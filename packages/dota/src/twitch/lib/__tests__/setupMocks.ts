@@ -53,8 +53,13 @@ export const state: {
   chatSayCalls: Array<{ channel: string; message: string; messageId?: string }>
   socketEmitCalls: Array<{ room: string; event: string; args: unknown[] }>
   streamStatusEffectCalls: Array<'socket' | 'update'>
-  steamSocketResponse: { matches: unknown[] } | null
+  steamSocketResponse: unknown
   steamSocketError: unknown
+  steamPlayerSummaries: Array<{
+    account_id: number
+    persona_name: string | null
+    country_code: string | null
+  }>
   predictions: Prediction[]
   resolvePredictionCalls: Array<{ twitchId: string; predictionId: string; outcomeId: string }>
   cancelPredictionCalls: Array<{ twitchId: string; predictionId: string }>
@@ -137,6 +142,7 @@ export const state: {
   streamStatusEffectCalls: [],
   steamSocketResponse: null,
   steamSocketError: null,
+  steamPlayerSummaries: [],
   predictions: [],
   resolvePredictionCalls: [],
   cancelPredictionCalls: [],
@@ -181,6 +187,7 @@ export function resetState() {
   state.streamStatusEffectCalls = []
   state.steamSocketResponse = null
   state.steamSocketError = null
+  state.steamPlayerSummaries = []
   state.predictions = []
   state.resolvePredictionCalls = []
   state.cancelPredictionCalls = []
@@ -528,12 +535,16 @@ await import('../../commands/unresolved')
 // Monkey-patch the singletons we need behavior control over. Mocking these
 // modules wholesale would force us to enumerate every other transitive export.
 steamSocket.emit = ((
-  _event: string,
+  event: string,
   _args: unknown,
   cb: (err: unknown, response: unknown) => void,
 ) => {
   if (state.steamSocketError) {
     cb(state.steamSocketError, null)
+    return
+  }
+  if (event === 'getPlayerSummaries') {
+    cb(null, state.steamPlayerSummaries)
     return
   }
   cb(null, state.steamSocketResponse ?? { matches: [] })

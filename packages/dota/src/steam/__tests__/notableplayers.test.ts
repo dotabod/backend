@@ -38,18 +38,18 @@ const getPlayersMock = vi.fn(async () => ({
 }))
 vi.doMock('../../dota/lib/getPlayers', () => ({ getPlayers: getPlayersMock }))
 vi.doMock('../../dota/lib/calculateAvg', () => ({ calculateAvg: async () => 'Divine' }))
+const getSteamPlayerSummariesMock = vi.fn(async () => new Map())
+vi.doMock('../playerSummaries', () => ({
+  getSteamPlayerSummaries: getSteamPlayerSummariesMock,
+}))
 
 await initTestI18n()
 
 const { notablePlayers } = await import('../notableplayers.ts')
 
-const realFetch = globalThis.fetch
-const realSteamWebApi = process.env.STEAM_WEB_API
-
 afterEach(() => {
-  globalThis.fetch = realFetch
-  if (realSteamWebApi === undefined) delete process.env.STEAM_WEB_API
-  else process.env.STEAM_WEB_API = realSteamWebApi
+  getSteamPlayerSummariesMock.mockReset()
+  getSteamPlayerSummariesMock.mockResolvedValue(new Map())
 })
 
 // getPlayersMock is stateful; clear call history before each test so randomized
@@ -106,22 +106,12 @@ describe('notablePlayers — normal path (heroes known)', () => {
       accountIds: [123, 456],
       gameMode: undefined,
     })
-    process.env.STEAM_WEB_API = 'test-key'
-    globalThis.fetch = (async () => ({
-      ok: true,
-      json: async () => ({
-        response: {
-          players: [
-            {
-              steamid: '76561197960265851',
-              personaname: 'Steam One',
-              loccountrycode: 'SE',
-            },
-            { steamid: '76561197960266184', personaname: 'Steam Two' },
-          ],
-        },
-      }),
-    })) as unknown as typeof fetch
+    getSteamPlayerSummariesMock.mockResolvedValueOnce(
+      new Map([
+        [123, { personaName: 'Steam One', countryCode: 'SE' }],
+        [456, { personaName: 'Steam Two', countryCode: null }],
+      ]),
+    )
 
     const result = await notablePlayers({
       locale: 'en',
@@ -136,42 +126,6 @@ describe('notablePlayers — normal path (heroes known)', () => {
     expect(result.description).toBe('[Divine avg]: 🇸🇪 Steam One (Anti-Mage) · Steam Two (Axe)')
     expect(result.playerList.map((player) => player.name)).toEqual(['Steam One', 'Steam Two'])
     expect(result.playerList.map((player) => player.country_code)).toEqual(['SE', ''])
-  })
-
-  it('reuses Steam summaries across repeated SourceTV responses', async () => {
-    const sourceTvPlayers = [{ ...blank, slot: 0, heroId: 1, accountId: 789, playerName: null }]
-    getPlayersMock.mockResolvedValue({
-      matchPlayers: sourceTvPlayers,
-      accountIds: [789],
-      gameMode: undefined,
-    })
-    process.env.STEAM_WEB_API = 'test-key'
-    let fetchCalls = 0
-    globalThis.fetch = (async () => {
-      fetchCalls++
-      return {
-        ok: true,
-        json: async () => ({
-          response: {
-            players: [{ steamid: '76561197960266517', personaname: 'Cached Steam Name' }],
-          },
-        }),
-      }
-    }) as unknown as typeof fetch
-
-    const args = {
-      locale: 'en',
-      twitchChannelId: 'chan',
-      currentMatchId: '123',
-      players: undefined,
-      steam32Id: null,
-      rosterSource: 'sourcetv' as const,
-    }
-    await notablePlayers(args)
-    const second = await notablePlayers(args)
-
-    expect(second.playerList[0].name).toBe('Cached Steam Name')
-    expect(fetchCalls).toBe(1)
   })
 
   it('keeps the "Name (Hero)" format and avg header', async () => {

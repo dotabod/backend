@@ -7,7 +7,7 @@ import { type RawRoster, type ResolverContext, RosterResolver } from './RosterRe
 export type DocFetcher = (matchId: string) => Promise<DelayedGames | null>
 
 // Reads the Mongo `delayedGames` doc and translates whichever shape it has (flat `players[]` from
-// the SourceTV writer, or `teams[]` from the dormant `GetRealTimeStats` writer) into the legacy
+// the SourceTV writer, or `teams[]` from the on-demand `GetRealTimeStats` writer) into the legacy
 // `Players` array. Returns null when no doc is present so the chain falls through to Vision /
 // GSI-self.
 export class SourceTvResolver extends RosterResolver {

@@ -9,6 +9,7 @@ import SteamUser from 'steam-user'
 import steamErrors from 'steam-errors'
 import { hasSteamData } from './hasSteamData'
 import MongoDBSingleton from './MongoDBSingleton'
+import { SteamPlayerSummaryService, type SteamPlayerSummary } from './playerSummaries'
 import { getSocketIoServer } from './socketServer'
 import type { Cards, DelayedGames } from './types/index'
 import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails'
@@ -89,8 +90,8 @@ const getApiUrl = (steam_server_id: string) => {
 }
 
 // Writer #1 of the `delayedGames` collection: the `teams[]` shape, from the on-demand
-// GetRealTimeStats fetch. Currently dormant — GetRealTimeStats is gated off in the dota app
-// (ENABLE_SPECTATE_FRIEND_GAME = false; Valve disabled the spectate-friend proto).
+// GetRealTimeStats fetch. SourceTV-backed commands can call this with the public feed's
+// server_steam_id; ordinary pubs still depend on the disabled spectate-friend lookup.
 // Saves the match to MongoDB and fetches new medals if needed
 const saveMatch = async ({
   match_id,
@@ -145,6 +146,7 @@ class Dota {
   private static instance: Dota
   private cache: Map<number, CacheEntry> = new Map()
   private user: SteamUserClient
+  private readonly playerSummaries: SteamPlayerSummaryService
   public dota2
   // steam-user owns CM reconnection (autoRelogin). This backoff only paces
   // re-logon attempts after a *fatal* logon error (e.g. a rejected refresh
@@ -175,6 +177,10 @@ class Dota {
       dataDirectory: VOLUME_DIR,
       autoRelogin: true,
       renewRefreshTokens: true,
+    })
+    this.playerSummaries = new SteamPlayerSummaryService({
+      getPersonas: this.user.getPersonas.bind(this.user),
+      apiKey: process.env.STEAM_WEB_API,
     })
 
     patchNodeDota2GcForSteamUser()
@@ -270,7 +276,7 @@ class Dota {
     }
   }
 
-  // Writer #2 of the `delayedGames` collection (the only active one today): polls the GC's public
+  // Writer #2 of the `delayedGames` collection: polls the GC's public
   // spectatable-game list (sourceTVGamesData) every 30s and upserts the flat `players[]` shape
   // (accountid + heroid) + average_mmr + spectators. Only covers games the GC broadcasts (notable /
   // high-MMR / tournament) — not most streamers' pub games. Does NOT emit saveHeroesForMatchId.
@@ -796,6 +802,10 @@ class Dota {
     } finally {
       await mongo.close()
     }
+  }
+
+  public getPlayerSummaries(accounts: number[]): Promise<SteamPlayerSummary[]> {
+    return this.playerSummaries.get(accounts)
   }
 
   public requestMatchMinimalDetails = (

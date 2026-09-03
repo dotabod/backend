@@ -2,14 +2,12 @@ import DOTA_ITEM_IDS from 'dotaconstants/build/item_ids.json' with { type: 'json
 import DOTA_ITEMS from 'dotaconstants/build/items.json' with { type: 'json' }
 import { t } from 'i18next'
 
-import RedisClient from '../../db/RedisClient'
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { isSpectator } from '../../dota/lib/isSpectator'
-import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings'
-import { steamSocket } from '../../steam/ws'
-import type { DelayedGames, Item, SocketClient } from '../../types'
+import { DBSettings } from '../../settings'
+import { findRealtimePlayer, getRealtimeStats } from '../../steam/realtimeStats'
+import type { Item, SocketClient } from '../../types'
 import CustomError from '../../utils/customError'
-import { is8500Plus } from '../../utils/index'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 import { profileLink } from './profileLink'
@@ -51,7 +49,7 @@ async function getItems({
   command: string
 }) {
   const packet = client.gsi
-  const { hero, items, playerIdx } = await profileLink({
+  const { accountIdFromArgs, hero, items, playerIdx } = await profileLink({
     command,
     client,
     locale,
@@ -74,50 +72,13 @@ async function getItems({
         .filter(Boolean)
         .filter((item) => item !== 'empty')
   } else {
-    // PRESERVED — gated, not dead. The branches below (steamServerId redis read + getRealTimeStats
-    // emit) come back to life if `ENABLE_SPECTATE_FRIEND_GAME` is re-enabled AND bot-streamer
-    // friendship is managed at scale. See memory `keep-spectate-friend-path`.
-    if (!ENABLE_SPECTATE_FRIEND_GAME) {
-      throw new CustomError(t('matchDataValveDisabled', { emote: 'PoroSad', lng: locale }))
-    }
-
-    if (is8500Plus(client)) {
-      throw new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale }))
-    }
-
-    const redisClient = RedisClient.getInstance()
-    const steamServerId =
-      packet?.map?.matchid &&
-      (await redisClient.client.get(`${packet?.map?.matchid}:${token}:steamServerId`))
-
-    if (!steamServerId) {
-      throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
-    }
-    const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale })))
-      }, 10000) // 10 second timeout
-
-      steamSocket.emit(
-        'getRealTimeStats',
-        {
-          match_id: packet?.map?.matchid ?? '',
-          forceRefetchAll: true,
-          steam_server_id: steamServerId,
-          token,
-        },
-        (err: unknown, cards: DelayedGames) => {
-          clearTimeout(timeoutId)
-          if (err) {
-            reject(err)
-          } else {
-            resolve(cards)
-          }
-        },
-      )
-    })
-
-    const delayedData = await getDelayedDataPromise.catch((_error) => {
+    const delayedData = await getRealtimeStats({
+      client,
+      token,
+      locale,
+      forceRefetchAll: true,
+    }).catch((error) => {
+      if (error instanceof CustomError) throw error
       throw new CustomError(t('gameNotFound', { lng: locale }))
     })
 
@@ -125,9 +86,7 @@ async function getItems({
       throw new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale }))
     }
 
-    const teamIndex = (playerIdx ?? 0) > 4 ? 1 : 0
-    const teamPlayerIdx = (playerIdx ?? 0) % 5
-    const itemIds = delayedData.teams[teamIndex]?.players[teamPlayerIdx]?.items
+    const itemIds = findRealtimePlayer(delayedData, accountIdFromArgs, playerIdx)?.items
 
     itemList =
       Array.isArray(itemIds) &&

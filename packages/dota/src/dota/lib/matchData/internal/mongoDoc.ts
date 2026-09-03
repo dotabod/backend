@@ -14,8 +14,8 @@ export async function fetchDelayedGameDoc(matchId: string): Promise<DelayedGames
 }
 
 // Extract a flat `Players[]` from whichever shape the Mongo doc happens to be in:
-//   - `teams[]` (GetRealTimeStats writer, currently dormant) → 2 teams × 5 players
-//   - flat `players[]` (SourceTV writer — the only active one today) → up to 10 entries
+//   - `teams[]` (on-demand GetRealTimeStats writer) → 2 teams × 5 players
+//   - flat `players[]` (SourceTV writer) → up to 10 entries
 // Returns [] if neither shape applies.
 export function extractPlayersFromMongoDoc(doc: DelayedGames | null): Players {
   if (!doc) return []

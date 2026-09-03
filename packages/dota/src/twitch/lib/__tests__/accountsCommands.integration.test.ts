@@ -44,12 +44,26 @@ describe('!geo', () => {
     expect(state.chatSayCalls[0].message).toBe(notPlaying)
   })
 
-  it('reports the Valve-disabled message for a live non-spectator match', async () => {
+  it('reports countries for a SourceTV-backed live non-spectator match', async () => {
+    state.delayedGame = {
+      match: { match_id: '7777777777' },
+      players: [
+        { accountid: 100, heroid: 1 },
+        { accountid: 200, heroid: 2 },
+      ],
+    }
+    state.steamPlayerSummaries = [
+      { account_id: 100, persona_name: 'One', country_code: 'SE' },
+      { account_id: 200, persona_name: 'Two', country_code: 'US' },
+    ]
+
     await commandHandler.handleMessage(
       makeMessage({ content: '!geo', clientOverrides: { gsi: liveGsi() } }),
     )
+    await new Promise<void>((resolve) => setTimeout(resolve, 0))
+
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toBe(t('matchDataValveDisabled', { lng: 'en' }))
+    expect(state.chatSayCalls[0].message).toContain('🇸🇪 · 🇺🇸')
   })
 
   it('blocks viewers (permission below mod)', async () => {

@@ -4,8 +4,9 @@ import RedisClient from '../../db/RedisClient'
 import { MatchDataService } from '../../dota/lib/matchData'
 import { isSpectator } from '../../dota/lib/isSpectator'
 import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings'
+import { getSteamPlayerSummaries } from '../../steam/playerSummaries'
 import CustomError from '../../utils/customError'
-import { is8500Plus, steamID32toSteamID64, steamID64toSteamID32 } from '../../utils/index'
+import { is8500Plus } from '../../utils/index'
 import { chatClient } from '../chatClient'
 import commandHandler, { type MessageType } from '../lib/CommandHandler'
 
@@ -32,7 +33,9 @@ commandHandler.registerCommand('geo', {
     }
 
     try {
-      if (!isSpectator(client.gsi)) {
+      const roster = await new MatchDataService(client).resolveRoster()
+
+      if (!isSpectator(client.gsi) && roster.source !== 'sourcetv') {
         // PRESERVED — gated, not dead. Branches below come back if ENABLE_SPECTATE_FRIEND_GAME is
         // re-enabled with bot-friend management. See memory `keep-spectate-friend-path`.
         if (!ENABLE_SPECTATE_FRIEND_GAME) {
@@ -52,7 +55,7 @@ commandHandler.registerCommand('geo', {
         }
       }
 
-      const { players: matchPlayers } = await new MatchDataService(client).resolveRoster()
+      const matchPlayers = roster.players
 
       if (matchPlayers.length === 0) {
         throw new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale }))
@@ -62,38 +65,11 @@ commandHandler.registerCommand('geo', {
         .map((p) => p.accountId)
         .filter((id): id is number => id !== null && id > 0)
 
-      const accountIdToCountry = new Map<number, string>()
-
-      if (accounts.length) {
-        const steamids = accounts
-          .map((steam32) => steamID32toSteamID64(steam32))
-          .filter((id): id is string => Boolean(id))
-          .join(',')
-        const apiKey = process.env.STEAM_WEB_API
-
-        if (apiKey) {
-          const resp = await fetch(
-            `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${apiKey}&steamids=${steamids}`,
-          )
-          if (resp.ok) {
-            const data = (await resp.json()) as {
-              response?: { players?: Array<{ steamid: string; loccountrycode?: string }> }
-            }
-            const players = data?.response?.players ?? []
-            for (const p of players) {
-              if (!p?.steamid) continue
-              const acc32 = steamID64toSteamID32(p.steamid)
-              if (typeof acc32 === 'number' && Number.isFinite(acc32) && p.loccountrycode) {
-                accountIdToCountry.set(acc32, p.loccountrycode.toUpperCase())
-              }
-            }
-          }
-        }
-      }
+      const summaries = await getSteamPlayerSummaries(accounts)
 
       const countriesList = matchPlayers
         .map((p) => {
-          const cc = p.accountId !== null ? accountIdToCountry.get(p.accountId) : undefined
+          const cc = p.accountId !== null ? summaries.get(p.accountId)?.countryCode : undefined
           if (!cc) return '?'
           return countryCodeEmoji(cc) || cc
         })

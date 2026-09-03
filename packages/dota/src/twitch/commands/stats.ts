@@ -1,13 +1,11 @@
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import RedisClient from '../../db/RedisClient'
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { isSpectator } from '../../dota/lib/isSpectator'
-import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings'
-import { steamSocket } from '../../steam/ws'
-import type { DelayedGames, SocketClient } from '../../types'
+import { DBSettings } from '../../settings'
+import { findRealtimePlayer, getRealtimeStats } from '../../steam/realtimeStats'
+import type { SocketClient } from '../../types'
 import CustomError from '../../utils/customError'
-import { is8500Plus } from '../../utils/index'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 import { profileLink } from './profileLink'
@@ -26,7 +24,7 @@ async function getStats({
   command: string
 }) {
   const packet = client.gsi
-  const { hero, player, playerIdx } = await profileLink({
+  const { accountIdFromArgs, hero, player, playerIdx } = await profileLink({
     command,
     client,
     locale,
@@ -34,71 +32,18 @@ async function getStats({
   })
 
   if (!isSpectator(packet)) {
-    // PRESERVED — gated, not dead. The branches below (steamServerId redis read + getRealTimeStats
-    // emit) come back if ENABLE_SPECTATE_FRIEND_GAME is re-enabled with bot-friend management. See
-    // memory `keep-spectate-friend-path`.
-    if (!ENABLE_SPECTATE_FRIEND_GAME) {
-      throw new CustomError(t('matchDataValveDisabled', { emote: 'PoroSad', lng: locale }))
-    }
-
-    if (is8500Plus(client)) {
-      throw new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale }))
-    }
-
-    const redisClient = RedisClient.getInstance()
-    const steamServerId =
-      packet?.map?.matchid &&
-      (await redisClient.client.get(`${packet?.map?.matchid}:${token}:steamServerId`))
-
-    if (!steamServerId) {
-      throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
-    }
-    const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale })))
-      }, 10000) // 10 second timeout
-
-      logger.info('Getting stats', {
+    const delayedData = await getRealtimeStats({
+      client,
+      token,
+      locale,
+      forceRefetchAll: true,
+    }).catch((error) => {
+      logger.error('Error getting stats', {
+        error,
         match_id: packet?.map?.matchid ?? '',
-        forceRefetchAll: true,
-        steam_server_id: steamServerId,
         token,
       })
-
-      steamSocket.emit(
-        'getRealTimeStats',
-        {
-          match_id: packet?.map?.matchid ?? '',
-          forceRefetchAll: true,
-          steam_server_id: steamServerId,
-          token,
-        },
-        (err: unknown, cards: DelayedGames) => {
-          clearTimeout(timeoutId)
-          if (err) {
-            logger.error('Error getting stats', {
-              err,
-              match_id: packet?.map?.matchid ?? '',
-              forceRefetchAll: true,
-              steam_server_id: steamServerId,
-              token,
-            })
-            reject(err)
-          } else {
-            logger.info('Stats received', {
-              cards,
-              match_id: packet?.map?.matchid ?? '',
-              forceRefetchAll: true,
-              steam_server_id: steamServerId,
-              token,
-            })
-            resolve(cards)
-          }
-        },
-      )
-    })
-
-    const delayedData = await getDelayedDataPromise.catch((_error) => {
+      if (error instanceof CustomError) throw error
       throw new CustomError(t('gameNotFound', { lng: locale }))
     })
 
@@ -106,9 +51,10 @@ async function getStats({
       throw new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale }))
     }
 
-    const teamIndex = (playerIdx ?? 0) > 4 ? 1 : 0
-    const teamPlayerIdx = (playerIdx ?? 0) % 5
-    const playerData = delayedData.teams[teamIndex]?.players[teamPlayerIdx]
+    const playerData = findRealtimePlayer(delayedData, accountIdFromArgs, playerIdx)
+    if (!playerData) {
+      throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
+    }
 
     return {
       heroName: getHeroNameOrColor(hero?.id ?? 0, playerIdx),

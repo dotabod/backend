@@ -128,6 +128,19 @@ socketIoServer.on('connection', (socket) => {
     }
   })
 
+  socket.on('getPlayerSummaries', async (accountIds: number[], callback: callback) => {
+    if (!isConnectedToSteam) {
+      callback('Steam not connected', null)
+      return
+    }
+    try {
+      const result = await withTimeout(dota.getPlayerSummaries(accountIds))
+      callback(null, result)
+    } catch (e) {
+      callback((e as Error).message, null)
+    }
+  })
+
   // PRESERVED — gated, not dead. Caller (dota's saveMatchData) is behind ENABLE_SPECTATE_FRIEND_GAME.
   // See memory `keep-spectate-friend-path`. Re-enable + test once bot-friend management exists.
   socket.on('getUserSteamServer', async (steam32Id: number, callback: callback) => {

@@ -41,6 +41,9 @@ export interface SteamUserClient {
   logOn(details: SteamLogOnDetails): void
   logOff(): void
   gamesPlayed(apps: unknown, force?: boolean): void
+  getPersonas(steamIds: string[]): Promise<{
+    personas: Record<string, { player_name?: string }>
+  }>
   sendToGC(
     appid: number,
     msgType: number,

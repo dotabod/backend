@@ -220,8 +220,9 @@ async function saveMatchData(client: SocketClient) {
     if (steamServerId && lobbyType !== null) return
 
     // PRESERVED — gated, not dead. This block is the sole writer of the redis steamServerId key
-    // that `!items`/`!stats`/`!geo`/`!winprobability` later read. Gated off pending bot-friend
-    // management at scale; see memory `keep-spectate-friend-path`.
+    // that the ordinary-pub `!items`/`!stats`/`!winprobability` fallback later reads. SourceTV
+    // commands instead use the server_steam_id already present in delayedGames. This lookup stays
+    // gated pending bot-friend management at scale; see memory `keep-spectate-friend-path`.
     if (
       !steamServerId &&
       lobbyType === null &&
