@@ -7,6 +7,7 @@ import retry from 'retry'
 import SteamUser from 'steam-user'
 // @ts-expect-error no types
 import steamErrors from 'steam-errors'
+import { PROFILE_CARD_CACHE_TTL_MS, shouldRefreshCard } from './cardCache'
 import { hasSteamData } from './hasSteamData'
 import MongoDBSingleton from './MongoDBSingleton'
 import { SteamPlayerSummaryService, type SteamPlayerSummary } from './playerSummaries'
@@ -32,8 +33,6 @@ interface CacheEntry {
 }
 
 const MAX_CACHE_SIZE = 5000
-const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
-
 // How long the Dota GC may stay continuously not-ready — through login stalls,
 // unanswered ClientHellos, or a degraded Valve GC — before we stop nursing the
 // (unmaintained, hidden-timer-laden) node-dota2 connection and exit for a clean
@@ -730,7 +729,7 @@ class Dota {
     const now = Date.now()
     const cacheEntry = this.cache.get(account)
 
-    if (cacheEntry && now - cacheEntry.timestamp < CACHE_TTL) {
+    if (cacheEntry && now - cacheEntry.timestamp < PROFILE_CARD_CACHE_TTL_MS) {
       return cacheEntry.card
     }
 
@@ -755,7 +754,7 @@ class Dota {
   private evictOldCacheEntries() {
     const now = Date.now()
     for (const [key, value] of this.cache.entries()) {
-      if (now - value.timestamp > CACHE_TTL) {
+      if (now - value.timestamp > PROFILE_CARD_CACHE_TTL_MS) {
         this.cache.delete(key)
       }
     }
@@ -792,7 +791,7 @@ class Dota {
 
       const promises = accounts.map(async (accountId) => {
         const existingCard = cardsMap.get(accountId)
-        if (refetchCards || !existingCard || typeof existingCard.rank_tier !== 'number') {
+        if (!existingCard || shouldRefreshCard(existingCard, refetchCards)) {
           return this.fetchAndUpdateCard(accountId)
         }
         return existingCard
