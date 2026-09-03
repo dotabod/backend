@@ -169,6 +169,7 @@ commandHandler.registerCommand('np', {
       enableFlags: enableCountries,
       steam32Id: client.steam32Id,
       heroesStatus: roster.heroesStatus,
+      rosterSource: roster.source,
     })
       .then(async (desc) => {
         let description = desc.description

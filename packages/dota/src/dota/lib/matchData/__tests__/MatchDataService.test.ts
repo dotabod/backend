@@ -408,19 +408,22 @@ describe('MatchDataService — resolveRoster source/stage/completeness', () => {
   })
 })
 
-describe('MatchDataService — Vision name backfill on account-linked sources', () => {
-  it('backfills sourcetv rows missing a name from Vision, matched by heroId', async () => {
+describe('MatchDataService — account-linked roster names', () => {
+  it('never mixes Vision OCR names into a SourceTV roster', async () => {
     mongoDoc = sourceTvDoc()
     withVisionHost()
-    mockVision(visionHeroesPayload())
+    let fetchCalled = false
+    globalThis.fetch = (async () => {
+      fetchCalled = true
+      return { ok: true, json: async () => visionHeroesPayload() }
+    }) as unknown as typeof fetch
     const r = await new MatchDataService(makeClient()).resolveRoster()
-    // Source stays 'sourcetv' — the real account_ids (and stage/completeness derived from them)
-    // are untouched; only names are backfilled.
+
     expect(r.source).toBe('sourcetv')
     expect(r.players.length).toBe(10)
     expect(r.players.every((p) => p.accountId !== null)).toBe(true)
-    expect(r.players.find((p) => p.heroId === 1)?.playerName).toBe('Player 1')
-    expect(r.players.find((p) => p.heroId === 10)?.playerName).toBe('Player 10')
+    expect(r.players.every((p) => p.playerName === null)).toBe(true)
+    expect(fetchCalled).toBe(false)
   })
 
   it('does not overwrite a name the winning resolver already knows', async () => {
@@ -435,7 +438,7 @@ describe('MatchDataService — Vision name backfill on account-linked sources', 
     mockVision(visionHeroesPayload())
     const r = await new MatchDataService(makeClient()).resolveRoster()
     expect(r.players.find((p) => p.heroId === 1)?.playerName).toBe('KnownPro')
-    expect(r.players.find((p) => p.heroId === 2)?.playerName).toBe('Player 2')
+    expect(r.players.find((p) => p.heroId === 2)?.playerName).toBeNull()
   })
 
   it('skips the Vision fetch entirely when every player already has a name', async () => {

@@ -348,6 +348,7 @@ class GSIHandler implements GSIHandlerType {
       players: roster.players,
       enableFlags: enableCountries,
       steam32Id: this.getSteam32(),
+      rosterSource: roster.source,
     })
       .then((response) => {
         if (response.playerList.length) {

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks.ts'
 import type { RosterPlayer } from '../../dota/lib/matchData'
 
@@ -42,6 +42,15 @@ vi.doMock('../../dota/lib/calculateAvg', () => ({ calculateAvg: async () => 'Div
 await initTestI18n()
 
 const { notablePlayers } = await import('../notableplayers.ts')
+
+const realFetch = globalThis.fetch
+const realSteamWebApi = process.env.STEAM_WEB_API
+
+afterEach(() => {
+  globalThis.fetch = realFetch
+  if (realSteamWebApi === undefined) delete process.env.STEAM_WEB_API
+  else process.env.STEAM_WEB_API = realSteamWebApi
+})
 
 // getPlayersMock is stateful; clear call history before each test so randomized
 // test ordering doesn't bleed mockResolvedValueOnce calls across describes.
@@ -88,6 +97,83 @@ describe('notablePlayers — draft-only (heroes pending)', () => {
 })
 
 describe('notablePlayers — normal path (heroes known)', () => {
+  it('uses Steam identities instead of OCR for every SourceTV account', async () => {
+    getPlayersMock.mockResolvedValueOnce({
+      matchPlayers: [
+        { ...blank, slot: 0, heroId: 1, accountId: 123, playerName: 'Wrong OCR name' },
+        { ...blank, slot: 1, heroId: 2, accountId: 456, playerName: null },
+      ],
+      accountIds: [123, 456],
+      gameMode: undefined,
+    })
+    process.env.STEAM_WEB_API = 'test-key'
+    globalThis.fetch = (async () => ({
+      ok: true,
+      json: async () => ({
+        response: {
+          players: [
+            {
+              steamid: '76561197960265851',
+              personaname: 'Steam One',
+              loccountrycode: 'SE',
+            },
+            { steamid: '76561197960266184', personaname: 'Steam Two' },
+          ],
+        },
+      }),
+    })) as unknown as typeof fetch
+
+    const result = await notablePlayers({
+      locale: 'en',
+      twitchChannelId: 'chan',
+      currentMatchId: '123',
+      players: undefined,
+      enableFlags: true,
+      steam32Id: null,
+      rosterSource: 'sourcetv',
+    })
+
+    expect(result.description).toBe('[Divine avg]: 🇸🇪 Steam One (Anti-Mage) · Steam Two (Axe)')
+    expect(result.playerList.map((player) => player.name)).toEqual(['Steam One', 'Steam Two'])
+    expect(result.playerList.map((player) => player.country_code)).toEqual(['SE', ''])
+  })
+
+  it('reuses Steam summaries across repeated SourceTV responses', async () => {
+    const sourceTvPlayers = [{ ...blank, slot: 0, heroId: 1, accountId: 789, playerName: null }]
+    getPlayersMock.mockResolvedValue({
+      matchPlayers: sourceTvPlayers,
+      accountIds: [789],
+      gameMode: undefined,
+    })
+    process.env.STEAM_WEB_API = 'test-key'
+    let fetchCalls = 0
+    globalThis.fetch = (async () => {
+      fetchCalls++
+      return {
+        ok: true,
+        json: async () => ({
+          response: {
+            players: [{ steamid: '76561197960266517', personaname: 'Cached Steam Name' }],
+          },
+        }),
+      }
+    }) as unknown as typeof fetch
+
+    const args = {
+      locale: 'en',
+      twitchChannelId: 'chan',
+      currentMatchId: '123',
+      players: undefined,
+      steam32Id: null,
+      rosterSource: 'sourcetv' as const,
+    }
+    await notablePlayers(args)
+    const second = await notablePlayers(args)
+
+    expect(second.playerList[0].name).toBe('Cached Steam Name')
+    expect(fetchCalls).toBe(1)
+  })
+
   it('keeps the "Name (Hero)" format and avg header', async () => {
     getPlayersMock.mockResolvedValueOnce({
       matchPlayers: [{ ...blank, slot: 0, heroId: 1, accountId: 123, playerName: 'Bob' }],

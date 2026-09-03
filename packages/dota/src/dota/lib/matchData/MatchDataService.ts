@@ -319,14 +319,18 @@ export class MatchDataService {
     })
   }
 
-  // Steam/GSI/SourceTV rosters carry real account_ids (needed for `notablePlayers` DB lookups
-  // and rank tracking) but only show a name for players the resolver itself knows by identity —
-  // everyone else renders as `Player N`. Vision's OCR read of the strategy panel has no
-  // account_ids but does carry a name for every slot it detected. Backfill missing names from it,
-  // matched by heroId (the only key both shapes share) — never overwrite an account-linked
-  // source's own name, so a tracked pro's real name always wins over an OCR'd handle.
+  // SourceTV's account_id + hero_id pairs are authoritative and must never be decorated with OCR
+  // identity. Consumers such as !np resolve those account IDs through curated notable-player data
+  // and Steam Player Summaries. Spectator GSI can still use Vision as a last-resort name backfill
+  // because it already has stable hero/slot identity from the observing client.
   private async backfillNamesFromVision(raw: RawRoster, ctx: ResolverContext): Promise<RawRoster> {
-    if (raw.source === 'vision-heroes' || raw.source === 'vision-draft') return raw
+    if (
+      raw.source === 'sourcetv' ||
+      raw.source === 'vision-heroes' ||
+      raw.source === 'vision-draft'
+    ) {
+      return raw
+    }
     const hasMissingName = raw.matchPlayers.some(
       (p) =>
         typeof p.heroid === 'number' &&

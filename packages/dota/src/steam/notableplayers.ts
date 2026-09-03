@@ -4,9 +4,10 @@ import { t } from 'i18next'
 import { calculateAvg } from '../dota/lib/calculateAvg'
 import { getPlayers } from '../dota/lib/getPlayers'
 import { getHeroNameOrColor } from '../dota/lib/heroes'
-import type { RosterPlayer } from '../dota/lib/matchData'
+import type { RosterPlayer, RosterSource } from '../dota/lib/matchData'
 import type { HeroesStatus, NotablePlayer, SocketClient } from '../types'
 import MongoDBSingleton from './MongoDBSingleton'
+import { getSteamPlayerSummaries } from './playerSummaries'
 
 export interface NotablePlayers {
   account_id: number
@@ -23,6 +24,7 @@ export async function notablePlayers({
   enableFlags,
   steam32Id,
   heroesStatus,
+  rosterSource,
 }: {
   client?: SocketClient
   locale: string
@@ -32,6 +34,7 @@ export async function notablePlayers({
   enableFlags?: boolean
   steam32Id: number | null
   heroesStatus?: HeroesStatus
+  rosterSource?: RosterSource
 }) {
   // Draft-only path: the players passed in are OCR'd draft names with no ranks
   // or hero data, so skip getPlayers (which would fire a needless Steam getCards
@@ -85,6 +88,11 @@ export async function notablePlayers({
           .toArray()
       : []
 
+    // SourceTV gives authoritative account_id + hero_id pairs but no display identity. Resolve
+    // names and optional countries by account ID instead of mixing OCR text into that roster.
+    const steamSummaries =
+      rosterSource === 'sourcetv' ? await getSteamPlayerSummaries(accountIds) : new Map()
+
     // Description text. When only draft player names are available (no heroes
     // yet) there are no ranks to average, so skip the avg lookup entirely.
     const avg = heroesStatus
@@ -100,6 +108,8 @@ export async function notablePlayers({
     // Using for..of loop instead of forEach to properly handle await
     for (const [i, player] of matchPlayers.entries()) {
       const np = nps.find((np) => np.account_id === player.accountId)
+      const steamSummary =
+        player.accountId !== null ? steamSummaries.get(player.accountId) : undefined
       const isCurrentPlayer = player.accountId === steam32Id
 
       // Determine hero name based on available data
@@ -126,9 +136,13 @@ export async function notablePlayers({
               : '?'
             : heroName,
         name:
-          (await moderateText(np?.name ?? matchPlayers[i].playerName ?? `Player ${i + 1}`)) ??
-          `Player ${i + 1}`,
-        country_code: np?.country_code ?? '',
+          (await moderateText(
+            np?.name ||
+              steamSummary?.personaName ||
+              (rosterSource === 'sourcetv' ? undefined : matchPlayers[i].playerName) ||
+              `Player ${i + 1}`,
+          )) ?? `Player ${i + 1}`,
+        country_code: np?.country_code || steamSummary?.countryCode || '',
         isMe: isCurrentPlayer,
       }
 
@@ -138,7 +152,10 @@ export async function notablePlayers({
       // vision path is the high-MMR roster view, so a confidently-detected hero
       // must not vanish just because its name OCR came back empty.
       const isVisionHero = player.accountId === null && (player.heroId ?? 0) > 0
-      if (np || matchPlayers[i].playerName || isVisionHero) proPlayers.push(playerData)
+      const isSourceTvPlayer = rosterSource === 'sourcetv' && player.accountId !== null
+      if (np || isSourceTvPlayer || matchPlayers[i].playerName || isVisionHero) {
+        proPlayers.push(playerData)
+      }
     }
 
     let modeText: string
