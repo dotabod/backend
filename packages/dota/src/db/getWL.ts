@@ -1,8 +1,13 @@
-import { type Database, supabase } from '@dotabod/shared-utils'
+import { type Database, logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { DBSettings, getValueOrDefault } from '../settings'
 import type { SocketClient } from '../types'
-import { getWinLossStartDate, normalizeStatsDays, WL_RESET_SETTING_KEY } from './winLossWindow'
+import {
+  getWinLossChallenge,
+  getWinLossStartDate,
+  normalizeStatsDays,
+  WL_RESET_SETTING_KEY,
+} from './winLossWindow'
 
 interface WL {
   lng: string
@@ -13,6 +18,7 @@ interface WL {
   streamStartDate?: Date | null
   currentGameIsRanked?: boolean | null
   statsDaysOverride?: number | null
+  statsStartDateOverride?: string | null
   userId?: string
 }
 
@@ -20,6 +26,25 @@ export const LOBBY_TYPE_RANKED = 7
 export const MULTIPLIER_PARTY = 20
 export const MULTIPLIER_SOLO = 25
 const DAY_MS = 24 * 60 * 60 * 1000
+
+async function clearCompletedChallenge(userId: string, settings?: SocketClient['settings']) {
+  const updatedAt = new Date().toISOString()
+  const values = [
+    { key: DBSettings.wlStatsDays, userId, updated_at: updatedAt, value: null },
+    { key: DBSettings.wlStatsStartDate, userId, updated_at: updatedAt, value: null },
+  ]
+  const { error } = await supabase.from('settings').upsert(values, { onConflict: 'userId, key' })
+
+  if (error) {
+    logger.error('[WL] Error clearing completed challenge', { error, userId })
+    return
+  }
+
+  for (const { key } of values) {
+    const setting = settings?.find((entry) => entry.key === key)
+    if (setting) setting.value = null
+  }
+}
 
 function getAvailableStatsDays(statsDays: number | null, firstMatchAt?: string): number | null {
   if (statsDays === null || !firstMatchAt) return statsDays
@@ -68,24 +93,45 @@ export async function getWL({
   streamStartDate,
   currentGameIsRanked,
   statsDaysOverride,
+  statsStartDateOverride,
   userId,
 }: WL) {
+  const now = new Date()
   const statsDays = normalizeStatsDays(
     statsDaysOverride === undefined
       ? getValueOrDefault(DBSettings.wlStatsDays, settings, subscription)
       : statsDaysOverride,
   )
+  const statsStartDate =
+    statsStartDateOverride === undefined
+      ? getValueOrDefault(DBSettings.wlStatsStartDate, settings, subscription)
+      : statsStartDateOverride
+  const challenge = getWinLossChallenge(statsDays, statsStartDate, now)
+  const isPreviewOverride = statsDaysOverride !== undefined || statsStartDateOverride !== undefined
+  const activeChallenge = challenge?.expired ? null : challenge
+  const activeStatsDays = challenge?.expired ? null : statsDays
+
+  if (challenge?.expired && userId && !isPreviewOverride) {
+    await clearCompletedChallenge(userId, settings)
+  }
 
   if (!channelId) {
     return Promise.resolve({
       record: [{ win: 0, lose: 0, type: 'U' }],
       msg: null,
-      statsDays,
+      statsDays: activeChallenge?.elapsedDays ?? activeStatsDays,
+      statsDaysTotal: activeChallenge?.totalDays ?? null,
     })
   }
 
   const resetAt = settings?.find((setting) => setting.key === WL_RESET_SETTING_KEY)?.value
-  const startDate = getWinLossStartDate(statsDays, streamStartDate, resetAt).toISOString()
+  const startDate = getWinLossStartDate(
+    activeStatsDays,
+    streamStartDate,
+    resetAt,
+    now,
+    activeChallenge?.startDate,
+  ).toISOString()
 
   const [matchResult, adjustmentResult, firstMatchResult] = await Promise.all([
     supabase.rpc('get_grouped_bets', {
@@ -99,7 +145,7 @@ export async function getWL({
           .eq('user_id', userId)
           .gte('created_at', startDate)
       : Promise.resolve({ data: [], error: null }),
-    statsDays !== null && userId
+    activeStatsDays !== null && !activeChallenge && userId
       ? supabase
           .from('matches')
           .select('created_at')
@@ -112,12 +158,20 @@ export async function getWL({
       : Promise.resolve({ data: [], error: null }),
   ])
 
-  const availableStatsDays = firstMatchResult.error
-    ? statsDays
-    : getAvailableStatsDays(statsDays, firstMatchResult.data?.[0]?.created_at)
+  const availableStatsDays = activeChallenge
+    ? activeChallenge.elapsedDays
+    : firstMatchResult.error
+      ? activeStatsDays
+      : getAvailableStatsDays(activeStatsDays, firstMatchResult.data?.[0]?.created_at)
+  const statsDaysTotal = activeChallenge?.totalDays ?? null
 
   if (matchResult.error) {
-    return { record: [{ win: 0, lose: 0, type: 'U' }], msg: null, statsDays: availableStatsDays }
+    return {
+      record: [{ win: 0, lose: 0, type: 'U' }],
+      msg: null,
+      statsDays: availableStatsDays,
+      statsDaysTotal,
+    }
   }
 
   const ranked: { win: number; lose: number; mmr: number } = {
@@ -181,11 +235,18 @@ export async function getWL({
   }
 
   const recordMessage = messages.filter(Boolean).join(' · ') || '0 W - 0 L'
-  const windowMessage =
-    availableStatsDays === null
-      ? t('wl.statsWindow_stream', { lng })
-      : t('wl.statsWindow', { count: availableStatsDays, lng })
+  const windowMessage = (() => {
+    if (availableStatsDays === null) return t('wl.statsWindow_stream', { lng })
+    if (statsDaysTotal !== null) {
+      return t('wl.statsChallenge', {
+        count: statsDaysTotal,
+        elapsed: availableStatsDays,
+        lng,
+      })
+    }
+    return t('wl.statsWindow', { count: availableStatsDays, lng })
+  })()
   const msg = `${recordMessage} · ${windowMessage}`
 
-  return { record, msg, statsDays: availableStatsDays }
+  return { record, msg, statsDays: availableStatsDays, statsDaysTotal }
 }

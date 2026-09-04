@@ -19,6 +19,7 @@ export const dbState: {
   // Recorded writes for assertions.
   inserts: Array<{ table: string; values: unknown }>
   updates: Array<{ table: string; values: unknown; whereCol?: string; whereVal?: unknown }>
+  upserts: Array<{ table: string; values: unknown; options?: unknown }>
   // Logger captures.
   loggerErrorCalls: Array<{ message: string; meta: Record<string, unknown> }>
   loggerInfoCalls: Array<{ message: string; meta: Record<string, unknown> }>
@@ -30,6 +31,7 @@ export const dbState: {
   gteCalls: [],
   inserts: [],
   updates: [],
+  upserts: [],
   loggerErrorCalls: [],
   loggerInfoCalls: [],
   loggerWarnCalls: [],
@@ -42,6 +44,7 @@ export function resetDbState() {
   dbState.gteCalls = []
   dbState.inserts = []
   dbState.updates = []
+  dbState.upserts = []
   dbState.loggerErrorCalls = []
   dbState.loggerInfoCalls = []
   dbState.loggerWarnCalls = []
@@ -56,6 +59,10 @@ function createTableBuilder(table: string) {
     select: () => builder,
     insert: (values: unknown) => {
       dbState.inserts.push({ table, values })
+      return Promise.resolve({ data: null, error: null })
+    },
+    upsert: (values: unknown, options?: unknown) => {
+      dbState.upserts.push({ table, values, options })
       return Promise.resolve({ data: null, error: null })
     },
     update: (values: unknown) => ({

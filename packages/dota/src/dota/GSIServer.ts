@@ -12,7 +12,7 @@ import bodyParserErrorHandler from 'express-body-parser-error-handler'
 import { Server, type Socket } from 'socket.io'
 import getDBUser from '../db/getDBUser'
 import { getWL } from '../db/getWL'
-import { MAX_WL_STATS_DAYS } from '../db/winLossWindow'
+import { MAX_WL_STATS_DAYS, normalizeStatsStartDate } from '../db/winLossWindow'
 import { twitchEvent } from '../twitch/index'
 import type { Ability, Item } from '../types'
 import { initDotaPatchChecker } from './DotaPatchChecker'
@@ -110,23 +110,34 @@ async function handleSocketConnection(socket: Socket) {
     socket.on(
       'request-wl',
       async (
-        request: { statsDays?: unknown } | undefined,
+        request: { statsDays?: unknown; statsStartDate?: unknown } | undefined,
         respond: (response: unknown) => void,
       ) => {
-        const hasOverride = Object.hasOwn(request ?? {}, 'statsDays')
+        const hasStatsDaysOverride = Object.hasOwn(request ?? {}, 'statsDays')
+        const hasStatsStartDateOverride = Object.hasOwn(request ?? {}, 'statsStartDate')
+        const hasOverride = hasStatsDaysOverride || hasStatsStartDateOverride
         const statsDays = request?.statsDays
+        const statsStartDate = request?.statsStartDate
         if (hasOverride && !isWinLossPreview) {
           respond({ error: 'Stats window overrides are only available in settings' })
           return
         }
         if (
-          hasOverride &&
+          hasStatsDaysOverride &&
           statsDays !== null &&
           (!Number.isInteger(statsDays) ||
             Number(statsDays) < 1 ||
             Number(statsDays) > MAX_WL_STATS_DAYS)
         ) {
           respond({ error: 'Invalid stats window' })
+          return
+        }
+        if (
+          hasStatsStartDateOverride &&
+          statsStartDate !== null &&
+          normalizeStatsStartDate(statsStartDate) === null
+        ) {
+          respond({ error: 'Invalid stats start date' })
           return
         }
 
@@ -136,12 +147,19 @@ async function handleSocketConnection(socket: Socket) {
             lng: client.locale,
             mmrEnabled: false,
             settings: client.settings,
-            statsDaysOverride: hasOverride ? (statsDays as number | null) : undefined,
+            statsDaysOverride: hasStatsDaysOverride ? (statsDays as number | null) : undefined,
+            statsStartDateOverride: hasStatsStartDateOverride
+              ? (statsStartDate as string | null)
+              : undefined,
             streamStartDate: client.stream_start_date,
             subscription: client.subscription,
             userId: client.token,
           })
-          respond({ records: result.record, statsDays: result.statsDays })
+          respond({
+            records: result.record,
+            statsDays: result.statsDays,
+            statsDaysTotal: result.statsDaysTotal,
+          })
         } catch (error) {
           logger.error('[GSI] Error loading WL socket data', {
             error,

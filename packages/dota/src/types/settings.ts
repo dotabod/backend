@@ -143,8 +143,9 @@ export const defaultSettingsStructure = {
   minimapRight: false,
   mmr: null,
   'mmr-tracker': true,
-  // null keeps the original per-stream counter. A number opts into a rolling window.
+  // A duration and start date together define a fixed challenge window.
   wlStatsDays: null as number | null,
+  wlStatsStartDate: null as string | null,
   'obs-scene-switcher': true,
   'obs-dc': '[dotabod] game disconnected',
   'obs-minimap': '[dotabod] blocking minimap',

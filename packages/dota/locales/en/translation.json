@@ -337,6 +337,7 @@
   },
   "wl": {
     "statsWindow_stream": "This stream",
+    "statsChallenge": "{{elapsed}} of {{count}} days",
     "statsWindow_one": "Last {{count}} day",
     "statsWindow_other": "Last {{count}} days"
   },

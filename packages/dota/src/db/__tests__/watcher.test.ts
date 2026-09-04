@@ -245,6 +245,17 @@ describe('dota watcher: settings', () => {
     expect(client.settings).toContainEqual({ key: 'wlStatsDays', value: 30 })
     expect(handler.emitWLUpdate).toHaveBeenCalledTimes(1)
   })
+
+  it('recomputes the overlay when the WL challenge start date changes', async () => {
+    const { client, handler } = seedClient({ userId: 'u-wl-start' })
+
+    await fire('*', 'settings', {
+      new: { key: 'wlStatsStartDate', userId: 'u-wl-start', value: '2026-08-21' },
+    })
+
+    expect(client.settings).toContainEqual({ key: 'wlStatsStartDate', value: '2026-08-21' })
+    expect(handler.emitWLUpdate).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('dota watcher: win/loss adjustments', () => {

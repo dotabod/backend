@@ -320,13 +320,15 @@ class GSIHandler implements GSIHandlerType {
       streamStartDate: this.client.stream_start_date,
       userId: this.client.token,
     })
-      .then(({ record, statsDays }) => {
+      .then(({ record, statsDays, statsDaysTotal }) => {
         if (this.client.stream_online) {
-          server.io.to(this.client.token).emit('update-wl', record, statsDays)
+          server.io.to(this.client.token).emit('update-wl', record, statsDays, statsDaysTotal)
         }
         const twitchId = this.getChannelId()
         if (twitchId) {
-          server.io.to(getWinLossRoom(twitchId)).emit('update-wl', record, statsDays)
+          server.io
+            .to(getWinLossRoom(twitchId))
+            .emit('update-wl', record, statsDays, statsDaysTotal)
         }
       })
       .catch(() => {

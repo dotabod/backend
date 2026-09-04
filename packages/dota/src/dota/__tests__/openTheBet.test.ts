@@ -195,7 +195,8 @@ vi.doMock('../../db/getWL', async () => {
     ...real,
     getWL: async () => ({
       record: [{ lose: 2, type: 'R', win: 5 }],
-      statsDays: 30,
+      statsDays: 14,
+      statsDaysTotal: 30,
     }),
   }
 })
@@ -358,13 +359,13 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
         token: 'token-arteezy',
         event: 'update-wl',
         payload: [{ lose: 2, type: 'R', win: 5 }],
-        trailingPayloads: [30],
+        trailingPayloads: [14, 30],
       })
       expect(ioEmitCalls).toContainEqual({
         token: 'profile-wl:twitch-arteezy',
         event: 'update-wl',
         payload: [{ lose: 2, type: 'R', win: 5 }],
-        trailingPayloads: [30],
+        trailingPayloads: [14, 30],
       })
     })
   })
@@ -380,7 +381,7 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
         token: 'profile-wl:twitch-arteezy',
         event: 'update-wl',
         payload: [{ lose: 2, type: 'R', win: 5 }],
-        trailingPayloads: [30],
+        trailingPayloads: [14, 30],
       })
     })
     expect(ioEmitCalls).not.toContainEqual(

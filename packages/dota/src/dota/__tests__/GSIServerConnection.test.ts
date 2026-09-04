@@ -254,7 +254,8 @@ describe('overlay socket connection state', () => {
     new GSIServer()
     getWL.mockResolvedValue({
       record: [{ lose: 3, type: 'R', win: 8 }],
-      statsDays: 30,
+      statsDays: 14,
+      statsDaysTotal: 30,
     })
     gsiState.handlers.set('profile-token', {
       client: {
@@ -283,7 +284,10 @@ describe('overlay socket connection state', () => {
     })
 
     const respond = vi.fn()
-    await socketState.requestHandlers.get('request-wl')?.({ statsDays: 30 }, respond)
+    await socketState.requestHandlers.get('request-wl')?.(
+      { statsDays: 30, statsStartDate: '2026-08-21' },
+      respond,
+    )
 
     expect(getWL).toHaveBeenCalledWith({
       channelId: 'channel-1',
@@ -291,13 +295,15 @@ describe('overlay socket connection state', () => {
       mmrEnabled: false,
       settings: [{ key: 'wlStatsDays', value: 7 }],
       statsDaysOverride: 30,
+      statsStartDateOverride: '2026-08-21',
       streamStartDate: null,
       subscription: undefined,
       userId: 'profile-token',
     })
     expect(respond).toHaveBeenCalledWith({
       records: [{ lose: 3, type: 'R', win: 8 }],
-      statsDays: 30,
+      statsDays: 14,
+      statsDaysTotal: 30,
     })
   })
 
@@ -418,5 +424,41 @@ describe('overlay socket connection state', () => {
 
     expect(getWL).not.toHaveBeenCalled()
     expect(respond).toHaveBeenCalledWith({ error: 'Invalid stats window' })
+  })
+
+  it('rejects an impossible WL challenge start date before querying the database', async () => {
+    new GSIServer()
+    gsiState.handlers.set('profile-token', {
+      client: {
+        Account: { providerAccountId: 'channel-1' },
+        locale: 'en',
+        settings: [],
+        stream_online: false,
+        stream_start_date: null,
+        token: 'profile-token',
+      },
+      disabled: true,
+    })
+
+    await socketState.handlers.get('connection')?.({
+      data: {
+        clientType: 'win-loss',
+        dotabodClient: gsiState.handlers.get('profile-token').client,
+      },
+      handshake: { auth: { client: 'win-loss', token: 'profile-token' } },
+      join: vi.fn().mockResolvedValue(undefined),
+      on: (event: string, handler: (...args: any[]) => any) => {
+        socketState.requestHandlers.set(event, handler)
+      },
+    })
+
+    const respond = vi.fn()
+    await socketState.requestHandlers.get('request-wl')?.(
+      { statsDays: 30, statsStartDate: '2026-02-30' },
+      respond,
+    )
+
+    expect(getWL).not.toHaveBeenCalled()
+    expect(respond).toHaveBeenCalledWith({ error: 'Invalid stats start date' })
   })
 })

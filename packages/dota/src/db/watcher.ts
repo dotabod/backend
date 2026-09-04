@@ -504,7 +504,7 @@ class SetupSupabase {
             client.settings.push({ key: newObj.key, value: newObj.value })
           }
 
-          if (newObj.key === DBSettings.wlStatsDays) {
+          if (newObj.key === DBSettings.wlStatsDays || newObj.key === DBSettings.wlStatsStartDate) {
             gsiHandlers.get(client.token)?.emitWLUpdate()
           }
 
