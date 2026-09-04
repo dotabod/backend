@@ -95,7 +95,7 @@ afterEach(() => {
 
 describe('overlay socket connection state', () => {
   it('refreshes overlay activity when the browser source sends a heartbeat', async () => {
-    const server = new GSIServer()
+    new GSIServer()
     const handlers = new Map<string, () => void>()
     const socket = {
       data: { dotabodClient: { token: 'overlay-heartbeat' } },
@@ -111,7 +111,7 @@ describe('overlay socket connection state', () => {
   })
 
   it('does not count a dashboard diagnostic socket as an OBS overlay', async () => {
-    const server = new GSIServer()
+    new GSIServer()
     const socket = {
       data: { clientType: 'setup-diagnostic', dotabodClient: { token: 'diagnostic-token' } },
       emit: vi.fn(),
