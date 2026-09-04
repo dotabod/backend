@@ -19,6 +19,24 @@ interface WL {
 export const LOBBY_TYPE_RANKED = 7
 export const MULTIPLIER_PARTY = 20
 export const MULTIPLIER_SOLO = 25
+const DAY_MS = 24 * 60 * 60 * 1000
+
+function getAvailableStatsDays(statsDays: number | null, firstMatchAt?: string): number | null {
+  if (statsDays === null || !firstMatchAt) return statsDays
+
+  const firstMatch = new Date(firstMatchAt)
+  if (!Number.isFinite(firstMatch.getTime())) return statsDays
+
+  const now = new Date()
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  const firstMatchDay = Date.UTC(
+    firstMatch.getUTCFullYear(),
+    firstMatch.getUTCMonth(),
+    firstMatch.getUTCDate(),
+  )
+  const elapsedDays = Math.max(1, Math.floor((today - firstMatchDay) / DAY_MS))
+  return Math.min(statsDays, elapsedDays)
+}
 
 const updateStats = (
   stats: {
@@ -69,7 +87,7 @@ export async function getWL({
   const resetAt = settings?.find((setting) => setting.key === WL_RESET_SETTING_KEY)?.value
   const startDate = getWinLossStartDate(statsDays, streamStartDate, resetAt).toISOString()
 
-  const [matchResult, adjustmentResult] = await Promise.all([
+  const [matchResult, adjustmentResult, firstMatchResult] = await Promise.all([
     supabase.rpc('get_grouped_bets', {
       channel_id: channelId,
       start_date: startDate,
@@ -81,10 +99,25 @@ export async function getWL({
           .eq('user_id', userId)
           .gte('created_at', startDate)
       : Promise.resolve({ data: [], error: null }),
+    statsDays !== null && userId
+      ? supabase
+          .from('matches')
+          .select('created_at')
+          .eq('userId', userId)
+          .not('won', 'is', null)
+          .in('lobby_type', [0, 7])
+          .gte('created_at', startDate)
+          .order('created_at', { ascending: true })
+          .limit(1)
+      : Promise.resolve({ data: [], error: null }),
   ])
 
+  const availableStatsDays = firstMatchResult.error
+    ? statsDays
+    : getAvailableStatsDays(statsDays, firstMatchResult.data?.[0]?.created_at)
+
   if (matchResult.error) {
-    return { record: [{ win: 0, lose: 0, type: 'U' }], msg: null, statsDays }
+    return { record: [{ win: 0, lose: 0, type: 'U' }], msg: null, statsDays: availableStatsDays }
   }
 
   const ranked: { win: number; lose: number; mmr: number } = {
@@ -149,10 +182,10 @@ export async function getWL({
 
   const recordMessage = messages.filter(Boolean).join(' · ') || '0 W - 0 L'
   const windowMessage =
-    statsDays === null
+    availableStatsDays === null
       ? t('wl.statsWindow_stream', { lng })
-      : t('wl.statsWindow', { count: statsDays, lng })
+      : t('wl.statsWindow', { count: availableStatsDays, lng })
   const msg = `${recordMessage} · ${windowMessage}`
 
-  return { record, msg, statsDays }
+  return { record, msg, statsDays: availableStatsDays }
 }

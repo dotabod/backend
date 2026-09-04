@@ -67,6 +67,7 @@ function createTableBuilder(table: string) {
     eq: () => builder,
     neq: () => builder,
     is: () => builder,
+    in: () => builder,
     not: () => builder,
     gte: (column: string, value: unknown) => {
       dbState.gteCalls.push({ table, column, value })

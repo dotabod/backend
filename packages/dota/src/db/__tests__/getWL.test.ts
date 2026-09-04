@@ -133,6 +133,30 @@ describe('getWL', () => {
     expect(res.statsDays).toBe(30)
   })
 
+  it('reports the available match span when it is shorter than the configured window', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-04T12:00:00.000Z'))
+    dbState.rpcResult = {
+      data: [{ won: true, _count_won: 3, lobby_type: 7, is_party: false, is_doubledown: false }],
+      error: null,
+    }
+    dbState.tableResults.matches = {
+      data: [{ created_at: '2026-08-21T23:30:00.000Z' }],
+      error: null,
+    }
+
+    const res = await getWL({
+      lng: 'en',
+      channelId: 'ch-1',
+      mmrEnabled: false,
+      settings: [{ key: 'wlStatsDays', value: 30 }],
+      userId: 'user-1',
+    })
+
+    expect(res.msg).toMatch(/\u00b7 Last 14 days$/)
+    expect(res.statsDays).toBe(14)
+  })
+
   it('states that the default stats window is the current stream', async () => {
     const res = await getWL({
       lng: 'en',

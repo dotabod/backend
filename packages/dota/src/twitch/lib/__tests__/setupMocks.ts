@@ -270,6 +270,7 @@ function createSupabaseFromBuilder() {
       return builder
     },
     is: () => builder,
+    in: () => builder,
     not: () => builder,
     neq: () => builder,
     order: () => builder,
