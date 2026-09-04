@@ -16,6 +16,7 @@ import { MAX_WL_STATS_DAYS } from '../db/winLossWindow'
 import { twitchEvent } from '../twitch/index'
 import type { Ability, Item } from '../types'
 import { initDotaPatchChecker } from './DotaPatchChecker'
+import { getDiagnosticPayload } from './diagnosticPayload'
 import { emitMinimapBlockerStatus } from './GSIHandler'
 import type { GSIServerInterface } from './GSIServerTypes'
 import {
@@ -29,7 +30,7 @@ import { isGsiFresh } from './lib/getCurrentMatchId'
 import { MatchDataService } from './lib/matchData'
 import { remindUnresolvedMatches } from './lib/remindUnresolvedMatches'
 import { deleteClipsBatch } from './lib/twitchUtils'
-import { recordOverlayFirstSeen } from './setupSignals'
+import { recordOverlaySocketActivity } from './setupSignals'
 import { validateToken } from './validateToken'
 import {
   getWinLossRoom,
@@ -95,7 +96,13 @@ async function handleSocketConnection(socket: Socket) {
   const client = socket.data?.dotabodClient ?? gsiHandlers.get(token)?.client
   const isWinLossPreview = socket.data?.clientType === WIN_LOSS_PREVIEW_CLIENT_TYPE
   const isWinLossProfile = socket.data?.clientType === WIN_LOSS_PROFILE_CLIENT_TYPE
+  const isSetupDiagnostic = socket.data?.clientType === 'setup-diagnostic'
   const twitchId = client?.Account?.providerAccountId
+
+  if (isSetupDiagnostic) {
+    socket.emit('diagnostic-ready', { status: 'ok' })
+    return
+  }
 
   if ((isWinLossPreview || isWinLossProfile) && twitchId) {
     if (isWinLossProfile) {
@@ -152,7 +159,8 @@ async function handleSocketConnection(socket: Socket) {
 
   // Signal that this user's overlay browser source has connected at least once.
   // Drives the setup wizard's Step 3 verify-state. Cached + idempotent.
-  recordOverlayFirstSeen(token)
+  recordOverlaySocketActivity(token)
+  socket.on('diagnostic-heartbeat', () => recordOverlaySocketActivity(token))
 
   const handler = gsiHandlers.get(token)
   if (handler && !handler.disabled && handler.client.stream_online) {
@@ -307,6 +315,11 @@ class GSIServer implements GSIServerInterface {
 
     app.get('/', (_req: Request, res: Response) => {
       res.status(200).json({ status: 'ok' })
+    })
+
+    app.get('/diagnostics/payload', (_req: Request, res: Response) => {
+      res.setHeader('Cache-Control', 'no-store')
+      res.type('text/plain').status(200).send(getDiagnosticPayload())
     })
 
     httpServer.listen(5120, () => {

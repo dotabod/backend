@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from 'express'
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 
 const getDBUserMock = vi.fn()
-const recordGsiFirstSeenMock = vi.fn()
+const recordGsiActivityMock = vi.fn()
 
 vi.doMock('@dotabod/shared-utils', () => ({
   logger: { info: vi.fn() },
@@ -13,7 +13,7 @@ vi.doMock('../../db/getDBUser', () => ({
 }))
 
 vi.doMock('../setupSignals', () => ({
-  recordGsiFirstSeen: recordGsiFirstSeenMock,
+  recordGsiActivity: recordGsiActivityMock,
 }))
 
 const { invalidTokens, lookingupToken, pendingCheckAuth } = await import('../lib/consts')
@@ -70,7 +70,7 @@ function deferred<T>() {
 
 beforeEach(() => {
   getDBUserMock.mockReset()
-  recordGsiFirstSeenMock.mockReset()
+  recordGsiActivityMock.mockReset()
   invalidTokens.clear()
   lookingupToken.clear()
   pendingCheckAuth.clear()
@@ -92,7 +92,7 @@ describe('validateToken cleanup', () => {
     expect(client.gsiUpdatedAt).toBe(Date.now())
     expect(client.pendingGsi).toBeUndefined()
     expect(client.pendingGsiUpdatedAt).toBeUndefined()
-    expect(recordGsiFirstSeenMock).toHaveBeenCalledWith('token-1')
+    expect(recordGsiActivityMock).toHaveBeenCalledWith('token-1')
     expect(next).toHaveBeenCalledOnce()
     expect(jsonCalls).toEqual([])
     expect(pendingCheckAuth.has('token-1')).toBe(false)

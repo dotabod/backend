@@ -2,7 +2,7 @@ import { logger } from '@dotabod/shared-utils'
 import type { NextFunction, Request, Response } from 'express'
 import getDBUser from '../db/getDBUser'
 import { invalidTokens, lookingupToken, pendingCheckAuth } from './lib/consts'
-import { recordGsiFirstSeen } from './setupSignals'
+import { recordGsiActivity } from './setupSignals'
 
 export async function validateToken(
   req: Request,
@@ -46,7 +46,7 @@ export async function validateToken(
       // Record first-seen for the setup wizard's Step 2 verify-state, regardless of
       // stream state. This is the signal that the cfg file is installed and Dota 2 is
       // running. Cached + idempotent upsert under the hood.
-      recordGsiFirstSeen(client.token)
+      recordGsiActivity(client.token)
 
       if (!client.stream_online) {
         // Buffer offline packets separately from live state. This lets the online transition

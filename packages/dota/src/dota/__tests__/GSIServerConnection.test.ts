@@ -13,7 +13,7 @@ const gsiState = vi.hoisted(() => ({
 
 const getWL = vi.hoisted(() => vi.fn())
 const getDBUser = vi.hoisted(() => vi.fn())
-const recordOverlayFirstSeen = vi.hoisted(() => vi.fn())
+const recordOverlaySocketActivity = vi.hoisted(() => vi.fn())
 
 vi.mock('node:http', () => ({
   default: {
@@ -71,7 +71,7 @@ vi.mock('../lib/remindUnresolvedMatches', () => ({
   remindUnresolvedMatches: vi.fn().mockResolvedValue(undefined),
 }))
 vi.mock('../lib/twitchUtils', () => ({ deleteClipsBatch: vi.fn() }))
-vi.mock('../setupSignals', () => ({ recordOverlayFirstSeen }))
+vi.mock('../setupSignals', () => ({ recordOverlaySocketActivity }))
 vi.mock('../validateToken', () => ({ validateToken: vi.fn() }))
 
 const { default: GSIServer } = await import('../GSIServer')
@@ -85,7 +85,7 @@ beforeEach(() => {
   gsiState.handlers.clear()
   getDBUser.mockReset()
   getWL.mockReset()
-  recordOverlayFirstSeen.mockReset()
+  recordOverlaySocketActivity.mockReset()
 })
 
 afterEach(() => {
@@ -94,6 +94,39 @@ afterEach(() => {
 })
 
 describe('overlay socket connection state', () => {
+  it('refreshes overlay activity when the browser source sends a heartbeat', async () => {
+    const server = new GSIServer()
+    const handlers = new Map<string, () => void>()
+    const socket = {
+      data: { dotabodClient: { token: 'overlay-heartbeat' } },
+      handshake: { auth: { token: 'overlay-heartbeat' } },
+      join: vi.fn(),
+      on: vi.fn((event: string, handler: () => void) => handlers.set(event, handler)),
+    }
+
+    await socketState.handlers.get('connection')?.(socket)
+    handlers.get('diagnostic-heartbeat')?.()
+
+    expect(recordOverlaySocketActivity).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not count a dashboard diagnostic socket as an OBS overlay', async () => {
+    const server = new GSIServer()
+    const socket = {
+      data: { clientType: 'setup-diagnostic', dotabodClient: { token: 'diagnostic-token' } },
+      emit: vi.fn(),
+      handshake: { auth: { client: 'setup-diagnostic', token: 'diagnostic-token' } },
+      join: vi.fn(),
+      on: vi.fn(),
+    }
+
+    await socketState.handlers.get('connection')?.(socket)
+
+    expect(recordOverlaySocketActivity).not.toHaveBeenCalled()
+    expect(socket.join).not.toHaveBeenCalled()
+    expect(socket.emit).toHaveBeenCalledWith('diagnostic-ready', { status: 'ok' })
+  })
+
   it('authenticates public WL sockets by Twitch channel ID', async () => {
     const client = { token: 'profile-token' }
     getDBUser.mockResolvedValue({ result: client })
@@ -168,6 +201,7 @@ describe('overlay socket connection state', () => {
     await connectionHandler?.({
       handshake: { auth: { token: 'overlay-token' } },
       join: vi.fn().mockResolvedValue(undefined),
+      on: vi.fn(),
     })
 
     expect(setupOBSBlockers).toHaveBeenCalledWith('DOTA_GAMERULES_STATE_GAME_IN_PROGRESS')
@@ -297,7 +331,7 @@ describe('overlay socket connection state', () => {
     expect(join).toHaveBeenCalledWith('profile-wl:channel-1')
     expect(join).not.toHaveBeenCalledWith('profile-token')
     expect(gsiState.handlers.get('profile-token').emitBadgeUpdate).not.toHaveBeenCalled()
-    expect(recordOverlayFirstSeen).not.toHaveBeenCalled()
+    expect(recordOverlaySocketActivity).not.toHaveBeenCalled()
   })
 
   it('does not let a public profile query arbitrary WL windows', async () => {

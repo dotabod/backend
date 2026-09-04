@@ -5,6 +5,7 @@ import { SETUP_SIGNAL_KEYS, type SetupSignalKey } from './setupSignalKeys'
 // can't grow these unboundedly. On eviction the next packet pays one redundant
 // idempotent upsert — harmless. Sized for ~10k active users per pod.
 const CACHE_MAX = 10_000
+const LAST_SEEN_WRITE_INTERVAL_MS = 60_000
 
 class BoundedSet {
   private set = new Set<string>()
@@ -22,6 +23,7 @@ class BoundedSet {
 
 const gsiSeenCache = new BoundedSet()
 const overlaySeenCache = new BoundedSet()
+const lastSeenWrites = new Map<string, number>()
 
 async function recordFirstSeen(userId: string, key: SetupSignalKey) {
   const now = new Date().toISOString()
@@ -34,6 +36,17 @@ async function recordFirstSeen(userId: string, key: SetupSignalKey) {
   if (error) logger.info('[setup-signals] upsert failed', { userId, key, error })
 }
 
+async function recordLastSeen(userId: string, key: SetupSignalKey) {
+  const now = new Date().toISOString()
+  const { error } = await supabase
+    .from('settings')
+    .upsert(
+      { userId, key, value: true, updated_at: now },
+      { onConflict: 'userId, key', ignoreDuplicates: false },
+    )
+  if (error) logger.info('[setup-signals] last-seen upsert failed', { userId, key, error })
+}
+
 // Cache populates before the upsert resolves: on the GSI hot path (5/sec/user) we'd
 // rather accept one missed signal on transient failure than let duplicate writes pile up.
 function recordOnce(userId: string, cache: BoundedSet, key: SetupSignalKey) {
@@ -42,10 +55,35 @@ function recordOnce(userId: string, cache: BoundedSet, key: SetupSignalKey) {
   recordFirstSeen(userId, key).catch(() => {})
 }
 
+function recordThrottled(userId: string, key: SetupSignalKey) {
+  if (!userId) return
+  const cacheKey = `${key}:${userId}`
+  const now = Date.now()
+  const previous = lastSeenWrites.get(cacheKey)
+  if (previous !== undefined && now - previous < LAST_SEEN_WRITE_INTERVAL_MS) return
+
+  if (lastSeenWrites.size >= CACHE_MAX * 2) {
+    const oldest = lastSeenWrites.keys().next().value
+    if (oldest !== undefined) lastSeenWrites.delete(oldest)
+  }
+  lastSeenWrites.set(cacheKey, now)
+  recordLastSeen(userId, key).catch(() => {})
+}
+
 export function recordGsiFirstSeen(userId: string): void {
   recordOnce(userId, gsiSeenCache, SETUP_SIGNAL_KEYS.gsi)
 }
 
 export function recordOverlayFirstSeen(userId: string): void {
   recordOnce(userId, overlaySeenCache, SETUP_SIGNAL_KEYS.overlay)
+}
+
+export function recordGsiActivity(userId: string): void {
+  recordGsiFirstSeen(userId)
+  recordThrottled(userId, SETUP_SIGNAL_KEYS.gsiLastSeen)
+}
+
+export function recordOverlaySocketActivity(userId: string): void {
+  recordOverlayFirstSeen(userId)
+  recordThrottled(userId, SETUP_SIGNAL_KEYS.overlaySocketLastSeen)
 }
