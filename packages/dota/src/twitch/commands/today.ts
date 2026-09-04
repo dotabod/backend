@@ -55,10 +55,7 @@ commandHandler.registerCommand('today', {
       return
     }
 
-    const heroStats = await getTodayHeroStats({
-      token: client.token,
-      startDate: client.stream_start_date,
-    })
+    const heroStats = await getTodayHeroStats({ token: client.token })
 
     if (!heroStats.length) {
       chatClient.say(channel, t('today.noGames', { lng: client.locale }), message.user.messageId)

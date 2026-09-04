@@ -313,11 +313,13 @@ class GSIHandler implements GSIHandlerType {
     getWL({
       lng: this.client.locale,
       channelId: this.getChannelId(),
-      startDate: this.client.stream_start_date,
       mmrEnabled,
+      settings: this.client.settings,
+      subscription: this.client.subscription,
+      streamStartDate: this.client.stream_start_date,
     })
-      .then(({ record }) => {
-        server.io.to(this.client.token).emit('update-wl', record)
+      .then(({ record, statsDays }) => {
+        server.io.to(this.client.token).emit('update-wl', record, statsDays)
       })
       .catch(() => {
         // Stream not live

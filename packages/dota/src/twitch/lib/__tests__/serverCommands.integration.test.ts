@@ -75,11 +75,26 @@ describe('!online / !offline', () => {
 })
 
 describe('!resetwl', () => {
-  it('resets the stream start date and confirms', async () => {
-    await commandHandler.handleMessage(makeMessage({ content: '!resetwl' }))
+  it('stores a WL-only reset marker and confirms', async () => {
+    const message = makeMessage({ content: '!resetwl' })
+    await commandHandler.handleMessage(message)
     await flushAsync()
-    expect(state.updateCalls).toHaveLength(1)
-    expect(state.updateCalls[0].values).toHaveProperty('stream_start_date')
+    expect(state.updateCalls).toHaveLength(0)
+    expect(state.upsertCalls).toHaveLength(1)
+    expect(state.upsertCalls[0]).toEqual({
+      values: {
+        key: 'wlResetAt',
+        userId: 'token-abc',
+        updated_at: expect.any(String),
+        value: expect.any(String),
+      },
+      options: { onConflict: 'userId, key' },
+    })
+    expect(message.channel.client.settings).toContainEqual({
+      key: 'wlResetAt',
+      value: expect.any(String),
+    })
+    expect(state.emitWLUpdateCalls).toBe(1)
     expect(state.chatSayCalls).toHaveLength(2)
     expect(state.chatSayCalls[0].message).toBe(t('refresh', { lng: 'en' }))
     expect(state.chatSayCalls[1].message).toBe(t('resetwl', { lng: 'en', channel: '#streamer' }))
@@ -91,6 +106,7 @@ describe('!resetwl', () => {
     )
     await flushAsync()
     expect(state.updateCalls).toHaveLength(0)
+    expect(state.upsertCalls).toHaveLength(0)
   })
 })
 

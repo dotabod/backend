@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { t } from 'i18next'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
@@ -21,7 +21,28 @@ beforeEach(() => {
   commandHandler.cooldowns.clear()
 })
 
+afterEach(() => {
+  vi.useRealTimers()
+})
+
 describe('!today', () => {
+  it('keeps a one-day query when the WL counter uses a 30-day window', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-04T18:45:00.000Z'))
+
+    await commandHandler.handleMessage(
+      makeMessage({
+        content: '!today',
+        clientOverrides: { settings: [{ key: 'wlStatsDays', value: 30 }] },
+      }),
+    )
+
+    expect(state.gteCalls).toContainEqual({
+      column: 'created_at',
+      value: '2026-09-04T00:00:00.000Z',
+    })
+  })
+
   it('reports noGames when no resolved matches exist today', async () => {
     setMatches([])
     await commandHandler.handleMessage(makeMessage({ content: '!today' }))

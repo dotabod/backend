@@ -307,10 +307,17 @@ class SetupSupabase {
           client.locale = newObj.locale
           client.beta_tester = newObj.beta_tester
           client.stream_online = newObj.stream_online
+          if (typeof newObj.stream_start_date === 'string') {
+            client.stream_start_date = new Date(newObj.stream_start_date)
+          } else {
+            client.stream_start_date = newObj.stream_start_date
+          }
+
+          const connectedUser = gsiHandlers.get(client.token)
 
           const streamStatusTransition = handleStreamStatusTransition({
             client,
-            connectedUser: gsiHandlers.get(client.token),
+            connectedUser,
             io: server.io,
             logger,
             oldStreamOnline: oldObj.stream_online,
@@ -323,12 +330,7 @@ class SetupSupabase {
           if (streamStatusTransition.cameOnline) {
             // Handle any pending scheduled messages for this user
             await handleUserOnlineMessages(client.token, client.name)
-          }
-
-          if (typeof newObj.stream_start_date === 'string') {
-            client.stream_start_date = new Date(newObj.stream_start_date)
-          } else {
-            client.stream_start_date = newObj.stream_start_date
+            connectedUser?.emitWLUpdate()
           }
 
           // dont overwrite with 0 because we use this variable to track currently logged in mmr
@@ -500,6 +502,10 @@ class SetupSupabase {
             setting.value = newObj.value
           } else {
             client.settings.push({ key: newObj.key, value: newObj.value })
+          }
+
+          if (newObj.key === DBSettings.wlStatsDays) {
+            gsiHandlers.get(client.token)?.emitWLUpdate()
           }
 
           // Sending this one even when offline, because they might be testing locally

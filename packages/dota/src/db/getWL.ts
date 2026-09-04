@@ -1,12 +1,16 @@
 import { type Database, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { getSessionStartDate } from './streamWindow'
+import { DBSettings, getValueOrDefault } from '../settings'
+import type { SocketClient } from '../types'
+import { getWinLossStartDate, normalizeStatsDays, WL_RESET_SETTING_KEY } from './winLossWindow'
 
 interface WL {
   lng: string
   channelId: string
-  mmrEnabled: false
-  startDate?: Date | null
+  mmrEnabled: boolean
+  settings?: SocketClient['settings']
+  subscription?: SocketClient['subscription']
+  streamStartDate?: Date | null
   currentGameIsRanked?: boolean | null
 }
 
@@ -35,21 +39,36 @@ const updateStats = (
   }
 }
 
-export async function getWL({ lng, channelId, mmrEnabled, startDate, currentGameIsRanked }: WL) {
+export async function getWL({
+  lng,
+  channelId,
+  mmrEnabled,
+  settings,
+  subscription,
+  streamStartDate,
+  currentGameIsRanked,
+}: WL) {
+  const statsDays = normalizeStatsDays(
+    getValueOrDefault(DBSettings.wlStatsDays, settings, subscription),
+  )
+
   if (!channelId) {
     return Promise.resolve({
       record: [{ win: 0, lose: 0, type: 'U' }],
       msg: null,
+      statsDays,
     })
   }
 
+  const resetAt = settings?.find((setting) => setting.key === WL_RESET_SETTING_KEY)?.value
+
   const { data: matches, error } = await supabase.rpc('get_grouped_bets', {
     channel_id: channelId,
-    start_date: getSessionStartDate(startDate).toISOString(),
+    start_date: getWinLossStartDate(statsDays, streamStartDate, resetAt).toISOString(),
   })
 
   if (error) {
-    return { record: [{ win: 0, lose: 0, type: 'U' }], msg: null }
+    return { record: [{ win: 0, lose: 0, type: 'U' }], msg: null, statsDays }
   }
 
   const ranked: { win: number; lose: number; mmr: number } = {
@@ -94,7 +113,12 @@ export async function getWL({ lng, channelId, mmrEnabled, startDate, currentGame
     messages = [hasRanked ? rankedMsg : null, hasUnranked ? unrankedMsg : null]
   }
 
-  const msg = messages.filter(Boolean).join(' · ') || '0 W - 0 L'
+  const recordMessage = messages.filter(Boolean).join(' · ') || '0 W - 0 L'
+  const windowMessage =
+    statsDays === null
+      ? t('wl.statsWindow_stream', { lng })
+      : t('wl.statsWindow', { count: statsDays, lng })
+  const msg = `${recordMessage} · ${windowMessage}`
 
-  return { record, msg }
+  return { record, msg, statsDays }
 }

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { dbState, resetDbState } from './dbMocks.ts'
 
 const { getWL } = await import('../getWL')
@@ -6,6 +6,10 @@ const { getWL } = await import('../getWL')
 describe('getWL', () => {
   beforeEach(() => {
     resetDbState()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('returns the empty-record result when channelId is missing', async () => {
@@ -39,6 +43,112 @@ describe('getWL', () => {
     expect(res.msg).not.toContain('MMR')
   })
 
+  it('states the configured stats window in the command response', async () => {
+    dbState.rpcResult = {
+      data: [{ won: true, _count_won: 3, lobby_type: 7, is_party: false, is_doubledown: false }],
+      error: null,
+    }
+
+    const res = await getWL({
+      lng: 'en',
+      channelId: 'ch-1',
+      mmrEnabled: false as const,
+      settings: [{ key: 'wlStatsDays', value: 30 }],
+    })
+
+    expect(res.msg).toMatch(/\u00b7 Last 30 days$/)
+    expect(res.statsDays).toBe(30)
+  })
+
+  it('states that the default stats window is the current stream', async () => {
+    const res = await getWL({
+      lng: 'en',
+      channelId: 'ch-1',
+      mmrEnabled: false as const,
+      streamStartDate: new Date('2026-09-04T08:00:00.000Z'),
+    })
+
+    expect(res.msg).toMatch(/\u00b7 This stream$/)
+    expect(res.statsDays).toBeNull()
+  })
+
+  it('defaults the WL counter to the supplied stream session', async () => {
+    await getWL({
+      lng: 'en',
+      channelId: 'ch-1',
+      mmrEnabled: false as const,
+      streamStartDate: new Date('2026-09-04T08:00:00.000Z'),
+    })
+
+    expect(dbState.rpcCalls[0].args.start_date).toBe('2026-09-04T08:00:00.000Z')
+  })
+
+  it('keeps one day as an explicit rolling window', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-04T12:00:00.000Z'))
+
+    const res = await getWL({
+      lng: 'en',
+      channelId: 'ch-1',
+      mmrEnabled: false as const,
+      settings: [{ key: 'wlStatsDays', value: 1 }],
+      streamStartDate: new Date('2026-09-04T08:00:00.000Z'),
+    })
+
+    expect(dbState.rpcCalls[0].args.start_date).toBe('2026-09-03T12:00:00.000Z')
+    expect(res.msg).toMatch(/\u00b7 Last 1 day$/)
+    expect(res.statsDays).toBe(1)
+  })
+
+  it('queries the configured rolling number of days instead of the current stream', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-04T12:00:00.000Z'))
+
+    await getWL({
+      lng: 'en',
+      channelId: 'ch-1',
+      mmrEnabled: false as const,
+      settings: [{ key: 'wlStatsDays', value: 30 }],
+    })
+
+    expect(dbState.rpcCalls).toContainEqual({
+      name: 'get_grouped_bets',
+      args: {
+        channel_id: 'ch-1',
+        start_date: '2026-08-05T12:00:00.000Z',
+      },
+    })
+  })
+
+  it('starts after a manual reset when it is newer than the rolling window', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-04T12:00:00.000Z'))
+
+    await getWL({
+      lng: 'en',
+      channelId: 'ch-1',
+      mmrEnabled: false as const,
+      settings: [
+        { key: 'wlStatsDays', value: 30 },
+        { key: 'wlResetAt', value: '2026-08-28T09:30:00.000Z' },
+      ],
+    })
+
+    expect(dbState.rpcCalls[0].args.start_date).toBe('2026-08-28T09:30:00.000Z')
+  })
+
+  it('starts a fresh per-stream counter after an older manual reset', async () => {
+    await getWL({
+      lng: 'en',
+      channelId: 'ch-1',
+      mmrEnabled: false as const,
+      settings: [{ key: 'wlResetAt', value: '2026-09-03T09:30:00.000Z' }],
+      streamStartDate: new Date('2026-09-04T08:00:00.000Z'),
+    })
+
+    expect(dbState.rpcCalls[0].args.start_date).toBe('2026-09-04T08:00:00.000Z')
+  })
+
   it('formats unranked-only results without an MMR delta', async () => {
     dbState.rpcResult = {
       data: [
@@ -67,9 +177,7 @@ describe('getWL', () => {
     const res = await getWL({
       lng: 'en',
       channelId: 'ch-1',
-      // Note: getWL's type says `mmrEnabled: false` but the code branches on
-      // truthiness. Pass true via a cast so we exercise the MMR-delta path.
-      mmrEnabled: true as unknown as false,
+      mmrEnabled: true,
     })
 
     // Solo multiplier (25) × 2 for doubledown = +50 MMR

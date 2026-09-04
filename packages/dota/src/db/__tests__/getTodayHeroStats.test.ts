@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { dbState, resetDbState } from './dbMocks.ts'
 
 const { getTodayHeroStats } = await import('../getTodayHeroStats')
@@ -6,6 +6,10 @@ const { getTodayHeroStats } = await import('../getTodayHeroStats')
 describe('getTodayHeroStats', () => {
   beforeEach(() => {
     resetDbState()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('returns an empty array when no token is provided', async () => {
@@ -45,5 +49,19 @@ describe('getTodayHeroStats', () => {
     expect(res[1].heroName).toBe('Pudge')
     expect(res[1].wins).toBe(0)
     expect(res[1].losses).toBe(1)
+  })
+
+  it('always queries one day even when the WL counter is configured for longer', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-04T18:45:00.000Z'))
+    dbState.tableResults.matches = { data: [], error: null }
+
+    await getTodayHeroStats({ token: 'tok-1' })
+
+    expect(dbState.gteCalls).toContainEqual({
+      table: 'matches',
+      column: 'created_at',
+      value: '2026-09-04T00:00:00.000Z',
+    })
   })
 })

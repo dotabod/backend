@@ -335,5 +335,10 @@
     "winProbability": "{{winRate}}% win probability at {{gameTime}}:00 · Next update in {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
   },
+  "wl": {
+    "statsWindow_stream": "This stream",
+    "statsWindow_one": "Last {{count}} day",
+    "statsWindow_other": "Last {{count}} days"
+  },
   "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }

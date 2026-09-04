@@ -14,6 +14,8 @@ export const dbState: {
   tableResults: Record<string, TableResult>
   // RPC results, keyed by function name (currently only get_grouped_bets).
   rpcResult: TableResult
+  rpcCalls: Array<{ name: string; args: Record<string, unknown> }>
+  gteCalls: Array<{ table: string; column: string; value: unknown }>
   // Recorded writes for assertions.
   inserts: Array<{ table: string; values: unknown }>
   updates: Array<{ table: string; values: unknown; whereCol?: string; whereVal?: unknown }>
@@ -24,6 +26,8 @@ export const dbState: {
 } = {
   tableResults: {},
   rpcResult: null,
+  rpcCalls: [],
+  gteCalls: [],
   inserts: [],
   updates: [],
   loggerErrorCalls: [],
@@ -34,6 +38,8 @@ export const dbState: {
 export function resetDbState() {
   dbState.tableResults = {}
   dbState.rpcResult = null
+  dbState.rpcCalls = []
+  dbState.gteCalls = []
   dbState.inserts = []
   dbState.updates = []
   dbState.loggerErrorCalls = []
@@ -62,7 +68,10 @@ function createTableBuilder(table: string) {
     neq: () => builder,
     is: () => builder,
     not: () => builder,
-    gte: () => builder,
+    gte: (column: string, value: unknown) => {
+      dbState.gteCalls.push({ table, column, value })
+      return builder
+    },
     lte: () => builder,
     order: () => builder,
     limit: () => builder,
@@ -75,7 +84,10 @@ function createTableBuilder(table: string) {
 
 const supabaseMock = {
   from: (table: string) => createTableBuilder(table),
-  rpc: async () => dbState.rpcResult ?? { data: [], error: null },
+  rpc: async (name: string, args: Record<string, unknown>) => {
+    dbState.rpcCalls.push({ name, args })
+    return dbState.rpcResult ?? { data: [], error: null }
+  },
 }
 
 const loggerMock = {

@@ -176,7 +176,16 @@ vi.doMock('../handleScheduledMessages', () => ({
 }))
 
 vi.doMock('../handleStreamStatusTransition', () => ({
-  handleStreamStatusTransition: () => ({ wentOffline: false, cameOnline: false }),
+  handleStreamStatusTransition: ({
+    client,
+    oldStreamOnline,
+  }: {
+    client: { stream_online: boolean }
+    oldStreamOnline: boolean
+  }) => ({
+    cameOnline: !oldStreamOnline && client.stream_online,
+    wentOffline: oldStreamOnline && !client.stream_online,
+  }),
 }))
 
 vi.doMock('../getDBUser', () => ({
@@ -252,6 +261,8 @@ export function seedClient(opts: {
     Account: opts.providerAccountId ? { providerAccountId: opts.providerAccountId } : undefined,
     SteamAccount: opts.steamAccounts ?? [],
     settings: [],
+    stream_online: false,
+    stream_start_date: null,
     multiAccount: opts.multiAccount,
   }
   const handler: any = {
@@ -259,6 +270,7 @@ export function seedClient(opts: {
     token,
     disable: () => undefined,
     getChannelId: () => null,
+    emitWLUpdate: vi.fn(),
     multiAccountRevalidatedAt: opts.multiAccountRevalidatedAt,
   }
   gsiHandlers.set(token, handler)

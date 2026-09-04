@@ -24,7 +24,12 @@ const loggerInfoCalls: Array<{ message: string; meta?: Record<string, unknown> }
 const openBetCalls: OpenBetCall[] = []
 const closeBetCalls: unknown[][] = []
 const sayCalls: Array<{ message: string; options?: Record<string, unknown> }> = []
-const ioEmitCalls: Array<{ token: string; event: string; payload: unknown }> = []
+const ioEmitCalls: Array<{
+  token: string
+  event: string
+  payload: unknown
+  trailingPayloads?: unknown[]
+}> = []
 const heldTasks: DelayedTask[] = []
 const removedTaskIds: string[] = []
 const openTwitchBetControl: { throwOnNextCall: Error | null } = { throwOnNextCall: null }
@@ -186,7 +191,13 @@ vi.doMock('../lib/DelayedQueue', () => ({
 // need to load cleanly.
 vi.doMock('../../db/getWL', async () => {
   const real = await vi.importActual<any>('../../db/getWL')
-  return { ...real, getWL: async () => ({ record: [], hasParty: false }) }
+  return {
+    ...real,
+    getWL: async () => ({
+      record: [{ lose: 2, type: 'R', win: 5 }],
+      statsDays: 30,
+    }),
+  }
 })
 
 vi.doMock('../lib/ranks', async () => {
@@ -243,8 +254,13 @@ const { server } = await import('../server')
 server.setServer({
   io: {
     to: (token: string) => ({
-      emit: (event: string, payload: unknown) => {
-        ioEmitCalls.push({ token, event, payload })
+      emit: (event: string, payload: unknown, ...trailingPayloads: unknown[]) => {
+        ioEmitCalls.push({
+          token,
+          event,
+          payload,
+          ...(trailingPayloads.length > 0 ? { trailingPayloads } : {}),
+        })
       },
     }),
     in: () => ({ fetchSockets: async () => [] }),
@@ -331,6 +347,20 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     heldTasks.length = 0
     removedTaskIds.length = 0
     existingBetRows.length = 0
+  })
+
+  it('sends the configured stats window with WL overlay updates', async () => {
+    const handler = makeHandler(makeClient())
+
+    handler.emitWLUpdate()
+    await vi.waitFor(() => {
+      expect(ioEmitCalls).toContainEqual({
+        token: 'token-arteezy',
+        event: 'update-wl',
+        payload: [{ lose: 2, type: 'R', win: 5 }],
+        trailingPayloads: [30],
+      })
+    })
   })
 
   it('uses the matchId + hero captured at openBets time, even when GSI clears before the delayed openTheBet fires', async () => {

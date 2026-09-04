@@ -1,6 +1,6 @@
 import { supabase } from '@dotabod/shared-utils'
 import getHero, { type HeroNames } from '../dota/lib/getHero'
-import { getSessionStartDate } from './streamWindow'
+import { getTodayStartDate } from './winLossWindow'
 
 interface HeroStat {
   heroName: string
@@ -10,18 +10,14 @@ interface HeroStat {
 
 interface TodayHeroStatsParams {
   token: string
-  startDate?: Date | null
 }
 
-export async function getTodayHeroStats({
-  token,
-  startDate,
-}: TodayHeroStatsParams): Promise<HeroStat[]> {
+export async function getTodayHeroStats({ token }: TodayHeroStatsParams): Promise<HeroStat[]> {
   if (!token) {
     return []
   }
 
-  const fromDate = getSessionStartDate(startDate).toISOString()
+  const fromDate = getTodayStartDate().toISOString()
 
   const { data: matches, error } = await supabase
     .from('matches')

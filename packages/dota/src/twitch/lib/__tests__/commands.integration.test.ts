@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { t } from 'i18next'
 import { flushAsync } from '../../../__tests__/sharedMocks.ts'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
@@ -14,6 +14,10 @@ const multiAccount = t('multiAccount', { lng: 'en', url: 'dotabod.com/dashboard/
 beforeEach(() => {
   resetState()
   commandHandler.cooldowns.clear()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe('!ping', () => {
@@ -138,6 +142,37 @@ describe('!wl', () => {
     expect(msg).toContain('3 W')
     expect(msg).toContain('1 L')
     expect(msg).toContain('2 W')
+    expect(msg).toMatch(/· This stream$/)
+    expect(state.rpcCalls[0]).toEqual({
+      name: 'get_grouped_bets',
+      args: {
+        channel_id: 'channel-1',
+        start_date: '2026-05-19T08:00:00.000Z',
+      },
+    })
+  })
+
+  it("uses the streamer's configured stats window", async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-04T12:00:00.000Z'))
+
+    await commandHandler.handleMessage(
+      makeMessage({
+        content: '!wl',
+        clientOverrides: {
+          settings: [{ key: 'wlStatsDays', value: 30 }],
+        },
+      }),
+    )
+
+    expect(state.rpcCalls[0]).toEqual({
+      name: 'get_grouped_bets',
+      args: {
+        channel_id: 'channel-1',
+        start_date: '2026-08-05T12:00:00.000Z',
+      },
+    })
+    expect(state.chatSayCalls[0].message).toMatch(/· Last 30 days$/)
   })
 
   it('handles a supabase.rpc error by falling back to no-record output', async () => {

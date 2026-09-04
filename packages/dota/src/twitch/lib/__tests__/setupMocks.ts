@@ -82,6 +82,8 @@ export const state: {
   loggerInfoCalls: Array<{ message: string; meta: Record<string, unknown> }>
   groupedBets: GroupedBet[]
   groupedBetsError: unknown
+  rpcCalls: Array<{ name: string; args: Record<string, unknown> }>
+  gteCalls: Array<{ column: string; value: unknown }>
   dotabodRankProfile: DotabodRankProfile
   rankTitle: string
   rankDescription: string | null
@@ -157,6 +159,8 @@ export const state: {
   loggerInfoCalls: [],
   groupedBets: [],
   groupedBetsError: null,
+  rpcCalls: [],
+  gteCalls: [],
   dotabodRankProfile: null,
   rankTitle: 'Immortal',
   rankDescription: null,
@@ -202,6 +206,8 @@ export function resetState() {
   state.loggerInfoCalls = []
   state.groupedBets = []
   state.groupedBetsError = null
+  state.rpcCalls = []
+  state.gteCalls = []
   state.dotabodRankProfile = null
   state.rankTitle = 'Immortal'
   state.rankDescription = null
@@ -258,8 +264,9 @@ function createSupabaseFromBuilder() {
       }
       return builder
     },
-    gte: () => {
+    gte: (column: string, value: unknown) => {
       hasGte = true
+      state.gteCalls.push({ column, value })
       return builder
     },
     is: () => builder,
@@ -293,7 +300,8 @@ function createSupabaseFromBuilder() {
 
 const supabaseMock = {
   from: () => createSupabaseFromBuilder(),
-  rpc: async () => {
+  rpc: async (name: string, args: Record<string, unknown>) => {
+    state.rpcCalls.push({ name, args })
     if (state.groupedBetsError) {
       return { data: null, error: state.groupedBetsError }
     }

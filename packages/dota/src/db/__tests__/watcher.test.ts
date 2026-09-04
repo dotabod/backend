@@ -131,6 +131,36 @@ describe('dota watcher: UPDATE:users banned_at unchanged', () => {
     expect(invalidTokens.has('u-stable')).toBe(false)
     expect(invalidTokens.has('tw-stable')).toBe(false)
   })
+
+  it('recomputes WL from the new stream start when the streamer comes online', async () => {
+    const { client, handler } = seedClient({ userId: 'u-live' })
+
+    await fire('UPDATE', 'users', {
+      new: {
+        id: 'u-live',
+        banned_at: null,
+        beta_tester: false,
+        locale: 'en',
+        mmr: 5000,
+        name: 'live',
+        stream_online: true,
+        stream_start_date: '2026-09-04T12:00:00.000Z',
+      },
+      old: {
+        id: 'u-live',
+        banned_at: null,
+        beta_tester: false,
+        locale: 'en',
+        mmr: 5000,
+        name: 'live',
+        stream_online: false,
+        stream_start_date: null,
+      },
+    })
+
+    expect(client.stream_start_date).toEqual(new Date('2026-09-04T12:00:00.000Z'))
+    expect(handler.emitWLUpdate).toHaveBeenCalledOnce()
+  })
 })
 
 describe('dota watcher: UPDATE:accounts requires_refresh', () => {
@@ -201,6 +231,19 @@ describe('dota watcher: DELETE:users', () => {
     expect(invalidTokens.has('u-del')).toBe(false)
     expect(invalidTokens.has('tw-del')).toBe(false)
     expect(gsiHandlers.has('u-del')).toBe(false)
+  })
+})
+
+describe('dota watcher: settings', () => {
+  it('recomputes the overlay when the WL stats window changes', async () => {
+    const { client, handler } = seedClient({ userId: 'u-wl' })
+
+    await fire('*', 'settings', {
+      new: { key: 'wlStatsDays', userId: 'u-wl', value: 30 },
+    })
+
+    expect(client.settings).toContainEqual({ key: 'wlStatsDays', value: 30 })
+    expect(handler.emitWLUpdate).toHaveBeenCalledTimes(1)
   })
 })
 

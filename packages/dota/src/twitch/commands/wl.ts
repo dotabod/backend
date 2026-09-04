@@ -57,7 +57,9 @@ commandHandler.registerCommand('wl', {
         lng: client.locale,
         channelId: channelId,
         mmrEnabled: mmrEnabled,
-        startDate: client.stream_start_date,
+        settings: client.settings,
+        subscription: client.subscription,
+        streamStartDate: client.stream_start_date,
         currentGameIsRanked: currentGameIsRanked,
       })
 
