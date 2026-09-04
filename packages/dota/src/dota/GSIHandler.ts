@@ -50,6 +50,7 @@ import { updateMmr } from './lib/updateMmr'
 import { NeutralItemTimer } from './NeutralItemTimer'
 import { say } from './say'
 import { server } from './server'
+import { getWinLossRoom } from './winLossSocket'
 
 // Delay before the "other streamers in match" announce, giving co-players' openBets time to insert
 // their own `matches` rows (players load into a game at slightly different times).
@@ -320,6 +321,10 @@ class GSIHandler implements GSIHandlerType {
     })
       .then(({ record, statsDays }) => {
         server.io.to(this.client.token).emit('update-wl', record, statsDays)
+        const twitchId = this.getChannelId()
+        if (twitchId) {
+          server.io.to(getWinLossRoom(twitchId)).emit('update-wl', record, statsDays)
+        }
       })
       .catch(() => {
         // Stream not live

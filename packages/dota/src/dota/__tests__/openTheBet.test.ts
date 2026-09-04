@@ -360,6 +360,12 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
         payload: [{ lose: 2, type: 'R', win: 5 }],
         trailingPayloads: [30],
       })
+      expect(ioEmitCalls).toContainEqual({
+        token: 'profile-wl:twitch-arteezy',
+        event: 'update-wl',
+        payload: [{ lose: 2, type: 'R', win: 5 }],
+        trailingPayloads: [30],
+      })
     })
   })
 

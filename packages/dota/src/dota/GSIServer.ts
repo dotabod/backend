@@ -11,6 +11,8 @@ import express, {
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
 import { Server, type Socket } from 'socket.io'
 import getDBUser from '../db/getDBUser'
+import { getWL } from '../db/getWL'
+import { MAX_WL_STATS_DAYS } from '../db/winLossWindow'
 import { twitchEvent } from '../twitch/index'
 import type { Ability, Item } from '../types'
 import { initDotaPatchChecker } from './DotaPatchChecker'
@@ -29,6 +31,11 @@ import { remindUnresolvedMatches } from './lib/remindUnresolvedMatches'
 import { deleteClipsBatch } from './lib/twitchUtils'
 import { recordOverlayFirstSeen } from './setupSignals'
 import { validateToken } from './validateToken'
+import {
+  getWinLossRoom,
+  WIN_LOSS_PREVIEW_CLIENT_TYPE,
+  WIN_LOSS_PROFILE_CLIENT_TYPE,
+} from './winLossSocket'
 
 // --- Clip Deletion Queue ---
 // Map<accountId: string, Set<clipSlug: string>>
@@ -49,27 +56,97 @@ function emitInactiveOverlayState(io: Server, token: string) {
 }
 
 function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
-  const { token } = socket.handshake.auth
+  const { client: clientType, token, twitchId } = socket.handshake.auth
+  const lookup =
+    clientType === WIN_LOSS_PROFILE_CLIENT_TYPE && typeof twitchId === 'string'
+      ? { twitchId }
+      : { token }
 
-  getDBUser({ token })
-    .then(({ result: client }) => {
-      if (client?.token) {
-        // Successful authentication
-        next()
-      } else {
-        socket.emit('auth_error', 'Invalid token') // Send an auth error message if needed
-        socket.disconnect(true) // Disconnect the socket and prevent reconnection attempts
-      }
-    })
-    .catch((e) => {
-      logger.info('[GSI] Error checking auth', { token, e })
-      socket.emit('auth_error', 'Authentication error') // Send an error message if needed
-      socket.disconnect(true) // Disconnect the socket and prevent reconnection attempts
-    })
+  const authenticate = (attempt = 0) => {
+    getDBUser(lookup)
+      .then(({ reason, result: client }) => {
+        if (client?.token) {
+          socket.data.clientType = clientType
+          socket.data.dotabodClient = client
+          next()
+          return
+        }
+
+        if (reason === 'Token is currently being looked up' && attempt < 20) {
+          setTimeout(() => authenticate(attempt + 1), 100)
+          return
+        }
+
+        socket.emit('auth_error', 'Invalid token')
+        socket.disconnect(true)
+      })
+      .catch((e) => {
+        logger.info('[GSI] Error checking auth', { token, twitchId, e })
+        socket.emit('auth_error', 'Authentication error')
+        socket.disconnect(true)
+      })
+  }
+
+  authenticate()
 }
 
 async function handleSocketConnection(socket: Socket) {
   const { token } = socket.handshake.auth
+  const client = socket.data?.dotabodClient ?? gsiHandlers.get(token)?.client
+  const isWinLossPreview = socket.data?.clientType === WIN_LOSS_PREVIEW_CLIENT_TYPE
+  const isWinLossProfile = socket.data?.clientType === WIN_LOSS_PROFILE_CLIENT_TYPE
+  const twitchId = client?.Account?.providerAccountId
+
+  if ((isWinLossPreview || isWinLossProfile) && twitchId) {
+    if (isWinLossProfile) {
+      await socket.join(getWinLossRoom(twitchId))
+    }
+
+    socket.on(
+      'request-wl',
+      async (
+        request: { statsDays?: unknown } | undefined,
+        respond: (response: unknown) => void,
+      ) => {
+        const hasOverride = Object.hasOwn(request ?? {}, 'statsDays')
+        const statsDays = request?.statsDays
+        if (hasOverride && !isWinLossPreview) {
+          respond({ error: 'Stats window overrides are only available in settings' })
+          return
+        }
+        if (
+          hasOverride &&
+          statsDays !== null &&
+          (!Number.isInteger(statsDays) ||
+            Number(statsDays) < 1 ||
+            Number(statsDays) > MAX_WL_STATS_DAYS)
+        ) {
+          respond({ error: 'Invalid stats window' })
+          return
+        }
+
+        try {
+          const result = await getWL({
+            channelId: twitchId,
+            lng: client.locale,
+            mmrEnabled: false,
+            settings: client.settings,
+            statsDaysOverride: hasOverride ? (statsDays as number | null) : undefined,
+            streamStartDate: client.stream_start_date,
+            subscription: client.subscription,
+          })
+          respond({ records: result.record, statsDays: result.statsDays })
+        } catch (error) {
+          logger.error('[GSI] Error loading WL socket data', {
+            error,
+            token: client.token,
+          })
+          respond({ error: 'Unable to load win/loss record' })
+        }
+      },
+    )
+    return
+  }
 
   await socket.join(token)
 

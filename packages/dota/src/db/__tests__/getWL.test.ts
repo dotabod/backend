@@ -120,6 +120,22 @@ describe('getWL', () => {
     })
   })
 
+  it('uses a requested preview window without changing the saved setting', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-04T12:00:00.000Z'))
+
+    const res = await getWL({
+      lng: 'en',
+      channelId: 'ch-1',
+      mmrEnabled: false as const,
+      settings: [{ key: 'wlStatsDays', value: 7 }],
+      statsDaysOverride: 30,
+    })
+
+    expect(dbState.rpcCalls[0].args.start_date).toBe('2026-08-05T12:00:00.000Z')
+    expect(res.statsDays).toBe(30)
+  })
+
   it('starts after a manual reset when it is newer than the rolling window', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-09-04T12:00:00.000Z'))

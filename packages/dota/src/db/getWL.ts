@@ -12,6 +12,7 @@ interface WL {
   subscription?: SocketClient['subscription']
   streamStartDate?: Date | null
   currentGameIsRanked?: boolean | null
+  statsDaysOverride?: number | null
 }
 
 export const LOBBY_TYPE_RANKED = 7
@@ -47,9 +48,12 @@ export async function getWL({
   subscription,
   streamStartDate,
   currentGameIsRanked,
+  statsDaysOverride,
 }: WL) {
   const statsDays = normalizeStatsDays(
-    getValueOrDefault(DBSettings.wlStatsDays, settings, subscription),
+    statsDaysOverride === undefined
+      ? getValueOrDefault(DBSettings.wlStatsDays, settings, subscription)
+      : statsDaysOverride,
   )
 
   if (!channelId) {
