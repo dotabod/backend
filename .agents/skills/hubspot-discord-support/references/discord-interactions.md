@@ -124,7 +124,9 @@ answering before you set it**. Setting it first fails validation and is a confus
 place to start debugging.
 
 1. Deploy the handler with `DISCORD_PUBLIC_KEY` and `HUBSPOT_PRIVATE_APP_TOKEN`
-   available to it (for oracle: Doppler `dotabod-backend/prd`).
+   available to it (for oracle: Doppler `dotabod-backend/prd`). From the current
+   workspace, operate oracle's local Coolify/Docker deployment directly; use the
+   SSH alias only when Coolify is not local.
 2. Confirm it is reachable over HTTPS and returns `401` to an unsigned POST.
 3. Set the Interactions Endpoint URL in the app's settings, e.g.
    `https://gsi.dotabod.com/discord/interactions`.

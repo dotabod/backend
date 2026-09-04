@@ -36,7 +36,9 @@ failures and retries) and every cached detection result.
 scripts/clip-debug/query_match.sh 8916275620
 ```
 
-Reads the clip-processor Postgres on `oracle` (db `clip_processor`, port 5439). The
+Reads the production clip-processor Postgres (db `clip_processor`, port 5439). The script checks
+the current host's Coolify containers first—this workspace normally runs directly on `oracle`—and
+uses the `oracle` SSH alias only when the production container is not locally accessible. The
 container name carries a deploy-specific suffix, so the script rediscovers it each run.
 
 Gotcha worth knowing: draft requests (`only_draft=true`) are **always** marked
@@ -46,17 +48,21 @@ row is usually a mislabeled success. Only `only_draft=false` status is meaningfu
 ## Fetching the live API's view of a match
 
 ```sh
-ssh oracle 'K=$(sudo docker exec i8gccg8 printenv VISION_API_KEY); \
-  curl -s -H "X-API-Key: $K" "https://vision.dotabod.com/match/<matchId>"'
+K=$(sudo -n docker exec i8gccg8 printenv VISION_API_KEY)
+curl -s -H "X-API-Key: $K" "https://vision.dotabod.com/match/<matchId>"
 ```
 
 Re-run a single clip with debug images and cache bypass:
 
 ```sh
-ssh oracle 'K=$(sudo docker exec i8gccg8 printenv VISION_API_KEY); \
-  curl -s -H "X-API-Key: $K" \
-  "https://vision.dotabod.com/detect?clip_id=<slug>&match_id=<id>&debug=1&force=1&queue=0"'
+K=$(sudo -n docker exec i8gccg8 printenv VISION_API_KEY)
+curl -s -H "X-API-Key: $K" \
+  "https://vision.dotabod.com/detect?clip_id=<slug>&match_id=<id>&debug=1&force=1&queue=0"
 ```
+
+Check `sudo -n docker ps --format '{{.Names}}' | grep -Fxq coolify` first. If Coolify is local
+but `i8gccg8` is absent, report the production service as stopped; do not SSH back into Oracle.
+Use the same Docker commands through `ssh oracle` only when Coolify is not local.
 
 Debug crops then live in the container at `/app/temp/debug/` (`top_bar_full.jpg`,
 `hero_color_bars.jpg` — the latter is annotated with the per-slot match scores).

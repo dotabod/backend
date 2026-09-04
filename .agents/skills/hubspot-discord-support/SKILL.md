@@ -110,7 +110,9 @@ question:
   "put it in the workflow too" is a natural guess and it is not possible.
 - **Vercel is ruled out by preference**, not capability. Matt asked for it off
   Vercel; do not quietly reintroduce it.
-- **oracle or alex both work.** oracle already serves `gsi.dotabod.com` from
+- **oracle or alex both work.** The current Codex workspace runs on oracle; check
+  its local Coolify/Docker containers before using the `oracle` SSH alias. It
+  already serves `gsi.dotabod.com` from
   `packages/dota/src/dota/GSIServer.ts` (Express, port 5120, behind Traefik with
   Let's Encrypt), which makes it the shortest path to a public HTTPS route.
 

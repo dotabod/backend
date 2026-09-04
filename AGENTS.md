@@ -32,11 +32,15 @@ Each service must run as **exactly one replica**. They are stateful singletons a
 
 Each service runs on Coolify with `node --cpu-prof` gated by the `CPU_PROF` env var. Coolify app UUIDs: dota `i8gccg8`, twitch-events `zwg4g4c`, twitch-chat `zwgkg48`, steam `wsgwk8s`.
 
-To capture: in Coolify → `<service>` app → set env `CPU_PROF=1` → Restart → let it serve traffic ~5 min → Stop (SIGTERM triggers `process.exit(0)`, node flushes). Retrieve:
+To capture: in Coolify → `<service>` app → set env `CPU_PROF=1` → Restart → let it serve traffic ~5 min → Stop (SIGTERM triggers `process.exit(0)`, node flushes). This workspace normally runs directly on `oracle`, so retrieve locally first:
 
 ```sh
-ssh oracle 'sudo cat /var/lib/docker/volumes/<uuid>-profiles/_data/CPU.*.cpuprofile' > svc.cpuprofile
+sudo -n sh -lc 'cat /var/lib/docker/volumes/<uuid>-profiles/_data/CPU.*.cpuprofile' > svc.cpuprofile
 ```
+
+Only when the current host does not run the `coolify` container, use the remote fallback:
+`ssh oracle "sudo sh -lc 'cat /var/lib/docker/volumes/<uuid>-profiles/_data/CPU.*.cpuprofile'" > svc.cpuprofile`.
+If Coolify is local but the volume is missing, treat that as a local deployment/profile problem.
 
 Open in Chrome DevTools → Performance → Load profile. Source maps resolve frames to `src/...`. Set `CPU_PROF=` back to empty + Restart when done.
 
