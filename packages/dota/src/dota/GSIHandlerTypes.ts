@@ -13,7 +13,7 @@ export interface GSIHandlerType {
   emitBadgeUpdate: () => void
   updateSteam32Id: () => Promise<void>
   setupOBSBlockers: (gameState: string) => Promise<void>
-  emitWLUpdate: () => void
+  emitWLUpdate: (allowOffline?: boolean) => void
   client: SocketClient
   blockCache: BlockType | undefined
   events: DotaEvent[]

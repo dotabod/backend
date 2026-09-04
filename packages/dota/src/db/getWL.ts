@@ -13,6 +13,7 @@ interface WL {
   streamStartDate?: Date | null
   currentGameIsRanked?: boolean | null
   statsDaysOverride?: number | null
+  userId?: string
 }
 
 export const LOBBY_TYPE_RANKED = 7
@@ -49,6 +50,7 @@ export async function getWL({
   streamStartDate,
   currentGameIsRanked,
   statsDaysOverride,
+  userId,
 }: WL) {
   const statsDays = normalizeStatsDays(
     statsDaysOverride === undefined
@@ -65,13 +67,23 @@ export async function getWL({
   }
 
   const resetAt = settings?.find((setting) => setting.key === WL_RESET_SETTING_KEY)?.value
+  const startDate = getWinLossStartDate(statsDays, streamStartDate, resetAt).toISOString()
 
-  const { data: matches, error } = await supabase.rpc('get_grouped_bets', {
-    channel_id: channelId,
-    start_date: getWinLossStartDate(statsDays, streamStartDate, resetAt).toISOString(),
-  })
+  const [matchResult, adjustmentResult] = await Promise.all([
+    supabase.rpc('get_grouped_bets', {
+      channel_id: channelId,
+      start_date: startDate,
+    }),
+    userId
+      ? supabase
+          .from('win_loss_adjustments')
+          .select('won, lobby_type, delta')
+          .eq('user_id', userId)
+          .gte('created_at', startDate)
+      : Promise.resolve({ data: [], error: null }),
+  ])
 
-  if (error) {
+  if (matchResult.error) {
     return { record: [{ win: 0, lose: 0, type: 'U' }], msg: null, statsDays }
   }
 
@@ -82,13 +94,31 @@ export async function getWL({
   }
   const unranked: { win: number; lose: number } = { win: 0, lose: 0 }
 
-  matches.forEach((match: Database['public']['Functions']['get_grouped_bets']['Returns'][0]) => {
-    const isRanked = match.lobby_type === LOBBY_TYPE_RANKED
-    const stats = isRanked ? ranked : unranked
-    const multiplier = isRanked ? (match.is_party ? MULTIPLIER_PARTY : MULTIPLIER_SOLO) : 0
+  matchResult.data.forEach(
+    (match: Database['public']['Functions']['get_grouped_bets']['Returns'][0]) => {
+      const isRanked = match.lobby_type === LOBBY_TYPE_RANKED
+      const stats = isRanked ? ranked : unranked
+      const multiplier = isRanked ? (match.is_party ? MULTIPLIER_PARTY : MULTIPLIER_SOLO) : 0
 
-    updateStats(stats, match, multiplier)
-  })
+      updateStats(stats, match, multiplier)
+    },
+  )
+
+  if (!adjustmentResult.error) {
+    adjustmentResult.data?.forEach((adjustment) => {
+      const stats = adjustment.lobby_type === LOBBY_TYPE_RANKED ? ranked : unranked
+      if (adjustment.won) {
+        stats.win += adjustment.delta
+      } else {
+        stats.lose += adjustment.delta
+      }
+    })
+  }
+
+  for (const stats of [ranked, unranked]) {
+    stats.win = Math.max(0, stats.win)
+    stats.lose = Math.max(0, stats.lose)
+  }
 
   const hasUnranked = unranked.win + unranked.lose !== 0
   const hasRanked = ranked.win + ranked.lose !== 0

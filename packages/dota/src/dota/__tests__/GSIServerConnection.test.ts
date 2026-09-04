@@ -293,6 +293,7 @@ describe('overlay socket connection state', () => {
       statsDaysOverride: 30,
       streamStartDate: null,
       subscription: undefined,
+      userId: 'profile-token',
     })
     expect(respond).toHaveBeenCalledWith({
       records: [{ lose: 3, type: 'R', win: 8 }],
@@ -332,6 +333,29 @@ describe('overlay socket connection state', () => {
     expect(join).not.toHaveBeenCalledWith('profile-token')
     expect(gsiState.handlers.get('profile-token').emitBadgeUpdate).not.toHaveBeenCalled()
     expect(recordOverlaySocketActivity).not.toHaveBeenCalled()
+  })
+
+  it('joins the private dashboard preview to the WL-only room for correction updates', async () => {
+    new GSIServer()
+    const join = vi.fn().mockResolvedValue(undefined)
+    const client = {
+      Account: { providerAccountId: 'channel-1' },
+      locale: 'en',
+      settings: [],
+      stream_online: false,
+      stream_start_date: null,
+      token: 'profile-token',
+    }
+
+    await socketState.handlers.get('connection')?.({
+      data: { clientType: 'win-loss', dotabodClient: client },
+      handshake: { auth: { client: 'win-loss', token: 'profile-token' } },
+      join,
+      on: vi.fn(),
+    })
+
+    expect(join).toHaveBeenCalledWith('profile-wl:channel-1')
+    expect(join).not.toHaveBeenCalledWith('profile-token')
   })
 
   it('does not let a public profile query arbitrary WL windows', async () => {

@@ -247,6 +247,18 @@ describe('dota watcher: settings', () => {
   })
 })
 
+describe('dota watcher: win/loss adjustments', () => {
+  it('recomputes every live WL surface after a manual correction is inserted', async () => {
+    const { handler } = seedClient({ userId: 'u-wl-adjustment' })
+
+    await fire('INSERT', 'win_loss_adjustments', {
+      new: { user_id: 'u-wl-adjustment' },
+    })
+
+    expect(handler.emitWLUpdate).toHaveBeenCalledWith(true)
+  })
+})
+
 describe('dota watcher: steam account relationship invalidation', () => {
   it('DELETE clears a cached connected claimant even when the row owner is absent', async () => {
     const { client, handler } = seedClient({

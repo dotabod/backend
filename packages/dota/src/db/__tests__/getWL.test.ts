@@ -43,6 +43,79 @@ describe('getWL', () => {
     expect(res.msg).not.toContain('MMR')
   })
 
+  it('adds dated manual corrections to the same ranked and unranked totals', async () => {
+    dbState.rpcResult = {
+      data: [
+        { won: true, _count_won: 3, lobby_type: 7, is_party: false, is_doubledown: false },
+        { won: false, _count_won: 2, lobby_type: 0, is_party: false, is_doubledown: false },
+      ],
+      error: null,
+    }
+    dbState.tableResults.win_loss_adjustments = {
+      data: [
+        { delta: 1, lobby_type: 7, won: true },
+        { delta: -1, lobby_type: 0, won: false },
+      ],
+      error: null,
+    }
+
+    const res = await getWL({
+      lng: 'en',
+      channelId: 'ch-1',
+      mmrEnabled: false,
+      settings: [{ key: 'wlStatsDays', value: 30 }],
+      userId: 'user-1',
+    })
+
+    expect(res.record).toEqual([
+      { win: 4, lose: 0, type: 'R' },
+      { win: 0, lose: 1, type: 'U' },
+    ])
+    expect(dbState.gteCalls).toContainEqual({
+      table: 'win_loss_adjustments',
+      column: 'created_at',
+      value: expect.any(String),
+    })
+  })
+
+  it('does not treat manual ranked corrections as an MMR change', async () => {
+    dbState.rpcResult = {
+      data: [{ won: true, _count_won: 1, lobby_type: 7, is_party: false, is_doubledown: false }],
+      error: null,
+    }
+    dbState.tableResults.win_loss_adjustments = {
+      data: [{ delta: 1, lobby_type: 7, won: true }],
+      error: null,
+    }
+
+    const res = await getWL({
+      lng: 'en',
+      channelId: 'ch-1',
+      mmrEnabled: true,
+      userId: 'user-1',
+    })
+
+    expect(res.msg).toContain('2 W')
+    expect(res.msg).toContain('+25 MMR')
+  })
+
+  it('never displays a negative total after a manual subtraction', async () => {
+    dbState.tableResults.win_loss_adjustments = {
+      data: [{ delta: -1, lobby_type: 7, won: true }],
+      error: null,
+    }
+
+    const res = await getWL({
+      lng: 'en',
+      channelId: 'ch-1',
+      mmrEnabled: false,
+      userId: 'user-1',
+    })
+
+    expect(res.record).toEqual([{ win: 0, lose: 0, type: 'U' }])
+    expect(res.msg).toBe('0 W - 0 L · This stream')
+  })
+
   it('states the configured stats window in the command response', async () => {
     dbState.rpcResult = {
       data: [{ won: true, _count_won: 3, lobby_type: 7, is_party: false, is_doubledown: false }],

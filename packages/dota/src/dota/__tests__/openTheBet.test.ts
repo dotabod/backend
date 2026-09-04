@@ -369,6 +369,25 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     })
   })
 
+  it('updates public profiles while offline without sending inactive overlay traffic', async () => {
+    const handler = makeHandler(makeClient({ stream_online: false }))
+    handler.client.stream_online = false
+
+    handler.emitWLUpdate(true)
+
+    await vi.waitFor(() => {
+      expect(ioEmitCalls).toContainEqual({
+        token: 'profile-wl:twitch-arteezy',
+        event: 'update-wl',
+        payload: [{ lose: 2, type: 'R', win: 5 }],
+        trailingPayloads: [30],
+      })
+    })
+    expect(ioEmitCalls).not.toContainEqual(
+      expect.objectContaining({ token: 'token-arteezy', event: 'update-wl' }),
+    )
+  })
+
   it('uses the matchId + hero captured at openBets time, even when GSI clears before the delayed openTheBet fires', async () => {
     const client = makeClient({
       gsi: liveGsi({ map: { matchid: '8825999999', win_team: 'none' } }),

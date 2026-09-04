@@ -519,6 +519,16 @@ class SetupSupabase {
       )
       .on(
         'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'win_loss_adjustments' },
+        (payload: { new: Tables<'win_loss_adjustments'> }) => {
+          const client = findUser(payload.new.user_id)
+          if (!client) return
+
+          gsiHandlers.get(client.token)?.emitWLUpdate(true)
+        },
+      )
+      .on(
+        'postgres_changes',
         { event: '*', schema: 'public', table: 'steam_accounts' },
         async (payload: {
           new: Tables<'steam_accounts'>

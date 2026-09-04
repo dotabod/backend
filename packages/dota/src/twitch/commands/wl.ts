@@ -61,6 +61,7 @@ commandHandler.registerCommand('wl', {
         subscription: client.subscription,
         streamStartDate: client.stream_start_date,
         currentGameIsRanked: currentGameIsRanked,
+        userId: client.token,
       })
 
       if (res?.msg) {

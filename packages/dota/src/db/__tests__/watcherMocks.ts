@@ -230,6 +230,7 @@ export async function fire(
     | 'accounts'
     | 'subscriptions'
     | 'settings'
+    | 'win_loss_adjustments'
     | 'steam_accounts'
     | 'gift_subscriptions',
   payload: { new?: Record<string, unknown>; old?: Record<string, unknown>; eventType?: string },

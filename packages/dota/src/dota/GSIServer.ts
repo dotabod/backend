@@ -105,9 +105,7 @@ async function handleSocketConnection(socket: Socket) {
   }
 
   if ((isWinLossPreview || isWinLossProfile) && twitchId) {
-    if (isWinLossProfile) {
-      await socket.join(getWinLossRoom(twitchId))
-    }
+    await socket.join(getWinLossRoom(twitchId))
 
     socket.on(
       'request-wl',
@@ -141,6 +139,7 @@ async function handleSocketConnection(socket: Socket) {
             statsDaysOverride: hasOverride ? (statsDays as number | null) : undefined,
             streamStartDate: client.stream_start_date,
             subscription: client.subscription,
+            userId: client.token,
           })
           respond({ records: result.record, statsDays: result.statsDays })
         } catch (error) {

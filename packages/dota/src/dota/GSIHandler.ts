@@ -303,8 +303,8 @@ class GSIHandler implements GSIHandlerType {
     }
   }
 
-  emitWLUpdate() {
-    if (!this.client.stream_online) return
+  emitWLUpdate(allowOffline = false) {
+    if (!allowOffline && !this.client.stream_online) return
 
     const mmrEnabled = getValueOrDefault(
       DBSettings['mmr-tracker'],
@@ -318,9 +318,12 @@ class GSIHandler implements GSIHandlerType {
       settings: this.client.settings,
       subscription: this.client.subscription,
       streamStartDate: this.client.stream_start_date,
+      userId: this.client.token,
     })
       .then(({ record, statsDays }) => {
-        server.io.to(this.client.token).emit('update-wl', record, statsDays)
+        if (this.client.stream_online) {
+          server.io.to(this.client.token).emit('update-wl', record, statsDays)
+        }
         const twitchId = this.getChannelId()
         if (twitchId) {
           server.io.to(getWinLossRoom(twitchId)).emit('update-wl', record, statsDays)
