@@ -1,0 +1,211 @@
+name: Refresh Dota finding-match overlay
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Capture even when the recorded Dota build is current
+        required: false
+        type: boolean
+        default: false
+  schedule:
+    - cron: '17 */6 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: finding-match-overlay-update
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    environment: prod
+    timeout-minutes: 45
+    steps:
+      - name: Check out backend capture code
+        uses: actions/checkout@v7
+
+      - name: Check out frontend assets
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          repository: dotabod/frontend
+          path: frontend
+          persist-credentials: false
+
+      - name: Read latest Dota build and menu fingerprint
+        id: dota-build
+        env:
+          FORCE_CAPTURE: ${{ inputs.force || 'false' }}
+        run: |
+          latest_build=$(curl --fail --silent --show-error --retry 3 \
+            https://api.steamcmd.net/v1/info/570 \
+            | jq --raw-output '.data["570"].depots.branches.public.buildid')
+          if ! [[ "$latest_build" =~ ^[0-9]+$ ]]; then
+            echo "Invalid Dota build ID: $latest_build"
+            exit 1
+          fi
+
+          menu_fingerprint=$(curl --fail --silent --show-error --retry 3 \
+            https://raw.githubusercontent.com/SteamDatabase/GameTracking-Dota2/master/game/dota/pak01_dir.txt \
+            | grep -E '^(panorama/layout/(dashboard(\.vxml_c|_background_|_frontpage_|_page_home)|banners/front_page_)|panorama/images/(backgrounds/|front_page/|events/.*/dashboard/|leaf_pages/.*dashboard))' \
+            | LC_ALL=C sort \
+            | sha256sum \
+            | cut -d' ' -f1)
+          if ! [[ "$menu_fingerprint" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "Invalid Dota menu fingerprint: $menu_fingerprint"
+            exit 1
+          fi
+
+          current_build=$(jq --raw-output '.dotaBuildId // empty' \
+            frontend/public/images/overlay/finding-match-source.json 2>/dev/null || true)
+          current_fingerprint=$(jq --raw-output '.menuFingerprint // empty' \
+            frontend/public/images/overlay/finding-match-source.json 2>/dev/null || true)
+          should_capture=false
+          has_finding=false
+          has_idle=false
+          target_state=finding
+          if [ "$menu_fingerprint" = "$current_fingerprint" ]; then
+            has_finding=$(jq --raw-output '.states.finding != null' \
+              frontend/public/images/overlay/finding-match-source.json 2>/dev/null || echo false)
+            has_idle=$(jq --raw-output '.states.idle != null' \
+              frontend/public/images/overlay/finding-match-source.json 2>/dev/null || echo false)
+            if [ "$has_finding" != 'true' ]; then
+              target_state=finding
+            elif [ "$has_idle" != 'true' ]; then
+              target_state=idle
+            fi
+          fi
+          if [ "$FORCE_CAPTURE" = 'true' ] || [ "$menu_fingerprint" != "$current_fingerprint" ] \
+            || [ "$has_finding" != 'true' ] || [ "$has_idle" != 'true' ]; then
+            should_capture=true
+          fi
+
+          echo "latest=$latest_build" >> "$GITHUB_OUTPUT"
+          echo "current=$current_build" >> "$GITHUB_OUTPUT"
+          echo "menu-fingerprint=$menu_fingerprint" >> "$GITHUB_OUTPUT"
+          echo "should-capture=$should_capture" >> "$GITHUB_OUTPUT"
+          echo "target-state=$target_state" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Python
+        if: steps.dota-build.outputs.should-capture == 'true'
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: packages/clip-processor-py/requirements.txt
+
+      - name: Install stream capture dependencies
+        if: steps.dota-build.outputs.should-capture == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes tesseract-ocr
+          pip install --requirement packages/clip-processor-py/requirements.txt pytest
+
+      - name: Verify capture guards
+        if: steps.dota-build.outputs.should-capture == 'true'
+        working-directory: packages/clip-processor-py
+        run: python -m pytest tests/test_finding_match_capture.py
+
+      - name: Search live Dota streams for a safe frame
+        if: steps.dota-build.outputs.should-capture == 'true'
+        env:
+          DOTABOD_DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+        run: |
+          mkdir -p capture/references
+          reference_index=0
+          for asset in finding-match.png finding-match-old.png; do
+            while IFS= read -r commit; do
+              reference="capture/references/${reference_index}.png"
+              if git -C frontend show \
+                "${commit}:public/images/overlay/${asset}" > "$reference"; then
+                reference_index=$((reference_index + 1))
+              else
+                rm -f "$reference"
+              fi
+            done < <(git -C frontend log --format=%H -- "public/images/overlay/${asset}")
+          done
+
+          reference_args=()
+          while IFS= read -r reference; do
+            reference_args+=(--reference "$reference")
+          done < <(find capture/references -type f -name '*.png' -print | sort)
+
+          timeout 30m python packages/clip-processor-py/src/finding_match_capture.py \
+            --audit-output capture/source.json \
+            --build-id '${{ steps.dota-build.outputs.latest }}' \
+            --menu-fingerprint '${{ steps.dota-build.outputs.menu-fingerprint }}' \
+            --max-streams 40 \
+            --output capture/source.png \
+            "${reference_args[@]}" \
+            --target-state '${{ steps.dota-build.outputs.target-state }}'
+
+      - name: Set up pnpm
+        if: hashFiles('capture/source.png') != ''
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.2.2
+
+      - name: Set up Node
+        if: hashFiles('capture/source.png') != ''
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        if: hashFiles('capture/source.png') != ''
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate the exact 840x355 blocker
+        if: hashFiles('capture/source.png') != ''
+        working-directory: frontend
+        run: |
+          node scripts/update-finding-match-overlay.mjs \
+            --build-id '${{ steps.dota-build.outputs.latest }}' \
+            --input ../capture/source.png \
+            --output-dir public/images/overlay \
+            --source-metadata ../capture/source.json
+
+      - name: Verify frontend image processing
+        if: hashFiles('capture/source.png') != ''
+        working-directory: frontend
+        run: pnpm exec vp test run scripts/__tests__/finding-match-overlay.test.mjs
+
+      - name: Create frontend pull request
+        if: hashFiles('capture/source.png') != ''
+        uses: peter-evans/create-pull-request@v8.1.1
+        with:
+          token: ${{ secrets.GHA_PAT }}
+          path: frontend
+          base: master
+          branch: automation/finding-match-overlay
+          delete-branch: true
+          title: 'fix: refresh finding-match overlay for Dota build ${{ steps.dota-build.outputs.latest }}'
+          commit-message: 'fix: refresh finding-match overlay for Dota build ${{ steps.dota-build.outputs.latest }}'
+          add-paths: |
+            public/images/overlay/finding-match.png
+            public/images/overlay/finding-match-old.png
+            public/images/overlay/finding-match-source.json
+          body: |
+            Automated capture from a native 1920x1080 Dota 2 Twitch stream.
+
+            Safety checks passed before this PR was opened:
+            - the Twitch channel was not present in Dotabod's user database;
+            - the stream was tagged as English as an initial candidate filter;
+            - the decoded game frame was exactly 1920x1080;
+            - the queue controls matched Dota's `${{ steps.dota-build.outputs.target-state }}` state;
+            - OCR of the queue control itself matched English Dota client text, so an
+              English-tagged stream using a localized client could not be accepted;
+            - consecutive frames contained real menu motion;
+            - the crop did not perceptually match any historical Dotabod blocker;
+            - when present, baked `FINDING MATCH` text was removed from the final 840x355 PNG.
+
+            Capture channel, timestamp, stream URL, recognized queue text, and validation scores are recorded in
+            `public/images/overlay/finding-match-source.json`.

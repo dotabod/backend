@@ -82,6 +82,36 @@ python src/main.py --clip-url "clips.twitch.tv/WonderfulEntertainingWasabiCopyTh
 python src/dota_hero_detection.py --stream "twitchusername" --debug
 ```
 
+### Capture a current finding-match overlay source
+
+`src/finding_match_capture.py` scans the live Dota 2 directory for a native
+1920x1080 main-menu frame. It excludes every Twitch login in Dotabod's users
+table, uses Twitch's English stream tag only as a candidate prefilter, then OCRs
+the actual Dota queue control and requires English `PLAY DOTA` or
+`FINDING MATCH` client text. It also rejects unexpected layouts and non-1080p
+renditions, compares the candidate against historical blocker images, and
+requires motion in consecutive menu frames.
+
+```bash
+TWITCH_CLIENT_ID=... \
+TWITCH_CLIENT_SECRET=... \
+DOTABOD_DATABASE_URL=... \
+python src/finding_match_capture.py \
+  --audit-output /tmp/dota-main-menu.json \
+  --build-id 25132749 \
+  --menu-fingerprint abc123 \
+  --output /tmp/dota-main-menu.png \
+  --reference /path/to/frontend/public/images/overlay/finding-match.png \
+  --reference /path/to/frontend/public/images/overlay/finding-match-old.png
+```
+
+The scheduled `.github/workflows/finding-match-overlay-update.yml` workflow
+hashes dashboard and front-page entries from SteamDatabase's current VPK
+manifest. It runs this only when that menu-specific fingerprint changes (or one
+queue state is still missing), sends the accepted frame through the frontend's
+exact 840x355 crop and text-removal processor, and opens a frontend pull request
+with provenance, recognized queue text, and validation scores.
+
 ### Only detect heroes (skip player detection):
 
 ```bash
