@@ -113,7 +113,6 @@
     "overlay_one": "{{count}} streamer using the overlay",
     "overlay_other": "{{count}} streamers using the overlay"
   },
-  "dotabodProfileNotFound": "No tracked Dotabod profile found for {{- player}}.",
   "cosmetics": {
     "captured": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetics saved → {{- url}}",
     "captured_one": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetic saved → {{- url}}",
@@ -124,16 +123,17 @@
     "list_other": ""
   },
   "countryPlayerList": "Playing with players from {{- countries}}",
+  "currentMatchIdNotFound": "No current match ID was found.",
   "currentSong": "Now playing: {{artist}} - {{title}}{{album}} {{url}}",
+  "customGameNoMatchId": "Hero Demo and custom games do not have a public match ID.",
+  "customGameNoRoster": "Hero Demo and custom games do not have public roster data.",
   "dota2pt": "Need pro build ideas for {{- heroName}}? Check here {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. Get Dotabod for your stream: {{- url}}",
+  "dotabodProfileNotFound": "No tracked Dotabod profile found for {{- player}}.",
   "dotapatch": {
     "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
   },
   "gameNotFound": "Game was not found",
-  "currentMatchIdNotFound": "No current match ID was found.",
-  "customGameNoMatchId": "Hero Demo and custom games do not have a public match ID.",
-  "customGameNoRoster": "Hero Demo and custom games do not have public roster data.",
   "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
   "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
   "gpm_zero": "Live GPM for {{- heroName}}: {{num}}",
@@ -336,10 +336,12 @@
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
   },
   "wl": {
-    "statsWindow_stream": "This stream",
     "statsChallenge": "{{elapsed}} of {{count}} days",
+    "statsChallenge_one": "",
+    "statsChallenge_other": "",
     "statsWindow_one": "Last {{count}} day",
-    "statsWindow_other": "Last {{count}} days"
+    "statsWindow_other": "Last {{count}} days",
+    "statsWindow_stream": "This stream"
   },
   "xpm": "Live XPM for {{- heroName}}: {{num}}"
 }
