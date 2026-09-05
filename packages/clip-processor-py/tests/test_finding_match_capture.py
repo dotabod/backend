@@ -11,6 +11,7 @@ from finding_match_capture import (
     evaluate_candidate_frames,
     filter_candidate_streams,
     is_english_queue_text,
+    psycopg_database_url,
 )
 
 
@@ -133,6 +134,17 @@ def test_dotabod_login_rows_include_current_and_legacy_channel_columns():
     assert dotabod_logins_from_rows(
         [("CurrentLogin", "legacy_login"), (None, "FallbackName"), ("", None)]
     ) == {"currentlogin", "legacy_login", "fallbackname"}
+
+
+def test_psycopg_database_url_removes_prisma_pooling_parameters():
+    assert psycopg_database_url(
+        "postgresql://user:p%40ss@db.example.com:6543/dotabod?"
+        "pgbouncer=true&connection_limit=1&pool_timeout=10&schema=public&"
+        "sslmode=require&application_name=finding-match"
+    ) == (
+        "postgresql://user:p%40ss@db.example.com:6543/dotabod?"
+        "sslmode=require&application_name=finding-match"
+    )
 
 
 def test_attach_build_metadata_records_the_menu_fingerprint():

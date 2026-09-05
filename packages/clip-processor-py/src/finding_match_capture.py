@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import re
 from typing import Any, Iterable, Mapping, Sequence
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import cv2
 import numpy as np
@@ -33,6 +34,12 @@ QUEUE_TEXT_REGIONS = {
 }
 REFERENCE_SIMILARITY_LIMIT = 0.985
 MINIMUM_MOTION_SCORE = 0.35
+PRISMA_DATABASE_PARAMETERS = {
+    "connection_limit",
+    "pgbouncer",
+    "pool_timeout",
+    "schema",
+}
 
 
 @dataclass(frozen=True)
@@ -249,11 +256,28 @@ def dotabod_logins_from_rows(rows: Iterable[Sequence[Any]]) -> set[str]:
     }
 
 
+def psycopg_database_url(database_url: str) -> str:
+    """Remove Prisma-only query parameters before handing a URL to libpq."""
+    parsed = urlsplit(database_url)
+    query = urlencode(
+        [
+            (key, value)
+            for key, value in parse_qsl(parsed.query, keep_blank_values=True)
+            if key not in PRISMA_DATABASE_PARAMETERS
+        ]
+    )
+    return urlunsplit(
+        (parsed.scheme, parsed.netloc, parsed.path, query, parsed.fragment)
+    )
+
+
 def load_dotabod_logins(database_url: str) -> set[str]:
     """Read current and legacy Twitch logins without loading other user data."""
     import psycopg2
 
-    connection = psycopg2.connect(database_url, connect_timeout=15)
+    connection = psycopg2.connect(
+        psycopg_database_url(database_url), connect_timeout=15
+    )
     try:
         with connection.cursor() as cursor:
             cursor.execute(
