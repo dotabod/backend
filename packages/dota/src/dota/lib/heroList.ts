@@ -96,7 +96,7 @@ const heroAliases: Record<string, string[]> = {
   npc_dota_hero_witch_doctor: ['wd', 'doc'],
 }
 
-interface HeroEntry {
+export interface HeroEntry {
   id: number
   localized_name: string
   alias: string[]
