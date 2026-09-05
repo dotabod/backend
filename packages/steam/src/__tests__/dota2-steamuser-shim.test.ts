@@ -7,8 +7,8 @@ import { EventEmitter } from 'node:events'
 
 import { describe, expect, it } from 'vitest'
 
-import { SteamGameCoordinatorShim, SteamUserShim } from '../utils/dota2SteamUser';
-import type { SteamUserClient } from '../utils/dota2SteamUser';
+import { SteamGameCoordinatorShim, SteamUserShim } from '../utils/dota2SteamUser'
+import type { SteamUserClient } from '../utils/dota2SteamUser'
 
 const DOTA_APP_ID = 570
 

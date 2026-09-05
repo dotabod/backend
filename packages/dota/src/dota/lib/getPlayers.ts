@@ -5,8 +5,8 @@ import { steamSocket } from '../../steam/ws'
 import type { Cards, DelayedGames } from '../../types'
 import CustomError from '../../utils/customError'
 import { getHeroNameOrColor } from './heroes'
-import { lookupRosterByMatchId } from './matchData';
-import type { RosterPlayer } from './matchData';
+import { lookupRosterByMatchId } from './matchData'
+import type { RosterPlayer } from './matchData'
 
 export async function getPlayers({
   locale,
@@ -71,9 +71,7 @@ export async function getPlayers({
             resolve(cards)
           }
         })
-      }).catch(() => 
-        []
-      )
+      }).catch(() => [])
 
       cards = await getCardsPromise
     }

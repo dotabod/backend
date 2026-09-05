@@ -10,8 +10,8 @@ import {
   twitchNameToToken,
 } from '../dota/lib/consts'
 import type { SocketClient } from '../types'
-import { isSubscriptionActive } from '../types/subscription';
-import type { SubscriptionRow } from '../types/subscription';
+import { isSubscriptionActive } from '../types/subscription'
+import type { SubscriptionRow } from '../types/subscription'
 
 export default async function getDBUser({
   token,

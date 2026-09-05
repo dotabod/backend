@@ -71,7 +71,7 @@ export async function validateToken(
     invalidTokens.add(token)
     res.status(200).json({ error: 'Invalid token, skipping auth check' })
   } catch (error) {
-    logger.info('[GSI] io.use Error checking auth 48', { token, error })
+    logger.info('[GSI] io.use Error checking auth 48', { error, token })
     invalidTokens.add(token)
     res.status(200).json({
       error: 'Invalid token, skipping auth check',

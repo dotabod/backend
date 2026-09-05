@@ -3,15 +3,17 @@ import { describe, expect, it, vi } from 'vitest'
 import { buildSharedUtilsMock } from '../../../__tests__/sharedMocks.ts'
 
 const noopLogger = {
-  debug: () => undefined,
-  error: () => undefined,
-  info: () => undefined,
-  warn: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 
 // createReadyClip only touches `logger` from shared-utils; the Twitch ApiClient
 // is passed in, so a no-op surface keeps the test fully offline.
-vi.doMock(import('@dotabod/shared-utils'), () => buildSharedUtilsMock({ logger: noopLogger, supabase: {} }))
+vi.doMock(import('@dotabod/shared-utils'), () =>
+  buildSharedUtilsMock({ logger: noopLogger, supabase: {} })
+)
 
 const { createReadyClip } = await import('../createReadyClip.ts')
 
@@ -36,7 +38,9 @@ function fakeApi(opts: {
         throw new Error('createClip boom')
       }
       const id = opts.clipIds[createCalls - 1]
-      if (id === undefined) {throw new Error('ran out of fake clip ids')}
+      if (id === undefined) {
+        throw new Error('ran out of fake clip ids')
+      }
       return { data: [{ id }] }
     },
     clips: {

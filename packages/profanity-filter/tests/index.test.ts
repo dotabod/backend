@@ -174,7 +174,9 @@ describe('Profanity Filter', () => {
         if (details.matches && details.matches.length > 0) {
           // Check if the word includes the match OR the match includes the word
           // This handles cases like "nig" matching "ni" from obscenity library
-          expect(word.includes(details.matches[0]) || details.matches[0].includes(word)).toBeTruthy()
+          expect(
+            word.includes(details.matches[0]) || details.matches[0].includes(word)
+          ).toBeTruthy()
         }
       }
 

@@ -4,27 +4,25 @@ import { getProfanityDetails, moderateText } from './utils/moderation'
 
 // Create Elysia app
 const app = new Elysia()
-  .get('/', () => (
-    {
-      name: 'Profanity Filter API',
-      version: '1.0.0',
-      description: 'Multilingual profanity detection and filtering API',
-      endpoints: [
-        {
-          path: '/moderate',
-          method: 'POST',
-          description: 'Moderate text for profanity',
-          body: { text: 'string or string[]' },
-        },
-        {
-          path: '/check',
-          method: 'POST',
-          description: 'Check text for profanity and get detailed information',
-          body: { text: 'string or string[]' },
-        },
-      ],
-    }
-  ))
+  .get('/', () => ({
+    description: 'Multilingual profanity detection and filtering API',
+    endpoints: [
+      {
+        path: '/moderate',
+        method: 'POST',
+        description: 'Moderate text for profanity',
+        body: { text: 'string or string[]' },
+      },
+      {
+        path: '/check',
+        method: 'POST',
+        description: 'Check text for profanity and get detailed information',
+        body: { text: 'string or string[]' },
+      },
+    ],
+    name: 'Profanity Filter API',
+    version: '1.0.0',
+  }))
   .post('/moderate', async ({ body }) => {
     const { text } = body as { text: string | string[] }
 
@@ -78,7 +76,7 @@ const app = new Elysia()
       if (Array.isArray(text)) {
         // Handle array input
         return {
-          containsProfanity: (details as Array<{ isFlagged: boolean }>).some(
+          containsProfanity: (details as { isFlagged: boolean }[]).some(
             (item) => item.isFlagged
           ),
           details,

@@ -32,7 +32,9 @@ const ALLOWED_FILES = new Set([
 
 function* walk(dir: string): Generator<string> {
   for (const entry of readdirSync(dir)) {
-    if (SKIP_DIRS.has(entry)) {continue}
+    if (SKIP_DIRS.has(entry)) {
+      continue
+    }
     const full = join(dir, entry)
     const st = statSync(full)
     if (st.isDirectory()) {
@@ -61,11 +63,17 @@ describe('commandDisable facade pinning', () => {
     const offenders: { file: string; snippet: string }[] = []
 
     for (const file of walk(REPO_PACKAGES)) {
-      if (ALLOWED_FILES.has(file)) {continue}
+      if (ALLOWED_FILES.has(file)) {
+        continue
+      }
       const src = readFileSync(file, 'utf-8')
       // Cheap pre-filter to skip the vast majority of files.
-      if (!src.includes('commandDisable')) {continue}
-      if (!src.includes('trackDisableReason') && !src.includes('trackResolveReason')) {continue}
+      if (!src.includes('commandDisable')) {
+        continue
+      }
+      if (!src.includes('trackDisableReason') && !src.includes('trackResolveReason')) {
+        continue
+      }
 
       for (const pattern of VIOLATION_PATTERNS) {
         const match = src.match(pattern)

@@ -18,7 +18,7 @@ export function getRoshCountMessage(props: { lng: string; count: number }) {
       break
     }
     default: {
-      roshCountMsg = t('roshanCount.more', { lng: props.lng, count: props.count })
+      roshCountMsg = t('roshanCount.more', { count: props.count, lng: props.lng })
       break
     }
   }

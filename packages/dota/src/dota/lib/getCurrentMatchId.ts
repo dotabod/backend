@@ -21,7 +21,9 @@ export function getCurrentMatchId(
   now = Date.now()
 ): string | undefined {
   const matchId = getFreshActiveMatchId(client, now)
-  if (!matchId || !isPlayingMatch(client.gsi)) {return undefined}
+  if (!matchId || !isPlayingMatch(client.gsi)) {
+    return undefined
+  }
 
   return matchId
 }
@@ -34,7 +36,9 @@ export function getCurrentRosterMatchId(
   now = Date.now()
 ): string | undefined {
   const matchId = getFreshActiveMatchId(client, now)
-  if (!matchId || (!isPlayingMatch(client.gsi) && !isSpectator(client.gsi))) {return undefined}
+  if (!matchId || (!isPlayingMatch(client.gsi) && !isSpectator(client.gsi))) {
+    return undefined
+  }
 
   return matchId
 }
@@ -46,7 +50,9 @@ export function hasCurrentGameContext(
   client: Pick<SocketClient, 'gsi' | 'gsiUpdatedAt'>,
   now = Date.now()
 ): boolean {
-  if (!hasFreshActiveGameState(client, now)) {return false}
+  if (!hasFreshActiveGameState(client, now)) {
+    return false
+  }
 
   return isPlayingMatch(client.gsi) || isSpectator(client.gsi) || isArcade(client.gsi)
 }
@@ -65,7 +71,9 @@ function getFreshActiveMatchId(
   const packet = client.gsi
   const matchId = packet?.map?.matchid
 
-  if (!matchId || !Number(matchId) || !hasFreshActiveGameState(client, now)) {return undefined}
+  if (!matchId || !Number(matchId) || !hasFreshActiveGameState(client, now)) {
+    return undefined
+  }
 
   return matchId
 }
@@ -76,9 +84,15 @@ function hasFreshActiveGameState(
 ): boolean {
   const packet = client.gsi
 
-  if (!packet || !isGsiFresh(client, now)) {return false}
-  if (!activeMatchStates.has(packet.map?.game_state ?? '')) {return false}
-  if (packet.map?.win_team && packet.map.win_team !== 'none') {return false}
+  if (!packet || !isGsiFresh(client, now)) {
+    return false
+  }
+  if (!activeMatchStates.has(packet.map?.game_state ?? '')) {
+    return false
+  }
+  if (packet.map?.win_team && packet.map.win_team !== 'none') {
+    return false
+  }
 
   return true
 }

@@ -33,7 +33,10 @@ export interface Prediction {
   outcomes: { id: string; users: number; title: string }[]
 }
 
-export interface PredictionsCall { twitchId: string; opts: { limit: number } }
+export interface PredictionsCall {
+  twitchId: string
+  opts: { limit: number }
+}
 
 export type DotabodRankProfile = {
   rank_tier: number
@@ -121,14 +124,16 @@ export const state: {
     settingKey: string
     opts?: { reason?: string; autoResolved?: boolean }
   }[]
-  commandDisableCalls: (| { kind: 'disable'; userId: string; reason: string; metadata?: Record<string, unknown> }
+  commandDisableCalls: (
+    | { kind: 'disable'; userId: string; reason: string; metadata?: Record<string, unknown> }
     | { kind: 'enable'; userId: string; opts?: { reason?: string; autoResolved?: boolean } }
     | {
         kind: 'recordNotification'
         userId: string
         reason: string
         metadata?: Record<string, unknown>
-      })[]
+      }
+  )[]
 } = {
   botBanned: false,
   cancelPredictionCalls: [],
@@ -250,9 +255,9 @@ function createSupabaseFromBuilder() {
       updateValues = values
       return builder
     },
-    upsert:  async (values: Record<string, unknown>, options?: unknown) => {
+    upsert: async (values: Record<string, unknown>, options?: unknown) => {
       state.upsertCalls.push({ options, values })
-      return Promise.resolve({ data: null, error: null })
+      return ({ data: null, error: null })
     },
     eq: (col: string, val: string) => {
       if (mode === 'update' && col === 'id') {
@@ -276,8 +281,8 @@ function createSupabaseFromBuilder() {
     // `.limit()` is the terminal call for list queries (e.g. !recent, the
     // won/lost fallback). The result is awaited directly.
     limit: () => ({
-      then:  async (onFulfilled: (value: { data: unknown; error: unknown }) => unknown) =>
-        Promise.resolve({ data: state.recentList, error: null }).then(onFulfilled),
+      then: async (onFulfilled: (value: { data: unknown; error: unknown }) => unknown) =>
+        await Promise.resolve({ data: state.recentList, error: null }).then(onFulfilled),
     }),
     single: async () => {
       if (hasGte) {
@@ -291,8 +296,8 @@ function createSupabaseFromBuilder() {
     },
     // Terminal for chains awaited directly without .limit()/.single() (e.g.
     // getTodayHeroStats ends in .order()). Resolves the list result.
-    then:  async (onFulfilled: (value: { data: unknown; error: unknown }) => unknown) =>
-      Promise.resolve({ data: state.recentList, error: null }).then(onFulfilled),
+    then: async (onFulfilled: (value: { data: unknown; error: unknown }) => unknown) =>
+      await Promise.resolve({ data: state.recentList, error: null }).then(onFulfilled),
   }
 
   return builder
@@ -310,14 +315,14 @@ const supabaseMock = {
 }
 
 const loggerMock = {
-  debug: () => undefined,
+  debug: () => {},
   error: (message: string, meta?: Record<string, unknown>) => {
     state.loggerErrorCalls.push({ message, meta: meta ?? {} })
   },
   info: (message: string, meta?: Record<string, unknown>) => {
     state.loggerInfoCalls.push({ message, meta: meta ?? {} })
   },
-  warn: () => undefined,
+  warn: () => {},
 }
 
 const getTwitchAPIMock = async () => ({
@@ -340,19 +345,19 @@ const getTwitchAPIMock = async () => ({
     }),
   predictions: {
     cancelPrediction: async (twitchId: string, predictionId: string) => {
-      state.cancelPredictionCalls.push({ twitchId, predictionId })
+      state.cancelPredictionCalls.push({ predictionId, twitchId })
       return {}
     },
     createPrediction: async (
       twitchId: string,
       opts: { title: string; outcomes: string[]; autoLockAfter: number }
     ) => {
-      state.createPredictionCalls.push({ twitchId, opts })
-      if (state.createPredictionError) throw state.createPredictionError
+      state.createPredictionCalls.push({ opts, twitchId })
+      if (state.createPredictionError) {throw state.createPredictionError}
       return { id: 'new-prediction-id' }
     },
     getPredictions: async (twitchId: string, opts: { limit: number }) => {
-      state.getPredictionsCalls.push({ twitchId, opts })
+      state.getPredictionsCalls.push({ opts, twitchId })
       if (state.getPredictionsTransientFailures > 0) {
         state.getPredictionsTransientFailures -= 1
         const err = new Error(
@@ -361,11 +366,11 @@ const getTwitchAPIMock = async () => ({
         err.code = 'ERR_STREAM_PREMATURE_CLOSE'
         throw err
       }
-      if (state.getPredictionsError) throw state.getPredictionsError
+      if (state.getPredictionsError) {throw state.getPredictionsError}
       return { data: state.predictions }
     },
     resolvePrediction: async (twitchId: string, predictionId: string, outcomeId: string) => {
-      state.resolvePredictionCalls.push({ twitchId, predictionId, outcomeId })
+      state.resolvePredictionCalls.push({ outcomeId, predictionId, twitchId })
       return {}
     },
   },
@@ -384,34 +389,34 @@ function reinstallSharedUtilsMock() {
       checkBotStatus: async () => state.botBanned,
       commandDisable: {
         disable: async (userId, reason, metadata) => {
-          state.commandDisableCalls.push({ kind: 'disable', userId, reason, metadata })
+          state.commandDisableCalls.push({ kind: 'disable', metadata, reason, userId })
         },
         enable: async (userId, opts) => {
-          state.commandDisableCalls.push({ kind: 'enable', userId, opts })
+          state.commandDisableCalls.push({ kind: 'enable', opts, userId })
         },
         recordNotification: async (userId, reason, metadata) => {
           state.commandDisableCalls.push({
             kind: 'recordNotification',
-            userId,
-            reason,
             metadata,
+            reason,
+            userId,
           })
         },
       },
       getTwitchAPI: getTwitchAPIMock,
       logger: loggerMock,
       recordDisableNotification: async (userId, settingKey, reason, metadata) => {
-        state.recordDisableNotificationCalls.push({ userId, settingKey, reason, metadata })
+        state.recordDisableNotificationCalls.push({ metadata, reason, settingKey, userId })
       },
       resolveDisableNotifications: async (userId, settingKey, opts) => {
-        state.resolveDisableNotificationCalls.push({ userId, settingKey, opts })
+        state.resolveDisableNotificationCalls.push({ opts, settingKey, userId })
       },
       supabase: supabaseMock,
       trackDisableReason: async (userId, settingKey, reason, metadata, opts) => {
-        state.trackDisableReasonCalls.push({ userId, settingKey, reason, metadata, opts })
+        state.trackDisableReasonCalls.push({ metadata, opts, reason, settingKey, userId })
       },
       trackResolveReason: async (userId, settingKey, autoResolved, opts) => {
-        state.trackResolveReasonCalls.push({ userId, settingKey, autoResolved, opts })
+        state.trackResolveReasonCalls.push({ autoResolved, opts, settingKey, userId })
       },
     })
   )
@@ -424,7 +429,7 @@ function reinstallModuleMocks() {
   reinstallSharedUtilsMock()
 
   vi.doMock(import('../../../dota/lib/updateMmr'), () => ({
-    tellChatNewMMR: () => undefined,
+    tellChatNewMMR: () => {},
     updateMmr: async (args: Record<string, unknown>) => {
       state.updateMmrCalls.push(args)
     },
@@ -445,7 +450,9 @@ function reinstallModuleMocks() {
   // handling can override `state.moderateTextOverride`.
   vi.doMock(import('@dotabod/profanity-filter'), () => ({
     moderateText: async (text?: string | string[]) => {
-      if (state.moderateTextOverride) {return state.moderateTextOverride(text)}
+      if (state.moderateTextOverride) {
+        return state.moderateTextOverride(text)
+      }
       return text
     },
   }))
@@ -454,13 +461,13 @@ function reinstallModuleMocks() {
   // connect() yields a db whose delayedGames.findOne returns state.delayedGame.
   vi.doMock(import('../../../steam/MongoDBSingleton'), () => ({
     default: {
-      close: async () => undefined,
+      close: async () => {},
       connect: async () => ({
         collection: (name: string) => ({
-          findOne: async () => state.delayedGame,
           find: () => ({
             toArray: async () => (name === 'notablePlayers' ? state.notablePlayers : []),
           }),
+          findOne: async () => state.delayedGame,
         }),
       }),
     },
@@ -473,8 +480,8 @@ await initTestI18n()
 
 // Import after all module mocks are registered.
 const resolveMatchModule = await import('../resolveMatch')
-export const {resolveMatchRetroactively} = resolveMatchModule
-export const {findMostRecentResolvedMatch} = resolveMatchModule
+export const { resolveMatchRetroactively } = resolveMatchModule
+export const { findMostRecentResolvedMatch } = resolveMatchModule
 export const { closeTwitchBet } = await import('../closeTwitchBet')
 export const { refundTwitchBet } = await import('../refundTwitchBets')
 export const { isPredictionAlreadyActiveError, openTwitchBet } = await import('../openTwitchBet')
@@ -573,9 +580,9 @@ const { server } = await import('../../../dota/server')
 // harness loaded last wins. Calling this in resetState() (which every twitch
 // test calls in beforeEach) guarantees the twitch patches are active.
 function installTwitchMocks() {
-  chatClient.say = (async (channel: string, message: string, messageId?: string) => {
+  chatClient.say = async (channel: string, message: string, messageId?: string) => {
     state.chatSayCalls.push({ channel, message, messageId })
-  })
+  }
 
   ;(redisClient as any).client = {
     del: async (key: string) => {
@@ -602,8 +609,8 @@ function installTwitchMocks() {
       in: () => ({ fetchSockets: async () => [] }),
       to: (room: string) => ({
         emit: (event: string, ...args: unknown[]) => {
-          state.socketEmitCalls.push({ room, event, args })
-          if (event === 'refresh-settings') state.streamStatusEffectCalls.push('socket')
+          state.socketEmitCalls.push({ args, event, room })
+          if (event === 'refresh-settings') {state.streamStatusEffectCalls.push('socket')}
         },
       }),
     },
@@ -638,7 +645,7 @@ export function makeClient(overrides: Partial<Client> = {}): Client {
     mmr: 5000,
     name: 'streamer',
     settings: [],
-    steam32Id: 99999,
+    steam32Id: 99_999,
     stream_online: true,
     stream_start_date: new Date('2026-05-19T08:00:00Z'),
     token: 'token-abc',
@@ -659,7 +666,7 @@ export const baseMatchRow = (overrides: Partial<SessionMatchRow> = {}): SessionM
   matchId: '7777777777',
   myTeam: 'radiant',
   predictionId: 'pred-1',
-  steam32Id: 99999,
+  steam32Id: 99_999,
   won: null,
   ...overrides,
 })
@@ -674,7 +681,7 @@ export const liveGsi = (extra: Record<string, unknown> = {}) =>
       matchid: '7777777777',
       win_team: 'none',
     },
-    player: { accountid: 99999, activity: 'playing' },
+    player: { accountid: 99_999, activity: 'playing' },
     ...extra,
   }) as any
 

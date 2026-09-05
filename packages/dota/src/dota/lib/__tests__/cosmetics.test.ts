@@ -6,7 +6,7 @@ import { resolveCosmetics } from '../cosmetics.ts'
 // player-equipped cosmetics and default/base model parts.
 const FIXTURE_WEARABLES: Record<string, number> = {
   wearable0: 5867, // Iceforged Hair (head, marketable)
-  wearable1: 23683, // 10th Anniversary Heaven-Piercing Pauldrons (shoulder, not marketable)
+  wearable1: 23_683, // 10th Anniversary Heaven-Piercing Pauldrons (shoulder, not marketable)
   wearable15: 766,
   wearable2: 98, // base part
   wearable25: 683,
@@ -15,7 +15,7 @@ const FIXTURE_WEARABLES: Record<string, number> = {
   wearable5: 8626, // default_item
   wearable6: 6079, // Wraps of the Eastern Range (belt, marketable)
   wearable7: 8632,
-  wearable8: 13043,
+  wearable8: 13_043,
 }
 
 describe(resolveCosmetics, () => {

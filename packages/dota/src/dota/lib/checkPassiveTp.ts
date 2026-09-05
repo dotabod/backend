@@ -14,9 +14,15 @@ interface PassiveTpData {
 
 // todo: make sure streamer has gold to buy tp?
 export async function checkPassiveTp(client: SocketClient) {
-  if (!isPlayingMatch(client.gsi)) {return}
-  if (!client.stream_online) {return}
-  if (Number(client.gsi?.map?.clock_time) <= 30) {return}
+  if (!isPlayingMatch(client.gsi)) {
+    return
+  }
+  if (!client.stream_online) {
+    return
+  }
+  if (Number(client.gsi?.map?.clock_time) <= 30) {
+    return
+  }
 
   const passiveTpData = (await redisClient.getJson<PassiveTpData>(`${client.token}:passiveTp`)) || {
     firstNoticedPassive: 0,
@@ -29,7 +35,7 @@ export async function checkPassiveTp(client: SocketClient) {
   if (hasTp) {
     // they got a tp within 30s so no scolding
     if (passiveTpData.firstNoticedPassive && !passiveTpData.told) {
-      return await resetPassiveTime(client.token)
+       await resetPassiveTime(client.token); return;
     }
 
     // they got a tp after 30s so tell how long its been
@@ -49,7 +55,7 @@ export async function checkPassiveTp(client: SocketClient) {
           }),
           { chattersKey: 'noTp' }
         )
-        return await resetPassiveTime(client.token)
+         await resetPassiveTime(client.token); return;
       }
 
       say(
@@ -63,7 +69,7 @@ export async function checkPassiveTp(client: SocketClient) {
         { chattersKey: 'noTp' }
       )
 
-      return await resetPassiveTime(client.token)
+       await resetPassiveTime(client.token); return;
     }
   }
 

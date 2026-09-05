@@ -61,10 +61,10 @@ commandHandler.registerCommand('innate', {
         channelName,
         withHeroLink(
           t('innate', {
-            lng: channelClient.locale,
-            heroName: getHeroNameOrColor(hero.id, playerIdx),
-            title: heroInnate.title,
             description: heroInnate.description,
+            heroName: getHeroNameOrColor(hero.id, playerIdx),
+            lng: channelClient.locale,
+            title: heroInnate.title,
           }),
           hero.id
         ),
@@ -84,13 +84,10 @@ commandHandler.registerCommand('innate', {
 const isValidGSIHandler = (
   gsiHandler: GSIHandlerType | undefined,
   hasCurrentGame: boolean
-): boolean => 
-  !!gsiHandler && hasCurrentGame
+): boolean => !!gsiHandler && hasCurrentGame
 
-
-const isValidHero = (hero: { id?: number } | null | undefined): boolean => 
+const isValidHero = (hero: { id?: number } | null | undefined): boolean =>
   typeof hero?.id === 'number' && !!getHeroById(hero.id)
-
 
 const getHeroInnate = (
   heroData: ReturnType<typeof getHeroById>
@@ -103,7 +100,6 @@ const getHeroInnate = (
       'is_innate' in abilityData &&
       'dname' in abilityData &&
       'desc' in abilityData &&
-      
       abilityData.is_innate
     ) {
       return {

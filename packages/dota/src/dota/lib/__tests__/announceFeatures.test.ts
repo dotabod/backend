@@ -8,10 +8,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildSharedUtilsMock, initTestI18n } from '../../../__tests__/sharedMocks'
 
 const loggerMock = {
-  debug: () => undefined,
-  error: () => undefined,
-  info: () => undefined,
-  warn: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 
 // Durable settings flag (ON CONFLICT DO NOTHING → only first insert returns a row) +
@@ -21,21 +21,21 @@ const notificationInserts: Record<string, unknown>[] = []
 let nextUpsertError: unknown = null
 const supabaseMock = {
   from: (table: string) => ({
-    insert:  async (row: Record<string, unknown>) => {
-      if (table === 'notifications') notificationInserts.push(row)
-      return Promise.resolve({ error: null })
+    insert: async (row: Record<string, unknown>) => {
+      if (table === 'notifications') {notificationInserts.push(row)}
+      return ({ error: null })
     },
     upsert: (values: { userId: string; key: string }) => ({
-      select:  async () => {
+      select: async () => {
         if (nextUpsertError) {
           const error = nextUpsertError
           nextUpsertError = null
-          return Promise.resolve({ data: null, error })
+          return ({ data: null, error })
         }
         const k = `${values.userId}:${values.key}`
         const firstTime = !settingsInserted.has(k)
         settingsInserted.add(k)
-        return Promise.resolve({ data: firstTime ? [{ key: values.key }] : [], error: null })
+        return ({ data: firstTime ? [{ key: values.key }] : [], error: null })
       },
     }),
   }),
@@ -72,7 +72,10 @@ const { dispatchFeatureAnnouncements, registerFeatureAnnouncers, isFeatureEnable
   await import('../announceFeatures')
 
 const INVOKER_ID = 74
-interface Setting { key: string; value: unknown }
+interface Setting {
+  key: string
+  value: unknown
+}
 let tokenCounter = 0
 const freshToken = () => `user-${(tokenCounter += 1)}`
 
@@ -110,7 +113,9 @@ describe('feature announcer', () => {
     settingsInserted.clear()
     registeredTriggers.length = 0
     nextUpsertError = null
-    for (const k of Object.keys(redisStore)) {delete redisStore[k]}
+    for (const k of Object.keys(redisStore)) {
+      delete redisStore[k]
+    }
   })
 
   it('registers a listener for each distinct trigger', () => {

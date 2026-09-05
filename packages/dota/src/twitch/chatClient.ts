@@ -14,7 +14,9 @@ const whisperQueue: { channel: string; text: string }[] = []
 let processingQueue = false
 
 const processQueue = async () => {
-  if (processingQueue || whisperQueue.length === 0) {return}
+  if (processingQueue || whisperQueue.length === 0) {
+    return
+  }
   processingQueue = true
 
   while (whisperQueue.length > 0) {
@@ -69,7 +71,9 @@ export const chatClient = {
           user.settings,
           user.subscription
         )
-        if (isDisabled) {return}
+        if (isDisabled) {
+          return
+        }
       }
 
       // Consume a pending command-suggestion suffix from the active command
@@ -90,7 +94,9 @@ export const chatClient = {
   // trailing "Also try !x" would point viewers at an equally-dataless sibling.
   sayWithoutSuggestion: (channel: string, text: string, reply_parent_message_id?: string): void => {
     const ctx = suggestionContext.getStore()
-    if (ctx) {ctx.suffix = null}
+    if (ctx) {
+      ctx.suffix = null
+    }
     chatClient.say(channel, text, reply_parent_message_id)
   },
   whisper: (channel: string, text: string | undefined) => {

@@ -40,7 +40,9 @@ export async function getAccountIds(): Promise<string[]> {
 
     providerIds.push(...pluckProviderIds(data as AccountRow[] | null))
 
-    if (!data || data.length < PAGE_SIZE) {break}
+    if (!data || data.length < PAGE_SIZE) {
+      break
+    }
     from += PAGE_SIZE
   }
 

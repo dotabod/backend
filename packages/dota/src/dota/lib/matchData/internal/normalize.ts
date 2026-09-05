@@ -31,7 +31,9 @@ export function normalize({
     const hasName = typeof p.player_name === 'string' && p.player_name.length > 0
     return validAcct || validHero || hasName
   })
-  if (cleaned.length === 0) {return emptyRoster()}
+  if (cleaned.length === 0) {
+    return emptyRoster()
+  }
 
   const players: RosterPlayer[] = cleaned.map((p) => {
     const rawSlot = (p as { playerid?: unknown }).playerid
@@ -57,7 +59,9 @@ export function normalize({
   // from team3). Other sources don't preserve team info today.
   if (source === 'gsi-spectator') {
     for (const p of players) {
-      if (p.slot !== null) {p.team = p.slot < 5 ? 'radiant' : 'dire'}
+      if (p.slot !== null) {
+        p.team = p.slot < 5 ? 'radiant' : 'dire'
+      }
     }
   }
 
@@ -88,8 +92,14 @@ function inferStage(
   completeness: RosterCompleteness,
   heroesStatus: HeroesStatus | undefined
 ): MatchStage {
-  if (source === 'none') {return 'unknown'}
-  if (heroesStatus) {return 'roster-draft'}
-  if (completeness.heroIds === 'all') {return 'in-progress'}
+  if (source === 'none') {
+    return 'unknown'
+  }
+  if (heroesStatus) {
+    return 'roster-draft'
+  }
+  if (completeness.heroIds === 'all') {
+    return 'in-progress'
+  }
   return 'hero-draft'
 }

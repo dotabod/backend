@@ -15,17 +15,24 @@ export async function getSteamPlayerSummaries(
   accountIds: number[]
 ): Promise<Map<number, SteamPlayerSummary>> {
   const uniqueAccountIds = [...new Set(accountIds.filter((id) => Number.isFinite(id) && id > 0))]
-  if (!uniqueAccountIds.length) {return new Map()}
+  if (!uniqueAccountIds.length) {
+    return new Map()
+  }
 
   const response = await new Promise<SteamPlayerSummaryResponse[]>((resolve, reject) => {
-    const timeout = setTimeout(() =>{  reject(new Error('Steam player summaries timed out')); }, 10_000)
+    const timeout = setTimeout(() => {
+      reject(new Error('Steam player summaries timed out'))
+    }, 10_000)
     steamSocket.emit(
       'getPlayerSummaries',
       uniqueAccountIds,
       (error: string | null, data: SteamPlayerSummaryResponse[] | null | undefined) => {
         clearTimeout(timeout)
-        if (error) {reject(new Error(error))}
-        else {resolve(data ?? [])}
+        if (error) {
+          reject(new Error(error))
+        } else {
+          resolve(data ?? [])
+        }
       }
     )
   }).catch(() => [])

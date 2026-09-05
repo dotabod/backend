@@ -57,27 +57,28 @@ commandHandler.registerCommand('shard', {
       }
 
       if (!heroShard.has_shard) {
-         chatClient.say(
+        chatClient.say(
           channelName,
           withHeroLink(
             t('noShard', {
-              lng: channelClient.locale,
               heroName: getHeroNameOrColor(hero.id, playerIdx),
+              lng: channelClient.locale,
             }),
             hero.id
           ),
           message.user.messageId
-        ); return;
+        )
+        return
       }
 
       chatClient.say(
         channelName,
         withHeroLink(
           t('shard', {
-            lng: channelClient.locale,
-            heroName: getHeroNameOrColor(hero.id, playerIdx),
-            title: heroShard?.shard_skill_name,
             description: heroShard?.shard_desc,
+            heroName: getHeroNameOrColor(hero.id, playerIdx),
+            lng: channelClient.locale,
+            title: heroShard?.shard_skill_name,
           }),
           hero.id
         ),
@@ -97,10 +98,7 @@ commandHandler.registerCommand('shard', {
 const isValidGSIHandler = (
   gsiHandler: GSIHandlerType | undefined,
   hasCurrentGame: boolean
-): boolean => 
-  !!gsiHandler && hasCurrentGame
+): boolean => !!gsiHandler && hasCurrentGame
 
-
-const isValidHero = (hero: { id?: number } | null | undefined): boolean => 
+const isValidHero = (hero: { id?: number } | null | undefined): boolean =>
   typeof hero?.id === 'number' && !!getHeroById(hero.id)
-

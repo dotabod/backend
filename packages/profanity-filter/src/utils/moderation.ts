@@ -142,18 +142,20 @@ function checkWashProfanity(text: string): {
       const wordList = wash.words(locale)
 
       // The actual words that matched using washyourmouthoutwithsoap's tokenize method
-      const tokens = new Set(text
-        .toLowerCase()
-        .replace(/[\s+]+/g, ' ')
-        .replace('/ {2,}/', ' ')
-        .split(' ')
-        .concat(
-          text
-            .toLowerCase()
-            .replace(/[^\w\s]/g, '')
-            .replace('/ {2,}/', ' ')
-            .split(' ')
-        ))
+      const tokens = new Set(
+        text
+          .toLowerCase()
+          .replaceAll(/[\s+]+/g, ' ')
+          .replace('/ {2,}/', ' ')
+          .split(' ')
+          .concat(
+            text
+              .toLowerCase()
+              .replaceAll(/[^\w\s]/g, '')
+              .replace('/ {2,}/', ' ')
+              .split(' ')
+          )
+      )
 
       const matchingWords = wordList.filter((word: string) => tokens.has(word.toLowerCase()))
 
@@ -190,7 +192,7 @@ export async function moderateText(
 ): Promise<string | (undefined | string)[] | undefined> {
   // Handle array of strings
   if (Array.isArray(input)) {
-    const results = await Promise.all(input.map( async (text) => moderateTextSingle(text)))
+    const results = await Promise.all(input.map(async (text) => await moderateTextSingle(text)))
     return results
   }
 
@@ -278,8 +280,9 @@ async function moderateTextSingle(text?: string): Promise<string | undefined> {
       if (
         !Array.isArray(naughtyWords[lang as keyof typeof naughtyWords]) ||
         !allowedLangs.has(lang)
-      )
-        {continue}
+      ) {
+        continue
+      }
 
       // For each language's word list
       const wordList = naughtyWords[lang as keyof typeof naughtyWords] as string[]
@@ -517,8 +520,9 @@ function getProfanityDetailsSingle(text: string): {
       if (
         !Array.isArray(naughtyWords[lang as keyof typeof naughtyWords]) ||
         !allowedLangs.has(lang)
-      )
-        {continue}
+      ) {
+        continue
+      }
 
       // For each language's word list
       const wordList = naughtyWords[lang as keyof typeof naughtyWords] as string[]

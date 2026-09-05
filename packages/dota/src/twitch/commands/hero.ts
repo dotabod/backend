@@ -6,8 +6,8 @@ import { hasCurrentGameContext } from '../../dota/lib/getCurrentMatchId'
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 import { findAccountFromCmd } from '../lib/findGSIByAccountId'
 
 commandHandler.registerCommand('hero', {
@@ -19,7 +19,10 @@ commandHandler.registerCommand('hero', {
     } = message
 
     const gsi = gsiHandlers.get(client.token)
-    if (!gsi || !hasCurrentGameContext(client)) {  handleNotPlaying(message); return; }
+    if (!gsi || !hasCurrentGameContext(client)) {
+      handleNotPlaying(message)
+      return
+    }
 
     try {
       const { ourHero, player, hero, playerIdx } = await findAccountFromCmd(
@@ -53,10 +56,10 @@ commandHandler.registerCommand('hero', {
         message,
       })
       return
-    } catch (e) {
+    } catch (error) {
       chatClient.say(
         message.channel.name,
-        (e as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        (error as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
         message.user.messageId
       )
     }

@@ -162,7 +162,7 @@ describe('!hero', () => {
         },
         player: {
           activity: 'watching',
-          team2: { player0: { accountid: 99999 } },
+          team2: { player0: { accountid: 99_999 } },
           team3: {},
           team_name: 'spectator',
         },
@@ -178,7 +178,7 @@ describe('!hero', () => {
           matchid: '0',
           win_team: 'none',
         },
-        player: { accountid: 99999, activity: 'playing' },
+        player: { accountid: 99_999, activity: 'playing' },
       },
     ],
   ])('uses the selected hero history while %s', async (_label, gsi) => {

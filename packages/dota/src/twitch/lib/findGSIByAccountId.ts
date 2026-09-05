@@ -12,7 +12,9 @@ export function findSpectatorIdx(packet: Packet | undefined, heroOrAccountId: nu
   for (const team of teams) {
     const teamPlayers = packet?.player?.[team]
     const players: Player[] = Object.values(teamPlayers ?? {})
-    if (!players) {continue}
+    if (!players) {
+      continue
+    }
 
     for (let i = 0; i < players.length; i++) {
       const player = players[i]

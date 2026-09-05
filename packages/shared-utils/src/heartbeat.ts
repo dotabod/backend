@@ -1,6 +1,9 @@
 import { logger } from './logger'
 
-interface HeartbeatStatus { up: boolean; msg?: string }
+interface HeartbeatStatus {
+  up: boolean
+  msg?: string
+}
 
 interface HeartbeatOptions {
   url?: string
@@ -35,7 +38,9 @@ export function startHeartbeat(opts: HeartbeatOptions = {}): void {
       downSince = null
     } else {
       const now = Date.now()
-      if (downSince === null) {downSince = now}
+      if (downSince === null) {
+        downSince = now
+      }
       report = now - downSince < debounceMs
     }
 

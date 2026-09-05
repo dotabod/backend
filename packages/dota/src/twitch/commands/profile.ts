@@ -30,10 +30,10 @@ commandHandler.registerCommand('profile', {
       }
 
       const { hero, playerIdx, player } = await profileLink({
-        command,
-        client,
-        locale: client.locale,
         args: args,
+        client,
+        command,
+        locale: client.locale,
       })
 
       const url = player?.accountid
@@ -52,19 +52,19 @@ commandHandler.registerCommand('profile', {
       }
 
       const desc = t('profileUrl', {
-        lng: client.locale,
         channel:
           Number(player?.accountid) === client.steam32Id
             ? client.name
             : getHeroNameOrColor(hero?.id ?? 0, playerIdx),
+        lng: client.locale,
         url,
       })
 
       chatClient.say(message.channel.name, desc, message.user.messageId)
-    } catch (e) {
+    } catch (error) {
       chatClient.say(
         message.channel.name,
-        (e as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        (error as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
         message.user.messageId
       )
     }

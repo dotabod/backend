@@ -23,9 +23,9 @@ commandHandler.registerCommand('toggle', {
       await commandDisable.enable(userId)
     } else {
       await commandDisable.disable(userId, 'MANUAL_DISABLE', {
-        disabled_by: message.user.name,
-        command: '!toggle',
         additional_info: `Manually disabled by ${message.user.name} via chat command`,
+        command: '!toggle',
+        disabled_by: message.user.name,
       })
     }
   },

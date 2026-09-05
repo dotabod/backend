@@ -3,8 +3,8 @@ import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 // Last.fm's JSON API returns track/artist/album names with HTML-encoded entities
 // (e.g. "&#39;" for "'", "&amp;" for "&"). Twitch chat doesn't render HTML, so
@@ -129,12 +129,12 @@ commandHandler.registerCommand('song', {
       chatClient.say(
         channel,
         t('currentSong', {
-          url: '', // dont show the url
-          artist: artist || 'Unknown',
-          title: title || 'Unknown',
           album: albumText ? ` [${albumText}]` : '',
-          lng: client.locale,
+          artist: artist || 'Unknown',
           interpolation: { escapeValue: false },
+          lng: client.locale,
+          title: title || 'Unknown',
+          url: '', // dont show the url,
         }),
         message.user.messageId
       )

@@ -13,7 +13,9 @@ import { gsiHandlers, twitchIdToToken, twitchNameToToken } from './lib/consts'
 // before calling clearCacheForUser, which then deleted it — silently undoing
 // the watcher's fast-path rejection. See packages/dota/src/db/watcher.ts.
 export async function clearCacheForUser(client?: SocketClient) {
-  if (!client) {return}
+  if (!client) {
+    return
+  }
 
   // Reset multiAccount explicitly
   client.multiAccount = undefined
@@ -22,7 +24,9 @@ export async function clearCacheForUser(client?: SocketClient) {
   // just so new items won't get added while we do this
   const handler = gsiHandlers.get(client.token)
   handler?.disable()
-  if (handler) {handler.multiAccountRevalidatedAt = undefined}
+  if (handler) {
+    handler.multiAccountRevalidatedAt = undefined
+  }
 
   const accountId = client.Account?.providerAccountId ?? ''
   twitchIdToToken.delete(accountId)

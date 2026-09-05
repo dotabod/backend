@@ -50,7 +50,7 @@ async function getItems({
 }) {
   const packet = client.gsi
   const { accountIdFromArgs, hero, items, playerIdx } = await profileLink({
-    args: args,
+    args,
     client,
     command,
     locale,
@@ -78,7 +78,9 @@ async function getItems({
       locale,
       token,
     }).catch((error) => {
-      if (error instanceof CustomError) {throw error}
+      if (error instanceof CustomError) {
+        throw error
+      }
       throw new CustomError(t('gameNotFound', { lng: locale }))
     })
 
@@ -141,17 +143,17 @@ commandHandler.registerCommand('items', {
 
     try {
       const res = await getItems({
-        client,
-        token: client.token,
         args,
-        locale: client.locale,
+        client,
         command,
+        locale: client.locale,
+        token: client.token,
       })
       chatClient.say(client.name, t('heroItems.list', res), message.user.messageId)
-    } catch (e) {
-      const msg = !(e as Error)?.message
+    } catch (error) {
+      const msg = !(error as Error)?.message
         ? t('gameNotFound', { lng: client.locale })
-        : (e as Error)?.message
+        : (error as Error)?.message
       chatClient.say(client.name, msg, message.user.messageId)
     }
   },

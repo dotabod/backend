@@ -63,7 +63,7 @@ describe('!items', () => {
         {
           players: [
             { accountid: 111, items: [50], team_slot: 0 },
-            { accountid: 99999, items: [1, 16, 16], team_slot: 1 },
+            { accountid: 99_999, items: [1, 16, 16], team_slot: 1 },
           ],
         },
         { players: [] },
@@ -129,7 +129,7 @@ describe('!stats', () => {
               team_slot: 0,
             },
             {
-              accountid: 99999,
+              accountid: 99_999,
               assists_count: 11,
               death_count: 2,
               denies_count: 13,

@@ -14,7 +14,9 @@ const { emit } = vi.hoisted(() => ({
         }[]
       ) => void
     ) => {
-      if (event !== 'getPlayerSummaries') {throw new Error(`Unexpected event: ${event}`)}
+      if (event !== 'getPlayerSummaries') {
+        throw new Error(`Unexpected event: ${event}`)
+      }
       callback(
         null,
         accountIds.map((accountId) => ({

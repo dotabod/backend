@@ -14,9 +14,9 @@ describe(SteamPlayerSummaryService, () => {
         response: {
           players: [
             {
-              steamid: '76561197960265851',
-              personaname: 'Web Name',
               loccountrycode: 'se',
+              personaname: 'Web Name',
+              steamid: '76561197960265851',
             },
           ],
         },

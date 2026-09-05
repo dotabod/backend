@@ -139,17 +139,17 @@ twitchChat.on(
             await ctx.moderation.banUser(channelId, {
               duration: 30,
               reason: t('rankOnlyMode', {
-                url: 'dotabod.com/verify',
+                lng: client.locale || 'en',
                 name: user,
                 requiredRank,
-                lng: client.locale || 'en',
+                url: 'dotabod.com/verify',
               }),
               user: userInfo.userId,
             })
           })
         } catch (error) {
           logger.error('[TWITCH] Failed to delete message or timeout user', {
-            error: error,
+            error,
             channel,
             user,
             messageId,
@@ -203,7 +203,9 @@ twitchChat.on(
       return
     }
 
-    if (!text.startsWith('!')) {return}
+    if (!text.startsWith('!')) {
+      return
+    }
 
     const isBotDisabled = getValueOrDefault(
       DBSettings.commandDisable,
@@ -228,7 +230,7 @@ twitchChat.on(
       channel: { client, id: channelId, name: channelName, settings: client.settings },
       content: text,
       user: {
-        messageId: messageId,
+        messageId,
         name: user,
         permission: userInfo.isBroadcaster ? 3 : userInfo.isMod ? 2 : userInfo.isSubscriber ? 1 : 0,
         userId: userInfo.userId,
@@ -251,13 +253,19 @@ twitchChat.on('event', (eventName: keyof typeof events, broadcasterId: string, d
   // Can start doing something with the events
 
   const token = getTokenFromTwitchId(broadcasterId)
-  if (!token) {return}
+  if (!token) {
+    return
+  }
 
   const client = findUser(token)
-  if (!client) {return}
+  if (!client) {
+    return
+  }
 
   const isEnabled = getValueOrDefault(DBSettings.livePolls, client.settings, client.subscription)
-  if (!isEnabled) {return}
+  if (!isEnabled) {
+    return
+  }
 
   server.io.to(token).emit('channelPollOrBet', data, eventName)
 })

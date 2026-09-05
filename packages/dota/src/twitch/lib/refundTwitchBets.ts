@@ -57,7 +57,7 @@ export const refundTwitchBet = async (twitchId: string, specificPredictionId?: s
     })
     return prediction.id
   } catch (error) {
-    logger.error('[PREDICT] Error refunding twitch bet', { twitchId, error })
+    logger.error('[PREDICT] Error refunding twitch bet', { error, twitchId })
   }
 
   return null

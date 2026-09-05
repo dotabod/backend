@@ -18,13 +18,17 @@ export async function fetchDelayedGameDoc(matchId: string): Promise<DelayedGames
 //   - flat `players[]` (SourceTV writer) → up to 10 entries
 // Returns [] if neither shape applies.
 export function extractPlayersFromMongoDoc(doc: DelayedGames | null): Players {
-  if (!doc) {return []}
+  if (!doc) {
+    return []
+  }
   const hasTwoTeams = Array.isArray(doc.teams) && doc.teams.length === 2
 
   if (!hasTwoTeams && Array.isArray(doc.teams)) {
     const out: Players = []
     for (const team of doc.teams) {
-      if (!Array.isArray(team?.players)) {continue}
+      if (!Array.isArray(team?.players)) {
+        continue
+      }
       for (const p of team.players) {
         out.push({ accountid: Number(p.accountid), heroid: p.heroid, playerid: null })
       }

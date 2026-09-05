@@ -4,10 +4,10 @@ import { buildSharedUtilsMock, initTestI18n } from '../../../__tests__/sharedMoc
 import type { MessageType } from '../../lib/CommandHandler.ts'
 
 const noopLogger = {
-  debug: () => undefined,
-  error: () => undefined,
-  info: () => undefined,
-  warn: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 
 interface FakeSocket {
@@ -35,7 +35,9 @@ function makeSocket(target: { connected: boolean; hash: string | null }): FakeSo
   }
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () => buildSharedUtilsMock({ logger: noopLogger, supabase: {} }))
+vi.doMock(import('@dotabod/shared-utils'), () =>
+  buildSharedUtilsMock({ logger: noopLogger, supabase: {} })
+)
 
 vi.doMock(import('../../../steam/ws'), () => ({
   steamSocket: makeSocket(sockets.steam),

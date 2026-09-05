@@ -4,13 +4,15 @@ import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks.
 import type { RosterPlayer } from '../../dota/lib/matchData'
 
 const noopLogger = {
-  debug: () => undefined,
-  error: () => undefined,
-  info: () => undefined,
-  warn: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () => buildSharedUtilsMock({ logger: noopLogger, supabase: {} }))
+vi.doMock(import('@dotabod/shared-utils'), () =>
+  buildSharedUtilsMock({ logger: noopLogger, supabase: {} })
+)
 
 vi.doMock(import('@dotabod/profanity-filter'), () => ({
   moderateText: async (text: string) => text,
@@ -20,11 +22,11 @@ vi.doMock(import('@dotabod/profanity-filter'), () => ({
 // only the players passed in.
 vi.doMock(import('../MongoDBSingleton'), () => ({
   default: {
-    close: async () => undefined,
+    close: async () => {},
     connect: async () => ({
       collection: () => ({
-        findOne: async () => null,
         find: () => ({ toArray: async () => [] }),
+        findOne: async () => null,
       }),
     }),
   },
@@ -103,8 +105,8 @@ describe('notablePlayers — normal path (heroes known)', () => {
       accountIds: [123, 456],
       gameMode: undefined,
       matchPlayers: [
-        { ...blank, slot: 0, heroId: 1, accountId: 123, playerName: 'Wrong OCR name' },
-        { ...blank, slot: 1, heroId: 2, accountId: 456, playerName: null },
+        { ...blank, accountId: 123, heroId: 1, playerName: 'Wrong OCR name', slot: 0 },
+        { ...blank, accountId: 456, heroId: 2, playerName: null, slot: 1 },
       ],
     })
     getSteamPlayerSummariesMock.mockResolvedValueOnce(
@@ -133,7 +135,7 @@ describe('notablePlayers — normal path (heroes known)', () => {
     getPlayersMock.mockResolvedValueOnce({
       accountIds: [123],
       gameMode: undefined,
-      matchPlayers: [{ ...blank, slot: 0, heroId: 1, accountId: 123, playerName: 'Bob' }],
+      matchPlayers: [{ ...blank, accountId: 123, heroId: 1, playerName: 'Bob', slot: 0 }],
     })
 
     const result = await notablePlayers({
@@ -156,8 +158,8 @@ describe('notablePlayers — normal path (heroes known)', () => {
       accountIds: [0, 0],
       gameMode: undefined,
       matchPlayers: [
-        { ...blank, heroId: 1, accountId: null, playerName: 'Named' },
-        { ...blank, heroId: 2, accountId: null, playerName: null },
+        { ...blank, accountId: null, heroId: 1, playerName: 'Named' },
+        { ...blank, accountId: null, heroId: 2, playerName: null },
       ],
     })
 

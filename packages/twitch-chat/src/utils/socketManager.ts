@@ -3,13 +3,13 @@ import { Server } from 'socket.io'
 
 // Socket.io server instance with improved connection handling
 export const io = new Server(5005, {
-  connectTimeout: 45000, // Increase connection timeout
+  connectTimeout: 45_000, // Increase connection timeout
   cors: {
     methods: ['GET', 'POST'],
     origin: '*', // Allow all origins,
   },
-  pingInterval: 25000, // Decrease ping interval for faster detection of disconnections
-  pingTimeout: 60000, // Increase ping timeout
+  pingInterval: 25_000, // Decrease ping interval for faster detection of disconnections
+  pingTimeout: 60_000, // Increase ping timeout
   transports: ['websocket', 'polling'], // Support both WebSocket and polling
 })
 

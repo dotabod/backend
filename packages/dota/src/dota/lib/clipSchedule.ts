@@ -3,8 +3,8 @@ import { randomUUID } from 'node:crypto'
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 
 import { redisClient } from '../../db/redisInstance'
-import { createReadyClip } from './createReadyClip';
-import type { CreateReadyClipOptions } from './createReadyClip';
+import { createReadyClip } from './createReadyClip'
+import type { CreateReadyClipOptions } from './createReadyClip'
 import { delayedQueue } from './DelayedQueue'
 
 // Heroes stay on the HUD all game, so retry generously with no deadline.
@@ -23,7 +23,7 @@ import { delayedQueue } from './DelayedQueue'
 // the room for the aim to be wrong.
 export const GAMEPLAY_CLIP_OPTS: CreateReadyClipOptions = {
   durationSeconds: 60,
-  initialDelayMs: 20000,
+  initialDelayMs: 20_000,
   maxAttempts: 3,
   pollAttempts: 4,
   pollIntervalMs: 5000,
@@ -36,7 +36,7 @@ export const GAMEPLAY_CLIP_OPTS: CreateReadyClipOptions = {
 // ~100% of the time. Polling the same clip longer doesn't move its content
 // (createAfterDelay captured the buffer at creation), so the draft UI is intact.
 export const DRAFT_CLIP_OPTS: CreateReadyClipOptions = {
-  deadlineMs: 45000,
+  deadlineMs: 45_000,
   maxAttempts: 2,
   pollAttempts: 5,
   pollIntervalMs: 5000,
@@ -134,9 +134,10 @@ function realDeps(): ClipScheduleDeps {
     logger,
     now: Date.now,
     run: createAndSubmitClip,
-    zAdd:  async (member, score) => redisClient.client.zAdd(CLIP_SCHEDULE_KEY, { score, value: member }),
-    zRangeAll:  async () => redisClient.client.zRangeByScore(CLIP_SCHEDULE_KEY, '-inf', '+inf'),
-    zRem:  async (member) => redisClient.client.zRem(CLIP_SCHEDULE_KEY, member),
+    zAdd: async (member, score) =>
+      await redisClient.client.zAdd(CLIP_SCHEDULE_KEY, { score, value: member }),
+    zRangeAll: async () => await redisClient.client.zRangeByScore(CLIP_SCHEDULE_KEY, '-inf', '+inf'),
+    zRem: async (member) => await redisClient.client.zRem(CLIP_SCHEDULE_KEY, member),
   }
 }
 
@@ -161,7 +162,9 @@ async function fireClip(deps: ClipScheduleDeps, member: string): Promise<void> {
       error: (error as Error).message,
     })
   }
-  if (!removed) {return}
+  if (!removed) {
+    return
+  }
 
   await deps.run(parsed)
 }
@@ -184,7 +187,7 @@ export async function scheduleClipWith(
     })
   }
 
-  deps.arm(delayMs,  async () => fireClip(deps, member))
+  deps.arm(delayMs, async () => await fireClip(deps, member))
 }
 
 export async function rearmWith(deps: ClipScheduleDeps): Promise<void> {
@@ -220,7 +223,7 @@ export async function rearmWith(deps: ClipScheduleDeps): Promise<void> {
     }
 
     const delayMs = lateBy <= 0 ? parsed.executeAt - now : 0
-    deps.arm(delayMs,  async () => fireClip(deps, member))
+    deps.arm(delayMs, async () => await fireClip(deps, member))
     rearmed++
   }
 
@@ -236,11 +239,11 @@ export async function rearmWith(deps: ClipScheduleDeps): Promise<void> {
 // fire-and-forget this; Redis is the durability backstop, the DelayedQueue is
 // the normal fire path.
 export async function scheduleClip(delayMs: number, payload: ClipTaskPayload): Promise<void> {
-  return scheduleClipWith(realDeps(), delayMs, payload)
+  return await scheduleClipWith(realDeps(), delayMs, payload)
 }
 
 // Re-arm clip tasks that outlived a restart. Future tasks keep their original
 // fire time; recently-passed tasks fire ~immediately; stale ones are dropped.
 export async function rearmPersistedClips(): Promise<void> {
-  return rearmWith(realDeps())
+  return await rearmWith(realDeps())
 }

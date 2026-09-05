@@ -24,7 +24,7 @@ export async function closeTwitchBet(
     if (error instanceof StreamNotLiveError) {
       logger.info('[PREDICT] [BETS] Skipped stream marker (close) — channel offline', { twitchId })
     } else {
-      logger.error('[PREDICT] [BETS] Failed to create stream marker (close)', { twitchId, error })
+      logger.error('[PREDICT] [BETS] Failed to create stream marker (close)', { error, twitchId })
     }
   }
 
@@ -71,10 +71,10 @@ export async function closeTwitchBet(
           ),
         { label: 'closeTwitchBet:resolvePrediction' }
       ).catch((error) => {
-        logger.error('[BETS] Could not resolve prediction', { token: twitchId, error: error })
+        logger.error('[BETS] Could not resolve prediction', { error: error, token: twitchId })
       })
     })
     .catch((error) => {
-      logger.error('[BETS] Could not get predictions', { token: twitchId, error: error })
+      logger.error('[BETS] Could not get predictions', { error: error, token: twitchId })
     })
 }

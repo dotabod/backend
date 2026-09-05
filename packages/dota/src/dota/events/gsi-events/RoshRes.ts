@@ -42,14 +42,20 @@ export function generateRoshanMessage(res: RoshRes, lng: string) {
   return msgs.join(' · ')
 }
 export function emitRoshEvent(res: RoshRes, token: string, client: SocketClient) {
-  if (!res?.minDate) {return}
+  if (!res?.minDate) {
+    return
+  }
   res = getNewRoshTime(res)
 
   // Only check settings if client is provided
-  if (!client) {return}
+  if (!client) {
+    return
+  }
 
   const tellChatRosh = getValueOrDefault(DBSettings.rosh, client.settings, client.subscription)
-  if (!tellChatRosh) {return}
+  if (!tellChatRosh) {
+    return
+  }
 
   server.io.to(token).emit('roshan-killed', res)
 }

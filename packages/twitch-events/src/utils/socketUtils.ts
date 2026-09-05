@@ -1,6 +1,6 @@
 import { botStatus, fetchConduitId, logger } from '@dotabod/shared-utils'
-import { Server } from 'socket.io';
-import type { Socket } from 'socket.io';
+import { Server } from 'socket.io'
+import type { Socket } from 'socket.io'
 
 import { handleNewUser } from '../handleNewUser'
 import { revokeEvent } from '../twitch/lib/revokeEvent'

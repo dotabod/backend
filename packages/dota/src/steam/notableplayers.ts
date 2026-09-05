@@ -99,8 +99,8 @@ export async function notablePlayers({
     const avg = heroesStatus
       ? null
       : await calculateAvg({
-          locale,
           currentMatchId,
+          locale,
           players,
         })
 

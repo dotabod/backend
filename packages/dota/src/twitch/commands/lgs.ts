@@ -2,8 +2,8 @@ import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
 import { LOBBY_TYPE_RANKED } from '../../db/getWL'
-import getHero from '../../dota/lib/getHero';
-import type { HeroNames } from '../../dota/lib/getHero';
+import getHero from '../../dota/lib/getHero'
+import type { HeroNames } from '../../dota/lib/getHero'
 import { DBSettings } from '../../settings'
 import { dotabodMatchHistoryUrl } from '../../utils/index'
 import { chatClient } from '../chatClient'
@@ -92,14 +92,19 @@ commandHandler.registerCommand('lgs', {
       t('lastgamescore.duration', { lng: message.channel.client.locale, minutes: lasted })
     )
 
-    if (lg.is_party)
-      {returnMsg.push(t('lastgamescore.party', { lng: message.channel.client.locale }))}
-    if (lg.is_doubledown)
-      {returnMsg.push(t('lastgamescore.double', { lng: message.channel.client.locale }))}
-    if (lg.lobby_type !== LOBBY_TYPE_RANKED)
-      {returnMsg.push(t('lastgamescore.unranked', { lng: message.channel.client.locale }))}
+    if (lg.is_party) {
+      returnMsg.push(t('lastgamescore.party', { lng: message.channel.client.locale }))
+    }
+    if (lg.is_doubledown) {
+      returnMsg.push(t('lastgamescore.double', { lng: message.channel.client.locale }))
+    }
+    if (lg.lobby_type !== LOBBY_TYPE_RANKED) {
+      returnMsg.push(t('lastgamescore.unranked', { lng: message.channel.client.locale }))
+    }
     const url = dotabodMatchHistoryUrl(message.channel.client)
-    if (url) {returnMsg.push(url)}
+    if (url) {
+      returnMsg.push(url)
+    }
 
     chatClient.say(message.channel.name, returnMsg.join(' · '), message.user.messageId)
   },

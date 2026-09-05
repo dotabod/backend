@@ -105,7 +105,7 @@ export interface HeroEntry {
 export const heroes: Record<string, HeroEntry> = {}
 
 for (const heroData of Object.values(HEROES_DATA)) {
-  const {name} = heroData
+  const { name } = heroData
   heroes[name] = {
     alias: heroAliases[name] ?? [],
     id: heroData.id,

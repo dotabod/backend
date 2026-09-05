@@ -11,9 +11,11 @@ const TWITCH_CHAT_MESSAGE_LIMIT = 500
 const DUPLICATE_DISAMBIGUATOR = ' \u034F'
 
 function fitTwitchChatMessage(message: string): string {
-  if (message.length <= TWITCH_CHAT_MESSAGE_LIMIT) {return message}
+  if (message.length <= TWITCH_CHAT_MESSAGE_LIMIT) {
+    return message
+  }
 
-  const trailingLink = (/ · (?:https?:\/\/)?\S+\.\S+(?: · .*)?$/.exec(message))?.[0] ?? ''
+  const trailingLink = / · (?:https?:\/\/)?\S+\.\S+(?: · .*)?$/.exec(message)?.[0] ?? ''
   const availableTextLength = TWITCH_CHAT_MESSAGE_LIMIT - trailingLink.length - 1
   if (availableTextLength <= 0) {
     return `${message.slice(0, TWITCH_CHAT_MESSAGE_LIMIT - 1)}…`
@@ -173,7 +175,9 @@ export async function sendTwitchChatMessage(
   }
 
   // Record this message in the cache
-  if (dedupeKey) {messageDedupeCache.set(dedupeKey, now)}
+  if (dedupeKey) {
+    messageDedupeCache.set(dedupeKey, now)
+  }
 
   const url = 'https://api.twitch.tv/helix/chat/messages'
   // Only the bot can send messages
@@ -298,8 +302,10 @@ export async function handleChatMessage(message: ChatMessageNotification): Promi
     return
   }
 
-  const {event} = message.payload
-  if (!event) {return}
+  const { event } = message.payload
+  if (!event) {
+    return
+  }
   const {
     chatter_user_login,
     chatter_user_id,

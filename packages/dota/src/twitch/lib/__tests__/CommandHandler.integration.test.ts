@@ -120,9 +120,7 @@ describe('CommandHandler dispatch (integration)', () => {
 
       expect(state.updateCalls).toHaveLength(1)
       expect(state.updateCalls[0].values).toMatchObject({ won: false })
-      expect(state.chatSayCalls.at(-1).message).toContain(
-        'corrected from WON to LOST'
-      )
+      expect(state.chatSayCalls.at(-1).message).toContain('corrected from WON to LOST')
     })
 
     it('!won with a matchId arg routes through the retroactive path', async () => {

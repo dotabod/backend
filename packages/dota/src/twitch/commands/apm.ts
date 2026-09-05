@@ -15,10 +15,10 @@ commandHandler.registerCommand('apm', {
 
     try {
       const { player, hero, playerIdx } = await profileLink({
-        command,
-        client,
-        locale: client.locale,
         args: args,
+        client,
+        command,
+        locale: client.locale,
       })
 
       const commandsIssued =
@@ -36,17 +36,17 @@ commandHandler.registerCommand('apm', {
       chatClient.say(
         channel,
         t('apm', {
-          heroName,
-          emote: 'Chatting',
-          lng: message.channel.client.locale,
           count: apm,
+          emote: 'Chatting',
+          heroName,
+          lng: message.channel.client.locale,
         }),
         message.user.messageId
       )
-    } catch (e) {
+    } catch (error) {
       chatClient.say(
         message.channel.name,
-        (e as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        (error as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
         message.user.messageId
       )
     }

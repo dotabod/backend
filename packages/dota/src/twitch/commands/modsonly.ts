@@ -4,8 +4,8 @@ import { t } from 'i18next'
 import { modMode } from '../../dota/lib/consts'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('modsonly', {
   aliases: ['modsonlyoff', 'modsonlyon'],
@@ -47,7 +47,7 @@ commandHandler.registerCommand('modsonly', {
     }
     chatClient.say(
       channel,
-      t('modsOnly', { emote: 'BASED Clap', context: 'on', lng: client.locale }),
+      t('modsOnly', { context: 'on', emote: 'BASED Clap', lng: client.locale }),
       message.user.messageId
     )
   },

@@ -1,7 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { baseMatchRow, commandHandler, findMostRecentResolvedMatch, makeClient, resetState, resolveMatchRetroactively, state } from './setupMocks.ts';
-import type { Client } from './setupMocks.ts';
+import {
+  baseMatchRow,
+  commandHandler,
+  findMostRecentResolvedMatch,
+  makeClient,
+  resetState,
+  resolveMatchRetroactively,
+  state,
+} from './setupMocks.ts'
+import type { Client } from './setupMocks.ts'
 
 describe(resolveMatchRetroactively, () => {
   beforeEach(() => {
@@ -115,8 +123,8 @@ describe(resolveMatchRetroactively, () => {
         {
           id: 'pred-1',
           outcomes: [
-            { id: 'won-outcome', users: 10, title: 'Yes' },
-            { id: 'lost-outcome', users: 5, title: 'No' },
+            { id: 'won-outcome', title: 'Yes', users: 10 },
+            { id: 'lost-outcome', title: 'No', users: 5 },
           ],
           status: 'ACTIVE',
         },
@@ -169,8 +177,8 @@ describe(resolveMatchRetroactively, () => {
         {
           id: 'pred-1',
           outcomes: [
-            { id: 'won-outcome', users: 10, title: 'Yes' },
-            { id: 'lost-outcome', users: 3, title: 'No' },
+            { id: 'won-outcome', title: 'Yes', users: 10 },
+            { id: 'lost-outcome', title: 'No', users: 3 },
           ],
           status: 'LOCKED',
         },
@@ -267,8 +275,8 @@ describe(resolveMatchRetroactively, () => {
         {
           id: 'pred-1',
           outcomes: [
-            { id: 'won-outcome', users: 10, title: 'Yes' },
-            { id: 'lost-outcome', users: 5, title: 'No' },
+            { id: 'won-outcome', title: 'Yes', users: 10 },
+            { id: 'lost-outcome', title: 'No', users: 5 },
           ],
           status: 'RESOLVED',
         },
@@ -339,8 +347,8 @@ describe(resolveMatchRetroactively, () => {
         {
           id: 'pred-1',
           outcomes: [
-            { id: 'won-outcome', users: 10, title: 'Yes' },
-            { id: 'lost-outcome', users: 5, title: 'No' },
+            { id: 'won-outcome', title: 'Yes', users: 10 },
+            { id: 'lost-outcome', title: 'No', users: 5 },
           ],
           status: 'ACTIVE',
         },
@@ -419,7 +427,7 @@ describe(resolveMatchRetroactively, () => {
       await resolveMatchRetroactively(client, '7777777777', true, 'modUser', '#streamer', 'msg-1')
 
       expect(state.updateCalls).toHaveLength(1)
-      const {values} = state.updateCalls[0]
+      const { values } = state.updateCalls[0]
       expect(values).toStrictEqual({
         updated_at: expect.any(String),
         won: true,
@@ -438,8 +446,8 @@ describe(resolveMatchRetroactively, () => {
         {
           id: 'pred-1',
           outcomes: [
-            { id: 'won-outcome', users: 10, title: 'Yes' },
-            { id: 'lost-outcome', users: 5, title: 'No' },
+            { id: 'won-outcome', title: 'Yes', users: 10 },
+            { id: 'lost-outcome', title: 'No', users: 5 },
           ],
           status: 'ACTIVE',
         },

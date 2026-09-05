@@ -11,8 +11,12 @@ import type { DisableReason, DisableReasonMetadata } from './types'
  */
 export const commandDisable = {
   /** Disable the bot for this user. Single settings write + one audit row. */
-   async disable(userId: string, reason: DisableReason, metadata?: DisableReasonMetadata): Promise<void> {
-    return trackDisableReason(userId, 'commandDisable', reason, metadata, { disabledValue: true })
+  async disable(
+    userId: string,
+    reason: DisableReason,
+    metadata?: DisableReasonMetadata
+  ): Promise<void> {
+    return await trackDisableReason(userId, 'commandDisable', reason, metadata, { disabledValue: true })
   },
 
   /**
@@ -24,11 +28,11 @@ export const commandDisable = {
    * `opts.autoResolved`: marks the audit resolve as automated rather than
    * user-initiated.
    */
-   async enable(
+  async enable(
     userId: string,
     opts: { reason?: DisableReason; autoResolved?: boolean } = {}
   ): Promise<void> {
-    return trackResolveReason(userId, 'commandDisable', opts.autoResolved ?? false, {
+    return await trackResolveReason(userId, 'commandDisable', opts.autoResolved ?? false, {
       enabledValue: false,
       reason: opts.reason,
     })
@@ -39,11 +43,11 @@ export const commandDisable = {
    * when something flagged the bot but we explicitly don't want to disable it
    * (e.g. ACCOUNT_SHARING is blocked at runtime in Redis, not via the setting).
    */
-   async recordNotification(
+  async recordNotification(
     userId: string,
     reason: DisableReason,
     metadata?: DisableReasonMetadata
   ): Promise<void> {
-    return recordDisableNotification(userId, 'commandDisable', reason, metadata)
+    return await recordDisableNotification(userId, 'commandDisable', reason, metadata)
   },
 }

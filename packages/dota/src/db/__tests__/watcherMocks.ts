@@ -57,7 +57,7 @@ function sbBuilder(_table: string) {
   const b: any = {
     eq: () => b,
     in: () => b,
-    insert:  async () => Promise.resolve({ data: null, error: null }),
+    insert: async () => ({ data: null, error: null }),
     is: () => b,
     limit: () => b,
     maybeSingle: async () => ({ data: null, error: null }),
@@ -66,10 +66,10 @@ function sbBuilder(_table: string) {
     order: () => b,
     select: () => b,
     single: async () => ({ data: null, error: null }),
-    then:  async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) =>
-      Promise.resolve({ data: null, error: null }).then(onFulfilled),
+    then: async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) =>
+      await Promise.resolve({ data: null, error: null }).then(onFulfilled),
     update: () => b,
-    upsert:  async () => Promise.resolve({ data: null, error: null }),
+    upsert: async () => ({ data: null, error: null }),
   }
   return b
 }
@@ -101,12 +101,12 @@ const supabaseMock = {
 }
 
 const loggerMock = {
-  debug: () => undefined,
+  debug: () => {},
   error: (message: string, meta?: Record<string, unknown>) =>
     watcherState.loggerErrorCalls.push({ message, meta: meta ?? {} }),
   info: (message: string, meta?: Record<string, unknown>) =>
     watcherState.loggerInfoCalls.push({ message, meta: meta ?? {} }),
-  warn: () => undefined,
+  warn: () => {},
 }
 
 vi.doMock(import('@dotabod/shared-utils'), () =>
@@ -131,7 +131,9 @@ vi.doMock(import('../../dota/clearCacheForUser'), () => ({
     multiAccount?: number
     Account?: { providerAccountId?: string }
   }) => {
-    if (!client) {return}
+    if (!client) {
+      return
+    }
     watcherState.clearCacheCalls.push({
       accountId: client.Account?.providerAccountId,
       token: client.token,
@@ -140,11 +142,15 @@ vi.doMock(import('../../dota/clearCacheForUser'), () => ({
     const { gsiHandlers, twitchIdToToken, twitchNameToToken } =
       await import('../../dota/lib/consts')
     const handler = gsiHandlers.get(client.token)
-    if (handler) {handler.multiAccountRevalidatedAt = undefined}
+    if (handler) {
+      handler.multiAccountRevalidatedAt = undefined
+    }
     if (client.Account?.providerAccountId) {
       twitchIdToToken.delete(client.Account.providerAccountId)
     }
-    if (client.name) {twitchNameToToken.delete(client.name)}
+    if (client.name) {
+      twitchNameToToken.delete(client.name)
+    }
     gsiHandlers.delete(client.token)
     return true
   },
@@ -161,12 +167,12 @@ vi.doMock(import('../../twitch/toggleDotabod'), () => ({
 // twitchChat is an EventEmitter wrapper around the steam socket; the watcher
 // only .emit()s into it on commandDisable changes. Stub to a no-op emitter.
 vi.doMock(import('../../steam/ws'), () => ({
-  steamSocket: { emit: () => undefined },
-  twitchChat: { emit: () => undefined },
+  steamSocket: { emit: () => {} },
+  twitchChat: { emit: () => {} },
 }))
 
 vi.doMock(import('../../twitch/chatClient'), () => ({
-  chatClient: { say:  async () => Promise.resolve() },
+  chatClient: { say: async () => {} },
 }))
 
 // handleScheduledMessages / handleStreamStatusTransition / getDBUser are only
@@ -237,7 +243,9 @@ export async function fire(
   payload: { new?: Record<string, unknown>; old?: Record<string, unknown>; eventType?: string }
 ) {
   const handler = watcherState.channelHandlers.get(`${event}:${table}`)
-  if (!handler) {throw new Error(`no handler for ${event}:${table}`)}
+  if (!handler) {
+    throw new Error(`no handler for ${event}:${table}`)
+  }
   await handler(payload)
 }
 
@@ -269,15 +277,19 @@ export function seedClient(opts: {
   }
   const handler: any = {
     client,
-    disable: () => undefined,
+    disable: () => {},
     emitWLUpdate: vi.fn(),
     getChannelId: () => null,
     multiAccountRevalidatedAt: opts.multiAccountRevalidatedAt,
     token,
   }
   gsiHandlers.set(token, handler)
-  if (opts.providerAccountId) {twitchIdToToken.set(opts.providerAccountId, token)}
-  if (client.name) {twitchNameToToken.set(client.name, token)}
+  if (opts.providerAccountId) {
+    twitchIdToToken.set(opts.providerAccountId, token)
+  }
+  if (client.name) {
+    twitchNameToToken.set(client.name, token)
+  }
   return { client, handler }
 }
 

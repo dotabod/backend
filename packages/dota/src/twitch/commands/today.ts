@@ -3,16 +3,20 @@ import { t } from 'i18next'
 import { getTodayHeroStats } from '../../db/getTodayHeroStats'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 // Twitch chat limit is 500 characters
 const TWITCH_CHAR_LIMIT = 500
 
 // Format a single hero stat: "Hero 3W 1L", "Hero 2W", or "Hero 1L"
 function formatHeroStat(heroName: string, wins: number, losses: number): string {
-  if (wins && losses) {return `${heroName} ${wins}W ${losses}L`}
-  if (wins) {return `${heroName} ${wins}W`}
+  if (wins && losses) {
+    return `${heroName} ${wins}W ${losses}L`
+  }
+  if (wins) {
+    return `${heroName} ${wins}W`
+  }
   return `${heroName} ${losses}L`
 }
 
@@ -26,12 +30,16 @@ function splitIntoMessages(parts: string[], separator: string, limit: number): s
     if (wouldBe.length <= limit) {
       current = wouldBe
     } else {
-      if (current) {messages.push(current)}
+      if (current) {
+        messages.push(current)
+      }
       current = part
     }
   }
 
-  if (current) {messages.push(current)}
+  if (current) {
+    messages.push(current)
+  }
   return messages
 }
 

@@ -17,10 +17,10 @@ commandHandler.registerCommand('mute', {
 
     await supabase.from('settings').upsert(
       {
-        userId: message.channel.client.token,
         key: DBSettings.chatter,
-        value: !hasChatters,
         updated_at: new Date().toISOString(),
+        userId: message.channel.client.token,
+        value: !hasChatters,
       },
       {
         onConflict: 'userId, key',
@@ -29,11 +29,11 @@ commandHandler.registerCommand('mute', {
 
     chatClient.say(
       message.channel.name,
-      !hasChatters
-        ? t('muted', {
+      hasChatters
+        ? t('unmuted', {
             lng: message.channel.client.locale,
           })
-        : t('unmuted', {
+        : t('muted', {
             lng: message.channel.client.locale,
           }),
       message.user.messageId

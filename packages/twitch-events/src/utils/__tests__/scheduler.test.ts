@@ -17,11 +17,11 @@ describe(scheduleNonOverlapping, () => {
     let runs = 0
     const resolvers: (() => void)[] = []
 
-    const stop = scheduleNonOverlapping( async () => {
+    const stop = scheduleNonOverlapping(async () => {
       runs++
       active++
       maxConcurrent = Math.max(maxConcurrent, active)
-      return new Promise<void>((r) => {
+      return await new Promise<void>((r) => {
         resolvers.push(() => {
           active--
           r()

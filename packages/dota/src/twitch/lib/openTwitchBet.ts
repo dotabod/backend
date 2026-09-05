@@ -9,10 +9,14 @@ import { DBSettings, defaultSettings, getValueOrDefault } from '../../settings'
 import type { SocketClient } from '../../types'
 
 export function isPredictionAlreadyActiveError(error: unknown): boolean {
-  if (typeof error !== 'object' || error === null) {return false}
+  if (typeof error !== 'object' || error === null) {
+    return false
+  }
 
   const { statusCode, body } = error as { statusCode?: unknown; body?: unknown }
-  if (statusCode !== 400 || typeof body !== 'string') {return false}
+  if (statusCode !== 400 || typeof body !== 'string') {
+    return false
+  }
 
   try {
     const parsedBody = JSON.parse(body) as { message?: unknown }
@@ -28,7 +32,9 @@ export function isPredictionAlreadyActiveError(error: unknown): boolean {
 // Disable the bet in settings for this user
 async function disableBetsForTwitchId(twitchId: string, errorMessage: string) {
   const token = getTokenFromTwitchId(twitchId)
-  if (!token) {return}
+  if (!token) {
+    return
+  }
 
   // Track the disable reason before disabling
   await trackDisableReason(token, DBSettings.bets, 'API_ERROR', {
@@ -93,18 +99,18 @@ export const openTwitchBet = async ({
     if (error instanceof StreamNotLiveError) {
       logger.info('[PREDICT] [BETS] Skipped stream marker (open) — channel offline', { twitchId })
     } else {
-      logger.error('[PREDICT] [BETS] Failed to create stream marker (open)', { twitchId, error })
+      logger.error('[PREDICT] [BETS] Failed to create stream marker (open)', { error, twitchId })
     }
   }
 
   return await api.predictions
     .createPrediction(twitchId, {
       autoLockAfter,
-      outcomes: [filteredYes.substring(0, 25), filteredNo.substring(0, 25)],
-      title: filteredTitle.substring(0, 45),
+      outcomes: [filteredYes.slice(0, 25), filteredNo.slice(0, 25)],
+      title: filteredTitle.slice(0, 45),
     })
     .catch(async (error) => {
-      if (isPredictionAlreadyActiveError(error)) throw error
+      if (isPredictionAlreadyActiveError(error)) {throw error}
 
       try {
         if (error.stack?.includes('The user context for the user')) {
@@ -121,7 +127,7 @@ export const openTwitchBet = async ({
           })
           return
         }
-      } catch (_e) {
+      } catch {
         // just means couldn't find the error in the stack
       }
 
@@ -133,7 +139,7 @@ export const openTwitchBet = async ({
           })
           return
         }
-      } catch (_e) {
+      } catch {
         // just means couldn't json parse the message for the case above
       }
 
@@ -162,11 +168,11 @@ export const openTwitchBet = async ({
 
           return
         }
-      } catch (_e) {
+      } catch {
         // just means couldn't json parse the message for the two cases above
       }
 
-      logger.error('[PREDICT] [BETS] Failed to open twitch bet', { twitchId, heroName, error })
+      logger.error('[PREDICT] [BETS] Failed to open twitch bet', { error, heroName, twitchId })
 
       throw error
     })

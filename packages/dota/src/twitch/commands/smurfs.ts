@@ -34,10 +34,10 @@ commandHandler.registerCommand('smurfs', {
       .then((desc) => {
         chatClient.say(message.channel.name, desc, message.user.messageId)
       })
-      .catch((e) => {
+      .catch((error) => {
         chatClient.say(
           message.channel.name,
-          e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+          error?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
           message.user.messageId
         )
       })

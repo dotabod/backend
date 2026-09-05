@@ -5,8 +5,8 @@ import { t } from 'i18next'
 import { getDotabodRankProfile, getRankDescription, getRankTitle } from '../../dota/lib/ranks'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('mmr', {
   aliases: ['rank', 'medal'],
@@ -34,20 +34,20 @@ commandHandler.registerCommand('mmr', {
         chatClient.say(
           channel,
           t('chattersRankUnknown', {
-            username: (await moderateText(username)) || username,
-            url: 'dotabod.com/verify',
             lng: message.channel.client.locale,
+            url: 'dotabod.com/verify',
+            username: (await moderateText(username)) || username,
           })
         )
       } else {
         chatClient.say(
           channel,
           t('chattersRank', {
+            lng: message.channel.client.locale,
             rank:
               getRankTitle(rankProfile.rank_tier) +
               (rankProfile.leaderboard_rank > 0 ? ` #${rankProfile.leaderboard_rank}` : ''),
             username,
-            lng: message.channel.client.locale,
           }),
           message.user.messageId
         )
@@ -126,14 +126,14 @@ commandHandler.registerCommand('mmr', {
           }
         })
         .catch((error) => {
-          logger.error('[MMR] Failed to get rank description', { error: error, channel })
+          logger.error('[MMR] Failed to get rank description', { error, channel })
         })
       return
     }
 
     const act = client.SteamAccount.find((a) => a.steam32Id === client.steam32Id)
     logger.debug('[MMR] Finding active Steam account', {
-      accountDetails: act ? { name: act.name, mmr: act.mmr, steam32Id: act.steam32Id } : null,
+      accountDetails: act ? { mmr: act.mmr, name: act.name, steam32Id: act.steam32Id } : null,
       channel,
       currentSteam32Id: client.steam32Id,
       foundAccount: !!act,
@@ -186,7 +186,7 @@ commandHandler.registerCommand('mmr', {
         }
       })
       .catch((error) => {
-        logger.error('[MMR] Failed to get rank description', { error: error, channel })
+        logger.error('[MMR] Failed to get rank description', { error, channel })
       })
   },
 })

@@ -13,10 +13,14 @@ let authProvider: RefreshingAuthProvider | null = null
  */
 export const getAuthProvider = () => {
   // Ensure Twitch credentials are available
-  if (!hasTokens) {throw new Error('Missing Twitch tokens')}
+  if (!hasTokens) {
+    throw new Error('Missing Twitch tokens')
+  }
 
   // Return existing instance if available
-  if (authProvider) {return authProvider}
+  if (authProvider) {
+    return authProvider
+  }
 
   // Create new auth provider instance
   authProvider = new RefreshingAuthProvider({

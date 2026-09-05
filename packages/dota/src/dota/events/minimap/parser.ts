@@ -78,7 +78,9 @@ class MinimapParser {
   ]
 
   init(data: Packet, dataBroadcaster: DataBroadcasterInterface) {
-    if (!isPlayingMatch(data)) {return}
+    if (!isPlayingMatch(data)) {
+      return
+    }
 
     const parsed = this.parse(data)
 
@@ -248,7 +250,9 @@ class MinimapParser {
 
     entities.forEach((key) => {
       const entity = data.minimap?.[key]
-      if (!entity) {return}
+      if (!entity) {
+        return
+      }
 
       // Heroes
       if (

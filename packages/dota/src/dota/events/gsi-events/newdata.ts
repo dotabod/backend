@@ -7,8 +7,17 @@ import MongoDBSingleton from '../../../steam/MongoDBSingleton'
 import { steamSocket } from '../../../steam/ws'
 import commandHandler from '../../../twitch/lib/CommandHandler' // Import commandHandler here
 import { findSpectatorIdx } from '../../../twitch/lib/findGSIByAccountId'
-import { ChatMessageType, validEventTypes } from '../../../types';
-import type { Abilities, Ability, DelayedGames, Hero, Item, Items, Packet, SocketClient } from '../../../types';
+import { ChatMessageType, validEventTypes } from '../../../types'
+import type {
+  Abilities,
+  Ability,
+  DelayedGames,
+  Hero,
+  Item,
+  Items,
+  Packet,
+  SocketClient,
+} from '../../../types'
 import CustomError from '../../../utils/customError'
 import { getRedisNumberValue, is8500Plus } from '../../../utils/index'
 import { consumeMultiAccountRecovery, events } from '../../globalEventEmitter'
@@ -31,7 +40,9 @@ import { sendExtensionPubSubBroadcastMessageIfChanged } from './sendExtensionPub
 import { shouldLogUnknownGsiEvent } from './unknownEventDiagnostics'
 
 async function chatterMatchFound(client: SocketClient) {
-  if (!client.stream_online) {return}
+  if (!client.stream_online) {
+    return
+  }
 
   const commands = DelayedCommands.filter((cmd) =>
     getValueOrDefault(cmd.key, client.settings, client.subscription)
@@ -150,9 +161,13 @@ async function saveMatchData(client: SocketClient) {
   // Since match data is delayed it will run far fewer than before, when checking actual match id of an ingame match
   // the matchid is saved when the hero is selected
   const matchId = await redisClient.client.get(`${client.token}:matchId`)
-  if (!matchId || !Number(matchId)) {return}
+  if (!matchId || !Number(matchId)) {
+    return
+  }
 
-  if (!client.steam32Id) {return}
+  if (!client.steam32Id) {
+    return
+  }
 
   // Check for account sharing before proceeding with match data processing
   const accountSharingDetected = await checkAccountSharing(client, matchId)
@@ -168,7 +183,9 @@ async function saveMatchData(client: SocketClient) {
   if (cachedData) {
     // If cache is still valid, use cached data and return
     if (Date.now() - cachedData.timestamp < CACHE_EXPIRATION) {
-      if (cachedData.steamServerId && cachedData.lobbyType !== null) {return}
+      if (cachedData.steamServerId && cachedData.lobbyType !== null) {
+        return
+      }
     } else {
       // If cache expired, remove it
       matchDataCache.delete(cacheKey)
@@ -208,7 +225,9 @@ async function saveMatchData(client: SocketClient) {
       timestamp: now,
     })
 
-    if (steamServerId && lobbyType !== null) {return}
+    if (steamServerId && lobbyType !== null) {
+      return
+    }
 
     // PRESERVED — gated, not dead. This block is the sole writer of the redis steamServerId key
     // that the ordinary-pub `!items`/`!stats`/`!winprobability` fallback later reads. SourceTV
@@ -221,7 +240,9 @@ async function saveMatchData(client: SocketClient) {
       ENABLE_SPECTATE_FRIEND_GAME
     ) {
       // Fix: Check if we're already looking up this match to prevent race conditions
-      if (steamServerLookupMap.has(matchId)) {return}
+      if (steamServerLookupMap.has(matchId)) {
+        return
+      }
 
       // Add to lookup map before starting the async operation
       steamServerLookupMap.add(matchId)
@@ -294,7 +315,9 @@ async function saveMatchData(client: SocketClient) {
 
     if (currentSteamServerId && lobbyType === null && !is8500Plus(client)) {
       // Fix: Check if we're already looking up this match to prevent race conditions
-      if (steamDelayDataLookupMap.has(matchId)) {return}
+      if (steamDelayDataLookupMap.has(matchId)) {
+        return
+      }
 
       steamDelayDataLookupMap.add(matchId)
 
@@ -412,9 +435,11 @@ cleanupAccountSharingLogCache()
 
 // Account sharing detection - blocks processing for multiple Steam accounts per token
 export async function checkAccountSharing(client: SocketClient, matchId: string): Promise<boolean> {
-  if (!client.steam32Id || !matchId) {return false}
+  if (!client.steam32Id || !matchId) {
+    return false
+  }
 
-  const {steam32Id} = client
+  const { steam32Id } = client
   const currentToken = client.token
   const currentTime = Date.now()
 
@@ -527,7 +552,9 @@ const _saveMatchDataDump = async (dotaClient: GSIHandlerType) => {
   }
 
   const matchId = dotaClient.client.gsi?.map?.matchid
-  if (!matchId) {return}
+  if (!matchId) {
+    return
+  }
 
   const now = Date.now()
   const lastSaveTime = lastSaveTimeByMatch.get(matchId) || 0
@@ -614,7 +641,9 @@ const _maybeSendTooltipData = async (dotaClient: GSIHandlerType) => {
     abilities = dotaClient.client.gsi?.abilities
   }
 
-  if (!hero || !items || !abilities) {return}
+  if (!hero || !items || !abilities) {
+    return
+  }
 
   const inv = Object.values(items ?? {})
   const backpackItems: Item[] = inv.slice(0, 9)
@@ -627,7 +656,7 @@ const _maybeSendTooltipData = async (dotaClient: GSIHandlerType) => {
     items: backpackItems.map((item) => item.name),
     neutral: items?.neutral0?.name,
   }
-  return await sendExtensionPubSubBroadcastMessageIfChanged(dotaClient, messageToSend)
+   await sendExtensionPubSubBroadcastMessageIfChanged(dotaClient, messageToSend)
 }
 
 // Catch all
@@ -639,7 +668,9 @@ eventHandler.registerEvent('newdata', {
     if (wasMultiAccountBlocked && !recoveryAttemptedBeforeDispatch) {
       await dotaClient.updateSteam32Id()
     }
-    if (dotaClient.client.multiAccount) {return}
+    if (dotaClient.client.multiAccount) {
+      return
+    }
 
     // New users who don't have a steam account saved yet
     // This needs to run first so we have client.steamid on multiple acts

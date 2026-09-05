@@ -8,8 +8,13 @@ import {
   isInGracePeriod,
 } from '../subscription.ts'
 
-const sub = (overrides: Partial<SubscriptionRow>): SubscriptionRow =>
-  ({ id: 's1', isGift: false, status: 'ACTIVE', tier: 'PRO', ...overrides })
+const sub = (overrides: Partial<SubscriptionRow>): SubscriptionRow => ({
+  id: 's1',
+  isGift: false,
+  status: 'ACTIVE',
+  tier: 'PRO',
+  ...overrides,
+})
 
 describe(getRequiredTier, () => {
   it('defaults to PRO when no feature is given', () => {
@@ -66,7 +71,9 @@ describe(canAccessFeature, () => {
   })
 
   it('grants a pro feature to a TRIALING PRO subscriber', () => {
-    expect(canAccessFeature('bets', sub({ status: 'TRIALING', tier: 'PRO' })).hasAccess).toBeTruthy()
+    expect(
+      canAccessFeature('bets', sub({ status: 'TRIALING', tier: 'PRO' })).hasAccess
+    ).toBeTruthy()
   })
 
   it('denies a pro feature to a FREE-tier subscriber', () => {

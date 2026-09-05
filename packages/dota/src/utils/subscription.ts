@@ -1,8 +1,8 @@
 import type { Database } from '@dotabod/shared-utils'
 
 import type { ChatterSettingKeys, SettingKeys } from '../types/settings'
-import { isSubscriptionActive, SUBSCRIPTION_TIERS } from '../types/subscription';
-import type { SubscriptionRow } from '../types/subscription';
+import { isSubscriptionActive, SUBSCRIPTION_TIERS } from '../types/subscription'
+import type { SubscriptionRow } from '../types/subscription'
 
 const TIER_LEVELS: Record<Database['public']['Enums']['SubscriptionTier'], number> = {
   [SUBSCRIPTION_TIERS.FREE]: 0,
@@ -163,7 +163,9 @@ export type GenericFeature = keyof typeof GENERIC_FEATURE_TIERS
 export function getRequiredTier(
   feature?: FeatureTier | GenericFeature
 ): Database['public']['Enums']['SubscriptionTier'] {
-  if (!feature) {return SUBSCRIPTION_TIERS.PRO}
+  if (!feature) {
+    return SUBSCRIPTION_TIERS.PRO
+  }
 
   return (
     FEATURE_TIERS[feature as FeatureTier] ||
@@ -208,11 +210,12 @@ export function canAccessFeature(
     }
   }
 
-  if (!subscription?.tier)
-    {return {
+  if (!subscription?.tier) {
+    return {
       hasAccess: false,
-      requiredTier: requiredTier,
-    }}
+      requiredTier,
+    }
+  }
 
   // Return early if feature is free or subscription is invalid
   if (isFreeFeature || !subscription || !isSubscriptionActive(subscription)) {

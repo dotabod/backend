@@ -31,7 +31,9 @@ function walk(dir: string, out: string[] = []): string[] {
     const p = join(dir, entry)
     if (statSync(p).isDirectory()) {
       // CLI-only entries live under src/scripts/ and are never bundled.
-      if (entry === 'scripts' || entry === '__tests__') {continue}
+      if (entry === 'scripts' || entry === '__tests__') {
+        continue
+      }
       walk(p, out)
     } else if (entry.endsWith('.ts')) {
       out.push(p)

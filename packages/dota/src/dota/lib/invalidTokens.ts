@@ -32,7 +32,9 @@ export class InvalidTokensCache {
 
   has(value: unknown): boolean {
     const expiry = this.mem.get(value)
-    if (expiry === undefined) {return false}
+    if (expiry === undefined) {
+      return false
+    }
     if (Date.now() >= expiry) {
       this.mem.delete(value)
       return false
@@ -97,13 +99,13 @@ export class InvalidTokensCache {
   }
 
   private seed(): void {
-    for (const v of SEED_VALUES) {this.mem.set(v, NEVER_EXPIRES)}
+    for (const v of SEED_VALUES) {
+      this.mem.set(v, NEVER_EXPIRES)
+    }
   }
 }
 
-export const invalidTokens = new InvalidTokensCache(
-  () => redisClient.client
-)
+export const invalidTokens = new InvalidTokensCache(() => redisClient.client)
 
 /**
  * Boot-time hydration. Always runs both layers:

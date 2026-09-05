@@ -17,7 +17,9 @@ async function fire(
   payload: { new?: Record<string, unknown>; old?: Record<string, unknown> }
 ) {
   const handler = state.channelHandlers.get(`${event}:${table}`)
-  if (!handler) {throw new Error(`no handler registered for ${event}:${table}`)}
+  if (!handler) {
+    throw new Error(`no handler registered for ${event}:${table}`)
+  }
   await handler(payload)
 }
 
@@ -81,7 +83,9 @@ describe(setupAccountWatcher, () => {
     })
 
     expect(state.subscribeCalls.some((c) => c.userId === 'tw-new')).toBeTruthy()
-    expect(state.updates.some((u) => u.table === 'users' && u.values.name === 'newbie')).toBeTruthy()
+    expect(
+      state.updates.some((u) => u.table === 'users' && u.values.name === 'newbie')
+    ).toBeTruthy()
   })
 
   it('INSERT:accounts (non-twitch provider) → ignored', async () => {
@@ -129,7 +133,9 @@ describe(setupAccountWatcher, () => {
     expect(deleteCalls).toHaveLength(2)
     // And the user's entry should be removed from the in-memory map.
     expect(eventSubMap['tw-gone']).toBeUndefined()
-    expect(state.logError.some((l) => l.message.includes('DELETE stopUserSubscriptions'))).toBeFalsy()
+    expect(
+      state.logError.some((l) => l.message.includes('DELETE stopUserSubscriptions'))
+    ).toBeFalsy()
   })
 
   it('UPDATE:accounts (non-twitch provider) → ignored even on requires_refresh flip', async () => {
@@ -324,7 +330,9 @@ describe(setupAccountWatcher, () => {
 
       // The status callback never attached (channel() threw), but the catch
       // path logged an error and scheduled a reconnect.
-      expect(state.logError.some((l) => l.message.includes('supabase.channel() threw'))).toBeTruthy()
+      expect(
+        state.logError.some((l) => l.message.includes('supabase.channel() threw'))
+      ).toBeTruthy()
 
       // Clear the error so the next channel() call succeeds.
       state.channelCreationError = null
@@ -344,7 +352,9 @@ describe(setupAccountWatcher, () => {
       state.channelOnError = new Error('invalid event filter')
       setupAccountWatcher()
 
-      expect(state.logError.some((l) => l.message.includes('channel.on/.subscribe threw'))).toBeTruthy()
+      expect(
+        state.logError.some((l) => l.message.includes('channel.on/.subscribe threw'))
+      ).toBeTruthy()
 
       // Clear the error and let the reconnect tick.
       state.channelOnError = null
@@ -365,6 +375,8 @@ describe(setupAccountWatcher, () => {
       new: { provider: 'twitch', providerAccountId: 'tw-broken' },
     })
 
-    expect(state.logError.some((l) => l.message === '[WATCHER] INSERT handleNewUser failed')).toBeTruthy()
+    expect(
+      state.logError.some((l) => l.message === '[WATCHER] INSERT handleNewUser failed')
+    ).toBeTruthy()
   })
 })

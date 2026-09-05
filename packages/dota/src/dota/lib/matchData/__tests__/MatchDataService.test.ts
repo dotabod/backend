@@ -3,10 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildSharedUtilsMock } from '../../../../__tests__/sharedMocks.ts'
 
 const noopLogger = {
-  debug: () => undefined,
-  error: () => undefined,
-  info: () => undefined,
-  warn: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 
 // Per-test supabase rows for the streamers-in-match count test.
@@ -46,7 +46,7 @@ let mongoFindOneOverride: (() => Promise<unknown>) | null = null
 
 vi.doMock(import('../../../../steam/MongoDBSingleton'), () => ({
   default: {
-    close: async () => undefined,
+    close: async () => {},
     connect: async () => ({
       collection: () => ({
         findOne: async () => {
@@ -101,10 +101,16 @@ function withVisionHost() {
 
 afterEach(() => {
   globalThis.fetch = realFetch
-  if (origVisionHost === undefined) {delete process.env.VISION_API_HOST}
-  else {process.env.VISION_API_HOST = origVisionHost}
-  if (origVisionKey === undefined) {delete process.env.VISION_API_KEY}
-  else {process.env.VISION_API_KEY = origVisionKey}
+  if (origVisionHost === undefined) {
+    delete process.env.VISION_API_HOST
+  } else {
+    process.env.VISION_API_HOST = origVisionHost
+  }
+  if (origVisionKey === undefined) {
+    delete process.env.VISION_API_KEY
+  } else {
+    process.env.VISION_API_KEY = origVisionKey
+  }
 })
 
 // --- Client fixture ---
@@ -126,7 +132,7 @@ function makeClient(o: ClientOverrides = {}): any {
   const ownAccountId = o.ownAccountId ?? '111'
   const baseGsi = matchid
     ? {
-        hero: o.ownHeroId !== undefined ? { id: o.ownHeroId } : undefined,
+        hero: o.ownHeroId === undefined ? undefined : { id: o.ownHeroId },
         map: { customgamename: '', matchid, win_team: 'none' },
         player: { accountid: ownAccountId, team_name: 'radiant' },
       }
@@ -138,10 +144,10 @@ function makeClient(o: ClientOverrides = {}): any {
   return {
     SteamAccount: [
       {
-        steam32Id: 111,
-        mmr: o.mmr ?? 4000,
         leaderboard_rank: o.leaderboard_rank ?? null,
+        mmr: o.mmr ?? 4000,
         name: 'self',
+        steam32Id: 111,
       },
     ],
     gsi: o.gsi ?? baseGsi,
@@ -161,8 +167,8 @@ function sourceTvDoc(opts: { partialHeroes?: boolean } = {}) {
     average_mmr: 6500,
     match: { game_mode: 22, lobby_type: 7, match_id: '8800000001' },
     players: Array.from({ length: 10 }, (_, i) => ({
-      heroid: opts.partialHeroes && i >= 7 ? 0 : i + 1,
       accountid: 1000 + i,
+      heroid: opts.partialHeroes && i >= 7 ? 0 : i + 1,
     })),
     spectators: 3,
   }
@@ -172,15 +178,15 @@ function visionHeroesPayload() {
   return {
     heroes: Array.from({ length: 10 }, (_, i) => ({
       hero_id: i + 1,
-      hero_name: `hero${i + 1}`,
       hero_localized_name: `Hero ${i + 1}`,
+      hero_name: `hero${i + 1}`,
       match_score: 100,
-      position: i,
+      player_id: i,
       player_name: `Player ${i + 1}`,
+      position: i,
       rank: 8500 + i * 50,
       team: i < 5 ? 'radiant' : 'dire',
       variant: '',
-      player_id: i,
     })),
     match_id: '8800000001',
     players: [],
@@ -255,7 +261,9 @@ describe('MatchDataService — sync getters', () => {
   })
 
   it('isHighMmr is true when steam_account has leaderboard rank', () => {
-    expect(new MatchDataService(makeClient({ leaderboard_rank: 500, mmr: 100 })).isHighMmr).toBeTruthy()
+    expect(
+      new MatchDataService(makeClient({ leaderboard_rank: 500, mmr: 100 })).isHighMmr
+    ).toBeTruthy()
   })
 
   it('isHighMmr is false sub-8500 with no leaderboard', () => {
@@ -549,7 +557,9 @@ describe('MatchDataService — memoization', () => {
   })
 
   it('getDelayedGameDoc returns null without I/O when matchId is undefined', async () => {
-    await expect(new MatchDataService(makeClient({ matchid: '0' })).getDelayedGameDoc()).resolves.toBeNull()
+    await expect(
+      new MatchDataService(makeClient({ matchid: '0' })).getDelayedGameDoc()
+    ).resolves.toBeNull()
     expect(mongoCallCount).toBe(0)
   })
 
@@ -561,7 +571,9 @@ describe('MatchDataService — memoization', () => {
     await svc.getCards()
     await svc.getCards()
     expect(socketCallCount).toBe(1)
-    expect(socketLastIds).toStrictEqual([1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009])
+    expect(socketLastIds).toStrictEqual([
+      1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009,
+    ])
   })
 
   it('getCards returns [] without socket emit when there are no real accountIds', async () => {
@@ -597,7 +609,9 @@ describe('MatchDataService — memoization', () => {
       _ids: number[],
       _refetch: boolean,
       cb: (err: unknown, cards: unknown) => void
-    ) =>{  cb(new Error('socket boom'), null); }) as typeof ws.steamSocket.emit
+    ) => {
+      cb(new Error('socket boom'), null)
+    }) as typeof ws.steamSocket.emit
     let caught: unknown = null
     try {
       await new MatchDataService(makeClient()).getCards()
@@ -613,7 +627,9 @@ describe('MatchDataService — memoization', () => {
     let calls = 0
     mongoFindOneOverride = async () => {
       calls++
-      if (calls === 1) {throw new Error('transient mongo')}
+      if (calls === 1) {
+        throw new Error('transient mongo')
+      }
       return sourceTvDoc()
     }
     noVisionHost()
@@ -634,7 +650,9 @@ describe('MatchDataService — memoization', () => {
 
 describe('MatchDataService — per-slot lookups + getSelf + focused spectator', () => {
   it('findPlayerBySlot returns null for NaN', async () => {
-    await expect(new MatchDataService(makeClient()).findPlayerBySlot(Number.NaN)).resolves.toBeNull()
+    await expect(
+      new MatchDataService(makeClient()).findPlayerBySlot(Number.NaN)
+    ).resolves.toBeNull()
   })
 
   it('findPlayerBySlot locates spectator slots', async () => {
@@ -680,7 +698,9 @@ describe('MatchDataService — per-slot lookups + getSelf + focused spectator', 
   })
 
   it('getSelf returns null when steam32Id is unset', async () => {
-    await expect(new MatchDataService(makeClient({ steam32Id: null })).getSelf()).resolves.toBeNull()
+    await expect(
+      new MatchDataService(makeClient({ steam32Id: null })).getSelf()
+    ).resolves.toBeNull()
   })
 
   it('getFocusedSpectatorPlayer returns the unit with `selected: true`', async () => {

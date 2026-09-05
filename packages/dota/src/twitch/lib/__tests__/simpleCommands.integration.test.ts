@@ -35,8 +35,11 @@ describe('!version', () => {
   const original = process.env.COMMIT_HASH
 
   afterEach(() => {
-    if (original === undefined) {delete process.env.COMMIT_HASH}
-    else {process.env.COMMIT_HASH = original}
+    if (original === undefined) {
+      delete process.env.COMMIT_HASH
+    } else {
+      process.env.COMMIT_HASH = original
+    }
   })
 
   it('reports the unknown-version message when COMMIT_HASH is unset', async () => {
@@ -72,7 +75,7 @@ describe('!steam', () => {
   it('reports the multiAccount message when no steam32Id and multiAccount is set', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        clientOverrides: { steam32Id: null, multiAccount: true } as any,
+        clientOverrides: { multiAccount: true, steam32Id: null } as any,
         content: '!steam',
       })
     )
@@ -94,8 +97,8 @@ describe('!match', () => {
         clientOverrides: {
           gsi: {
             map: {
-              matchid: '7777777777',
               game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+              matchid: '7777777777',
               win_team: 'none',
             },
             player: { activity: 'playing' },
@@ -114,13 +117,13 @@ describe('!match', () => {
       makeMessage({
         clientOverrides: {
           gsi: {
+            hero: { team2: {} },
             map: {
-              matchid: '8980144969',
               game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+              matchid: '8980144969',
               win_team: 'none',
             },
-            player: { activity: 'watching', team_name: 'spectator', team2: {} },
-            hero: { team2: {} },
+            player: { activity: 'watching', team2: {}, team_name: 'spectator' },
           },
           gsiUpdatedAt: Date.now(),
         } as any,
@@ -136,14 +139,14 @@ describe('!match', () => {
       makeMessage({
         clientOverrides: {
           gsi: {
+            hero: { id: 1 },
             map: {
               customgamename: 'hero_demo',
-              matchid: '0',
               game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+              matchid: '0',
               win_team: 'none',
             },
             player: { activity: 'playing' },
-            hero: { id: 1 },
           },
           gsiUpdatedAt: Date.now(),
         } as any,
@@ -230,8 +233,11 @@ describe('!song', () => {
   })
 
   afterAll(() => {
-    if (origApiKey === undefined) {delete process.env.LASTFM_API_KEY}
-    else {process.env.LASTFM_API_KEY = origApiKey}
+    if (origApiKey === undefined) {
+      delete process.env.LASTFM_API_KEY
+    } else {
+      process.env.LASTFM_API_KEY = origApiKey
+    }
   })
 
   afterEach(() => {
@@ -268,10 +274,10 @@ describe('!song', () => {
         '@attr': {},
         track: [
           {
+            '@attr': { nowplaying: 'true' },
+            album: { '#text': 'The Chronic' },
             artist: { '#text': 'Dr. Dre &amp; Friends' },
             name: 'Fuck Wit Dre Day (And Everybody&#39;s Celebratin&#39;)',
-            album: { '#text': 'The Chronic' },
-            '@attr': { nowplaying: 'true' },
           },
         ],
       },
@@ -292,11 +298,19 @@ describe('!song', () => {
 
   it('runs artist/title/album through moderateText before emitting', async () => {
     state.moderateTextOverride = (text?: string | string[]) => {
-      if (typeof text !== 'string') {return text}
+      if (typeof text !== 'string') {
+        return text
+      }
       // Pretend the filter redacted these fields.
-      if (text === 'Bad Artist') {return '***'}
-      if (text === 'Bad Title') {return '***'}
-      if (text === 'Bad Album') {return '***'}
+      if (text === 'Bad Artist') {
+        return '***'
+      }
+      if (text === 'Bad Title') {
+        return '***'
+      }
+      if (text === 'Bad Album') {
+        return '***'
+      }
       return text
     }
     mockLastFm({
@@ -304,10 +318,10 @@ describe('!song', () => {
         '@attr': {},
         track: [
           {
+            '@attr': { nowplaying: 'true' },
+            album: { '#text': 'Bad Album' },
             artist: { '#text': 'Bad Artist' },
             name: 'Bad Title',
-            album: { '#text': 'Bad Album' },
-            '@attr': { nowplaying: 'true' },
           },
         ],
       },
@@ -335,7 +349,7 @@ describe('!song', () => {
             name: 'Nuthin But A G Thang',
             album: { '#text': 'The Chronic' },
             // no @attr.nowplaying → not currently playing
-            date: { uts: '1700000000', '#text': '...' },
+            date: { '#text': '...', uts: '1700000000' },
           },
         ],
       },

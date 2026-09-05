@@ -24,8 +24,8 @@ startHeartbeat()
 startHeartbeat({
   debounceMs: 90_000,
   getStatus: () => ({
-    up: isConnectedToSteam,
     msg: isConnectedToSteam ? 'connected' : 'steam gc disconnected',
+    up: isConnectedToSteam,
   }),
   name: 'steam gc heartbeat',
   url: process.env.KUMA_PUSH_URL_GC,
@@ -80,14 +80,15 @@ socketIoServer.on('connection', (socket) => {
   })
 
   // Add timeout for long-running operations (e.g., 30 seconds)
-  const withTimeout =  async <T>(fn: Promise<T>, timeoutMs = 30_000): Promise<T> => 
-    Promise.race([
+  const withTimeout = async <T>(fn: Promise<T>, timeoutMs = 30_000): Promise<T> =>
+    await Promise.race([
       fn,
       new Promise<never>((_, reject) =>
-        setTimeout(() =>{  reject(new Error('Operation timed out')); }, timeoutMs)
+        setTimeout(() => {
+          reject(new Error('Operation timed out'))
+        }, timeoutMs)
       ),
     ])
-  
 
   socket.on('getVersion', (ack: (commitHash: string | null) => void) => {
     ack(process.env.COMMIT_HASH ?? null)
@@ -108,9 +109,9 @@ socketIoServer.on('connection', (socket) => {
     } catch (error) {
       logger.error('[STEAM] Error getting cards', {
         accountIds,
-        refetchCards,
-        errorAll: error,
         error: (error as Error).message,
+        errorAll: error,
+        refetchCards,
       })
       callback((error as Error).message, null)
     }
@@ -158,9 +159,9 @@ socketIoServer.on('connection', (socket) => {
       callback(null, result)
     } catch (error) {
       logger.error('[STEAM] Error getting user steam server, unknown error', {
-        steam32Id,
         error,
         error: (error as Error).message,
+        steam32Id,
       })
       callback((error as Error).message, null)
     }

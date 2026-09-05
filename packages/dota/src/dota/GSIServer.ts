@@ -2,11 +2,11 @@ import http from 'node:http'
 
 import { getTwitchAPI, logger, supabase } from '@dotabod/shared-utils'
 import cors from 'cors'
-import express, { json, urlencoded } from 'express';
-import type { ErrorRequestHandler, Request, Response } from 'express';
+import express, { json, urlencoded } from 'express'
+import type { ErrorRequestHandler, Request, Response } from 'express'
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
-import { Server } from 'socket.io';
-import type { Socket } from 'socket.io';
+import { Server } from 'socket.io'
+import type { Socket } from 'socket.io'
 
 import getDBUser from '../db/getDBUser'
 import { getWL } from '../db/getWL'
@@ -72,7 +72,9 @@ function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
         }
 
         if (reason === 'Token is currently being looked up' && attempt < 20) {
-          setTimeout(() =>{  authenticate(attempt + 1); }, 100)
+          setTimeout(() => {
+            authenticate(attempt + 1)
+          }, 100)
           return
         }
 
@@ -80,7 +82,7 @@ function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
         socket.disconnect(true)
       })
       .catch((error) => {
-        logger.info('[GSI] Error checking auth', { token, twitchId, error })
+        logger.info('[GSI] Error checking auth', { error, token, twitchId })
         socket.emit('auth_error', 'Authentication error')
         socket.disconnect(true)
       })
@@ -175,7 +177,9 @@ async function handleSocketConnection(socket: Socket) {
   // Signal that this user's overlay browser source has connected at least once.
   // Drives the setup wizard's Step 3 verify-state. Cached + idempotent.
   recordOverlaySocketActivity(token)
-  socket.on('diagnostic-heartbeat', () =>{  recordOverlaySocketActivity(token); })
+  socket.on('diagnostic-heartbeat', () => {
+    recordOverlaySocketActivity(token)
+  })
 
   const handler = gsiHandlers.get(token)
   if (handler && !handler.disabled && handler.client.stream_online) {
@@ -219,7 +223,7 @@ class GSIServer implements GSIServerInterface {
       cors: {
         origin: allowedOrigins,
       },
-      pingInterval: 15000,
+      pingInterval: 15_000,
       pingTimeout: 60_000,
     })
 

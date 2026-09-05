@@ -81,7 +81,9 @@ export class DelayedQueue {
   }
 
   private start(): void {
-    if (this.isRunning) {return}
+    if (this.isRunning) {
+      return
+    }
 
     this.isRunning = true
     this.intervalId = setInterval(() => {

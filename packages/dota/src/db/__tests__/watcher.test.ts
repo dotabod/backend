@@ -274,7 +274,7 @@ describe('dota watcher: win/loss adjustments', () => {
 describe('dota watcher: steam account relationship invalidation', () => {
   it('DELETE clears a cached connected claimant even when the row owner is absent', async () => {
     const { client, handler } = seedClient({
-      multiAccount: 440614454,
+      multiAccount: 440_614_454,
       multiAccountRevalidatedAt: 123,
       name: 'claimant-name',
       providerAccountId: 'tw-claimant',
@@ -289,7 +289,7 @@ describe('dota watcher: steam account relationship invalidation', () => {
       old: {
         connectedUserIds: ['claimant'],
         id: 'steam-row',
-        steam32Id: 440614454,
+        steam32Id: 440_614_454,
         userId: 'missing-owner',
       },
     })
@@ -307,7 +307,7 @@ describe('dota watcher: steam account relationship invalidation', () => {
   it('DELETE clears the owner and connected claimants independently and is idempotent', async () => {
     seedClient({ providerAccountId: 'tw-owner', userId: 'owner' })
     seedClient({
-      multiAccount: 12345,
+      multiAccount: 12_345,
       providerAccountId: 'tw-claimant',
       userId: 'claimant',
     })
@@ -321,7 +321,7 @@ describe('dota watcher: steam account relationship invalidation', () => {
       old: {
         connectedUserIds: ['claimant'],
         id: 'steam-row',
-        steam32Id: 12345,
+        steam32Id: 12_345,
         userId: 'owner',
       },
     }
@@ -380,7 +380,7 @@ describe('dota watcher: steam account relationship invalidation', () => {
 
   it('connectedUserIds removal clears only the removed claimant', async () => {
     seedClient({
-      steamAccounts: [{ steam32Id: 777, mmr: 5000, name: 'account', leaderboard_rank: null }],
+      steamAccounts: [{ leaderboard_rank: null, mmr: 5000, name: 'account', steam32Id: 777 }],
       userId: 'owner',
     })
     seedClient({ multiAccount: 777, userId: 'removed' })
@@ -416,7 +416,7 @@ describe('dota watcher: steam account relationship invalidation', () => {
 
   it('ordinary MMR/profile UPDATE refreshes local data without evicting clients', async () => {
     const { client } = seedClient({
-      steamAccounts: [{ steam32Id: 777, mmr: 5000, name: 'old', leaderboard_rank: null }],
+      steamAccounts: [{ leaderboard_rank: null, mmr: 5000, name: 'old', steam32Id: 777 }],
       userId: 'owner',
     })
     seedClient({ multiAccount: 777, userId: 'claimant' })

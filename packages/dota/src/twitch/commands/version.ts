@@ -3,18 +3,20 @@ import type { Socket as ClientSocket } from 'socket.io-client'
 
 import { steamSocket, twitchChat, twitchEvents } from '../../steam/ws'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 const VERSION_ACK_TIMEOUT_MS = 2000
 
- async function fetchVersion(socket: ClientSocket): Promise<string | null> {
-  return new Promise((resolve) => {
+async function fetchVersion(socket: ClientSocket): Promise<string | null> {
+  return await new Promise((resolve) => {
     if (!socket.connected) {
       resolve(null)
       return
     }
-    const timer = setTimeout(() =>{  resolve(null); }, VERSION_ACK_TIMEOUT_MS)
+    const timer = setTimeout(() => {
+      resolve(null)
+    }, VERSION_ACK_TIMEOUT_MS)
     socket.emit('getVersion', (commitHash: string | null) => {
       clearTimeout(timer)
       resolve(commitHash ?? null)
@@ -54,7 +56,7 @@ commandHandler.registerCommand('version', {
 
     const allKnownAndSame = uniqueHashes.size === 1 && known.length === Object.keys(versions).length
     const versionStr = allKnownAndSame
-      ? (known[0])
+      ? known[0]
       : Object.entries(versions)
           .map(([name, hash]) => `${name}:${hash ?? '?'}`)
           .join(', ')

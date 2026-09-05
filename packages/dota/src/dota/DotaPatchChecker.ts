@@ -27,7 +27,7 @@ async function checkForNewDotaPatch(): Promise<{ isNewPatch: boolean; version: s
     }
 
     // Get the latest patch from the sorted list (patches are sorted with oldest first, newest last)
-    const {patches} = response.data
+    const { patches } = response.data
     const latestPatch = patches.at(-1)
     const currentVersion = latestPatch.patch_name
     const currentTimestamp = latestPatch.patch_timestamp

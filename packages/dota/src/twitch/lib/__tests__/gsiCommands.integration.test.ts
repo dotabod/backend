@@ -34,7 +34,7 @@ const heroDemoGsi = () =>
       matchid: '0',
       win_team: 'none',
     },
-    player: { accountid: 99999, activity: 'playing' },
+    player: { accountid: 99_999, activity: 'playing' },
   }) as any
 
 const spectatorGsi = () =>
@@ -50,7 +50,7 @@ const spectatorGsi = () =>
     },
     player: {
       activity: 'watching',
-      team2: { player0: { accountid: 99999 } },
+      team2: { player0: { accountid: 99_999 } },
       team3: {},
       team_name: 'spectator',
     },

@@ -7,8 +7,8 @@ import { openTwitchBet } from '../../../twitch/lib/openTwitchBet'
 import { refundTwitchBet } from '../../../twitch/lib/refundTwitchBets'
 import { getStreamDelay } from '../../getStreamDelay'
 import { delayedQueue } from '../../lib/DelayedQueue'
-import getHero from '../../lib/getHero';
-import type { HeroNames } from '../../lib/getHero';
+import getHero from '../../lib/getHero'
+import type { HeroNames } from '../../lib/getHero'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import { say } from '../../say'
 import eventHandler from '../EventHandler'
@@ -17,14 +17,18 @@ const redisClient = RedisClient.getInstance()
 
 eventHandler.registerEvent('hero:name', {
   handler: async (dotaClient, name: HeroNames) => {
-    if (!isPlayingMatch(dotaClient.client.gsi)) {return}
+    if (!isPlayingMatch(dotaClient.client.gsi)) {
+      return
+    }
 
     const betsEnabled = getValueOrDefault(
       DBSettings.bets,
       dotaClient.client.settings,
       dotaClient.client.subscription
     )
-    if (!betsEnabled) {return}
+    if (!betsEnabled) {
+      return
+    }
 
     const playingHero = (await redisClient.client.get(
       `${dotaClient.getToken()}:playingHero`

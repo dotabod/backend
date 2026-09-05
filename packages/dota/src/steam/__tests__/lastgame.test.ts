@@ -3,10 +3,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks.ts'
 
 const noopLogger = {
-  debug: () => undefined,
-  error: () => undefined,
-  info: () => undefined,
-  warn: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 
 // Mutable holders so each test controls what Supabase and the delayedGames cache
@@ -30,7 +30,7 @@ vi.doMock(import('@dotabod/shared-utils'), () =>
 
 vi.doMock(import('../MongoDBSingleton'), () => ({
   default: {
-    close: async () => undefined,
+    close: async () => {},
     connect: async () => ({
       collection: () => ({
         find: () => ({ toArray: async () => delayedGamesRows }),
@@ -45,17 +45,17 @@ await initTestI18n()
 const lastgame = (await import('../lastgame.ts')).default
 
 const normalClient = {
-  SteamAccount: [{ steam32Id: 86745912, mmr: 3000 }],
+  SteamAccount: [{ mmr: 3000, steam32Id: 86745912 }],
   mmr: 3000,
   name: 'streamer',
-  steam32Id: 86745912,
+  steam32Id: 86_745_912,
 } as any
 
 const highMmrClient = {
-  SteamAccount: [{ steam32Id: 86745912, mmr: 9000 }],
+  SteamAccount: [{ mmr: 9000, steam32Id: 86745912 }],
   mmr: 9000,
   name: 'streamer',
-  steam32Id: 86745912,
+  steam32Id: 86_745_912,
 } as any
 
 describe('lastgame — not-playing "last game" link', () => {
@@ -68,7 +68,7 @@ describe('lastgame — not-playing "last game" link', () => {
       currentMatchId: undefined,
       currentPlayers: [],
       locale: 'en',
-      steam32Id: 86745912,
+      steam32Id: 86_745_912,
     })
 
     expect(desc).toContain('dotabod.com/streamer/matches')
@@ -83,7 +83,7 @@ describe('lastgame — not-playing "last game" link', () => {
       currentMatchId: undefined,
       currentPlayers: [],
       locale: 'en',
-      steam32Id: 86745912,
+      steam32Id: 86_745_912,
     })
 
     expect(desc).toContain('dotabod.com/streamer/matches')
@@ -98,7 +98,7 @@ describe('lastgame — not-playing "last game" link', () => {
       currentMatchId: undefined,
       currentPlayers: [],
       locale: 'en',
-      steam32Id: 86745912,
+      steam32Id: 86_745_912,
     })
 
     expect(desc).toContain('dotabod.com/streamer/matches')

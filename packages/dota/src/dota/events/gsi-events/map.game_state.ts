@@ -5,16 +5,20 @@ import { is8500Plus } from '../../../utils/index'
 import { getStreamDelay } from '../../getStreamDelay'
 import { announceCapturedCosmetics } from '../../lib/announceCosmetics'
 import { DRAFT_CLIP_OPTS, GAMEPLAY_CLIP_OPTS, scheduleClip } from '../../lib/clipSchedule'
-import { draftStartByMatchId, GLOBAL_DELAY, gameInProgressClipByMatchId } from '../../lib/consts';
-import type { allStates } from '../../lib/consts';
+import { draftStartByMatchId, GLOBAL_DELAY, gameInProgressClipByMatchId } from '../../lib/consts'
+import type { allStates } from '../../lib/consts'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent('map:game_state', {
   handler: async (dotaClient, gameState: (typeof allStates)[number]) => {
     // Early returns for invalid conditions
-    if (!dotaClient.client.stream_online) {return}
-    if (!isPlayingMatch(dotaClient.client.gsi, false)) {return}
+    if (!dotaClient.client.stream_online) {
+      return
+    }
+    if (!isPlayingMatch(dotaClient.client.gsi, false)) {
+      return
+    }
 
     // Release the held cosmetic-set announcement once the hero is visible to everyone
     // (strategy phase on). The pick fired hero:id back in hero selection, where the reveal is
@@ -130,7 +134,9 @@ eventHandler.registerEvent('map:game_state', {
     // an extra clip once the player has loaded in.
     if (gameState === 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS') {
       const matchId = dotaClient.client.gsi?.map?.matchid || ''
-      if (gameInProgressClipByMatchId.get(matchId)) {return}
+      if (gameInProgressClipByMatchId.get(matchId)) {
+        return
+      }
       gameInProgressClipByMatchId.set(matchId, true)
 
       const IN_GAME_CLIP_DELAY_MS = 60_000 // settle ~1 min in; top bar is up all game

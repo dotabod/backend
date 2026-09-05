@@ -11,7 +11,7 @@ describe(VisionResolver, () => {
       calls++
       return null
     })
-    await expect(r.resolve(ctx(undefined))).resolves.toBeNull()
+    await expect(r.resolve(ctx())).resolves.toBeNull()
     expect(calls).toBe(0)
   })
 
@@ -24,8 +24,8 @@ describe(VisionResolver, () => {
     const r = new VisionResolver(async () => ({
       heroes: Array.from({ length: 10 }, (_, i) => ({
         hero_id: i + 1,
-        hero_name: `h${i}`,
         hero_localized_name: `Hero ${i}`,
+        hero_name: `h${i}`,
         match_score: 0,
         position: i,
         team: i < 5 ? 'radiant' : 'dire',
@@ -67,11 +67,11 @@ describe(VisionResolver, () => {
     const r = new VisionResolver(async () => ({
       heroes: Array.from({ length: 10 }, (_, i) => ({
         hero_id: 0,
-        hero_name: '',
         hero_localized_name: '',
+        hero_name: '',
         match_score: 0,
-        position: i % 5,
         player_name: `p${i}`,
+        position: i % 5,
         team: i < 5 ? 'radiant' : 'dire',
         variant: '',
       })),
@@ -87,8 +87,8 @@ describe(VisionResolver, () => {
     const r = new VisionResolver(async () => ({
       heroes: Array.from({ length: 10 }, (_, i) => ({
         hero_id: i + 1,
-        hero_name: `h${i}`,
         hero_localized_name: `Hero ${i}`,
+        hero_name: `h${i}`,
         match_score: 0,
         position: i,
         team: i < 5 ? 'radiant' : 'dire',

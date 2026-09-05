@@ -4,10 +4,10 @@ import { buildSharedUtilsMock } from '../../../../__tests__/sharedMocks.ts'
 import type { RosterPlayer } from '../types'
 
 const noopLogger = {
-  debug: () => undefined,
-  error: () => undefined,
-  info: () => undefined,
-  warn: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 
 // Rows returned per source, set per test.
@@ -41,14 +41,16 @@ const supabase = {
   },
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () => buildSharedUtilsMock({ logger: noopLogger, supabase }))
+vi.doMock(import('@dotabod/shared-utils'), () =>
+  buildSharedUtilsMock({ logger: noopLogger, supabase })
+)
 
 // getStreamersInMatch can fall through to MatchDataService when no roster
 // is provided, which reaches into Mongo. Stub it so tests without roster don't
 // hang trying to connect to a real Mongo singleton.
 vi.doMock(import('../../../../steam/MongoDBSingleton'), () => ({
   default: {
-    close: async () => undefined,
+    close: async () => {},
     connect: async () => ({
       collection: () => ({ findOne: async () => null }),
     }),

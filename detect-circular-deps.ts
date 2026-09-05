@@ -137,12 +137,16 @@ function extractImports(filePath: string): string[] {
 
 // Function to process a file and extract its dependencies
 function processFile(filePath: string): void {
-  if (processedFiles.has(filePath)) {return}
+  if (processedFiles.has(filePath)) {
+    return
+  }
   processedFiles.add(filePath)
 
   // Skip non-source files
   const ext = extname(filePath)
-  if (!extensions.has(ext)) {return}
+  if (!extensions.has(ext)) {
+    return
+  }
 
   const imports = extractImports(filePath)
   const fileDeps = new Set<string>()
@@ -151,10 +155,14 @@ function processFile(filePath: string): void {
   for (const importPath of imports) {
     if (!isInternalModule(importPath)) {
       // Skip external modules
-      if (externalModules.has(importPath)) {continue}
+      if (externalModules.has(importPath)) {
+        continue
+      }
 
       // Skip node built-ins and other external packages
-      if (!importPath.startsWith('@dotabod/')) {continue}
+      if (!importPath.startsWith('@dotabod/')) {
+        continue
+      }
     }
 
     const resolvedImport = resolveImport(importPath, filePath)
@@ -214,7 +222,9 @@ function findCycles(): Map<string, string[]> {
       return
     }
 
-    if (visited.has(node)) {return}
+    if (visited.has(node)) {
+      return
+    }
 
     visited.add(node)
     stack.add(node)

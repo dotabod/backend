@@ -12,17 +12,17 @@ import SteamUser from 'steam-user'
 import { PROFILE_CARD_CACHE_TTL_MS, shouldRefreshCard } from './cardCache'
 import { hasSteamData } from './hasSteamData'
 import MongoDBSingleton from './MongoDBSingleton'
-import { SteamPlayerSummaryService } from './playerSummaries';
-import type { SteamPlayerSummary } from './playerSummaries';
+import { SteamPlayerSummaryService } from './playerSummaries'
+import type { SteamPlayerSummary } from './playerSummaries'
 import { getSocketIoServer } from './socketServer'
 import type { Cards, DelayedGames } from './types/index'
 import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails'
 import type { SteamMatchDetails } from './types/SteamMatchDetails'
 import CustomError from './utils/customError'
-import { patchNodeDota2GcForSteamUser } from './utils/dota2SteamUser';
-import type { SteamLogOnDetails, SteamUserClient } from './utils/dota2SteamUser';
-import { GcWatchdog } from './utils/gcWatchdog';
-import type { GcEvent } from './utils/gcWatchdog';
+import { patchNodeDota2GcForSteamUser } from './utils/dota2SteamUser'
+import type { SteamLogOnDetails, SteamUserClient } from './utils/dota2SteamUser'
+import { GcWatchdog } from './utils/gcWatchdog'
+import type { GcEvent } from './utils/gcWatchdog'
 import { getAccountsFromMatch } from './utils/getAccountsFromMatch'
 import { logger } from './utils/logger'
 import { computeReconnectDelay } from './utils/reconnectBackoff'
@@ -59,11 +59,15 @@ const GC_HEALTH_PATH = `${VOLUME_DIR}/gc-health.json`
 function isRefreshTokenExpired(token: string): boolean {
   try {
     const [, payload] = token.split('.')
-    if (!payload) {return false}
+    if (!payload) {
+      return false
+    }
     const claims = JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8')) as {
       exp?: number
     }
-    if (!claims.exp) {return false}
+    if (!claims.exp) {
+      return false
+    }
     // Treat tokens within 1h of expiry as expired to avoid mid-session lapses.
     return claims.exp * 1000 < Date.now() + 60 * 60 * 1000
   } catch {
@@ -84,7 +88,9 @@ const fetchDataFromMongo = async (match_id: string) => {
 }
 // Constructs the API URL
 const getApiUrl = (steam_server_id: string) => {
-  if (!process.env.STEAM_WEB_API) {throw new CustomError('STEAM_WEB_API not set')}
+  if (!process.env.STEAM_WEB_API) {
+    throw new CustomError('STEAM_WEB_API not set')
+  }
 
   return `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steam_server_id}`
 }
@@ -133,8 +139,12 @@ const saveMatch = async ({
 }
 
 function sortPlayersBySlot(game: DelayedGames) {
-  if (!game.teams || !Array.isArray(game.teams) || game.teams.length !== 2) {return}
-  if (!Array.isArray(game.teams[0].players) || !Array.isArray(game.teams[1].players)) {return}
+  if (!game.teams || !Array.isArray(game.teams) || game.teams.length !== 2) {
+    return
+  }
+  if (!Array.isArray(game.teams[0].players) || !Array.isArray(game.teams[1].players)) {
+    return
+  }
 
   for (const team of game.teams) {
     team.players.sort((a, b) => a.team_slot - b.team_slot)
@@ -192,7 +202,9 @@ class Dota {
 
     // Drive the watchdog + health file between events so a silently-stuck GC
     // still escalates. Unref so it never keeps the process alive on its own.
-    this.gcTick = setInterval(() =>{  this.feedWatchdog({ type: 'tick' }); }, GC_TICK_MS)
+    this.gcTick = setInterval(() => {
+      this.feedWatchdog({ type: 'tick' })
+    }, GC_TICK_MS)
     this.gcTick.unref?.()
     this.writeGcHealth()
 
@@ -232,8 +244,12 @@ class Dota {
   // and no message can be dispatched between two synchronous calls, so closing
   // the gap eliminates the race entirely (the old 30s setTimeout was the leak).
   private relaunchGc(reason: string) {
-    if (this.relaunchPending) {return}
-    if (!this.isSteamClientLoggedOn()) {return}
+    if (this.relaunchPending) {
+      return
+    }
+    if (!this.isSteamClientLoggedOn()) {
+      return
+    }
     logger.info('[STEAM] relaunching GC', { reason })
     // Held only across the synchronous exit→launch so re-entrancy from a
     // nested emit can't double-fire; cleared on the next ready/unready.
@@ -267,7 +283,9 @@ class Dota {
   }
 
   private readonly checkAccounts = async () => {
-    if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {return}
+    if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {
+      return
+    }
     void this.getGames()
 
     if (!this.interval) {
@@ -282,7 +300,9 @@ class Dota {
   // high-MMR / tournament) — not most streamers' pub games. Does NOT emit saveHeroesForMatchId.
   private async getGames() {
     // Check if the Dota2 game coordinator and Steam client are ready
-    if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {return}
+    if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {
+      return
+    }
 
     const time = new Date()
 
@@ -331,9 +351,11 @@ class Dota {
   }
 
   // Fetch games from the Dota2 game coordinator
-  private  async fetchGames(): Promise<SteamMatchDetails[]> {
-    return new Promise((resolve, _reject) => {
-      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {return}
+  private async fetchGames(): Promise<SteamMatchDetails[]> {
+    return await new Promise((resolve, _reject) => {
+      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {
+        return
+      }
 
       let games: SteamMatchDetails[] = []
       const startGame = 90
@@ -384,7 +406,9 @@ class Dota {
   // Filter unique games based on lobby_id
   private filterUniqueGames(games: SteamMatchDetails[]): SteamMatchDetails[] {
     return games.filter((game, index, self) => {
-      if (!game?.lobby_id) {return false}
+      if (!game?.lobby_id) {
+        return false
+      }
       return index === self.findIndex((g) => g?.lobby_id?.equals(game.lobby_id))
     })
   }
@@ -479,7 +503,9 @@ class Dota {
 
   private setupUserEventHandlers() {
     this.user.on('loggedOn', this.handleLoggedOn.bind(this))
-    this.user.on('refreshToken', (token) =>{  this.saveRefreshToken(token); })
+    this.user.on('refreshToken', (token) => {
+      this.saveRefreshToken(token)
+    })
     this.user.on('disconnected', this.handleDisconnected.bind(this))
     this.user.on('error', this.handleError.bind(this))
   }
@@ -515,7 +541,9 @@ class Dota {
     this.user.loggedOn = false
     const eresult = error?.eresult
     logger.info('[STEAM] steam error', { eresult, message: error?.message })
-    if (eresult) {this.logSteamError(eresult)}
+    if (eresult) {
+      this.logSteamError(eresult)
+    }
 
     // Stop dota2's internal timers (like _sendClientHello) before reconnecting.
     this.dota2.exit()
@@ -536,8 +564,12 @@ class Dota {
   // Re-attempt logon after an exponential, jittered backoff. Coalesced: while a
   // re-logon is already pending this is a no-op.
   private scheduleReconnect() {
-    if (!this.isProduction()) {return}
-    if (this.reconnectTimer) {return}
+    if (!this.isProduction()) {
+      return
+    }
+    if (this.reconnectTimer) {
+      return
+    }
 
     this.reconnectAttempts += 1
     const delayMs = computeReconnectDelay(this.reconnectAttempts)
@@ -577,18 +609,17 @@ class Dota {
     }
   }
 
-  public requestMatchDetails =  async (matchIds: number): Promise<unknown> => 
-    new Promise((resolve, reject) => {
+  public requestMatchDetails = async (matchIds: number): Promise<unknown> =>
+    await new Promise((resolve, reject) => {
       if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
-        reject(new CustomError('Not connected to Dota 2 GC'))
+        {reject(new CustomError('Not connected to Dota 2 GC'))}
       else {
         this.dota2.requestMatchDetails(matchIds, (err: unknown, data: unknown) => {
-          if (err) reject(err)
+          if (err) {reject(err)}
           resolve(data)
         })
       }
     })
-  
 
   // node-dota2 emits this after ~30s of unanswered ClientHellos but does NOT
   // stand its own knock timer down. The old handler re-launched on a 30s
@@ -622,7 +653,7 @@ class Dota {
   // is off until we build streamer↔bot friend management at scale, at which point this is the
   // chokepoint that obtains the `server_steam_id` for `GetRealTimeStats`. See memory
   // `keep-spectate-friend-path`. Do not delete.
-  public getUserSteamServer =  async (steam32Id: number | string): Promise<string> => {
+  public getUserSteamServer = async (steam32Id: number | string): Promise<string> => {
     const steam_id = this.dota2.ToSteamID(Number(steam32Id))
 
     // Set up the retry operation
@@ -633,7 +664,7 @@ class Dota {
       retries: 35,
     })
 
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       operation.attempt(() => {
         this.dota2.spectateFriendGame(
           { steam_id },
@@ -642,10 +673,15 @@ class Dota {
             logger.info('[STEAM] Got user steam server', { err, response, steam_id, theID })
 
             const shouldRetry = theID ? undefined : new Error('No ID yet, will keep trying.')
-            if (operation.retry(shouldRetry)) {return}
+            if (operation.retry(shouldRetry)) {
+              return
+            }
 
-            if (theID) {resolve(theID)}
-            else {reject('No spectator match found')}
+            if (theID) {
+              resolve(theID)
+            } else {
+              reject('No spectator match found')
+            }
           }
         )
       })
@@ -659,7 +695,7 @@ class Dota {
     }
 
     if (accountId) {
-      fetchedCard = await retryCustom( async () => this.getCard(accountId)).catch(() => fetchedCard)
+      fetchedCard = await retryCustom(async () => await this.getCard(accountId)).catch(() => fetchedCard)
     }
 
     const card = {
@@ -670,7 +706,9 @@ class Dota {
       rank_tier: fetchedCard?.rank_tier ?? 0,
     } as Cards
 
-    if (!accountId) {return card}
+    if (!accountId) {
+      return card
+    }
 
     if (fetchedCard?.rank_tier !== -10) {
       const mongo = MongoDBSingleton
@@ -704,8 +742,8 @@ class Dota {
     })
   }
 
-  promiseTimeout =  async <T>(promise: Promise<T>, ms: number, reason: string): Promise<T> =>
-    new Promise<T>((resolve, reject) => {
+  promiseTimeout = async <T>(promise: Promise<T>, ms: number, reason: string): Promise<T> =>
+    await new Promise<T>((resolve, reject) => {
       let timeoutCleared = false
       const timeoutId = setTimeout(() => {
         timeoutCleared = true
@@ -743,7 +781,7 @@ class Dota {
 
     this.evictOldCacheEntries() // Evict entries based on time
     this.cache.set(account, {
-      card: card,
+      card,
       timestamp: now,
     })
 
@@ -763,13 +801,12 @@ class Dota {
 
   private evictExtraCacheEntries() {
     while (this.cache.size > MAX_CACHE_SIZE) {
-      const oldestKey = [...this.cache.entries()].reduce< number | null>(
-        (oldest, [key, entry]) => {
-          if (!oldest) {return key}
-          return entry.timestamp < (this.cache.get(oldest)?.timestamp || 0) ? key : oldest
-        },
-        null
-      )
+      const oldestKey = [...this.cache.entries()].reduce<number | null>((oldest, [key, entry]) => {
+        if (!oldest) {
+          return key
+        }
+        return entry.timestamp < (this.cache.get(oldest)?.timestamp || 0) ? key : oldest
+      }, null)
 
       if (oldestKey !== null) {
         this.cache.delete(oldestKey)
@@ -804,35 +841,36 @@ class Dota {
     }
   }
 
-  public  async getPlayerSummaries(accounts: number[]): Promise<SteamPlayerSummary[]> {
-    return this.playerSummaries.get(accounts)
+  public async getPlayerSummaries(accounts: number[]): Promise<SteamPlayerSummary[]> {
+    return await this.playerSummaries.get(accounts)
   }
 
-  public requestMatchMinimalDetails =  async (
+  public requestMatchMinimalDetails = async (
     matchIds: number[]
-  ): Promise<MatchMinimalDetailsResponse> => 
-    new Promise((resolve, reject) => {
+  ): Promise<MatchMinimalDetailsResponse> =>
+    await new Promise((resolve, reject) => {
       if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
-        reject(new CustomError('Not connected to Dota 2 GC'))
+        {reject(new CustomError('Not connected to Dota 2 GC'))}
       else {
         this.dota2.requestMatchMinimalDetails(
           matchIds,
           (err: unknown, data: MatchMinimalDetailsResponse) => {
-            if (err) reject(err)
+            if (err) {reject(err)}
             resolve(data)
           }
         )
       }
     })
-  
 
   public static getInstance(): Dota {
-    if (!Dota.instance) {Dota.instance = new Dota()}
+    if (!Dota.instance) {
+      Dota.instance = new Dota()
+    }
     return Dota.instance
   }
 
-  public  async exit(): Promise<boolean> {
-    return new Promise((resolve) => {
+  public async exit(): Promise<boolean> {
+    return await new Promise((resolve) => {
       clearInterval(this.interval)
       clearInterval(this.gcTick)
       this.resetReconnectBackoff()
@@ -896,7 +934,7 @@ export const GetRealTimeStats = async ({
   // Debounce: If there's already an active request for this match_id, return that promise
   if (activeRequests.has(match_id)) {
     // logger.info(`[STEAM] Reusing in-flight request for match_id: ${match_id}`)
-    return await (activeRequests.get(match_id)!)
+    return await activeRequests.get(match_id)!
   }
 
   let waitForHeros = forceRefetchAll || false
@@ -993,7 +1031,8 @@ export const GetRealTimeStats = async ({
 
         // Remove from active requests before resolving
         activeRequests.delete(match_id)
-         resolve(gamePlusMore); return;
+        resolve(gamePlusMore)
+        return
       }
 
       if (!waitForHeros) {
@@ -1007,7 +1046,7 @@ export const GetRealTimeStats = async ({
 
       // Remove from active requests before resolving
       activeRequests.delete(match_id)
-       resolve(gamePlusMore)
+      resolve(gamePlusMore)
     })
   })
 

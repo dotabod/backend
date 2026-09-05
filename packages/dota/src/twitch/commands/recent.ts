@@ -1,16 +1,16 @@
 import { t } from 'i18next'
 
-import getHero from '../../dota/lib/getHero';
-import type { HeroNames } from '../../dota/lib/getHero';
+import getHero from '../../dota/lib/getHero'
+import type { HeroNames } from '../../dota/lib/getHero'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 import { findResolvedMatchesInSession } from '../lib/resolveMatch'
 
 commandHandler.registerCommand('recent', {
   aliases: ['history', 'matches'],
-  cooldown: 10000,
+  cooldown: 10_000,
   dbkey: DBSettings.commandWon, // Reuse the same setting as won/lost commands
   handler: async (message: MessageType) => {
     const {
@@ -18,8 +18,8 @@ commandHandler.registerCommand('recent', {
     } = message
 
     const matches = await findResolvedMatchesInSession(client.token, client.stream_start_date, {
-      limit: 5,
       excludeMatchId: client.gsi?.map?.matchid,
+      limit: 5,
     })
 
     if (matches.length === 0) {
@@ -43,9 +43,9 @@ commandHandler.registerCommand('recent', {
     chatClient.say(
       channel,
       t('bets.recentMatches', {
-        matchList,
         emote: 'PauseChamp',
         lng: client.locale,
+        matchList,
       }),
       message.user.messageId
     )

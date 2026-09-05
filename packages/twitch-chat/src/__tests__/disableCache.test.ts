@@ -14,7 +14,9 @@ const entry = (providerAccountId: string, ageMs = 0) => ({
   timestamp: Date.now() - ageMs,
 })
 
-beforeEach(() =>{  resetState(); })
+beforeEach(() => {
+  resetState()
+})
 
 describe(isUserBeingDisabled, () => {
   it('is true for a fresh entry keyed by the user id', () => {

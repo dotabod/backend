@@ -5,8 +5,8 @@ import { franc } from 'franc'
 
 import { DBSettings, getValueOrDefault } from '../../../settings'
 import { chatClient } from '../../../twitch/chatClient'
-import { DotaEventTypes } from '../../../types';
-import type { ChatMessageEvent } from '../../../types';
+import { DotaEventTypes } from '../../../types'
+import type { ChatMessageEvent } from '../../../types'
 import { is8500Plus } from '../../../utils/index'
 import type { GSIHandlerType } from '../../GSIHandlerTypes'
 import { getHeroNameOrColor } from '../../lib/heroes'
@@ -186,7 +186,9 @@ async function processTranslationBuffer(
   translateOnOverlay: boolean,
   typedLanguage: deepl.TargetLanguageCode
 ) {
-  if (buffer.length === 0) {return}
+  if (buffer.length === 0) {
+    return
+  }
 
   // Translate all messages in parallel
   const translationPromises = buffer.map(async (item) => {
@@ -220,7 +222,9 @@ async function processTranslationBuffer(
   const translations = await Promise.all(translationPromises)
   const validTranslations = translations.filter((t) => t !== null)
 
-  if (validTranslations.length === 0) {return}
+  if (validTranslations.length === 0) {
+    return
+  }
 
   // Group translations by hero and merge messages from same hero
   const heroMessages = new Map<string, string[]>()
@@ -266,8 +270,12 @@ async function processTranslationBuffer(
 
 eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
   handler: async (dotaClient, event: ChatMessageEvent) => {
-    if (!dotaClient.client.stream_online) {return}
-    if (!isPlayingMatch(dotaClient.client.gsi)) {return}
+    if (!dotaClient.client.stream_online) {
+      return
+    }
+    if (!isPlayingMatch(dotaClient.client.gsi)) {
+      return
+    }
 
     const message = await moderateText(event.message?.trim())
     if (!message || typeof message !== 'string' || message === '***') {
@@ -314,7 +322,9 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
       dotaClient.client.subscription
     )
 
-    if (!translateInChat && !translateOnOverlay) {return}
+    if (!translateInChat && !translateOnOverlay) {
+      return
+    }
 
     // Check global chatter access
     const toLanguage = getValueOrDefault(
@@ -340,7 +350,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
 
     // Get hero name
     const roster = await new MatchDataService(dotaClient.client).resolveRoster()
-    const {players} = roster
+    const { players } = roster
     let playerIdIndex = players.findIndex((p) => p.slot === event.player_id)
     const foundInMatchPlayers = playerIdIndex !== -1
     if (!foundInMatchPlayers) {

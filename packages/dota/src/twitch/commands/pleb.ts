@@ -4,8 +4,8 @@ import { t } from 'i18next'
 import { plebMode } from '../../dota/lib/consts'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('pleb', {
   dbkey: DBSettings.commandPleb,

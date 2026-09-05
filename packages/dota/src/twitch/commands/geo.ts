@@ -9,8 +9,8 @@ import { getSteamPlayerSummaries } from '../../steam/playerSummaries'
 import CustomError from '../../utils/customError'
 import { is8500Plus } from '../../utils/index'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('geo', {
   aliases: ['country', 'location'],
@@ -20,7 +20,7 @@ commandHandler.registerCommand('geo', {
       channel: { name: channel, client },
     } = message
 
-    const locale = client.locale
+    const {locale} = client
     const currentMatchId = client.gsi?.map?.matchid
 
     if (!currentMatchId) {
@@ -69,8 +69,8 @@ commandHandler.registerCommand('geo', {
 
       const countriesList = matchPlayers
         .map((p) => {
-          const cc = p.accountId !== null ? summaries.get(p.accountId)?.countryCode : undefined
-          if (!cc) return '?'
+          const cc = p.accountId === null ? undefined : summaries.get(p.accountId)?.countryCode
+          if (!cc) {return '?'}
           return countryCodeEmoji(cc) || cc
         })
         .join(' · ')
@@ -78,13 +78,13 @@ commandHandler.registerCommand('geo', {
       chatClient.say(
         channel,
         t('countryPlayerList', {
-          lng: locale,
           countries: countriesList,
+          lng: locale,
         }),
         message.user.messageId
       )
-    } catch (e) {
-      const msg = !(e as Error)?.message ? t('gameNotFound', { lng: locale }) : (e as Error).message
+    } catch (error) {
+      const msg = !(error as Error)?.message ? t('gameNotFound', { lng: locale }) : (error as Error).message
       chatClient.say(channel, msg, message.user.messageId)
     }
   },

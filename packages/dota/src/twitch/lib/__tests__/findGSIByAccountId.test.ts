@@ -13,7 +13,7 @@ describe('findAccountFromCmd — default (non-spectator) branch', () => {
       hero: { alive: true, id: 74 },
       items: { slot0: { name: 'item_tango' } },
       map: { matchid: '123' },
-      player: { accountid: 123456, gpm: 400 },
+      player: { accountid: 123_456, gpm: 400 },
     }
     const r = await findAccountFromCmd({ gsi: packet } as any, [], 'en', 'items')
     expect(r.ourHero).toBeTruthy()

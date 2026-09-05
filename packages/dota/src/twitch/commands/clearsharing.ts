@@ -31,7 +31,7 @@ commandHandler.registerCommand('clearsharing', {
         t('clearsharing.success', { lng: client.locale }),
         message.user.messageId
       )
-    } catch (_error) {
+    } catch {
       const channel = message.channel.client.name
       chatClient.say(
         channel,

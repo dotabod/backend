@@ -43,7 +43,7 @@ describe(GsiSpectatorResolver, () => {
   })
 
   it('defers when GSI is undefined', async () => {
-    await expect(r.resolve(ctx(undefined))).resolves.toBeNull()
+    await expect(r.resolve(ctx())).resolves.toBeNull()
   })
 
   it('defers when team2/team3 are missing on hero', async () => {

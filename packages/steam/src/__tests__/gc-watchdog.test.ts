@@ -68,7 +68,9 @@ describe(GcWatchdog, () => {
     clock.advance(30_000) // now 180_000 since unready
     const action = wd.step({ type: 'helloTimeout' })
     expect(action.type).toBe('exit')
-    if (action.type === 'exit') {expect(action.reason).toContain('exiting')}
+    if (action.type === 'exit') {
+      expect(action.reason).toContain('exiting')
+    }
   })
 
   it('a gcReady resets the ladder so later trouble starts fresh', () => {

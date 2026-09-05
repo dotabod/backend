@@ -28,11 +28,17 @@ async function findUserIdByProviderAccount(providerAccountId: string): Promise<s
       .eq('providerAccountId', providerAccountId)
       .eq('provider', 'twitch')
       .single()
-    if (data?.userId) {return data.userId}
+    if (data?.userId) {
+      return data.userId
+    }
     lastError = error ?? null
-    if (attempt === 0) {await new Promise((r) => setTimeout(r, REPLICA_LAG_RETRY_MS))}
+    if (attempt === 0) {
+      await new Promise((r) => setTimeout(r, REPLICA_LAG_RETRY_MS))
+    }
   }
-  if (lastError) {throw lastError}
+  if (lastError) {
+    throw lastError
+  }
   return null
 }
 
@@ -102,10 +108,7 @@ export async function handleNewUser(
       )
 
       if (userId) {
-        await supabase
-          .from('users')
-          .update(filteredData)
-          .eq('id', userId)
+        await supabase.from('users').update(filteredData).eq('id', userId)
         profileUpdated = true
       } else {
         // Both attempts returned null. Either the caller has a bogus
@@ -133,7 +136,9 @@ export async function handleNewUser(
   // sites that may want to differentiate "subscribed but profile stale".
   void profileUpdated
 
-  if (banShortCircuit) {return}
+  if (banShortCircuit) {
+    return
+  }
 
   if (resubscribeEvents) {
     // initUserSubscriptions returns false (not throws) when a critical sub

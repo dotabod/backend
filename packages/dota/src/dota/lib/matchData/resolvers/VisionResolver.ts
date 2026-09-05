@@ -1,6 +1,6 @@
 import type { HeroesStatus, Players } from '../../../../types'
-import { RosterResolver } from './RosterResolver';
-import type { RawRoster, ResolverContext } from './RosterResolver';
+import { RosterResolver } from './RosterResolver'
+import type { RawRoster, ResolverContext } from './RosterResolver'
 
 // Vision-API response shape (subset we actually read).
 interface VisionApiHero {
@@ -29,12 +29,16 @@ export type VisionFetcher = (matchId: string) => Promise<VisionApiResponse | nul
 // Default fetcher: hits `${VISION_API_HOST}/match/${matchId}` with the API key from env.
 const defaultVisionFetcher: VisionFetcher = async (matchId) => {
   const host = process.env.VISION_API_HOST
-  if (!host) {return null}
+  if (!host) {
+    return null
+  }
   try {
     const res = await fetch(`https://${host}/match/${matchId}`, {
       headers: { 'X-API-Key': process.env.VISION_API_KEY || '' },
     })
-    if (!res.ok) {return null}
+    if (!res.ok) {
+      return null
+    }
     return (await res.json()) as VisionApiResponse
   } catch {
     return null
@@ -52,12 +56,18 @@ const defaultVisionFetcher: VisionFetcher = async (matchId) => {
 // this: a *correct* slot elsewhere scored 0.386, so any cutoff that kills the bad read also
 // kills good ones. Anchoring on GSI is exact where a threshold is a guess.
 function correctSelfHeroWithGsi(heroes: VisionApiHero[], selfHeroId: number | undefined) {
-  if (!selfHeroId || selfHeroId <= 0) {return heroes}
-  if (heroes.some((h) => h.hero_id === selfHeroId)) {return heroes}
+  if (!selfHeroId || selfHeroId <= 0) {
+    return heroes
+  }
+  if (heroes.some((h) => h.hero_id === selfHeroId)) {
+    return heroes
+  }
 
   let weakest = 0
   for (let i = 1; i < heroes.length; i++) {
-    if ((heroes[i].match_score ?? 1) < (heroes[weakest].match_score ?? 1)) {weakest = i}
+    if ((heroes[i].match_score ?? 1) < (heroes[weakest].match_score ?? 1)) {
+      weakest = i
+    }
   }
   return heroes.map((h, i) => (i === weakest ? { ...h, hero_id: selfHeroId } : h))
 }
@@ -73,9 +83,13 @@ export class VisionResolver extends RosterResolver {
   }
 
   async resolve({ matchId, gsi }: ResolverContext): Promise<RawRoster | null> {
-    if (!matchId) {return null}
+    if (!matchId) {
+      return null
+    }
     const data = await this.fetcher(matchId)
-    if (!data) {return null}
+    if (!data) {
+      return null
+    }
 
     if (Array.isArray(data.heroes) && data.heroes.length > 0) {
       const heroes = correctSelfHeroWithGsi(data.heroes, gsi?.hero?.id)
@@ -94,7 +108,9 @@ export class VisionResolver extends RosterResolver {
     const draftNames = (data.draft_player_order ?? []).filter(
       (n): n is string => typeof n === 'string' && n.trim().length > 0
     )
-    if (draftNames.length === 0) {return null}
+    if (draftNames.length === 0) {
+      return null
+    }
 
     const matchPlayers: Players = draftNames.map((name) => ({
       accountid: 0,

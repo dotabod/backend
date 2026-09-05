@@ -34,9 +34,13 @@ let eventSubInitInFlight = false
 let currentSocket: EventsubSocket | null = null
 
 async function ensureEventSubInitialized(reason: string): Promise<void> {
-  if (eventSubInitInFlight) {return}
+  if (eventSubInitInFlight) {
+    return
+  }
   // A plain socket.io reconnect while EventSub is already live needs no re-init.
-  if (isEventsubConnected()) {return}
+  if (isEventsubConnected()) {
+    return
+  }
   eventSubInitInFlight = true
   try {
     logger.info('[TWITCHCHAT] Ensuring EventSub is initialized', { reason })
@@ -156,7 +160,7 @@ async function updateConduitShard(
       )
 
       await new Promise((resolve) => setTimeout(resolve, delay))
-      return await updateConduitShard(session_id, conduitId, retryCount + 1)
+       await updateConduitShard(session_id, conduitId, retryCount + 1); return;
     }
   }
 }
@@ -179,7 +183,8 @@ const handleObsEvents = (type: keyof TwitchEventTypes, broadcasterId: string, da
 }
 
 // Helper function to extract broadcaster ID and transform event data
-const createEventHandler = <T, R>(type: keyof TwitchEventTypes, transform: (event: T) => R) => 
+const createEventHandler =
+  <T, R>(type: keyof TwitchEventTypes, transform: (event: T) => R) =>
   ({
     payload: {
       subscription: {
@@ -198,7 +203,6 @@ const createEventHandler = <T, R>(type: keyof TwitchEventTypes, transform: (even
     const transformed = transform(event)
     handleObsEvents(type, broadcaster_user_id, transformed)
   }
-
 
 function grantEvent(data: {
   payload: {
@@ -325,7 +329,7 @@ async function initializeSocket() {
 
     mySocket.on('connected', async (session_id: string) => {
       logger.info('[TWITCHCHAT] Socket connected (initial)', {
-        conduitId: `${conduitId.substring(0, 8)}...`,
+        conduitId: `${conduitId.slice(0, 8)}...`,
         sessionId: session_id,
       })
       await updateConduitShard(session_id, conduitId)
@@ -333,7 +337,7 @@ async function initializeSocket() {
 
     mySocket.on('reconnected', async (session_id: string) => {
       logger.info('[TWITCHCHAT] Socket reconnected', {
-        conduitId: `${conduitId.substring(0, 8)}...`,
+        conduitId: `${conduitId.slice(0, 8)}...`,
         sessionId: session_id,
       })
       await updateConduitShard(session_id, conduitId)
@@ -438,9 +442,9 @@ async function initializeSocket() {
           logger.info('Bot was banned by Twitch! isOnlyChatMessage')
         } else {
           logger.info('Revocation with multiple types or non-chat type', {
-            userId,
-            types: Array.from(state.types),
             payload,
+            types: Array.from(state.types),
+            userId,
           })
           twitchEvent.emit('revoke', userId)
         }

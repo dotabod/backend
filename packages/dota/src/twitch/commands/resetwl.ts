@@ -5,8 +5,8 @@ import { WL_RESET_SETTING_KEY } from '../../db/winLossWindow'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { server } from '../../dota/server'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('resetwl', {
   cooldown: 0,
@@ -20,8 +20,8 @@ commandHandler.registerCommand('resetwl', {
       await supabase.from('settings').upsert(
         {
           key: WL_RESET_SETTING_KEY,
-          userId: client.token,
           updated_at: resetAt,
+          userId: client.token,
           value: resetAt,
         },
         { onConflict: 'userId, key' }
@@ -47,8 +47,8 @@ commandHandler.registerCommand('resetwl', {
       chatClient.say(
         message.channel.name,
         t('resetwl', {
-          lng: message.channel.client.locale,
           channel: message.channel.name,
+          lng: message.channel.client.locale,
         }),
         message.user.messageId
       )
@@ -56,8 +56,8 @@ commandHandler.registerCommand('resetwl', {
 
     try {
       void handler()
-    } catch (e) {
-      logger.error('Error in resetwl command', e)
+    } catch (error) {
+      logger.error('Error in resetwl command', error)
     }
   },
   permission: 2,

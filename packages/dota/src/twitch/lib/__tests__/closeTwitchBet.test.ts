@@ -18,8 +18,8 @@ describe(closeTwitchBet, () => {
       {
         id: mockPredictionId,
         outcomes: [
-          { id: 'outcome-1', users: 10, title: 'Yes' },
-          { id: 'outcome-2', users: 0, title: 'No' },
+          { id: 'outcome-1', title: 'Yes', users: 10 },
+          { id: 'outcome-2', title: 'No', users: 0 },
         ],
         status: 'ACTIVE',
       },
@@ -40,8 +40,8 @@ describe(closeTwitchBet, () => {
       {
         id: mockPredictionId,
         outcomes: [
-          { id: 'outcome-1', users: 0, title: 'Yes' },
-          { id: 'outcome-2', users: 5, title: 'No' },
+          { id: 'outcome-1', title: 'Yes', users: 0 },
+          { id: 'outcome-2', title: 'No', users: 5 },
         ],
         status: 'ACTIVE',
       },
@@ -71,8 +71,8 @@ describe(closeTwitchBet, () => {
       {
         id: mockPredictionId,
         outcomes: [
-          { id: 'outcome-1', users: 8, title: 'Yes' },
-          { id: 'outcome-2', users: 0, title: 'No' },
+          { id: 'outcome-1', title: 'Yes', users: 8 },
+          { id: 'outcome-2', title: 'No', users: 0 },
         ],
         status: 'ACTIVE',
       },
@@ -93,8 +93,8 @@ describe(closeTwitchBet, () => {
       {
         id: mockPredictionId,
         outcomes: [
-          { id: 'outcome-1', users: 10, title: 'Yes' },
-          { id: 'outcome-2', users: 5, title: 'No' },
+          { id: 'outcome-1', title: 'Yes', users: 10 },
+          { id: 'outcome-2', title: 'No', users: 5 },
         ],
         status: 'ACTIVE',
       },
@@ -115,8 +115,8 @@ describe(closeTwitchBet, () => {
       {
         id: mockPredictionId,
         outcomes: [
-          { id: 'outcome-1', users: 10, title: 'Yes' },
-          { id: 'outcome-2', users: 0, title: 'No' },
+          { id: 'outcome-1', title: 'Yes', users: 10 },
+          { id: 'outcome-2', title: 'No', users: 0 },
         ],
         status: 'ACTIVE',
       },
@@ -148,8 +148,8 @@ describe(closeTwitchBet, () => {
       {
         id: mockPredictionId,
         outcomes: [
-          { id: 'outcome-1', users: 10, title: 'Yes' },
-          { id: 'outcome-2', users: 5, title: 'No' },
+          { id: 'outcome-1', title: 'Yes', users: 10 },
+          { id: 'outcome-2', title: 'No', users: 5 },
         ],
         status: 'ACTIVE',
       },

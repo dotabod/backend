@@ -16,7 +16,9 @@ export function clippingDisabledNote(client: SocketClient, matchPlayers: RosterP
     client.settings,
     client.subscription
   )
-  if (!disabled || !is8500Plus(client)) {return ''}
+  if (!disabled || !is8500Plus(client)) {
+    return ''
+  }
 
   // Only count OTHER players' heroes: when no roster is available
   // MatchDataService falls back to a single gsi-self player carrying the
@@ -25,7 +27,9 @@ export function clippingDisabledNote(client: SocketClient, matchPlayers: RosterP
   const hasOtherPlayers = matchPlayers.some(
     (player) => (player.heroId ?? 0) > 0 && player.accountId !== client.steam32Id
   )
-  if (hasOtherPlayers) {return ''}
+  if (hasOtherPlayers) {
+    return ''
+  }
 
   return t('clippingDisabled', { lng: client.locale })
 }

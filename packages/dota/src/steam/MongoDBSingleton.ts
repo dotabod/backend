@@ -1,6 +1,6 @@
 import { logger } from '@dotabod/shared-utils'
-import { MongoClient } from 'mongodb';
-import type { Db } from 'mongodb';
+import { MongoClient } from 'mongodb'
+import type { Db } from 'mongodb'
 import retry from 'retry'
 
 class MongoDBSingleton {

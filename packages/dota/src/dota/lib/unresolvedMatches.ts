@@ -2,8 +2,8 @@ import { supabase } from '@dotabod/shared-utils'
 
 import { getSessionStartDate } from '../../db/streamWindow'
 import type { SocketClient } from '../../types'
-import getHero from './getHero';
-import type { HeroNames } from './getHero';
+import getHero from './getHero'
+import type { HeroNames } from './getHero'
 
 interface UnresolvedKda {
   kills?: number | null
@@ -43,15 +43,21 @@ export async function getUnresolvedMatches(client: SocketClient): Promise<Unreso
     .order('created_at', { ascending: false })
     .limit(10)
 
-  if (error || !data) {return []}
+  if (error || !data) {
+    return []
+  }
   return data as UnresolvedMatch[]
 }
 
 export function formatTimeAgo(date: Date, now: Date = new Date()): string {
   const elapsed = now.getTime() - date.getTime()
-  if (Number.isNaN(elapsed)) {return ''}
+  if (Number.isNaN(elapsed)) {
+    return ''
+  }
   const minutes = Math.max(0, Math.floor(elapsed / 60_000))
-  if (minutes < 60) {return `${minutes}m ago`}
+  if (minutes < 60) {
+    return `${minutes}m ago`
+  }
   const hours = Math.floor(minutes / 60)
   const remMinutes = minutes % 60
   return remMinutes ? `${hours}h ${remMinutes}m ago` : `${hours}h ago`
@@ -70,7 +76,7 @@ export function formatUnresolvedMatch(match: UnresolvedMatch, now: Date = new Da
 
   const parts: string[] = [heroName]
 
-  const {kda} = match
+  const { kda } = match
   if (kda && (kda.kills != null || kda.deaths != null || kda.assists != null)) {
     parts.push(`${kda.kills ?? 0}/${kda.deaths ?? 0}/${kda.assists ?? 0}`)
   }
@@ -86,7 +92,9 @@ export function formatUnresolvedMatch(match: UnresolvedMatch, now: Date = new Da
   const endedAt = match.updated_at || match.created_at
   if (endedAt) {
     const ago = formatTimeAgo(new Date(endedAt), now)
-    if (ago) {parts.push(`~${ago}`)}
+    if (ago) {
+      parts.push(`~${ago}`)
+    }
   }
 
   return `${match.matchId} (${parts.join(', ')})`

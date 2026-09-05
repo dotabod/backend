@@ -1,8 +1,8 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
-import { getRawSettingValue, getValueOrDefault } from '../../settings';
-import type { SettingKeys } from '../../settings';
+import { getRawSettingValue, getValueOrDefault } from '../../settings'
+import type { SettingKeys } from '../../settings'
 import MongoDBSingleton from '../../steam/MongoDBSingleton'
 import type { SocketClient } from '../../types'
 import type { SubscriptionRow } from '../../types/subscription'
@@ -295,14 +295,18 @@ class CommandHandler {
     subscription?: SubscriptionRow
   ) {
     // Default enabled if no dbkey is provided
-    if (!dbkey) {return true}
+    if (!dbkey) {
+      return true
+    }
 
     return !!getValueOrDefault(dbkey, settings, subscription)
   }
 
   isEnabledRaw(settings: SocketClient['settings'], dbkey?: SettingKeys) {
     // Default enabled if no dbkey is provided
-    if (!dbkey) {return true}
+    if (!dbkey) {
+      return true
+    }
 
     return !!getRawSettingValue(dbkey, settings)
   }

@@ -46,7 +46,7 @@ export const getTwitchAPI = async (twitchId?: string): Promise<ApiClient> => {
       authProvider.addUser(lookupTwitchId, tokenData)
     }
   } catch (error) {
-    logger.error('[TWITCH] Error adding user to auth provider', { twitchId, lookupTwitchId, error })
+    logger.error('[TWITCH] Error adding user to auth provider', { error, lookupTwitchId, twitchId })
   }
 
   // Create API client if it doesn't exist yet

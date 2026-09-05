@@ -35,7 +35,9 @@ export async function getStreamersInMatch({
   if (matchId && matchId !== '0') {
     const { data } = await supabase.from('matches').select('userId').eq('matchId', matchId)
     for (const row of data ?? []) {
-      if (row.userId) {userIds.add(row.userId)}
+      if (row.userId) {
+        userIds.add(row.userId)
+      }
     }
   }
 
@@ -53,7 +55,9 @@ export async function getStreamersInMatch({
       .select('userId')
       .in('steam32Id', accountIds)
     for (const row of data ?? []) {
-      if (row.userId) {userIds.add(row.userId)}
+      if (row.userId) {
+        userIds.add(row.userId)
+      }
     }
   }
 

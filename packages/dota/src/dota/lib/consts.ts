@@ -103,7 +103,7 @@ export const leaderRanks = [
   { image: '92.png', range: [2, 10], sparklingEffect: true },
   { image: '91.png', range: [11, 100], sparklingEffect: true },
   { image: '80.png', range: [101, 1000], sparklingEffect: true },
-  { image: '80.png', range: [1001, 100000], sparklingEffect: false },
+  { image: '80.png', range: [1001, 100_000], sparklingEffect: false },
 ]
 
 export const plebMode = new Set()

@@ -22,7 +22,7 @@ export interface CreateReadyClipOptions {
   durationSeconds?: number
 }
 
-const sleep =  async (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+const sleep = async (ms: number) => await new Promise((resolve) => setTimeout(resolve, ms))
 
 // Twurple 7.4's `clips.createClip` hardcodes its query to `broadcaster_id` +
 // `has_delay` — a parameter Twitch removed and documents as never having had an
@@ -36,7 +36,9 @@ async function createClipWithDuration(
   durationSeconds: number | undefined
 ): Promise<string> {
   const query: Record<string, string> = { broadcaster_id: accountId }
-  if (durationSeconds !== undefined) {query.duration = String(durationSeconds)}
+  if (durationSeconds !== undefined) {
+    query.duration = String(durationSeconds)
+  }
 
   const result = await api.callApi<{ data: { id: string }[] }>({
     canOverrideScopedUserContext: true,
@@ -55,9 +57,13 @@ async function createClipWithDuration(
 // from that — retrying won't bring the stream online inside the budget — so we
 // short-circuit instead of burning the remaining attempts (and erroring 3x).
 function isChannelOfflineError(err: unknown): boolean {
-  if (typeof err !== 'object' || err === null) {return false}
+  if (typeof err !== 'object' || err === null) {
+    return false
+  }
   const e = err as { statusCode?: unknown; body?: unknown; message?: unknown }
-  if (e.statusCode !== 404) {return false}
+  if (e.statusCode !== 404) {
+    return false
+  }
   const body = typeof e.body === 'string' ? e.body : ''
   const message = typeof e.message === 'string' ? e.message : ''
   return (
@@ -72,7 +78,9 @@ function isChannelOfflineError(err: unknown): boolean {
 // has to re-authorize — so retrying inside the loop can't recover it and just
 // re-logs the same error 2-3x per game state. Short-circuit like the offline case.
 function isMissingScopeError(err: unknown): boolean {
-  if (typeof err !== 'object' || err === null) {return false}
+  if (typeof err !== 'object' || err === null) {
+    return false
+  }
   const message =
     typeof (err as { message?: unknown }).message === 'string'
       ? (err as { message: string }).message
@@ -97,7 +105,9 @@ export async function createReadyClip(
   const overDeadline = () => opts.deadlineMs !== undefined && Date.now() - start > opts.deadlineMs
 
   for (let attempt = 1; attempt <= opts.maxAttempts; attempt++) {
-    if (overDeadline()) {break}
+    if (overDeadline()) {
+      break
+    }
 
     let clipId: string
     try {
@@ -130,10 +140,14 @@ export async function createReadyClip(
     // Give Twitch's transcode a head start before the first poll — see
     // initialDelayMs on CreateReadyClipOptions. The deadline check inside the
     // poll loop still bounds the total wait.
-    if (opts.initialDelayMs) {await sleep(opts.initialDelayMs)}
+    if (opts.initialDelayMs) {
+      await sleep(opts.initialDelayMs)
+    }
 
     for (let poll = 1; poll <= opts.pollAttempts; poll++) {
-      if (overDeadline()) {return null}
+      if (overDeadline()) {
+        return null
+      }
       try {
         const clip = await api.clips.getClipById(clipId)
         if (clip && clip.duration > 0) {
@@ -149,7 +163,9 @@ export async function createReadyClip(
           poll,
         })
       }
-      if (poll < opts.pollAttempts) {await sleep(opts.pollIntervalMs)}
+      if (poll < opts.pollAttempts) {
+        await sleep(opts.pollIntervalMs)
+      }
     }
 
     logger.warn(`${logPrefix} clip did not transcode; recreating`, {

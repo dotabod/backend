@@ -38,7 +38,9 @@ const LISTENER_NAMES = [
 ] as const
 
 type ListenerName = (typeof LISTENER_NAMES)[number]
-interface Call { args: unknown[] }
+interface Call {
+  args: unknown[]
+}
 const spies = new Map<ListenerName, Call[]>()
 
 // Listeners that existed before installSpies() wiped them. Restored in afterEach.
@@ -74,7 +76,9 @@ function callCount(name: ListenerName): number {
 function callCountsByName(): Record<string, number> {
   const out: Record<string, number> = {}
   for (const [name, calls] of spies) {
-    if (calls.length > 0) {out[name] = calls.length}
+    if (calls.length > 0) {
+      out[name] = calls.length
+    }
   }
   return out
 }
@@ -480,7 +484,7 @@ describe('downstream read path: client.gsi.* stays accessible (mirrors actual re
       items: { neutral0: { name: 'n' }, slot0: { name: 'a' } },
       map: { game_state: 'X', matchid: 'm1' },
       player: { gold: 600 },
-      provider: { appid: 570, name: 'Dota 2', timestamp: 1700000000, version: 47 },
+      provider: { appid: 570, name: 'Dota 2', timestamp: 1_700_000_000, version: 47 },
       wearables: { wearable0: 1234 },
     }
     const client = { gsi: body as any }
@@ -500,11 +504,18 @@ describe('audit guards (lock in invariants the refactor relies on)', () => {
   function walkTs(root: string): string[] {
     const out: string[] = []
     for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
-      if (entry.name === 'node_modules' || entry.name === 'dist') {continue}
-      if (entry.name === '__tests__') {continue}
+      if (entry.name === 'node_modules' || entry.name === 'dist') {
+        continue
+      }
+      if (entry.name === '__tests__') {
+        continue
+      }
       const full = path.join(root, entry.name)
-      if (entry.isDirectory()) {out.push(...walkTs(full))}
-      else if (entry.name.endsWith('.ts')) {out.push(full)}
+      if (entry.isDirectory()) {
+        out.push(...walkTs(full))
+      } else if (entry.name.endsWith('.ts')) {
+        out.push(full)
+      }
     }
     return out
   }
@@ -518,10 +529,14 @@ describe('audit guards (lock in invariants the refactor relies on)', () => {
     for (const f of allSources) {
       const src = fs.readFileSync(f, 'utf-8')
       for (const m of src.matchAll(re)) {
-        if (m[2].includes('*') || m[2].includes('?')) {offenders.push(`${f}: ${m[2]}`)}
+        if (m[2].includes('*') || m[2].includes('?')) {
+          offenders.push(`${f}: ${m[2]}`)
+        }
       }
       for (const m of src.matchAll(regRe)) {
-        if (m[1].includes('*') || m[1].includes('?')) {offenders.push(`${f}: ${m[1]}`)}
+        if (m[1].includes('*') || m[1].includes('?')) {
+          offenders.push(`${f}: ${m[1]}`)
+        }
       }
     }
     expect(offenders).toStrictEqual([])
@@ -556,7 +571,9 @@ describe('audit guards (lock in invariants the refactor relies on)', () => {
     const re = /\bevents\.on\s*\(/g
     for (const f of allSources) {
       const src = fs.readFileSync(f, 'utf-8')
-      if (re.test(src)) {callers.push(path.relative(dotaSrc, f))}
+      if (re.test(src)) {
+        callers.push(path.relative(dotaSrc, f))
+      }
     }
     expect(callers).toStrictEqual(['dota/events/EventHandler.ts'])
   })
@@ -578,11 +595,15 @@ describe('audit guards (lock in invariants the refactor relies on)', () => {
     for (const f of allSources) {
       const src = fs.readFileSync(f, 'utf-8')
       for (const m of src.matchAll(re)) {
-        if (!m[1].includes('${')) {found.add(m[1])}
+        if (!m[1].includes('${')) {
+          found.add(m[1])
+        }
       }
       for (const m of src.matchAll(templateRe)) {
         const enumKey = m[1]
-        if (enumMap[enumKey]) {found.add(`event:${enumMap[enumKey]}`)}
+        if (enumMap[enumKey]) {
+          found.add(`event:${enumMap[enumKey]}`)
+        }
       }
     }
     expect([...found].sort()).toStrictEqual([...LISTENER_NAMES].sort())

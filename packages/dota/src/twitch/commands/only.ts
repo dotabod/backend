@@ -4,8 +4,8 @@ import { t } from 'i18next'
 import { ranks } from '../../dota/lib/consts'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 // Extract unique rank titles and map them to their base tier values
 const rankTitles: Record<string, number> = {}
@@ -48,9 +48,9 @@ commandHandler.registerCommand('only', {
           channel,
           t('rankOnlyStatus', {
             context: 'enabled',
+            lng: message.channel.client.locale,
             rank: requiredRank,
             url: 'dotabod.com/verify',
-            lng: message.channel.client.locale,
           }),
           message.user.messageId
         )
@@ -59,8 +59,8 @@ commandHandler.registerCommand('only', {
           channel,
           t('rankOnlyStatus', {
             context: 'disabled',
-            rank: '',
             lng: message.channel.client.locale,
+            rank: '',
           }),
           message.user.messageId
         )
@@ -75,13 +75,13 @@ commandHandler.registerCommand('only', {
 
       await supabase.from('settings').upsert(
         {
-          userId,
           key: DBSettings.rankOnly,
+          updated_at: new Date().toISOString(),
+          userId,
           value: JSON.stringify({
             ...rankOnlySettings,
             enabled: false,
           }),
-          updated_at: new Date().toISOString(),
         },
         {
           onConflict: 'userId, key',
@@ -128,14 +128,14 @@ commandHandler.registerCommand('only', {
     // Update the settings
     await supabase.from('settings').upsert(
       {
-        userId: message.channel.client.token,
         key: DBSettings.rankOnly,
+        updated_at: new Date().toISOString(),
+        userId: message.channel.client.token,
         value: JSON.stringify({
           enabled: true,
           minimumRank,
           minimumRankTier,
         }),
-        updated_at: new Date().toISOString(),
       },
       {
         onConflict: 'userId, key',
@@ -145,9 +145,9 @@ commandHandler.registerCommand('only', {
     chatClient.say(
       channel,
       t('rankOnlyEnabled', {
+        lng: message.channel.client.locale,
         rank: minimumRank,
         url: 'dotabod.com/verify',
-        lng: message.channel.client.locale,
       }),
       message.user.messageId
     )

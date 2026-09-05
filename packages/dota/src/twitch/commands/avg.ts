@@ -51,17 +51,17 @@ commandHandler.registerCommand('avg', {
     }
 
     calculateAvg({
-      locale: client.locale,
       currentMatchId: message.channel.client.gsi?.map?.matchid,
+      locale: client.locale,
       players: roster.players,
     })
       .then((avg) => {
         chatClient.say(message.channel.name, `${avg}${avgDescriptor}`, message.user.messageId)
       })
-      .catch((e) => {
+      .catch((error) => {
         chatClient.say(
           message.channel.name,
-          e?.message ?? t('gameNotFound', { lng: client.locale }),
+          error?.message ?? t('gameNotFound', { lng: client.locale }),
           message.user.messageId
         )
       })

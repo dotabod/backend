@@ -65,12 +65,12 @@ describe(transformBetData, () => {
     const result = transformBetData({
       outcomes: [
         {
-          title: 'Yes',
           channel_points: 500,
-          users: 3,
+          title: 'Yes',
           top_predictors: [
             { user_name: 'alice', channel_points_used: 100, channel_points_won: 200 },
           ],
+          users: 3,
         },
       ],
       title: 'Match',
@@ -79,7 +79,7 @@ describe(transformBetData, () => {
     expect(result.outcomes).toStrictEqual([
       {
         title: 'Yes',
-        topUsers: [{ userDisplayName: 'alice', channelPointsUsed: 100, channelPointsWon: 200 }],
+        topUsers: [{ channelPointsUsed: 100, channelPointsWon: 200, userDisplayName: 'alice' }],
         totalUsers: 3,
         totalVotes: 500,
       },
@@ -88,7 +88,7 @@ describe(transformBetData, () => {
 
   it('leaves totals and topUsers undefined when top_predictors is absent', () => {
     const result = transformBetData({
-      outcomes: [{ title: 'No', channel_points: 500, users: 3 }],
+      outcomes: [{ channel_points: 500, title: 'No', users: 3 }],
       title: 'Match',
     })
 
@@ -105,12 +105,12 @@ describe(transformBetData, () => {
     const result = transformBetData({
       outcomes: [
         {
-          title: 'Yes',
           channel_points: 100,
-          users: 1,
+          title: 'Yes',
           top_predictors: [
             { user_name: 'bob', channel_points_used: 100, channel_points_won: null },
           ],
+          users: 1,
         },
       ],
       title: 'Refund?',

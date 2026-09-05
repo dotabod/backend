@@ -7,8 +7,8 @@ import { isSpectator } from '../../dota/lib/isSpectator'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { getRedisNumberValue } from '../../utils/index'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('wl', {
   aliases: ['score', 'winrate', 'wr'],
@@ -56,10 +56,10 @@ commandHandler.registerCommand('wl', {
 
     try {
       const res = await getWL({
-        channelId: channelId,
-        currentGameIsRanked: currentGameIsRanked,
+        channelId,
+        currentGameIsRanked,
         lng: client.locale,
-        mmrEnabled: mmrEnabled,
+        mmrEnabled,
         settings: client.settings,
         streamStartDate: client.stream_start_date,
         subscription: client.subscription,
@@ -70,7 +70,7 @@ commandHandler.registerCommand('wl', {
         chatClient.say(channel, res.msg, message.user.messageId)
       }
     } catch (error) {
-      logger.error('[WL] Error getting WL', { error: error, channelId, name: client.name })
+      logger.error('[WL] Error getting WL', { error, channelId, name: client.name })
     }
   },
 })

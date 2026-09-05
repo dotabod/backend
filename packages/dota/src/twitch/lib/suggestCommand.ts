@@ -1,8 +1,8 @@
 import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../settings'
-import commandHandler from './CommandHandler';
-import type { MessageType } from './CommandHandler';
+import commandHandler from './CommandHandler'
+import type { MessageType } from './CommandHandler'
 import { suggestionContext } from './suggestionContext'
 
 export { suggestionContext }
@@ -27,7 +27,9 @@ const relatedIndex: ReadonlyMap<string, readonly string[]> = (() => {
     for (const cmd of cluster) {
       const list = acc.get(cmd) ?? []
       for (const sibling of cluster) {
-        if (sibling !== cmd && !list.includes(sibling)) {list.push(sibling)}
+        if (sibling !== cmd && !list.includes(sibling)) {
+          list.push(sibling)
+        }
       }
       acc.set(cmd, list)
     }
@@ -53,9 +55,13 @@ function pickCandidate(
   const recent = lastSuggested.get(channelId)
   const now = Date.now()
   for (const candidate of candidates) {
-    if (recent && recent.cmd === candidate && now - recent.ts < REPEAT_WINDOW_MS) {continue}
+    if (recent && recent.cmd === candidate && now - recent.ts < REPEAT_WINDOW_MS) {
+      continue
+    }
     const dbkey = commandHandler.commands.get(candidate)?.dbkey
-    if (dbkey && !getValueOrDefault(dbkey, settings, subscription)) {continue}
+    if (dbkey && !getValueOrDefault(dbkey, settings, subscription)) {
+      continue
+    }
     return candidate
   }
   return null
@@ -67,7 +73,9 @@ function pickCandidate(
 // so chatClient.say can consume it.
 export function prepareSuggestionSuffix(commandName: string, message: MessageType): string | null {
   const candidates = relatedIndex.get(commandName)
-  if (!candidates?.length) {return null}
+  if (!candidates?.length) {
+    return null
+  }
 
   const { channel } = message
   const suggestionsEnabled = getValueOrDefault(
@@ -75,11 +83,15 @@ export function prepareSuggestionSuffix(commandName: string, message: MessageTyp
     channel.settings,
     channel.client.subscription
   )
-  if (!suggestionsEnabled) {return null}
+  if (!suggestionsEnabled) {
+    return null
+  }
 
   const count = (invocationCount.get(channel.id) ?? 0) + 1
   invocationCount.set(channel.id, count)
-  if (count % SUGGEST_EVERY !== 0) {return null}
+  if (count % SUGGEST_EVERY !== 0) {
+    return null
+  }
 
   const candidate = pickCandidate(
     channel.id,
@@ -87,7 +99,9 @@ export function prepareSuggestionSuffix(commandName: string, message: MessageTyp
     channel.settings,
     channel.client.subscription
   )
-  if (!candidate) {return null}
+  if (!candidate) {
+    return null
+  }
 
   lastSuggested.set(channel.id, { cmd: candidate, ts: Date.now() })
 

@@ -15,13 +15,15 @@ class RedisClient {
   /** Reads a JSON value stored at `key`, typed as `T`. Returns null when the key is absent. */
   public async getJson<T>(key: string): Promise<T | null> {
     const value = await this.client.json.get(key)
-    if (value === null || value === undefined) {return null}
+    if (value === null || value === undefined) {
+      return null
+    }
     return value as unknown as T
   }
 
   /** Stores `value` as JSON at `key`. */
-  public  async setJson(key: string, value: unknown): Promise<string | null> {
-    return this.client.json.set(key, '$', value as RedisJSON)
+  public async setJson(key: string, value: unknown): Promise<string | null> {
+    return await this.client.json.set(key, '$', value as RedisJSON)
   }
 
   public async connect(
@@ -36,16 +38,18 @@ class RedisClient {
     }
   }
 
-  public  async connectClient(): Promise<ReturnType<typeof createClient>> {
-    return this.connect(this.client)
+  public async connectClient(): Promise<ReturnType<typeof createClient>> {
+    return await this.connect(this.client)
   }
 
-  public  async connectSubscriber(): Promise<ReturnType<typeof createClient>> {
-    return this.connect(this.subscriber)
+  public async connectSubscriber(): Promise<ReturnType<typeof createClient>> {
+    return await this.connect(this.subscriber)
   }
 
   public static getInstance(): RedisClient {
-    if (!RedisClient.instance) {RedisClient.instance = new RedisClient()}
+    if (!RedisClient.instance) {
+      RedisClient.instance = new RedisClient()
+    }
     return RedisClient.instance
   }
 }

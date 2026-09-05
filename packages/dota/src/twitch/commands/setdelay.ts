@@ -30,10 +30,10 @@ commandHandler.registerCommand('setdelay', {
 
     await supabase.from('settings').upsert(
       {
-        userId: message.channel.client.token,
         key: DBSettings.streamDelay,
-        value: delayInSeconds * 1000,
         updated_at: new Date().toISOString(),
+        userId: message.channel.client.token,
+        value: delayInSeconds * 1000,
       },
       {
         onConflict: 'userId, key',
@@ -42,13 +42,13 @@ commandHandler.registerCommand('setdelay', {
 
     chatClient.say(
       message.channel.name,
-      !delayInSeconds
-        ? t('setStreamDelayRemoved', {
-            lng: message.channel.client.locale,
-          })
-        : t('setStreamDelay', {
+      delayInSeconds
+        ? t('setStreamDelay', {
             lng: message.channel.client.locale,
             seconds: delayInSeconds,
+          })
+        : t('setStreamDelayRemoved', {
+            lng: message.channel.client.locale,
           }),
       message.user.messageId
     )

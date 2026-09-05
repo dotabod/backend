@@ -33,23 +33,33 @@ class SetupSupabase {
 
   toggleHandler = async (userId: string, enable: boolean) => {
     const { result: client } = await getDBUser({ token: userId })
-    if (!client) {return}
+    if (!client) {
+      return
+    }
 
     toggleDotabod(userId, enable, client.name, client.locale)
   }
 
   clearSteamUsers = async (userIds: Iterable<string>) => {
     for (const userId of new Set(userIds)) {
-      if (!userId) {continue}
+      if (!userId) {
+        continue
+      }
 
       const client = findUser(userId)
       const accountIds = new Set<string>()
-      if (client?.Account?.providerAccountId) {accountIds.add(client.Account.providerAccountId)}
+      if (client?.Account?.providerAccountId) {
+        accountIds.add(client.Account.providerAccountId)
+      }
       for (const [accountId, token] of twitchIdToToken) {
-        if (token === userId) {accountIds.add(accountId)}
+        if (token === userId) {
+          accountIds.add(accountId)
+        }
       }
 
-      if (client) {await clearCacheForUser(client)}
+      if (client) {
+        await clearCacheForUser(client)
+      }
 
       invalidTokens.delete(userId)
       for (const accountId of accountIds) {
@@ -57,7 +67,9 @@ class SetupSupabase {
         invalidTokens.delete(accountId)
       }
       for (const [name, token] of twitchNameToToken) {
-        if (token === userId) {twitchNameToToken.delete(name)}
+        if (token === userId) {
+          twitchNameToToken.delete(name)
+        }
       }
     }
   }
@@ -79,7 +91,9 @@ class SetupSupabase {
             // User row is gone — allow a future re-onboarding under the same
             // id to bypass the negative cache.
             invalidTokens.delete(client.token)
-            if (accountId) {invalidTokens.delete(accountId)}
+            if (accountId) {
+              invalidTokens.delete(accountId)
+            }
             return
           }
         }
@@ -91,7 +105,9 @@ class SetupSupabase {
           const newObj = payload.new
           const client = findUser(newObj.userId)
 
-          if (!client) {return}
+          if (!client) {
+            return
+          }
 
           if (isSubscriptionActive(newObj)) {
             client.subscription = {
@@ -110,7 +126,9 @@ class SetupSupabase {
           const newObj = payload.new
           const client = findUser(newObj.userId)
 
-          if (!client) {return}
+          if (!client) {
+            return
+          }
 
           const isNewActive = isSubscriptionActive(newObj)
           if (isNewActive) {
@@ -167,7 +185,9 @@ class SetupSupabase {
           const oldObj = payload.old
           const client = findUser(oldObj.userId)
 
-          if (!client) {return}
+          if (!client) {
+            return
+          }
 
           if (client.subscription?.id === oldObj.id) {
             // Check if user has any other active subscriptions
@@ -215,7 +235,9 @@ class SetupSupabase {
             // (GSI path) or the providerAccountId (Twitch chat / tooltips path).
             // Add AFTER clearCacheForUser — see ban branch for rationale.
             invalidTokens.add(newObj.userId)
-            if (newObj.providerAccountId) {invalidTokens.add(newObj.providerAccountId)}
+            if (newObj.providerAccountId) {
+              invalidTokens.add(newObj.providerAccountId)
+            }
             return
           }
 
@@ -237,8 +259,8 @@ class SetupSupabase {
               authProvider.removeUser(twitchId)
               getTwitchAPI(twitchId).catch((error) => {
                 logger.error('[TWITCHAPI] Error updating twurple token', {
-                  twitchId,
                   error,
+                  twitchId,
                 })
               })
             }
@@ -248,7 +270,9 @@ class SetupSupabase {
           // Which allows us to update the authProvider object
           if (newObj.requires_refresh === false && oldObj.requires_refresh === true) {
             invalidTokens.delete(newObj.userId)
-            if (newObj.providerAccountId) {invalidTokens.delete(newObj.providerAccountId)}
+            if (newObj.providerAccountId) {
+              invalidTokens.delete(newObj.providerAccountId)
+            }
             logger.info('[WATCHER ACCOUNT] Refreshing account', {
               twitchId: newObj.providerAccountId,
             })
@@ -282,7 +306,9 @@ class SetupSupabase {
             // cache. (Until clearCacheForUser stopped touching invalidTokens
             // these adds were silently undone.)
             invalidTokens.add(newObj.id)
-            if (accountId) {invalidTokens.add(accountId)}
+            if (accountId) {
+              invalidTokens.add(accountId)
+            }
             return
           }
 
@@ -296,13 +322,17 @@ class SetupSupabase {
             // the providerAccountId so both keyspaces are cleared.
             const client = findUser(newObj.id)
             const accountId = client?.Account?.providerAccountId
-            if (accountId) {invalidTokens.delete(accountId)}
+            if (accountId) {
+              invalidTokens.delete(accountId)
+            }
             logger.info('[WATCHER USER] Unbanning user', { userId: newObj.id })
             return
           }
 
           const client = findUser(newObj.id)
-          if (!client) {return}
+          if (!client) {
+            return
+          }
 
           client.name = newObj.name
           client.locale = newObj.locale
@@ -338,7 +368,9 @@ class SetupSupabase {
           if (newObj.mmr !== 0 && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
             client.mmr = newObj.mmr
 
-            if (!client.stream_online) {return}
+            if (!client.stream_online) {
+              return
+            }
             logger.info('[WATCHER MMR] Sending mmr to socket', {
               mmr: newObj.mmr,
               name: client.name,
@@ -396,7 +428,7 @@ class SetupSupabase {
             const isValidQuantity = !Number.isNaN(giftQuantityNum) && giftQuantityNum > 0
 
             if (isValidQuantity) {
-              const {giftType} = newObj
+              const { giftType } = newObj
 
               if (giftType) {
                 if (giftType === 'monthly') {
@@ -457,7 +489,7 @@ class SetupSupabase {
             chatClient.say(client.name, fullMessage)
           } catch (error) {
             logger.error('Error constructing or sending gift notification to chat', {
-              error: error,
+              error,
               userId: client.token,
               giftId: newObj.id,
             })
@@ -484,13 +516,15 @@ class SetupSupabase {
               // we'll never have the client cached, so we have to lookup the user again
               try {
                 void this.toggleHandler(newObj.userId, !!newObj.value)
-              } catch (e) {
-                logger.error('Error in toggleHandler', { e })
+              } catch (error) {
+                logger.error('Error in toggleHandler', { error })
               }
             }
           }
 
-          if (!client) {return}
+          if (!client) {
+            return
+          }
 
           // replace the new setting with the one we have saved in cache
           logger.info('[WATCHER SETTING] Updating setting for', {
@@ -523,7 +557,9 @@ class SetupSupabase {
         { event: 'INSERT', schema: 'public', table: 'win_loss_adjustments' },
         (payload: { new: Tables<'win_loss_adjustments'> }) => {
           const client = findUser(payload.new.user_id)
-          if (!client) {return}
+          if (!client) {
+            return
+          }
 
           gsiHandlers.get(client.token)?.emitWLUpdate(true)
         }
@@ -558,7 +594,9 @@ class SetupSupabase {
             const affectedUserIds = new Set<string>()
 
             for (const userId of oldConnectedUserIds) {
-              if (!newConnectedUserIds.has(userId)) {affectedUserIds.add(userId)}
+              if (!newConnectedUserIds.has(userId)) {
+                affectedUserIds.add(userId)
+              }
             }
 
             if (oldObj.userId !== newObj.userId) {
@@ -566,13 +604,17 @@ class SetupSupabase {
               affectedUserIds.add(newObj.userId)
             }
 
-            if (affectedUserIds.size) {await this.clearSteamUsers(affectedUserIds)}
+            if (affectedUserIds.size) {
+              await this.clearSteamUsers(affectedUserIds)
+            }
           }
 
           const client = findUser(newObj.userId)
 
           // Just here to update local memory
-          if (!client) {return}
+          if (!client) {
+            return
+          }
 
           logger.debug('[WATCHER STEAM] Updating steam accounts for', {
             name: client.name,
@@ -598,7 +640,9 @@ class SetupSupabase {
           if (client.steam32Id === newObj.steam32Id) {
             client.mmr = newObj.mmr
 
-            if (!client.stream_online) {return}
+            if (!client.stream_online) {
+              return
+            }
 
             getRankDetail(newObj.mmr, newObj.steam32Id)
               .then((deets) => {

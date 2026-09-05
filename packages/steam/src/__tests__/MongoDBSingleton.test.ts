@@ -14,7 +14,9 @@ vi.doMock(import('mongodb'), () => ({
   MongoClient: {
     connect: async () => {
       connectAttempts++
-      if (connectAttempts === 1) {throw new Error('mongo down')}
+      if (connectAttempts === 1) {
+        throw new Error('mongo down')
+      }
       return { db: () => fakeDb }
     },
   },
@@ -25,7 +27,9 @@ vi.doMock(import('mongodb'), () => ({
 vi.doMock(import('retry'), () => ({
   default: {
     operation: () => ({
-      attempt: (cb: (currentAttempt: number) => void) =>{  cb(1); },
+      attempt: (cb: (currentAttempt: number) => void) => {
+        cb(1)
+      },
       retry: () => false,
     }),
   },
@@ -33,10 +37,10 @@ vi.doMock(import('retry'), () => ({
 
 vi.doMock(import('../utils/logger'), () => ({
   logger: {
-    debug: () => undefined,
-    error: () => undefined,
-    info: () => undefined,
-    warn: () => undefined,
+    debug: () => {},
+    error: () => {},
+    info: () => {},
+    warn: () => {},
   },
 }))
 

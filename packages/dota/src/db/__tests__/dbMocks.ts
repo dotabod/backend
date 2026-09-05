@@ -59,13 +59,13 @@ function createTableBuilder(table: string) {
   const builder: any = {
     eq: () => builder,
     gte: (column: string, value: unknown) => {
-      dbState.gteCalls.push({ table, column, value })
+      dbState.gteCalls.push({ column, table, value })
       return builder
     },
     in: () => builder,
-    insert:  async (values: unknown) => {
+    insert: async (values: unknown) => {
       dbState.inserts.push({ table, values })
-      return Promise.resolve({ data: null, error: null })
+      return ({ data: null, error: null })
     },
     is: () => builder,
     limit: () => builder,
@@ -75,17 +75,17 @@ function createTableBuilder(table: string) {
     order: () => builder,
     select: () => builder,
     single: async () => result,
-    then:  async (onFulfilled: (value: TableResult) => unknown) =>
-      Promise.resolve(result).then(onFulfilled),
+    then: async (onFulfilled: (value: TableResult) => unknown) =>
+      await Promise.resolve(result).then(onFulfilled),
     update: (values: unknown) => ({
-      eq:  async (col: string, val: unknown) => {
+      eq: async (col: string, val: unknown) => {
         dbState.updates.push({ table, values, whereCol: col, whereVal: val })
-        return Promise.resolve({ data: null, error: null })
+        return ({ data: null, error: null })
       },
     }),
-    upsert:  async (values: unknown, options?: unknown) => {
-      dbState.upserts.push({ table, values, options })
-      return Promise.resolve({ data: null, error: null })
+    upsert: async (values: unknown, options?: unknown) => {
+      dbState.upserts.push({ options, table, values })
+      return ({ data: null, error: null })
     },
   }
   return builder
@@ -100,7 +100,7 @@ const supabaseMock = {
 }
 
 const loggerMock = {
-  debug: () => undefined,
+  debug: () => {},
   error: (message: string, meta?: Record<string, unknown>) => {
     dbState.loggerErrorCalls.push({ message, meta: meta ?? {} })
   },

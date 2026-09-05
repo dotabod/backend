@@ -28,7 +28,7 @@ describe('event:aegis_picked_up', () => {
   it('writes aegis state to redis and chats the pickup message', async () => {
     const handler = makeGsiHandler()
     registerHandler(handler)
-    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 99_999, heroid: 5, playerid: 0 }]
 
     events.emit('event:aegis_picked_up', { game_time: 600, player_id: 0 }, handler.getToken())
     await flushAsync()
@@ -45,7 +45,7 @@ describe('event:aegis_picked_up', () => {
     gsiState.matchPlayers = [
       { accountid: 101, heroid: 1, playerid: 0 },
       { accountid: 102, heroid: 2, playerid: 1 },
-      { accountid: 99999, heroid: 5, playerid: 8 },
+      { accountid: 99_999, heroid: 5, playerid: 8 },
     ]
     handler.client.gsi.player.kill_list = { victimid_8: 2 }
 
@@ -116,7 +116,7 @@ describe('event:aegis_picked_up', () => {
   it('uses the snatched message when the aegis was snatched', async () => {
     const handler = makeGsiHandler()
     registerHandler(handler)
-    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 99_999, heroid: 5, playerid: 0 }]
 
     events.emit(
       'event:aegis_picked_up',
@@ -296,7 +296,7 @@ describe('event:aegis_denied', () => {
   it('chats the deny message', async () => {
     const handler = makeGsiHandler()
     registerHandler(handler)
-    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 99_999, heroid: 5, playerid: 0 }]
 
     events.emit('event:aegis_denied', { game_time: 600, player_id: 0 }, handler.getToken())
     await flushAsync()
@@ -735,11 +735,11 @@ describe('hero:smoked', () => {
 describe('event:generic_event - smoke activated', () => {
   const smokeEvent = (playerid1: number) => ({
     data: JSON.stringify({
-      type: 'CHAT_MESSAGE_SMOKE_ACTIVATED',
-      value: 0,
       playerid1,
       playerid2: -1,
       time: 537,
+      type: 'CHAT_MESSAGE_SMOKE_ACTIVATED',
+      value: 0,
     }),
     event_type: 'generic_event',
     game_time: 600,
@@ -751,7 +751,7 @@ describe('event:generic_event - smoke activated', () => {
     handler.client.gsi.hero = { alive: true, name: 'npc_dota_hero_lina', smoked: false }
     registerHandler(handler)
     // Teammate in slot 0 casts it; the streamer is slot 1 and never got the buff.
-    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 99_999, heroid: 5, playerid: 0 }]
     gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
 
     events.emit('event:generic_event', smokeEvent(0), handler.getToken())
@@ -766,7 +766,7 @@ describe('event:generic_event - smoke activated', () => {
     handler.client.gsi.player.team_name = 'radiant'
     handler.client.gsi.hero = { alive: true, name: 'npc_dota_hero_lina', smoked: true }
     registerHandler(handler)
-    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 99_999, heroid: 5, playerid: 0 }]
     gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
 
     events.emit('event:generic_event', smokeEvent(0), handler.getToken())
@@ -782,7 +782,7 @@ describe('event:generic_event - smoke activated', () => {
     handler.client.gsi.player.team_name = 'radiant'
     handler.client.gsi.hero = { alive: true, name: 'npc_dota_hero_lina', smoked: false }
     registerHandler(handler)
-    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 99_999, heroid: 5, playerid: 0 }]
     gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '0'
 
     events.emit('event:generic_event', smokeEvent(0), handler.getToken())
@@ -799,7 +799,7 @@ describe('event:generic_event - smoke activated', () => {
     registerHandler(handler)
     // Teammate smoked while the streamer is dead — a dead player wasn't left behind and
     // never gets the buff, so neither path has anything to say.
-    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 99_999, heroid: 5, playerid: 0 }]
     gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
 
     events.emit('event:generic_event', smokeEvent(0), handler.getToken())
@@ -814,7 +814,7 @@ describe('event:generic_event - smoke activated', () => {
     registerHandler(handler)
     // Activator in dire slot 5 — opposite side; Dota would not surface this to
     // the streamer, and we must never leak it even if it did.
-    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 5 }]
+    gsiState.matchPlayers = [{ accountid: 99_999, heroid: 5, playerid: 5 }]
 
     events.emit('event:generic_event', smokeEvent(5), handler.getToken())
     await flushAsync()
@@ -829,7 +829,7 @@ describe('event:generic_event - smoke activated', () => {
     registerHandler(handler)
     gsiState.redisGet[`${handler.getToken()}:playingHero`] = 'npc_dota_hero_lina'
     // Teammate in slot 0 popped it; the streamer (slot 1) is in the smoke.
-    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 99_999, heroid: 5, playerid: 0 }]
     gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
 
     // The same activation reaches both paths: the hero buff flip and the team chat event.

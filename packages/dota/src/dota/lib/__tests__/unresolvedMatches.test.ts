@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatTimeAgo, formatUnresolvedMatch } from '../unresolvedMatches.ts';
-import type { UnresolvedMatch } from '../unresolvedMatches.ts';
+import { formatTimeAgo, formatUnresolvedMatch } from '../unresolvedMatches.ts'
+import type { UnresolvedMatch } from '../unresolvedMatches.ts'
 
 const now = new Date('2026-05-22T12:00:00.000Z')
 

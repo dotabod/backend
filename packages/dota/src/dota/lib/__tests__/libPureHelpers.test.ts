@@ -23,7 +23,9 @@ describe(findItem, () => {
   })
 
   it('returns false when the inventory is not a full 17 slots', () => {
-    expect(findItem({ data: { items: inv(['item_blink']) } as any, itemName: 'item_blink' })).toBeFalsy()
+    expect(
+      findItem({ data: { items: inv(['item_blink']) } as any, itemName: 'item_blink' })
+    ).toBeFalsy()
   })
 
   it('finds a matching item in the first 6 backpack slots', () => {

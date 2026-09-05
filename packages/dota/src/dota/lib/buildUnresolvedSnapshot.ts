@@ -29,7 +29,9 @@ interface LiveGsiLike {
 // Treats empty strings as missing — the disconnect GSI packet often returns
 // `hero.name = ""` rather than dropping the key.
 const liveString = (v: string | null | undefined): string | null => {
-  if (typeof v !== 'string') {return null}
+  if (typeof v !== 'string') {
+    return null
+  }
   return v.length > 0 ? v : null
 }
 
@@ -46,8 +48,12 @@ const monotonic = (
 ): number | null => {
   const l = typeof live === 'number' ? live : null
   const p = typeof prev === 'number' ? prev : null
-  if (l == null) {return p}
-  if (p == null) {return l}
+  if (l == null) {
+    return p
+  }
+  if (p == null) {
+    return l
+  }
   return Math.max(l, p)
 }
 

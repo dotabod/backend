@@ -1,7 +1,7 @@
 import type { DelayedGames } from '../../../../types'
 import { extractPlayersFromMongoDoc } from '../internal/mongoDoc'
-import { RosterResolver } from './RosterResolver';
-import type { RawRoster, ResolverContext } from './RosterResolver';
+import { RosterResolver } from './RosterResolver'
+import type { RawRoster, ResolverContext } from './RosterResolver'
 
 // Fetcher injected by `MatchDataService` so this resolver shares the class's memoized Mongo I/O.
 // Tests pass a stub directly without touching mock.module.
@@ -18,11 +18,17 @@ export class SourceTvResolver extends RosterResolver {
   }
 
   async resolve({ matchId }: ResolverContext): Promise<RawRoster | null> {
-    if (!matchId) {return null}
+    if (!matchId) {
+      return null
+    }
     const doc = await this.fetchDoc(matchId)
-    if (!doc) {return null}
+    if (!doc) {
+      return null
+    }
     const matchPlayers = extractPlayersFromMongoDoc(doc)
-    if (matchPlayers.length === 0) {return null}
+    if (matchPlayers.length === 0) {
+      return null
+    }
     return { matchPlayers, source: 'sourcetv' }
   }
 }

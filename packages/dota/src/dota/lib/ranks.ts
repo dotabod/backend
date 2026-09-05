@@ -35,12 +35,16 @@ export function rankTierToMmr(rankTier: string | number) {
  * @returns The rank tier value (e.g. 71 for Legend 1, 80 for Immortal)
  */
 export function mmrToRankTier(mmr: number): number {
-  if (mmr <= 0) {return 0} // Uncalibrated
+  if (mmr <= 0) {
+    return 0
+  } // Uncalibrated
 
   // Immortal rank (rank tier 80)
   // Get the highest MMR from the ranks array
   const highestRankMMR = ranks.at(-1)?.range[1] || 5619
-  if (mmr >= highestRankMMR) {return 80}
+  if (mmr >= highestRankMMR) {
+    return 80
+  }
 
   // Find the rank based on MMR
   for (let i = 0; i < ranks.length; i++) {
@@ -99,7 +103,7 @@ interface LeaderRankData {
 async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise<LeaderRankData> {
   const defaultNotFound: LeaderRankData = {
     mmr,
-    myRank: leaderRanks[leaderRanks.length - 1],
+    myRank: leaderRanks.at(-1),
     standing: null,
   }
 
@@ -143,8 +147,7 @@ async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise
       }
 
       // Find the corresponding leaderboard rank for the given standing
-      const myRank =
-        leaderRanks.find((rank) => standing <= rank.range[1]) || leaderRanks.at(-1)
+      const myRank = leaderRanks.find((rank) => standing <= rank.range[1]) || leaderRanks.at(-1)
 
       // Construct the result object
       result = { mmr, myRank, standing }
@@ -162,7 +165,9 @@ async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise
 export async function getRankDetail(mmr: string | number, steam32Id?: number | null) {
   const mmrNum = Number(mmr)
 
-  if (!mmrNum || mmrNum < 0) {return null}
+  if (!mmrNum || mmrNum < 0) {
+    return null
+  }
 
   // At or higher than max mmr? Lets check leaderboards
   if (mmrNum >= ranks.at(-1).range[1]) {
@@ -202,16 +207,22 @@ export async function getRankDescription({
 }: RankDescription) {
   const rankResponse = await getRankDetail(mmr, steam32Id)
 
-  if (!rankResponse) {return null}
+  if (!rankResponse) {
+    return null
+  }
 
   if ('standing' in rankResponse) {
     const rankTitle = 'Immortal'
     const standing = rankResponse.standing && `#${rankResponse.standing}`
     const msgs: string[] = []
 
-    if (showRankMmr) {msgs.push(`${mmr} MMR`)}
+    if (showRankMmr) {
+      msgs.push(`${mmr} MMR`)
+    }
     msgs.push(rankTitle)
-    if (standing) {msgs.push(standing)}
+    if (standing) {
+      msgs.push(standing)
+    }
 
     return msgs.join(' · ')
   }
@@ -231,9 +242,10 @@ export async function getRankDescription({
   })
 
   const msgs: string[] = []
-  msgs.push(String(mmr), myRank.title)
-  msgs.push(`${nextAt} ${nextMMR}${count === 1 ? '' : ` ${nextIn}`}`)
-  if (count === 1) {msgs.push(nextIn)}
+  msgs.push(String(mmr), myRank.title, `${nextAt} ${nextMMR}${count === 1 ? '' : ` ${nextIn}`}`)
+  if (count === 1) {
+    msgs.push(nextIn)
+  }
 
   return msgs.join(' · ')
 }
@@ -251,7 +263,9 @@ type Region =
 
 export function estimateMMR(leaderboard_rank: number, region: Region): number {
   // Max leaderboard rank is 5000
-  if (leaderboard_rank <= 0 || leaderboard_rank > 5000) {return 8500}
+  if (leaderboard_rank <= 0 || leaderboard_rank > 5000) {
+    return 8500
+  }
 
   let baseMMR: number
   const x = leaderboard_rank

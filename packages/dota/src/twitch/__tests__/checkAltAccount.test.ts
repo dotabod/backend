@@ -19,20 +19,20 @@ function reinstallMocks() {
   vi.doMock(import('@dotabod/shared-utils'), () =>
     buildSharedUtilsMock({
       getTwitchAPI: async () => ({
-        users: {
-          getUserByName: async () => ({ creationDate: state.creationDate }),
-        },
         channels: {
           getChannelFollowers: async () => ({
             data: state.followDate ? [{ followDate: state.followDate }] : [],
           }),
         },
+        users: {
+          getUserByName: async () => ({ creationDate: state.creationDate }),
+        },
       }),
       logger: {
-        debug: () => undefined,
-        error: () => undefined,
-        info: () => undefined,
-        warn: () => undefined,
+        debug: () => {},
+        error: () => {},
+        info: () => {},
+        warn: () => {},
       },
       supabase: {},
     })

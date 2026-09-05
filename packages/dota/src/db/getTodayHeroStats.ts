@@ -1,7 +1,7 @@
 import { supabase } from '@dotabod/shared-utils'
 
-import getHero from '../dota/lib/getHero';
-import type { HeroNames } from '../dota/lib/getHero';
+import getHero from '../dota/lib/getHero'
+import type { HeroNames } from '../dota/lib/getHero'
 import { getTodayStartDate } from './winLossWindow'
 
 interface HeroStat {
@@ -38,7 +38,9 @@ export async function getTodayHeroStats({ token }: TodayHeroStatsParams): Promis
   const heroStatsMap = new Map<string, { wins: number; losses: number }>()
 
   for (const match of matches) {
-    if (!match.hero_name) {continue}
+    if (!match.hero_name) {
+      continue
+    }
 
     const heroData = getHero(match.hero_name as HeroNames)
     const heroName = heroData?.localized_name ?? match.hero_name
@@ -57,7 +59,9 @@ export async function getTodayHeroStats({ token }: TodayHeroStatsParams): Promis
   const seenHeroes = new Set<string>()
 
   for (const match of matches) {
-    if (!match.hero_name) {continue}
+    if (!match.hero_name) {
+      continue
+    }
 
     const heroData = getHero(match.hero_name as HeroNames)
     const heroName = heroData?.localized_name ?? match.hero_name

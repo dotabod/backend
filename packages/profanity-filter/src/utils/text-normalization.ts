@@ -73,7 +73,9 @@ export function normalizeText(text: string): string {
   for (const [char, substitutions] of Object.entries(CHAR_SUBSTITUTIONS)) {
     for (const substitute of substitutions) {
       // Skip the standard form itself
-      if (substitute === char) {continue}
+      if (substitute === char) {
+        continue
+      }
 
       // Special characters need to be escaped in regular expressions
       const escapeRegExp = (str: string) => str.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&')

@@ -10,7 +10,7 @@ export const utilsState: {
   updates: {
     table: string
     values: unknown
-    filters: Array<{ method: string; col: string; val: unknown }>
+    filters: { method: string; col: string; val: unknown }[]
   }[]
   // Per-table single() result for select queries.
   selectSingle: Record<string, { data: unknown; error: unknown }>
@@ -48,12 +48,12 @@ function createTableBuilder(table: string) {
 
   const builder: any = {
     eq: (col: string, val: unknown) => {
-      filters.push({ method: 'eq', col, val })
+      filters.push({ col, method: 'eq', val })
       return builder
     },
-    insert:  async (values: unknown) => {
+    insert: async (values: unknown) => {
       utilsState.inserts.push({ table, values })
-      return Promise.resolve({ data: null, error: null })
+      return ({ data: null, error: null })
     },
     select: () => builder,
     single: async () => utilsState.selectSingle[table] ?? { data: null, error: null },
@@ -61,9 +61,9 @@ function createTableBuilder(table: string) {
       updateValues = values
       return updateChain
     },
-    upsert:  async (values: unknown, options?: unknown) => {
-      utilsState.upserts.push({ table, values, options })
-      return Promise.resolve({ data: null, error: null })
+    upsert: async (values: unknown, options?: unknown) => {
+      utilsState.upserts.push({ options, table, values })
+      return ({ data: null, error: null })
     },
   }
 
@@ -77,9 +77,9 @@ function createTableBuilder(table: string) {
       filters.push({ col, method: 'is', val })
       return updateChain
     },
-    then:  async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => {
+    then: async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => {
       utilsState.updates.push({ filters, table, values: updateValues })
-      return Promise.resolve({ data: null, error: null }).then(onFulfilled)
+      return await Promise.resolve({ data: null, error: null }).then(onFulfilled)
     },
   }
 
@@ -98,20 +98,22 @@ vi.doMock('../src/db/supabase', () => ({
 
 vi.doMock('../src/logger', () => ({
   logger: {
-    debug: () => undefined,
+    debug: () => {},
     error: (message: string, meta?: Record<string, unknown>) => {
       utilsState.loggerErrorCalls.push({ message, meta: meta ?? {} })
     },
     info: (message: string, meta?: Record<string, unknown>) => {
       utilsState.loggerInfoCalls.push({ message, meta: meta ?? {} })
     },
-    warn: () => undefined,
+    warn: () => {},
   },
 }))
 
 vi.doMock('@twurple/auth', () => ({
   getAppToken: async () => {
-    if (utilsState.appTokenError) {throw utilsState.appTokenError}
+    if (utilsState.appTokenError) {
+      throw utilsState.appTokenError
+    }
     return utilsState.appToken
   },
 }))

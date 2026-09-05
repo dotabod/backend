@@ -72,7 +72,7 @@ export async function subscribeToEvents() {
     )
 
     // Count successes
-    successCount += results.filter((r) => r.status === 'fulfilled' &&  r.value).length
+    successCount += results.filter((r) => r.status === 'fulfilled' && r.value).length
 
     // Log progress periodically
     const isLogPoint = (i + CHUNK_SIZE) % 200 === 0 || i + CHUNK_SIZE >= accountIds.length

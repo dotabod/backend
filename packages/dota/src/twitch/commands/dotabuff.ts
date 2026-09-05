@@ -4,8 +4,8 @@ import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { dotabodProfileUrl } from '../../utils/index'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 import { getDotabodProfileUrl } from '../lib/getDotabodProfile'
 import { profileLink } from './profileLink'
 

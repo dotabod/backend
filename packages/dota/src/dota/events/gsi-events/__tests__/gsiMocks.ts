@@ -5,7 +5,11 @@ import { vi } from 'vitest'
 
 import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../../__tests__/sharedMocks'
 
-export interface MatchPlayer { heroid: number; accountid: number; playerid: number | null }
+export interface MatchPlayer {
+  heroid: number
+  accountid: number
+  playerid: number | null
+}
 
 export const gsiState: {
   // Per-key redis reads. Both RedisClient.getInstance().client.get and
@@ -76,7 +80,7 @@ const fakeRedisClient = {
   json: {
     del: async (key: string) => {
       gsiState.redisJsonDelCalls.push(key)
-      if (gsiState.redisJsonDelError) throw gsiState.redisJsonDelError
+      if (gsiState.redisJsonDelError) {throw gsiState.redisJsonDelError}
       delete gsiState.redisJson[key]
       return 1
     },
@@ -96,7 +100,7 @@ const fakeRedisClient = {
 const fakeRedisInstance = {
   client: fakeRedisClient,
   getJson: async (key: string) => await fakeRedisClient.json.get(key),
-  setJson:  async (key: string, value: unknown) => fakeRedisClient.json.set(key, '$', value),
+  setJson: async (key: string, value: unknown) => await fakeRedisClient.json.set(key, '$', value),
 }
 vi.doMock(import('../../../../db/RedisClient'), () => ({
   default: {
@@ -129,13 +133,13 @@ vi.doMock(import('../../../lib/matchData'), () => {
         hasAllAccountIds: false,
         hasAllHeroes: false,
         players: gsiState.matchPlayers.map((p) => ({
-          slot: p.playerid,
           accountId: p.accountid || null,
           heroId: p.heroid || null,
-          team: null,
           playerName: null,
           rank: null,
           selected: null,
+          slot: p.playerid,
+          team: null,
         })),
         source: 'sourcetv' as const,
         stage: 'in-progress' as const,
@@ -207,9 +211,9 @@ const { redisClient } = await import('../../../../db/redisInstance')
 // loads last wins. Calling this in `beforeEach` from gsi tests guarantees
 // the gsi patches are active for the test about to run.
 export function installGsiMocks() {
-  chatClient.say = (async (channel: string, message: string) => {
+  chatClient.say = async (channel: string, message: string) => {
     gsiState.chatSayCalls.push({ channel, message })
-  })
+  }
 
   ;(redisClient as any).client = fakeRedisClient
 
@@ -255,7 +259,7 @@ export interface GsiHandlerLike {
   bountyTaskId?: string
   killstreakTaskId?: string
   closeBets: (winningTeam?: string) => Promise<void>
-  closeBetsCalls: Array<string | undefined>
+  closeBetsCalls: (string | undefined)[]
 }
 
 export function makeGsiHandler(overrides: Partial<GsiHandlerLike> = {}): GsiHandlerLike {
@@ -274,9 +278,9 @@ export function makeGsiHandler(overrides: Partial<GsiHandlerLike> = {}): GsiHand
       subscription: PRO_SUB,
       // Default gsi: a playable match. Individual tests can override.
       gsi: {
-        player: { activity: 'playing', team_name: 'radiant' },
-        map: { matchid: '7777777777', clock_time: 600, game_time: 600 },
         hero: { name: 'npc_dota_hero_lina' },
+        map: { clock_time: 600, game_time: 600, matchid: '7777777777' },
+        player: { activity: 'playing', team_name: 'radiant' },
       },
     },
     closeBets: async (winningTeam) => {

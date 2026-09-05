@@ -10,12 +10,8 @@ import { steamSocket } from '../steam/ws'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet'
 import { isPredictionAlreadyActiveError, openTwitchBet } from '../twitch/lib/openTwitchBet'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets'
-import { type MatchMinimalDetailsResponse,
-  type BlockType,
-  type DotaEvent,
-  DotaGcTeam,
-  EMatchOutcome,
-  type SocketClient } from '../types'
+import { DotaGcTeam, EMatchOutcome } from '../types';
+import type { MatchMinimalDetailsResponse, BlockType, DotaEvent, SocketClient } from '../types';
 import { getRedisNumberValue, is8500Plus, steamID64toSteamID32 } from '../utils/index'
 import { maybeSendRoshAegisEvent } from './events/gsi-events/maybeSendRoshAegisEvent'
 import { clearPlayingHeroSlotCache } from './events/gsi-events/newdata'
@@ -26,12 +22,16 @@ import { minimapParser } from './events/minimap/parser'
 import { getStreamDelay } from './getStreamDelay'
 import { setGSIHandlerConstructor } from './GSIHandlerFactory'
 import type { GSIHandlerType } from './GSIHandlerTypes'
-import { buildClosingScores, buildUnresolvedSnapshot, mergeInGameSnapshotTick } from './lib/buildUnresolvedSnapshot';
-import type { InGameSnapshot } from './lib/buildUnresolvedSnapshot';
+import {
+  buildClosingScores,
+  buildUnresolvedSnapshot,
+  mergeInGameSnapshotTick,
+} from './lib/buildUnresolvedSnapshot'
+import type { InGameSnapshot } from './lib/buildUnresolvedSnapshot'
 import { blockTypes, pickSates } from './lib/consts'
 import { delayedQueue } from './lib/DelayedQueue'
-import getHero from './lib/getHero';
-import type { HeroNames } from './lib/getHero';
+import getHero from './lib/getHero'
+import type { HeroNames } from './lib/getHero'
 import { getHeroById } from './lib/heroes'
 import { isArcade } from './lib/isArcade'
 import { isSpectator } from './lib/isSpectator'
@@ -75,14 +75,18 @@ interface MMR {
 }
 
 export function emitMinimapBlockerStatus(client: SocketClient) {
-  if (!client.stream_online || !client.beta_tester || !client.gsi) {return}
+  if (!client.stream_online || !client.beta_tester || !client.gsi) {
+    return
+  }
 
   const enabled = getValueOrDefault(
     DBSettings['minimap-blocker'],
     client.settings,
     client.subscription
   )
-  if (!enabled) {return}
+  if (!enabled) {
+    return
+  }
 
   const parsedData = minimapParser.parse(client.gsi)
   sendInitialData(client.token)
@@ -221,7 +225,9 @@ class GSIHandler implements GSIHandlerType {
   }
 
   private async suppressUnresolvedReminder(matchId: string | number) {
-    if (!this.client.token) {return}
+    if (!this.client.token) {
+      return
+    }
     try {
       await redisClient.client.setEx(
         reminderSentFlagKey(this.client.token, matchId.toString()),
@@ -235,7 +241,9 @@ class GSIHandler implements GSIHandlerType {
 
   private captureInGameSnapshot() {
     const matchId = this.client.gsi?.map?.matchid
-    if (!matchId || matchId === '0') {return}
+    if (!matchId || matchId === '0') {
+      return
+    }
 
     this.lastInGameSnapshot = mergeInGameSnapshotTick({
       gsi: this.client.gsi,
@@ -300,7 +308,9 @@ class GSIHandler implements GSIHandlerType {
   }
 
   emitWLUpdate(allowOffline = false) {
-    if (!allowOffline && !this.client.stream_online) {return}
+    if (!allowOffline && !this.client.stream_online) {
+      return
+    }
 
     const mmrEnabled = getValueOrDefault(
       DBSettings['mmr-tracker'],
@@ -333,7 +343,9 @@ class GSIHandler implements GSIHandlerType {
       })
   }
   async emitNotablePlayers() {
-    if (!this.client.stream_online) {return}
+    if (!this.client.stream_online) {
+      return
+    }
 
     const roster = await new MatchDataService(this.client).resolveRoster()
 
@@ -347,7 +359,9 @@ class GSIHandler implements GSIHandlerType {
       this.client.settings,
       this.client.subscription
     )
-    if (!notablePlayersEnabled) {return}
+    if (!notablePlayersEnabled) {
+      return
+    }
 
     notablePlayers({
       currentMatchId: this.client.gsi?.map?.matchid,
@@ -373,26 +387,36 @@ class GSIHandler implements GSIHandlerType {
   }
 
   async emitStreamersInMatch(matchId = this.client.gsi?.map?.matchid) {
-    if (!this.client.stream_online) {return}
-    if (!matchId || matchId === '0') {return}
+    if (!this.client.stream_online) {
+      return
+    }
+    if (!matchId || matchId === '0') {
+      return
+    }
 
     const announceEnabled = getValueOrDefault(
       DBSettings.streamersAnnounce,
       this.client.settings,
       this.client.subscription
     )
-    if (!announceEnabled) {return}
+    if (!announceEnabled) {
+      return
+    }
 
     // Announce at most once per match (guards rejoins and any duplicate scheduling).
     const announcedKey = `${this.client.token}:streamersAnnounced`
-    if ((await redisClient.client.get(announcedKey)) === matchId) {return}
+    if ((await redisClient.client.get(announcedKey)) === matchId) {
+      return
+    }
 
     const count = await getStreamersInMatch({
       client: this.client,
       excludeUserId: this.client.token,
       matchId,
     })
-    if (count <= 0) {return}
+    if (count <= 0) {
+      return
+    }
 
     await redisClient.client.set(announcedKey, matchId)
     say(this.client, t('streamersInMatchAnnounce', { count, lng: this.client.locale }), {
@@ -417,7 +441,9 @@ class GSIHandler implements GSIHandlerType {
   // the user may have a steam account saved, but not this one for this match
   // so add to their list of steam accounts
   async updateSteam32Id() {
-    if (this.creatingSteamAccount || !this.client.gsi?.player?.steamid) {return}
+    if (this.creatingSteamAccount || !this.client.gsi?.player?.steamid) {
+      return
+    }
 
     // Set a flag to prevent concurrent calls
     this.creatingSteamAccount = true
@@ -466,7 +492,9 @@ class GSIHandler implements GSIHandlerType {
         .maybeSingle()
 
       if (error) {
-        if (isMultiAccount) {this.multiAccountRevalidatedAt = Date.now()}
+        if (isMultiAccount) {
+          this.multiAccountRevalidatedAt = Date.now()
+        }
         logger.error('Error in updateSteam32Id', { error, name: this.client.name })
         return
       }
@@ -525,7 +553,7 @@ class GSIHandler implements GSIHandlerType {
     } else {
       this.client.multiAccount = steam32Id
       this.multiAccountRevalidatedAt = Date.now()
-      const uniqueUserIds = [...new Set([...res?.connectedUserIds ?? [], this.client.token])]
+      const uniqueUserIds = [...new Set([...(res?.connectedUserIds ?? []), this.client.token])]
       await supabase
         .from('steam_accounts')
         .update({
@@ -819,7 +847,7 @@ class GSIHandler implements GSIHandlerType {
 
     this.openTheBetTaskId = delayedQueue.addTask(
       getStreamDelay(client.settings, client.subscription),
-       async () => this.openTheBet(validatedMatchId, validatedHeroName, validatedMyTeam)
+      async () => await this.openTheBet(validatedMatchId, validatedHeroName, validatedMyTeam)
     )
 
     // .catch((e: any) => {
@@ -965,7 +993,9 @@ class GSIHandler implements GSIHandlerType {
     winningTeam: 'radiant' | 'dire' | null = null,
     gcData?: MatchMinimalDetailsResponse
   ) {
-    if (this.endingBets) {return}
+    if (this.endingBets) {
+      return
+    }
     this.endingBets = true
 
     try {
@@ -1007,7 +1037,9 @@ class GSIHandler implements GSIHandlerType {
           playingMatchId: matchId,
         })
 
-        if (!matchId) {await this.resetClientState()}
+        if (!matchId) {
+          await this.resetClientState()
+        }
         return
       }
 
@@ -1128,11 +1160,11 @@ class GSIHandler implements GSIHandlerType {
         heroName,
         heroSlot,
         increase: won,
-        isParty: isParty,
+        isParty,
         lobbyType: localLobbyType,
-        matchId: matchId,
+        matchId,
         myTeam,
-        scores: scores,
+        scores,
       })
 
       const response = await getRankDetail(this.getMmr(), this.getSteam32())
@@ -1582,7 +1614,9 @@ class GSIHandler implements GSIHandlerType {
   }
 
   private emitBlockEvent({ blockType, state }: { state?: string; blockType: BlockType }) {
-    if (this.blockCache === blockType) {return}
+    if (this.blockCache === blockType) {
+      return
+    }
 
     this.blockCache = blockType
 
@@ -1617,7 +1651,9 @@ class GSIHandler implements GSIHandlerType {
     try {
       if (isSpectator(this.client.gsi) || isArcade(this.client.gsi)) {
         const blockType = isSpectator(this.client.gsi) ? 'spectator' : 'arcade'
-        if (this.blockCache === blockType) {return}
+        if (this.blockCache === blockType) {
+          return
+        }
 
         this.emitBadgeUpdate()
         this.emitWLUpdate()

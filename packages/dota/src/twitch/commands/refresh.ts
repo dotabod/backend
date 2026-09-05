@@ -2,8 +2,8 @@ import { t } from 'i18next'
 
 import { server } from '../../dota/server'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('refresh', {
   handler: (message: MessageType, _args: string[]) => {

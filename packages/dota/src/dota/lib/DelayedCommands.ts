@@ -1,5 +1,5 @@
-import { DBSettings } from '../../settings';
-import type { SettingKeys } from '../../settings';
+import { DBSettings } from '../../settings'
+import type { SettingKeys } from '../../settings'
 
 export const DelayedCommands: { command: string; key: SettingKeys }[] = [
   {

@@ -19,7 +19,9 @@ export const sendExtensionPubSubBroadcastMessageIfChanged = async (
   // Compare the current message with the previous one
   if (currentMessageString !== prevMessageString) {
     const accountId = client.Account?.providerAccountId ?? ''
-    if (!accountId) {return}
+    if (!accountId) {
+      return
+    }
 
     // If different, send the message and update Redis
     await sendExtensionPubSubBroadcastMessage(tooltipsConfig, accountId, currentMessageString)

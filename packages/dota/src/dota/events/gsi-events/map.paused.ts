@@ -8,9 +8,13 @@ import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent('map:paused', {
   handler: (dotaClient, isPaused: boolean) => {
-    if (!dotaClient.client.stream_online) {return}
+    if (!dotaClient.client.stream_online) {
+      return
+    }
 
-    if (!isPlayingMatch(dotaClient.client.gsi)) {return}
+    if (!isPlayingMatch(dotaClient.client.gsi)) {
+      return
+    }
 
     const tellChatPause = getValueOrDefault(
       DBSettings.chatters,
@@ -18,7 +22,9 @@ eventHandler.registerEvent('map:paused', {
       dotaClient.client.subscription,
       'pause'
     )
-    if (!tellChatPause) {return}
+    if (!tellChatPause) {
+      return
+    }
 
     // Necessary to let the frontend know, so we can pause any rosh / aegis / etc timers
     server.io.to(dotaClient.getToken()).emit('paused', isPaused)

@@ -10,8 +10,15 @@ import { vi } from 'vitest'
 
 import type { TwitchEventTypes } from '../TwitchEventTypes.ts'
 
-interface LogCall { message: string; meta: Record<string, unknown> }
-interface SubscribeCall { conduitId: string; userId: string; type: keyof TwitchEventTypes }
+interface LogCall {
+  message: string
+  meta: Record<string, unknown>
+}
+interface SubscribeCall {
+  conduitId: string
+  userId: string
+  type: keyof TwitchEventTypes
+}
 
 export const state: {
   conduitId: string
@@ -29,8 +36,10 @@ export const state: {
   dbSettings: { key: string; value: unknown }[]
   upserts: { table: string; values: Record<string, unknown> }[]
   updates: { table: string; values: Record<string, unknown> }[]
-  commandDisableCalls: (| { kind: 'disable'; userId: string; reason: string; metadata?: Record<string, unknown> }
-    | { kind: 'enable'; userId: string; opts?: { reason?: string; autoResolved?: boolean } })[]
+  commandDisableCalls: (
+    | { kind: 'disable'; userId: string; reason: string; metadata?: Record<string, unknown> }
+    | { kind: 'enable'; userId: string; opts?: { reason?: string; autoResolved?: boolean } }
+  )[]
   // botApi (handleNewUser) + getTwitchAPI moderation (ensureBotIsModerator).
   stream: { startDate: Date } | null
   streamer: { displayName: string; name: string } | null
@@ -181,19 +190,19 @@ function sbBuilder(table: string) {
       }
       return { data: null, error: null }
     },
-    then:  async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => {
-      if (mode === 'update') state.updates.push({ table, values })
+    then: async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => {
+      if (mode === 'update') {state.updates.push({ table, values })}
       const data = mode === 'select' && table === 'settings' ? state.dbSettings : null
-      return Promise.resolve({ data, error: null }).then(onFulfilled)
+      return await Promise.resolve({ data, error: null }).then(onFulfilled)
     },
     update: (v: Record<string, unknown>) => {
       mode = 'update'
       values = v
       return b
     },
-    upsert:  async (v: Record<string, unknown>) => {
+    upsert: async (v: Record<string, unknown>) => {
       state.upserts.push({ table, values: v })
-      return Promise.resolve({ data: null, error: null })
+      return ({ data: null, error: null })
     },
   }
   return b
@@ -221,7 +230,9 @@ function realtimeChannelMock(): RealtimeChannelMock {
     },
     subscribe: (cb) => {
       state.channelSubscribeStatuses.push('SUBSCRIBED')
-      if (cb) {state.channelSubscribeCallbacks.push(cb)}
+      if (cb) {
+        state.channelSubscribeCallbacks.push(cb)
+      }
       cb?.('SUBSCRIBED')
       return channel
     },
@@ -232,7 +243,7 @@ function realtimeChannelMock(): RealtimeChannelMock {
 const supabaseMock = {
   channel: () => {
     state.channelCreationCount++
-    if (state.channelCreationError) throw state.channelCreationError
+    if (state.channelCreationError) {throw state.channelCreationError}
     return realtimeChannelMock()
   },
   from: (table: string) => sbBuilder(table),
@@ -251,7 +262,7 @@ const supabaseMock = {
 }
 
 const logger = {
-  debug: () => undefined,
+  debug: () => {},
   error: (message: string, meta?: Record<string, unknown>) =>
     state.logError.push({ message, meta: meta ?? {} }),
   info: (message: string, meta?: Record<string, unknown>) =>
@@ -265,10 +276,10 @@ vi.doMock(import('@dotabod/shared-utils'), () => ({
   checkBotStatus: async () => state.isBanned,
   commandDisable: {
     disable: async (userId: string, reason: string, metadata?: Record<string, unknown>) => {
-      state.commandDisableCalls.push({ kind: 'disable', userId, reason, metadata })
+      state.commandDisableCalls.push({ kind: 'disable', metadata, reason, userId })
     },
     enable: async (userId: string, opts?: { reason?: string; autoResolved?: boolean }) => {
-      state.commandDisableCalls.push({ kind: 'enable', userId, opts })
+      state.commandDisableCalls.push({ kind: 'enable', opts, userId })
     },
   },
   default: supabaseMock,
@@ -277,7 +288,7 @@ vi.doMock(import('@dotabod/shared-utils'), () => ({
     moderation: {
       addModerator: async (broadcasterId: string) => {
         state.addModeratorCalls.push(broadcasterId)
-        if (state.addModeratorError) throw state.addModeratorError
+        if (state.addModeratorError) {throw state.addModeratorError}
       },
     },
   }),
@@ -290,7 +301,9 @@ vi.doMock(import('../twitch/lib/BotApiSingleton'), () => ({
   getBotInstance: () => ({
     streams: {
       getStreamByUserId: async () => {
-        if (state.streamError) {throw state.streamError}
+        if (state.streamError) {
+          throw state.streamError
+        }
         return state.stream
       },
     },
@@ -349,5 +362,7 @@ export function seedSubscriptions(userId: string, types: readonly (keyof TwitchE
 }
 
 export function clearSubscriptions() {
-  for (const key of Object.keys(eventSubMap)) {delete eventSubMap[key]}
+  for (const key of Object.keys(eventSubMap)) {
+    delete eventSubMap[key]
+  }
 }

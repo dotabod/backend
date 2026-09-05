@@ -25,8 +25,8 @@ initServer()
 startHeartbeat({
   debounceMs: 60_000,
   getStatus: () => ({
-    up: redisClient.client.isReady,
     msg: redisClient.client.isReady ? 'connected' : 'redis disconnected',
+    up: redisClient.client.isReady,
   }),
   name: 'dota redis heartbeat',
   url: process.env.KUMA_PUSH_URL_REDIS,
@@ -35,8 +35,8 @@ startHeartbeat({
 startHeartbeat({
   debounceMs: 90_000,
   getStatus: () => ({
-    up: steamSocket.connected,
     msg: steamSocket.connected ? 'connected' : 'steam socket disconnected',
+    up: steamSocket.connected,
   }),
   name: 'dota steam-socket heartbeat',
   url: process.env.KUMA_PUSH_URL_STEAM,

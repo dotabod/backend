@@ -107,7 +107,9 @@ export async function runSubscriptionHealthCheck(): Promise<HealthCheckResult> {
               !existingTypes.includes(type) && !(type === 'channel.chat.message' && isBanned)
           )
 
-          if (missingCritical.length === 0) {return}
+          if (missingCritical.length === 0) {
+            return
+          }
 
           usersWithMissingCritical.set(userId, missingCritical)
           result.usersWithIssues++
@@ -231,7 +233,9 @@ async function fetchSubscriptionsForHealthCheck(): Promise<void> {
   do {
     await rateLimiter.schedule(async () => {
       const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
-      if (cursor) {url.searchParams.append('after', cursor)}
+      if (cursor) {
+        url.searchParams.append('after', cursor)
+      }
 
       const response = await fetch(url.toString(), {
         headers,
@@ -265,7 +269,9 @@ async function fetchSubscriptionsForHealthCheck(): Promise<void> {
       // Process subscriptions
       data.forEach((sub) => {
         const broadcasterId = sub.condition?.broadcaster_user_id || sub.condition?.user_id
-        if (!broadcasterId) {return}
+        if (!broadcasterId) {
+          return
+        }
 
         // Initialize broadcaster entry if it doesn't exist
         eventSubMap[broadcasterId] ??= {} as (typeof eventSubMap)[number]

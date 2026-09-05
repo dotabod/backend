@@ -10,8 +10,14 @@ import { isPlayingMatch } from '../isPlayingMatch'
 import { isSpectator } from '../isSpectator'
 import { fetchDelayedGameDoc } from './internal/mongoDoc'
 import { normalize } from './internal/normalize'
-import { GsiSelfResolver, GsiSpectatorResolver, ResolverChain, SourceTvResolver, VisionResolver } from './resolvers';
-import type { RawRoster, ResolverContext, VisionFetcher } from './resolvers';
+import {
+  GsiSelfResolver,
+  GsiSpectatorResolver,
+  ResolverChain,
+  SourceTvResolver,
+  VisionResolver,
+} from './resolvers'
+import type { RawRoster, ResolverContext, VisionFetcher } from './resolvers'
 import type { ResolvedRoster, RosterPlayer } from './types'
 
 // One cached entry point per match for roster/Mongo/cards lookups. Dispatch is polymorphic —
@@ -68,7 +74,7 @@ export class MatchDataService {
       opts?.chain ??
       new ResolverChain([
         new GsiSpectatorResolver(),
-        new SourceTvResolver( async (_matchId) => this.getDelayedGameDoc()),
+        new SourceTvResolver(async (_matchId) => await this.getDelayedGameDoc()),
         this.visionResolver,
         new GsiSelfResolver(),
       ])
@@ -126,40 +132,46 @@ export class MatchDataService {
   // Caches the resolved value for the lifetime of THIS instance. Rejections clear the slot.
 
   private rosterPromise?: Promise<ResolvedRoster>
-   async resolveRoster(): Promise<ResolvedRoster> {
+  async resolveRoster(): Promise<ResolvedRoster> {
     if (!this.rosterPromise) {
       const p = this.fetchRoster()
       this.rosterPromise = p
       p.catch(() => {
-        if (this.rosterPromise === p) {this.rosterPromise = undefined}
+        if (this.rosterPromise === p) {
+          this.rosterPromise = undefined
+        }
       })
     }
-    return this.rosterPromise
+    return await this.rosterPromise
   }
 
   private docPromise?: Promise<DelayedGames | null>
-   async getDelayedGameDoc(): Promise<DelayedGames | null> {
+  async getDelayedGameDoc(): Promise<DelayedGames | null> {
     if (!this.docPromise) {
-      const {matchId} = this
+      const { matchId } = this
       const p = matchId ? fetchDelayedGameDoc(matchId) : Promise.resolve(null)
       this.docPromise = p
       p.catch(() => {
-        if (this.docPromise === p) {this.docPromise = undefined}
+        if (this.docPromise === p) {
+          this.docPromise = undefined
+        }
       })
     }
-    return this.docPromise
+    return await this.docPromise
   }
 
   private cardsPromise?: Promise<Cards[]>
-   async getCards(): Promise<Cards[]> {
+  async getCards(): Promise<Cards[]> {
     if (!this.cardsPromise) {
       const p = this.fetchCards()
       this.cardsPromise = p
       p.catch(() => {
-        if (this.cardsPromise === p) {this.cardsPromise = undefined}
+        if (this.cardsPromise === p) {
+          this.cardsPromise = undefined
+        }
       })
     }
-    return this.cardsPromise
+    return await this.cardsPromise
   }
 
   // --- Typed accessors over the delayedGames doc (memoized via getDelayedGameDoc) ---
@@ -207,25 +219,33 @@ export class MatchDataService {
   // --- Per-slot lookup primitives ---
 
   async findPlayerBySlot(slot: number): Promise<RosterPlayer | null> {
-    if (!Number.isFinite(slot)) {return null}
+    if (!Number.isFinite(slot)) {
+      return null
+    }
     const roster = await this.resolveRoster()
     return roster.players.find((p) => p.slot === slot) ?? null
   }
 
   async findPlayerByHeroId(heroId: number): Promise<RosterPlayer | null> {
-    if (!heroId) {return null}
+    if (!heroId) {
+      return null
+    }
     const roster = await this.resolveRoster()
     return roster.players.find((p) => p.heroId === heroId) ?? null
   }
 
   async findPlayerByAccountId(accountId: number): Promise<RosterPlayer | null> {
-    if (!accountId) {return null}
+    if (!accountId) {
+      return null
+    }
     const roster = await this.resolveRoster()
     return roster.players.find((p) => p.accountId === accountId) ?? null
   }
 
   async getSelf(): Promise<RosterPlayer | null> {
-    if (!this.client.steam32Id) {return null}
+    if (!this.client.steam32Id) {
+      return null
+    }
     return await this.findPlayerByAccountId(this.client.steam32Id)
   }
 
@@ -238,12 +258,14 @@ export class MatchDataService {
 
   async getStreamersInMatchCount(opts: { excludeUserId: string }): Promise<number> {
     const userIds = new Set<string>()
-    const {matchId} = this
+    const { matchId } = this
 
     if (matchId) {
       const { data } = await supabase.from('matches').select('userId').eq('matchId', matchId)
       for (const row of data ?? []) {
-        if (row.userId) {userIds.add(row.userId)}
+        if (row.userId) {
+          userIds.add(row.userId)
+        }
       }
     }
 
@@ -257,7 +279,9 @@ export class MatchDataService {
         .select('userId')
         .in('steam32Id', accountIds)
       for (const row of data ?? []) {
-        if (row.userId) {userIds.add(row.userId)}
+        if (row.userId) {
+          userIds.add(row.userId)
+        }
       }
     }
 
@@ -271,11 +295,15 @@ export class MatchDataService {
     eventPlayerId: number
   }): Promise<{ name: string | null; resolvedFromRoster: boolean }> {
     const slot = opts.eventPlayerId
-    if (!Number.isFinite(slot)) {return { name: null, resolvedFromRoster: false }}
+    if (!Number.isFinite(slot)) {
+      return { name: null, resolvedFromRoster: false }
+    }
     const player = await this.findPlayerBySlot(slot)
     if (player) {
       if (player.heroId === null) {
-        if (this.isHighMmr) {return { name: null, resolvedFromRoster: true }}
+        if (this.isHighMmr) {
+          return { name: null, resolvedFromRoster: true }
+        }
         if (slot >= 0 && slot < heroColors.length) {
           return { name: heroColors[slot], resolvedFromRoster: true }
         }
@@ -283,7 +311,9 @@ export class MatchDataService {
       }
       return { name: getHeroNameOrColor(player.heroId, slot), resolvedFromRoster: true }
     }
-    if (this.isHighMmr) {return { name: null, resolvedFromRoster: false }}
+    if (this.isHighMmr) {
+      return { name: null, resolvedFromRoster: false }
+    }
     if (slot >= 0 && slot < heroColors.length) {
       return { name: heroColors[slot], resolvedFromRoster: false }
     }
@@ -330,10 +360,14 @@ export class MatchDataService {
         p.heroid > 0 &&
         !(typeof p.player_name === 'string' && p.player_name.length > 0)
     )
-    if (!hasMissingName) {return raw}
+    if (!hasMissingName) {
+      return raw
+    }
 
     const vision = await this.visionResolver.resolve(ctx)
-    if (!vision || vision.source !== 'vision-heroes') {return raw}
+    if (!vision || vision.source !== 'vision-heroes') {
+      return raw
+    }
 
     const nameByHeroId = new Map<number, string>()
     for (const p of vision.matchPlayers) {
@@ -346,13 +380,19 @@ export class MatchDataService {
         nameByHeroId.set(p.heroid, p.player_name)
       }
     }
-    if (nameByHeroId.size === 0) {return raw}
+    if (nameByHeroId.size === 0) {
+      return raw
+    }
 
     return {
       ...raw,
       matchPlayers: raw.matchPlayers.map((p) => {
-        if (typeof p.player_name === 'string' && p.player_name.length > 0) {return p}
-        if (typeof p.heroid !== 'number' || p.heroid <= 0) {return p}
+        if (typeof p.player_name === 'string' && p.player_name.length > 0) {
+          return p
+        }
+        if (typeof p.heroid !== 'number' || p.heroid <= 0) {
+          return p
+        }
         const name = nameByHeroId.get(p.heroid)
         return name ? { ...p, player_name: name } : p
       }),
@@ -366,16 +406,20 @@ export class MatchDataService {
         roster.players.map((p) => p.accountId).filter((id): id is number => id !== null && id > 0)
       ),
     ]
-    if (!accountIds.length) {return []}
+    if (!accountIds.length) {
+      return []
+    }
     return await new Promise<Cards[]>((resolve, reject) => {
-      const timeout = setTimeout(
-        () =>{  reject(new Error('[MatchDataService] getCards socket timeout after 10s')); },
-        10_000
-      )
+      const timeout = setTimeout(() => {
+        reject(new Error('[MatchDataService] getCards socket timeout after 10s'))
+      }, 10_000)
       steamSocket.emit('getCards', accountIds, false, (err: unknown, cards: Cards[]) => {
         clearTimeout(timeout)
-        if (err) {reject(err instanceof Error ? err : new Error(JSON.stringify(err)))}
-        else {resolve(cards ?? [])}
+        if (err) {
+          reject(err instanceof Error ? err : new Error(JSON.stringify(err)))
+        } else {
+          resolve(cards ?? [])
+        }
       })
     })
   }

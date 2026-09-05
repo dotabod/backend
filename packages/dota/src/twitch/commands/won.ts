@@ -7,8 +7,8 @@ import { DBSettings } from '../../settings'
 import { steamSocket } from '../../steam/ws'
 import type { MatchMinimalDetailsResponse } from '../../types'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 import { resolveByMostRecentMatch, resolveMatchRetroactively } from '../lib/resolveMatch'
 
 commandHandler.registerCommand('won', {
@@ -28,9 +28,9 @@ commandHandler.registerCommand('won', {
         chatClient.say(
           channel,
           t('bets.retroactiveMatchNotFound', {
-            matchId: matchIdArg,
             emote: 'PauseChamp',
             lng: client.locale,
+            matchId: matchIdArg,
           }),
           message.user.messageId
         )
@@ -65,7 +65,7 @@ commandHandler.registerCommand('won', {
           channel,
           message.user.messageId
         )
-        if (flipped) return
+        if (flipped) {return}
 
         chatClient.say(
           channel,
@@ -81,8 +81,8 @@ commandHandler.registerCommand('won', {
       const { matchId } = JSON.parse(pendingResolution)
 
       logger.info('[BETS] Manual resolution requested - won', {
-        name: client.name,
         matchId,
+        name: client.name,
         resolvedBy: username,
       })
 
@@ -94,8 +94,8 @@ commandHandler.registerCommand('won', {
 
       if (!myTeam) {
         logger.error('[BETS] Could not determine team for manual resolution', {
-          name: client.name,
           matchId,
+          name: client.name,
         })
         chatClient.say(
           channel,
@@ -126,11 +126,11 @@ commandHandler.registerCommand('won', {
       let gcData: MatchMinimalDetailsResponse | undefined
       try {
         gcData = await getMatchDetailsPromise
-      } catch (e) {
+      } catch (error) {
         // If we can't get the data, we'll proceed without it
         logger.info('[BETS] Could not get match details for manual resolution, proceeding anyway', {
           matchId,
-          error: e,
+          error: error,
         })
       }
 
@@ -142,8 +142,8 @@ commandHandler.registerCommand('won', {
 
       if (!handler) {
         logger.error('[BETS] Could not find GSI handler for manual resolution', {
-          name: client.name,
           matchId,
+          name: client.name,
         })
         chatClient.say(
           channel,
@@ -163,14 +163,14 @@ commandHandler.registerCommand('won', {
         channel,
         t('bets.manualResolutionSuccess', {
           context: 'won',
+          lng: client.locale,
           matchId,
           username,
-          lng: client.locale,
         }),
         message.user.messageId
       )
     } catch (error) {
-      logger.error('[BETS] Error in manual resolution command (won)', { error, channel })
+      logger.error('[BETS] Error in manual resolution command (won)', { channel, error })
       chatClient.say(
         channel,
         t('bets.manualResolutionError', {

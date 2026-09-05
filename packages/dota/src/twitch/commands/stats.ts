@@ -26,7 +26,7 @@ async function getStats({
 }) {
   const packet = client.gsi
   const { accountIdFromArgs, hero, player, playerIdx } = await profileLink({
-    args: args,
+    args,
     client,
     command,
     locale,
@@ -44,7 +44,9 @@ async function getStats({
         match_id: packet?.map?.matchid ?? '',
         token,
       })
-      if (error instanceof CustomError) {throw error}
+      if (error instanceof CustomError) {
+        throw error
+      }
       throw new CustomError(t('gameNotFound', { lng: locale }))
     })
 
@@ -106,11 +108,11 @@ commandHandler.registerCommand('stats', {
 
     try {
       const stats = await getStats({
-        client,
-        token: client.token,
         args,
-        locale: client.locale,
+        client,
         command,
+        locale: client.locale,
+        token: client.token,
       })
       const isSpec = isSpectator(client.gsi)
       let msg = t('heroStats', {
@@ -122,10 +124,10 @@ commandHandler.registerCommand('stats', {
       }
 
       chatClient.say(client.name, msg, message.user.messageId)
-    } catch (e) {
-      const msg = !(e as Error)?.message
+    } catch (error) {
+      const msg = !(error as Error)?.message
         ? t('gameNotFound', { lng: client.locale })
-        : (e as Error)?.message
+        : (error as Error)?.message
       chatClient.say(client.name, msg, message.user.messageId)
     }
   },

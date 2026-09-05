@@ -1,5 +1,5 @@
-import { settingsKeys as DBSettings, defaultSettingsStructure } from './types/settings';
-import type { ChatterKeys, SettingKeys } from './types/settings';
+import { settingsKeys as DBSettings, defaultSettingsStructure } from './types/settings'
+import type { ChatterKeys, SettingKeys } from './types/settings'
 import type { SubscriptionRow } from './types/subscription'
 import { canAccessFeature } from './utils/subscription'
 

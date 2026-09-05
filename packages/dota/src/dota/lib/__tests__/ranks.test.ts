@@ -8,15 +8,17 @@ import { describe, expect, it, vi } from 'vitest'
 import { buildSharedUtilsMock } from '../../../__tests__/sharedMocks.ts'
 
 const noopLogger = {
-  debug: () => undefined,
-  error: () => undefined,
-  info: () => undefined,
-  warn: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 
 // ranks.ts -> getWL imports `supabase`/`logger` from shared-utils at load time;
 // these helpers never touch it at runtime, so a no-op surface is enough.
-vi.doMock(import('@dotabod/shared-utils'), () => buildSharedUtilsMock({ logger: noopLogger, supabase: {} }))
+vi.doMock(import('@dotabod/shared-utils'), () =>
+  buildSharedUtilsMock({ logger: noopLogger, supabase: {} })
+)
 
 const { rankTierToMmr, mmrToRankTier, estimateMMR, getRankDetail } = await import('../ranks.ts')
 

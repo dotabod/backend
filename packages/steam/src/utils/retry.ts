@@ -4,7 +4,7 @@ export const retryCustom = async <T>(fn: () => Promise<T>): Promise<T> => {
   const operation = retry.operation({
     factor: 1,
     maxTimeout: 10_000,
-    minTimeout: 1_000,
+    minTimeout: 1000,
     retries: 10,
   })
 

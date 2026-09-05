@@ -7,13 +7,15 @@ import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../__tests__/
 import type { MessageType } from '../CommandHandler'
 
 const noopLogger = {
-  debug: () => undefined,
-  error: () => undefined,
-  info: () => undefined,
-  warn: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () => buildSharedUtilsMock({ logger: noopLogger, supabase: {} }))
+vi.doMock(import('@dotabod/shared-utils'), () =>
+  buildSharedUtilsMock({ logger: noopLogger, supabase: {} })
+)
 
 // Stub the CommandHandler singleton with just the `.commands` map the
 // dispatcher needs for per-candidate dbkey lookup. Avoids dragging in the
@@ -51,7 +53,9 @@ function makeMessage(over: { settings?: { key: string; value: unknown }[] } = {}
 // Run prepareSuggestionSuffix `count` times and return the last call's result.
 function runUntilSuggestion(cmd: string, msg: MessageType, count = 4) {
   let last: string | null = null
-  for (let i = 0; i < count; i++) {last = prepareSuggestionSuffix(cmd, msg)}
+  for (let i = 0; i < count; i++) {
+    last = prepareSuggestionSuffix(cmd, msg)
+  }
   return last
 }
 
@@ -71,7 +75,9 @@ describe('prepareSuggestionSuffix', () => {
 
   it('emits a suffix on the throttle boundary and not before', () => {
     const msg = makeMessage()
-    for (let i = 0; i < 3; i++) {expect(prepareSuggestionSuffix('today', msg)).toBeNull()}
+    for (let i = 0; i < 3; i++) {
+      expect(prepareSuggestionSuffix('today', msg)).toBeNull()
+    }
     const suffix = prepareSuggestionSuffix('today', msg)
     expect(suffix).toBeTruthy()
     expect(suffix).toMatch(/!(lgs|wl)/)
@@ -107,18 +113,26 @@ describe('commandClusters', () => {
     const commandsDir = join(import.meta.dirname, '..', '..', 'commands')
     const modCommands = new Set<string>()
     for (const file of readdirSync(commandsDir)) {
-      if (!file.endsWith('.ts') || file.endsWith('.test.ts')) {continue}
+      if (!file.endsWith('.ts') || file.endsWith('.test.ts')) {
+        continue
+      }
       const source = readFileSync(join(commandsDir, file), 'utf-8')
-      if (!/permission:\s*2\b/.test(source)) {continue}
+      if (!/permission:\s*2\b/.test(source)) {
+        continue
+      }
       const match = /registerCommand\(\s*['"]([^'"]+)['"]/.exec(source)
-      if (match) {modCommands.add(match[1])}
+      if (match) {
+        modCommands.add(match[1])
+      }
     }
     expect(modCommands.size).toBeGreaterThan(0) // sanity: scanner picked something up
 
     const offenders: string[] = []
     for (const cluster of commandClusters) {
       for (const cmd of cluster) {
-        if (modCommands.has(cmd)) {offenders.push(cmd)}
+        if (modCommands.has(cmd)) {
+          offenders.push(cmd)
+        }
       }
     }
     expect(offenders).toStrictEqual([])

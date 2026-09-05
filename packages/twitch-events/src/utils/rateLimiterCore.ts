@@ -31,9 +31,15 @@ export class RateLimiter {
     const remaining = headers.get('Ratelimit-Remaining')
     const reset = headers.get('Ratelimit-Reset')
 
-    if (limit) {this.rateLimitInfo.limit = Number.parseInt(limit, 10)}
-    if (remaining) {this.rateLimitInfo.remaining = Number.parseInt(remaining, 10)}
-    if (reset) {this.rateLimitInfo.reset = Number.parseInt(reset, 10) * 1000} // Convert to milliseconds
+    if (limit) {
+      this.rateLimitInfo.limit = Number.parseInt(limit, 10)
+    }
+    if (remaining) {
+      this.rateLimitInfo.remaining = Number.parseInt(remaining, 10)
+    }
+    if (reset) {
+      this.rateLimitInfo.reset = Number.parseInt(reset, 10) * 1000
+    } // Convert to milliseconds
 
     // Log rate limit status when it changes
     logger.debug('[RateLimiter] Status', this.rateLimitStatus)
@@ -44,7 +50,9 @@ export class RateLimiter {
   }
 
   private async processQueue() {
-    if (this.processing) {return}
+    if (this.processing) {
+      return
+    }
     this.processing = true
 
     while (this.queue.length > 0) {

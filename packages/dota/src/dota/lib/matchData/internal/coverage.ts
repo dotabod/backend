@@ -7,8 +7,12 @@ const ROSTER_SLOTS = 10
 
 export function coverage(players: RosterPlayer[], pred: (p: RosterPlayer) => boolean): Coverage {
   const matches = players.filter(pred).length
-  if (matches === 0) {return 'none'}
-  if (matches >= ROSTER_SLOTS && players.length >= ROSTER_SLOTS) {return 'all'}
+  if (matches === 0) {
+    return 'none'
+  }
+  if (matches >= ROSTER_SLOTS && players.length >= ROSTER_SLOTS) {
+    return 'all'
+  }
   return 'partial'
 }
 

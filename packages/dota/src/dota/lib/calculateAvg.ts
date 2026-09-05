@@ -10,7 +10,9 @@ interface Avg {
 
 function calculateAverage(numbers: number[]): number {
   const validNumbers = numbers.filter(Boolean)
-  if (validNumbers.length === 0) {return 0}
+  if (validNumbers.length === 0) {
+    return 0
+  }
   const sum = validNumbers.reduce((a, b) => a + b, 0)
   return Math.round(sum / validNumbers.length)
 }
@@ -21,9 +23,15 @@ async function getRankTitle(
   averageMmrPostfix: string
 ): Promise<string> {
   const rank = await getRankDetail(avg)
-  if (!rank && !avgLeader) {return `Immortal${averageMmrPostfix}`}
-  if (!rank) {return `${avg || `#${avgLeader}${averageMmrPostfix}`}`}
-  if (avgLeader) {return `#${avgLeader}${averageMmrPostfix}`}
+  if (!rank && !avgLeader) {
+    return `Immortal${averageMmrPostfix}`
+  }
+  if (!rank) {
+    return `${avg || `#${avgLeader}${averageMmrPostfix}`}`
+  }
+  if (avgLeader) {
+    return `#${avgLeader}${averageMmrPostfix}`
+  }
   if ('standing' in rank) {
     return `Immortal${averageMmrPostfix}`
   }

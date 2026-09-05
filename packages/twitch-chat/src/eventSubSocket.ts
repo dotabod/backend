@@ -97,19 +97,25 @@ export class EventsubSocket extends EventEmitter {
   }
 
   private connect(url = this.mainUrl, isReconnect = false): void {
-    if (this.disposed) {return}
+    if (this.disposed) {
+      return
+    }
     this.counter++
     this.eventsub = new WebSocket(url)
     this.eventsub.counter = this.counter
 
     this.eventsub.addEventListener('open', this.handleOpen.bind(this))
-    this.eventsub.addEventListener('close', (close) =>{  this.handleClose(close, isReconnect); })
+    this.eventsub.addEventListener('close', (close) => {
+      this.handleClose(close, isReconnect)
+    })
     this.eventsub.addEventListener('error', this.handleError.bind(this))
     this.eventsub.addEventListener('message', this.handleMessage.bind(this))
   }
 
   private handleOpen(): void {
-    if (this.disposed) {return}
+    if (this.disposed) {
+      return
+    }
     this.backoff = 0
     this.got429 = false
     logger.info('[EVENTSUB] WebSocket open', {
@@ -119,7 +125,9 @@ export class EventsubSocket extends EventEmitter {
   }
 
   private handleClose(close: WebSocket.CloseEvent, _isReconnect: boolean): void {
-    if (this.disposed) {return}
+    if (this.disposed) {
+      return
+    }
     const reasonText = this.closeCodes[close.code] || 'Unknown'
     const isStale = close.target !== this.eventsub
     const wsId = this.eventsub.twitch_websocket_id
@@ -208,15 +216,21 @@ export class EventsubSocket extends EventEmitter {
   // cleared on dispose so a replaced socket can't resurrect itself.
   private scheduleReconnect(delayMs: number): void {
     clearTimeout(this.reconnectTimer)
-    this.reconnectTimer = setTimeout(() =>{  this.connect(this.mainUrl, true); }, delayMs)
+    this.reconnectTimer = setTimeout(() => {
+      this.connect(this.mainUrl, true)
+    }, delayMs)
   }
 
   private handleError(err: WebSocket.ErrorEvent): void {
-    if (this.disposed) {return}
+    if (this.disposed) {
+      return
+    }
     // ws surfaces a rejected upgrade as "Unexpected server response: 429".
     // Flag it so the following close applies the rate-limit cooldown.
     const rateLimited = typeof err.message === 'string' && err.message.includes('429')
-    if (rateLimited) {this.got429 = true}
+    if (rateLimited) {
+      this.got429 = true
+    }
     logger.error('[EVENTSUB] WebSocket error', {
       counter: this.eventsub.counter,
       message: err.message,
@@ -226,7 +240,9 @@ export class EventsubSocket extends EventEmitter {
   }
 
   private handleMessage(message: WebSocket.MessageEvent): void {
-    if (this.disposed) {return}
+    if (this.disposed) {
+      return
+    }
     const data = JSON.parse(message.data as string)
     const { metadata, payload } = data
     const { message_type } = metadata
@@ -310,7 +326,9 @@ export class EventsubSocket extends EventEmitter {
   }
 
   private silence(keepalive_timeout_seconds?: number): void {
-    if (this.disposed) {return}
+    if (this.disposed) {
+      return
+    }
     if (keepalive_timeout_seconds) {
       this.silenceTime = keepalive_timeout_seconds + 1
     }
@@ -319,7 +337,9 @@ export class EventsubSocket extends EventEmitter {
     eventsubConnected = true
     clearTimeout(this.silenceHandler)
     this.silenceHandler = setTimeout(() => {
-      if (this.disposed) {return}
+      if (this.disposed) {
+        return
+      }
       eventsubConnected = false
       logger.warn('[EVENTSUB] session_silenced — no keepalive in window', {
         counter: this.eventsub.counter,
@@ -359,7 +379,9 @@ export class EventsubSocket extends EventEmitter {
    * the background — the leak that produced the 2026-06-19 connection storm.
    */
   public dispose(): void {
-    if (this.disposed) {return}
+    if (this.disposed) {
+      return
+    }
     this.disposed = true
     this.disableAutoReconnect = true
     clearTimeout(this.silenceHandler)

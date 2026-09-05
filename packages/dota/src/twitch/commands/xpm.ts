@@ -30,10 +30,10 @@ commandHandler.registerCommand('xpm', {
         t('xpm', { heroName, lng: client.locale, num: xpm }),
         message.user.messageId
       )
-    } catch (e) {
+    } catch (error) {
       chatClient.say(
         message.channel.name,
-        (e as Error)?.message ?? t('gameNotFound', { lng: client.locale }),
+        (error as Error)?.message ?? t('gameNotFound', { lng: client.locale }),
         message.user.messageId
       )
     }

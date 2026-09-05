@@ -7,8 +7,8 @@ import type { SocketClient } from '../../types'
 import eventHandler from '../events/EventHandler'
 import type { GSIHandlerType } from '../GSIHandlerTypes'
 import { say } from '../say'
-import { FEATURE_ANNOUNCEMENTS } from './featureAnnouncements';
-import type { FeatureAnnouncement } from './featureAnnouncements';
+import { FEATURE_ANNOUNCEMENTS } from './featureAnnouncements'
+import type { FeatureAnnouncement } from './featureAnnouncements'
 import { isPlayingMatch } from './isPlayingMatch'
 
 const WHATS_NEW_URL = 'dotabod.com/dashboard/whats-new'
@@ -21,7 +21,9 @@ const handledCache = new Set<string>()
 function markHandled(key: string) {
   if (handledCache.size >= CACHE_MAX) {
     const oldest = handledCache.values().next().value
-    if (oldest !== undefined) {handledCache.delete(oldest)}
+    if (oldest !== undefined) {
+      handledCache.delete(oldest)
+    }
   }
   handledCache.add(key)
 }
@@ -37,11 +39,13 @@ export function isFeatureEnabled(
     client.settings,
     client.subscription
   ) as boolean
-  if (!gateSettingKey) {return  master}
+  if (!gateSettingKey) {
+    return master
+  }
   const perFeature = getValueOrDefault(gateSettingKey, client.settings, client.subscription) as
     | boolean
     | null
-  return  (perFeature ?? master)
+  return perFeature ?? master
 }
 
 // Announce a single feature to a streamer at most once ever — durable (Postgres flag, survives
@@ -53,8 +57,12 @@ async function announceFeatureOnce(
   feature: FeatureAnnouncement
 ): Promise<boolean> {
   const cacheKey = `${client.token}:${feature.id}`
-  if (handledCache.has(cacheKey)) {return false}
-  if (!isFeatureEnabled(client, feature.gateSettingKey)) {return false} // may enable later; don't cache
+  if (handledCache.has(cacheKey)) {
+    return false
+  }
+  if (!isFeatureEnabled(client, feature.gateSettingKey)) {
+    return false
+  } // may enable later; don't cache
 
   const { data, error } = await supabase
     .from('settings')
@@ -77,7 +85,9 @@ async function announceFeatureOnce(
   }
   // Recorded now (first time) or already recorded earlier — never look again.
   markHandled(cacheKey)
-  if (!data?.length) {return false} // already announced ever
+  if (!data?.length) {
+    return false
+  } // already announced ever
 
   const { error: notifyError } = await supabase
     .from('notifications')
@@ -101,22 +111,34 @@ export async function dispatchFeatureAnnouncements(
   trigger: string,
   data: unknown
 ): Promise<void> {
-  const {client} = dotaClient
+  const { client } = dotaClient
   // EventHandler already gates events on stream_online; this explicit guard keeps the
   // dispatcher correct if ever called from another path, and never persists a
   // featureAnnounced flag (which would suppress the notice forever) for an offline streamer.
-  if (!client.stream_online) {return}
-  if (!isPlayingMatch(client.gsi)) {return}
+  if (!client.stream_online) {
+    return
+  }
+  if (!isPlayingMatch(client.gsi)) {
+    return
+  }
 
   const matchId = client.gsi?.map?.matchid
-  if (!matchId) {return}
+  if (!matchId) {
+    return
+  }
 
   const guardKey = `${client.token}:featureAnnouncedMatch`
-  if ((await redisClient.client.get(guardKey)) === String(matchId)) {return}
+  if ((await redisClient.client.get(guardKey)) === String(matchId)) {
+    return
+  }
 
   for (const feature of FEATURE_ANNOUNCEMENTS) {
-    if (feature.trigger !== trigger) {continue}
-    if (feature.when && !feature.when(dotaClient, data)) {continue}
+    if (feature.trigger !== trigger) {
+      continue
+    }
+    if (feature.when && !feature.when(dotaClient, data)) {
+      continue
+    }
     if (await announceFeatureOnce(client, feature)) {
       await redisClient.client.set(guardKey, String(matchId))
       return
@@ -130,7 +152,7 @@ export function registerFeatureAnnouncers(): void {
   const triggers = [...new Set(FEATURE_ANNOUNCEMENTS.map((f) => f.trigger))]
   for (const trigger of triggers) {
     eventHandler.registerEvent(trigger, {
-      handler:  async (dotaClient, data) => dispatchFeatureAnnouncements(dotaClient, trigger, data),
+      handler: async (dotaClient, data) => await dispatchFeatureAnnouncements(dotaClient, trigger, data),
     })
   }
 }

@@ -6,8 +6,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../../__tests__/sharedMocks'
 
-interface UpdateCall { values: Record<string, unknown>; whereCol: string; whereVal: string }
-interface HeldTask { invoke: () => void | Promise<void> }
+interface UpdateCall {
+  values: Record<string, unknown>
+  whereCol: string
+  whereVal: string
+}
+interface HeldTask {
+  invoke: () => void | Promise<void>
+}
 
 const updateCalls: UpdateCall[] = []
 const refundCalls: { channelId: string; predictionId: string }[] = []
@@ -30,12 +36,10 @@ const supabaseMock = {
       },
       is: () => builder,
       select: () => builder,
-      single:  async () =>
-        Promise.resolve(
-          nextPredictionId
+      single: async () =>
+        nextPredictionId
             ? { data: { predictionId: nextPredictionId }, error: null }
-            : { data: null, error: { message: 'not found' } }
-        ),
+            : { data: null, error: { message: 'not found' } },
       update: (values: Record<string, unknown>) => {
         updateValues = values
         return builder
@@ -47,10 +51,10 @@ const supabaseMock = {
 }
 
 const loggerMock = {
-  debug: () => undefined,
-  error: () => undefined,
-  info: () => undefined,
-  warn: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 
 vi.doMock(import('@dotabod/shared-utils'), () =>
@@ -139,7 +143,7 @@ function unregisterFakeHandler() {
 
 // `events.emit` is synchronous but the handler is async; emit then await a
 // macrotask boundary so the handler's awaits resolve before we drain queue.
-const flush =  async () => new Promise<void>((r) => setTimeout(r, 0))
+const flush = async () => await new Promise<void>((r) => setTimeout(r, 0))
 
 describe('hero:name swap → matches.hero_name update', () => {
   beforeEach(() => {
@@ -147,7 +151,9 @@ describe('hero:name swap → matches.hero_name update', () => {
     refundCalls.length = 0
     openBetCalls.length = 0
     heldTasks.length = 0
-    for (const k of Object.keys(redisStore)) {delete redisStore[k]}
+    for (const k of Object.keys(redisStore)) {
+      delete redisStore[k]
+    }
     nextPredictionId = 'old-prediction-id'
     registerFakeHandler()
     // Pre-state: openBets has already set the Redis keys for the original hero.

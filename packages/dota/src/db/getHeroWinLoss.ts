@@ -23,7 +23,9 @@ export async function getHeroWinLoss({
   token,
 }: HeroWinLossParams): Promise<HeroWinLoss | null> {
   const hero = getHeroById(heroId)
-  if (!hero || !steam32Id || !token) {return { lose: 0, win: 0 }}
+  if (!hero || !steam32Id || !token) {
+    return { lose: 0, win: 0 }
+  }
 
   try {
     const fromDate = new Date(
@@ -37,7 +39,9 @@ export async function getHeroWinLoss({
         .eq('steam32Id', steam32Id)
         .single()
 
-      if (accountError || !steamAccount?.userId) {return { lose: 0, win: 0 }}
+      if (accountError || !steamAccount?.userId) {
+        return { lose: 0, win: 0 }
+      }
       userId = steamAccount.userId
     }
 
@@ -60,8 +64,12 @@ export async function getHeroWinLoss({
 
     return (matches ?? []).reduce<HeroWinLoss>(
       (record, match) => {
-        if (match.won === true) {record.win++}
-        if (match.won === false) {record.lose++}
+        if (match.won === true) {
+          record.win++
+        }
+        if (match.won === false) {
+          record.lose++
+        }
         return record
       },
       { lose: 0, win: 0 }

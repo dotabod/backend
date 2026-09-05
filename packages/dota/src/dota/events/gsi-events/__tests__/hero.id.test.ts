@@ -10,10 +10,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildSharedUtilsMock, initTestI18n } from '../../../../__tests__/sharedMocks'
 
 const loggerMock = {
-  debug: () => undefined,
-  error: () => undefined,
-  info: () => undefined,
-  warn: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 // captureCosmetics is mocked below, so nothing in this path actually hits supabase.
 const supabaseMock = {
@@ -63,7 +63,10 @@ await import('../hero.id')
 
 const TOKEN = 'user-token-1'
 const INVOKER_ID = 74
-interface Setting { key: string; value: unknown }
+interface Setting {
+  key: string
+  value: unknown
+}
 
 function makeDotaClient(
   overrides: {
@@ -104,7 +107,9 @@ describe('hero:id — cosmetic set announce', () => {
   beforeEach(() => {
     captureMock.mockClear()
     sayMock.mockReset()
-    for (const k of Object.keys(redisStore)) {delete redisStore[k]}
+    for (const k of Object.keys(redisStore)) {
+      delete redisStore[k]
+    }
     capturedItems = [{ defindex: 1 }, { defindex: 2 }, { defindex: 3 }, { defindex: 4 }]
   })
 

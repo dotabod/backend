@@ -126,10 +126,10 @@ describe(runSubscriptionHealthCheck, () => {
         json: {
           data: [
             {
+              condition: { broadcaster_user_id: '111' },
               id: 's1',
               status: 'enabled',
               type: 'stream.online',
-              condition: { broadcaster_user_id: '111' },
             },
           ],
           pagination: {},

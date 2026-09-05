@@ -24,16 +24,16 @@ async function postWinEventsForUsers(
   }[],
   win_team: 'radiant' | 'dire' = 'radiant'
 ) {
-  const promises = users.flatMap((user) => 
+  const promises = users.flatMap((user) =>
     gameEnd({
-      win_team,
       matchId: '123',
       steam32: '123',
       steam64: '123456',
       token: user.id,
-    }).map( async (step) => {
-      return apiClient.post('/', step)
-    })
+      win_team,
+    }).map(async (step) => 
+      await apiClient.post('/', step)
+    )
   )
   return await Promise.allSettled(promises)
 }
@@ -44,14 +44,14 @@ async function postEventsForUsers(
   }[],
   eventType: DotaEventTypes
 ) {
-  const promises = users.map( async (user) =>
-    apiClient.post('/', {
+  const promises = users.map(async (user) =>
+    await apiClient.post('/', {
       auth: { token: user.id },
       events: [
         {
           event_type: eventType,
-          player_id: faker.number.int({ min: 0, max: 9 }),
           game_time: faker.number.int({ min: 0, max: 1_000_000 }),
+          player_id: faker.number.int({ min: 0, max: 9 }),
         },
       ],
       player: {
@@ -75,7 +75,9 @@ async function _fixNewUsers() {
     .select('id, Account:accounts(providerAccountId)')
     .is('displayName', null)
 
-  if (!users) {return}
+  if (!users) {
+    return
+  }
 
   const botApi = await getTwitchAPI()
   for (const user of users) {
@@ -83,7 +85,9 @@ async function _fixNewUsers() {
       console.log('no account for user', user.id)
       continue
     }
-    if (botApi) {await handleNewUser(user.Account.providerAccountId, botApi)}
+    if (botApi) {
+      await handleNewUser(user.Account.providerAccountId, botApi)
+    }
   }
   return
 }
@@ -91,7 +95,9 @@ async function _fixNewUsers() {
 // await fixNewUsers()
 
 async function handleNewUser(providerAccountId: string, botApi: ApiClient) {
-  if (!botApi) {return}
+  if (!botApi) {
+    return
+  }
   try {
     const stream = await botApi.streams.getStreamByUserId(providerAccountId)
     const streamer = await botApi.users.getUserById(providerAccountId)

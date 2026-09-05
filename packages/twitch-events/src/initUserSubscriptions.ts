@@ -98,7 +98,9 @@ async function subscribeWithRetry(
       })
 
       // No need to retry if not a critical subscription
-      if (!isCritical) {break}
+      if (!isCritical) {
+        break
+      }
 
       // Only retry for specific error types (e.g., rate limiting, network issues)
       if (

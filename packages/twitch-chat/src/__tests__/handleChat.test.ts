@@ -37,7 +37,9 @@ function makeMessage(overrides: EventOverrides = {}) {
 }
 
 describe(handleChatMessage, () => {
-  beforeEach(() =>{  resetState(); })
+  beforeEach(() => {
+    resetState()
+  })
 
   it('ignores payloads without a subscription/event', async () => {
     await handleChatMessage({ payload: {} })
@@ -105,7 +107,9 @@ describe(handleChatMessage, () => {
 })
 
 describe(sendTwitchChatMessage, () => {
-  beforeEach(() =>{  resetState(); })
+  beforeEach(() => {
+    resetState()
+  })
 
   it('drops the message when the broadcaster is being disabled', async () => {
     disableUserCache.set('user-1:b1', {
@@ -166,13 +170,13 @@ describe(sendTwitchChatMessage, () => {
             ? {
                 data: [
                   {
-                    message_id: '',
-                    is_sent: false,
                     drop_reason: { code: 'msg_duplicate', message: 'duplicate' },
+                    is_sent: false,
+                    message_id: '',
                   },
                 ],
               }
-            : { data: [{ message_id: 'retry-id', is_sent: true }] },
+            : { data: [{ is_sent: true, message_id: 'retry-id' }] },
         ok: true,
       }
     }
@@ -188,7 +192,9 @@ describe(sendTwitchChatMessage, () => {
     expect(state.fetchCalls).toHaveLength(2)
     const retryBody = state.fetchCalls[1].options?.body
     expect(retryBody).toBeTypeOf('string')
-    if (typeof retryBody !== 'string') {throw new Error('Expected string request body')}
+    if (typeof retryBody !== 'string') {
+      throw new TypeError('Expected string request body')
+    }
     expect((JSON.parse(retryBody) as { message: string }).message).toBe(
       `Same command response \u034F`
     )
@@ -196,7 +202,7 @@ describe(sendTwitchChatMessage, () => {
 
   it('returns the API response on success', async () => {
     state.fetchImpl = async () => ({
-      json: async () => ({ data: [{ message_id: 'real-id', is_sent: true }] }),
+      json: async () => ({ data: [{ is_sent: true, message_id: 'real-id' }] }),
       ok: true,
     })
     const res = await sendTwitchChatMessage({
@@ -217,7 +223,9 @@ describe(sendTwitchChatMessage, () => {
 
     const body = state.fetchCalls[0].options?.body
     expect(body).toBeTypeOf('string')
-    if (typeof body !== 'string') {throw new Error('Expected string request body')}
+    if (typeof body !== 'string') {
+      throw new TypeError('Expected string request body')
+    }
     const request = JSON.parse(body) as { message: string }
     expect(request.message).toHaveLength(500)
     expect(request.message).toContain('…')

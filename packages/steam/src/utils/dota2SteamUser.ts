@@ -83,7 +83,9 @@ export class SteamGameCoordinatorShim extends EventEmitter {
     this.appid = appid
 
     this.user.on('receivedFromGC', (incomingAppid, msgType, payload) => {
-      if (incomingAppid !== this.appid) {return}
+      if (incomingAppid !== this.appid) {
+        return
+      }
       // node-dota2 reads only `header.msg`. Pushes have no reply channel, so the
       // third 'message' arg (callback) is always null — node-dota2 then calls the
       // handler with `(body)` only, matching v1 behaviour for non-job messages.
@@ -103,8 +105,9 @@ export class SteamGameCoordinatorShim extends EventEmitter {
     callback?: (header: GCHeader, body: Buffer) => void
   ): void {
     const jobCb = callback
-      ? (_appid: number, msgType: number, payload: Buffer) =>{ 
-          callback({ msg: msgType, proto: {} }, toBuffer(payload)); }
+      ? (_appid: number, msgType: number, payload: Buffer) => {
+          callback({ msg: msgType, proto: {} }, toBuffer(payload))
+        }
       : undefined
     this.user.sendToGC(this.appid, header.msg, {}, toBuffer(body), jobCb)
   }

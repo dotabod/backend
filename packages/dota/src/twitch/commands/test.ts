@@ -9,8 +9,8 @@ import MongoDBSingleton from '../../steam/MongoDBSingleton'
 import { steamSocket } from '../../steam/ws'
 import CustomError from '../../utils/customError'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 const fetchUserByName = async (name: string) => {
   const { data: user, error } = await supabase
@@ -39,7 +39,9 @@ const fetchUserByName = async (name: string) => {
 }
 
 const generateLogQuery = (user: Awaited<ReturnType<typeof fetchUserByName>>) => {
-  if (!user) {return}
+  if (!user) {
+    return
+  }
 
   const steamAccountQueries = user.steam_accounts
     .map((account: { steam32Id: number }) => `steam32Id:${account.steam32Id} or`)
@@ -277,35 +279,45 @@ const handleSubscriptionCommand = async (message: MessageType) => {
 commandHandler.registerCommand('test', {
   handler: async (message, args) => {
     switch (args[0]) {
-      case 'subscription':
+      case 'subscription': {
         await handleSubscriptionCommand(message)
         break
-      case 'user':
+      }
+      case 'user': {
         handleUserCommand(message, args)
         break
-      case 'game':
+      }
+      case 'game': {
         handleGameCommand(message)
         break
-      case '2m':
+      }
+      case '2m': {
         void handle2mDataCommand(message)
         break
-      case 'reset':
+      }
+      case 'reset': {
         await handleResetCommand(message)
         break
-      case 'cards':
+      }
+      case 'cards': {
         await handleCardsCommand(message)
         break
-      case 'card':
+      }
+      case 'card': {
         handleCardCommand(message, args)
         break
-      case 'logs':
+      }
+      case 'logs': {
         await handleLogsCommand(message)
         break
-      case 'server':
+      }
+      case 'server': {
         void handleServerCommand(message, args)
         break
-      default:
+      }
+      default: {
         chatClient.whisper(message.user.userId, 'Invalid command')
+      }
     }
   },
 

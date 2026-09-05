@@ -1,6 +1,6 @@
 import RedisClient from '../../../db/RedisClient'
-import { DotaEventTypes } from '../../../types';
-import type { AegisPickedUpEvent } from '../../../types';
+import { DotaEventTypes } from '../../../types'
+import type { AegisPickedUpEvent } from '../../../types'
 import { fmtMSS, is8500Plus } from '../../../utils/index'
 import { getHeroNameOrColor } from '../../lib/heroes'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
@@ -12,8 +12,12 @@ import { generateAegisMessage } from './generateAegisMessage'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
   handler: async (dotaClient, event: AegisPickedUpEvent) => {
-    if (!isPlayingMatch(dotaClient.client.gsi)) {return}
-    if (!dotaClient.client.stream_online) {return}
+    if (!isPlayingMatch(dotaClient.client.gsi)) {
+      return
+    }
+    if (!dotaClient.client.stream_online) {
+      return
+    }
 
     const gameTimeDiff =
       (dotaClient.client.gsi?.map?.game_time ?? event.game_time) - event.game_time
@@ -26,7 +30,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
     const expireDate = dotaClient.addSecondsToNow(expireS)
 
     const roster = await new MatchDataService(dotaClient.client).resolveRoster()
-    const {players} = roster
+    const { players } = roster
 
     const foundIndex = players.findIndex((p) => p.slot === event.player_id)
     const playerIdIndex = foundIndex === -1 ? event.player_id : foundIndex

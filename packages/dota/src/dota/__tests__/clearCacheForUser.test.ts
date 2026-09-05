@@ -12,12 +12,12 @@ import { buildSharedUtilsMock } from '../../__tests__/sharedMocks'
 
 vi.doMock(import('@dotabod/shared-utils'), () =>
   buildSharedUtilsMock({
-    getAuthProvider: () => ({ removeUser: () => undefined }),
+    getAuthProvider: () => ({ removeUser: () => {} }),
     logger: {
-      debug: () => undefined,
-      error: () => undefined,
-      info: () => undefined,
-      warn: () => undefined,
+      debug: () => {},
+      error: () => {},
+      info: () => {},
+      warn: () => {},
     },
     supabase: { from: () => ({}), rpc: async () => ({ data: [], error: null }) },
   })

@@ -132,7 +132,9 @@ export async function resolveByMostRecentMatch(
     client.stream_start_date,
     client.gsi?.map?.matchid
   )
-  if (!recent) {return false}
+  if (!recent) {
+    return false
+  }
 
   await resolveMatchRetroactively(client, recent.matchId, won, username, channel, messageId)
   return true
@@ -243,10 +245,10 @@ async function closeTwitchBetById(
     return true
   } catch (error) {
     logger.info('[BETS] Retroactive resolution - could not resolve prediction', {
-      twitchId,
-      predictionId,
-      matchId,
       error: error,
+      matchId,
+      predictionId,
+      twitchId,
     })
     return false
   }

@@ -3,7 +3,7 @@ import { getTwitchTokens } from './getTwitchTokens'
 
 // Bot status tracking
 export const botStatus = {
-  banCheckCooldown: 60000, // Only check once per minute
+  banCheckCooldown: 60_000, // Only check once per minute
   isBanned: false,
   lastChecked: 0,
 }

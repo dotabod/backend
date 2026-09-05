@@ -163,17 +163,17 @@ commandHandler.registerCommand('np', {
     )
     notablePlayers({
       client,
-      locale: client.locale,
-      twitchChannelId,
       currentMatchId: client.gsi?.map?.matchid,
-      players: roster.players,
       enableFlags: enableCountries,
-      steam32Id: client.steam32Id,
       heroesStatus: roster.heroesStatus,
+      locale: client.locale,
+      players: roster.players,
       rosterSource: roster.source,
+      steam32Id: client.steam32Id,
+      twitchChannelId,
     })
       .then(async (desc) => {
-        let {description} = desc
+        let { description } = desc
         const showStreamers = getValueOrDefault(
           DBSettings.streamersNpSuffix,
           client.settings,

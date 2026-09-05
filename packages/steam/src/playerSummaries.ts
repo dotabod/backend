@@ -89,13 +89,17 @@ export class SteamPlayerSummaryService {
   private async fetchWebSummaries(
     steamIds: string[]
   ): Promise<Map<number, { personaName: string | null; countryCode: string | null }>> {
-    if (!this.apiKey || !steamIds.length) {return new Map()}
+    if (!this.apiKey || !steamIds.length) {
+      return new Map()
+    }
 
     const url = new URL('https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/')
     url.searchParams.set('key', this.apiKey)
     url.searchParams.set('steamids', steamIds.join(','))
     const response = await this.fetchImpl(url)
-    if (!response.ok) {return new Map()}
+    if (!response.ok) {
+      return new Map()
+    }
 
     const body = (await response.json()) as {
       response?: {
@@ -108,9 +112,13 @@ export class SteamPlayerSummaryService {
     }
     const summaries = new Map<number, { personaName: string | null; countryCode: string | null }>()
     for (const player of body.response?.players ?? []) {
-      if (!player.steamid) {continue}
+      if (!player.steamid) {
+        continue
+      }
       const accountId = toAccountId(player.steamid)
-      if (!Number.isInteger(accountId) || accountId <= 0) {continue}
+      if (!Number.isInteger(accountId) || accountId <= 0) {
+        continue
+      }
       summaries.set(accountId, {
         countryCode: player.loccountrycode?.trim().toUpperCase() || null,
         personaName: player.personaname?.trim() || null,

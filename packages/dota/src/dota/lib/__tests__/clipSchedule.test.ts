@@ -1,12 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { rearmWith, scheduleClipWith } from '../clipSchedule.ts';
-import type { ClipScheduleDeps, ClipTaskPayload } from '../clipSchedule.ts';
+import { rearmWith, scheduleClipWith } from '../clipSchedule.ts'
+import type { ClipScheduleDeps, ClipTaskPayload } from '../clipSchedule.ts'
 
 // Fully in-memory deps so the scheduling/re-arm logic is exercised offline with
 // no Twitch, Redis, real timers, or process-wide module mocks (which would leak
 // into sibling test files and break randomized ordering).
-interface Captured { delayMs: number; cb: () => void | Promise<void> }
+interface Captured {
+  delayMs: number
+  cb: () => void | Promise<void>
+}
 
 function makeDeps() {
   const zset = new Map<string, number>()
@@ -16,11 +19,11 @@ function makeDeps() {
 
   const deps: ClipScheduleDeps = {
     arm: (delayMs, cb) => {
-      armed.push({ delayMs, cb })
+      armed.push({ cb, delayMs })
     },
     logger: {
-      info: () => undefined,
       error: () => undefined,
+      info: () => undefined,
     },
     now: () => now,
     run: async () => {

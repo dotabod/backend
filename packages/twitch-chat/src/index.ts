@@ -4,11 +4,19 @@ process.on('SIGINT', () => process.exit(0))
 import { lstatSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { checkBotStatus, checkSupabaseHealth, commandDisable, getTwitchAPI, logger, startHeartbeat, supabase } from '@dotabod/shared-utils';
-import type { DisableReasonMetadata } from '@dotabod/shared-utils';
+import {
+  checkBotStatus,
+  checkSupabaseHealth,
+  commandDisable,
+  getTwitchAPI,
+  logger,
+  startHeartbeat,
+  supabase,
+} from '@dotabod/shared-utils'
+import type { DisableReasonMetadata } from '@dotabod/shared-utils'
 import { use } from 'i18next'
-import FsBackend from 'i18next-fs-backend';
-import type { FsBackendOptions } from 'i18next-fs-backend';
+import FsBackend from 'i18next-fs-backend'
+import type { FsBackendOptions } from 'i18next-fs-backend'
 
 import { ensureEventSubInitialized } from './conduitSetup'
 import { clearDisableCache, DISABLE_CACHE_EXPIRY, disableUserCache } from './disableCache'
@@ -58,8 +66,8 @@ async function startup() {
     startHeartbeat({
       debounceMs: 90_000,
       getStatus: () => ({
-        up: isEventsubConnected(),
         msg: isEventsubConnected() ? 'connected' : 'eventsub disconnected',
+        up: isEventsubConnected(),
       }),
       name: 'eventsub heartbeat',
       url: process.env.KUMA_PUSH_URL_EVENTSUB,
@@ -244,17 +252,17 @@ async function disableUser(
     case 'followers_only_mode': {
       metadata = {
         ...metadata,
-        permission_required: 'moderator',
         additional_info: 'Bot is not a moderator and channel has followers-only mode enabled',
+        permission_required: 'moderator',
       }
       break
     }
     case 'user_warned': {
       metadata = {
         ...metadata,
-        warning_status: 'active',
         additional_info:
           'Bot account is currently warned and cannot send messages until warning is acknowledged',
+        warning_status: 'active',
       }
       break
     }

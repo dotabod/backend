@@ -31,19 +31,19 @@ commandHandler.registerCommand('lg', {
     const roster = await new MatchDataService(client).resolveRoster()
 
     lastgame({
-      currentMatchId: message.channel.client.gsi?.map?.matchid,
-      locale: message.channel.client.locale,
-      currentPlayers: roster.players,
-      steam32Id: message.channel.client.steam32Id,
       client,
+      currentMatchId: message.channel.client.gsi?.map?.matchid,
+      currentPlayers: roster.players,
+      locale: message.channel.client.locale,
+      steam32Id: message.channel.client.steam32Id,
     })
       .then((desc) => {
         chatClient.say(message.channel.name, desc, message.user.messageId)
       })
-      .catch((e) => {
+      .catch((error) => {
         chatClient.say(
           message.channel.name,
-          e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+          error?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
           message.user.messageId
         )
       })

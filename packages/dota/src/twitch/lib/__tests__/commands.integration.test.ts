@@ -91,7 +91,7 @@ describe('!wl', () => {
   it('reports the multiAccount message when steam32Id is unset and multiAccount is true', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        clientOverrides: { steam32Id: null, multiAccount: true } as any,
+        clientOverrides: { multiAccount: true, steam32Id: null } as any,
         content: '!wl',
       })
     )
@@ -204,7 +204,7 @@ describe('!mmr', () => {
 
   it('reports the unknown-mmr message when no SteamAccount and mmr=0', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { mmr: 0, SteamAccount: [] }, content: '!mmr' })
+      makeMessage({ clientOverrides: { SteamAccount: [], mmr: 0 }, content: '!mmr' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain('dotabod.com/dashboard/features')
@@ -213,7 +213,7 @@ describe('!mmr', () => {
   it('chats the rank description for legacy MMR (no SteamAccount, mmr > 0)', async () => {
     state.rankDescription = 'Divine 5 | 6000 MMR'
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { mmr: 6000, SteamAccount: [] }, content: '!mmr' })
+      makeMessage({ clientOverrides: { SteamAccount: [], mmr: 6000 }, content: '!mmr' })
     )
     await flushAsync()
     expect(state.chatSayCalls).toHaveLength(1)
@@ -224,8 +224,8 @@ describe('!mmr', () => {
     await commandHandler.handleMessage(
       makeMessage({
         clientOverrides: {
-          multiAccount: true,
           SteamAccount: [{ steam32Id: 11111, name: 'other', mmr: 4000 }],
+          multiAccount: true,
         } as any,
         content: '!mmr',
       })
@@ -256,8 +256,8 @@ describe('!gpm', () => {
       makeMessage({
         clientOverrides: {
           gsi: {
-            player: { gpm: 650, gold_from_hero_kills: 100, gold_from_creep_kills: 500 },
             hero: { id: 1 },
+            player: { gold_from_creep_kills: 500, gold_from_hero_kills: 100, gpm: 650 },
           },
         } as any,
         content: '!gpm',
@@ -336,9 +336,9 @@ describe('!apm', () => {
       makeMessage({
         clientOverrides: {
           gsi: {
-            map: { matchid: '7777777777', game_time: 600 },
-            player: { commands_issued: 3000, accountid: 99999 },
             hero: { id: 1 },
+            map: { game_time: 600, matchid: '7777777777' },
+            player: { accountid: 99999, commands_issued: 3000 },
           },
         } as any,
         content: '!apm',
@@ -362,7 +362,7 @@ describe('!avg', () => {
   it('reports multiAccount when steam32Id is unset and multiAccount is true', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        clientOverrides: { steam32Id: null, multiAccount: true } as any,
+        clientOverrides: { multiAccount: true, steam32Id: null } as any,
         content: '!avg',
       })
     )
@@ -487,7 +487,7 @@ describe('Hero Demo roster commands', () => {
       matchid: '0',
       win_team: 'none',
     },
-    player: { accountid: 99999, activity: 'playing' },
+    player: { accountid: 99_999, activity: 'playing' },
   } as any
 
   it.each(['!np', '!gm', '!avg'])(

@@ -21,7 +21,9 @@ export const deleteSubscription = async (id: string) => {
 // Function to stop subscriptions for a user
 export const stopUserSubscriptions = async (providerAccountId: string) => {
   const subscriptions = eventSubMap[providerAccountId]
-  if (!subscriptions) {return}
+  if (!subscriptions) {
+    return
+  }
 
   // Delete each subscription and remove from map
   await Promise.all(
@@ -104,7 +106,7 @@ export async function revokeEvent({ providerAccountId }: { providerAccountId: st
       try {
         void stopUserSubscriptions(providerAccountId)
       } catch (error) {
-        logger.info('Failed to delete subscriptions', { error: error, twitchId: providerAccountId })
+        logger.info('Failed to delete subscriptions', { error, twitchId: providerAccountId })
       }
 
       await supabase

@@ -24,7 +24,9 @@ export async function fetchExistingSubscriptions() {
     pageCount++
     await rateLimiter.schedule(async () => {
       const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
-      if (cursor) {url.searchParams.append('after', cursor)}
+      if (cursor) {
+        url.searchParams.append('after', cursor)
+      }
 
       const subsReq = await fetch(url.toString(), {
         headers,

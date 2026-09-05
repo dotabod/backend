@@ -5,8 +5,8 @@ import path, { join } from 'node:path'
 import { logger } from '@dotabod/shared-utils'
 import chokidar from 'chokidar'
 import i18next from 'i18next'
-import FsBackend from 'i18next-fs-backend';
-import type { FsBackendOptions } from 'i18next-fs-backend';
+import FsBackend from 'i18next-fs-backend'
+import type { FsBackendOptions } from 'i18next-fs-backend'
 
 import RedisClient from '../db/RedisClient'
 import SetupSupabase from '../db/watcher'

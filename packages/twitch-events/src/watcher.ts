@@ -1,5 +1,5 @@
-import { botStatus, logger, supabase } from '@dotabod/shared-utils';
-import type { Tables } from '@dotabod/shared-utils';
+import { botStatus, logger, supabase } from '@dotabod/shared-utils'
+import type { Tables } from '@dotabod/shared-utils'
 
 import { handleNewUser } from './handleNewUser'
 import { stopUserSubscriptions } from './twitch/lib/revokeEvent'
@@ -39,7 +39,9 @@ export function setupAccountWatcher(): void {
   const scheduleReconnect = (status: string, err?: Error) => {
     // Don't pile up reconnect timers if the dead channel's callback fires
     // multiple times for the same outage.
-    if (reconnectTimer) {return}
+    if (reconnectTimer) {
+      return
+    }
     // Claim the guard and detach the dead channel BEFORE touching
     // removeChannel(). supabase-js tears the channel down synchronously and
     // re-fires THIS status callback with CLOSED on the same stack — which
@@ -100,7 +102,9 @@ export function setupAccountWatcher(): void {
           { event: 'INSERT', schema: 'public', table: 'accounts' },
           async (payload: { new: Tables<'accounts'> }) => {
             const newObj = payload.new
-            if (newObj.provider !== 'twitch') {return}
+            if (newObj.provider !== 'twitch') {
+              return
+            }
             logger.info('[WATCHER] INSERT accounts → onboarding new user', {
               providerAccountId: newObj.providerAccountId,
             })
@@ -120,7 +124,9 @@ export function setupAccountWatcher(): void {
           async (payload: { new: Tables<'accounts'>; old: Tables<'accounts'> }) => {
             const newObj = payload.new
             const oldObj = payload.old
-            if (newObj.provider !== 'twitch') {return}
+            if (newObj.provider !== 'twitch') {
+              return
+            }
             // Re-auth: requires_refresh flipped true → false.
             if (oldObj.requires_refresh === true && newObj.requires_refresh === false) {
               if (newObj.providerAccountId === process.env.TWITCH_BOT_PROVIDERID) {
@@ -146,7 +152,9 @@ export function setupAccountWatcher(): void {
           { event: 'DELETE', schema: 'public', table: 'accounts' },
           async (payload: { old: Tables<'accounts'> }) => {
             const oldObj = payload.old
-            if (oldObj.provider !== 'twitch') {return}
+            if (oldObj.provider !== 'twitch') {
+              return
+            }
             logger.info('[WATCHER] Account deleted, stopping subscriptions', {
               providerAccountId: oldObj.providerAccountId,
             })

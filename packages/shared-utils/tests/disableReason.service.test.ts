@@ -77,7 +77,9 @@ describe('trackResolveReason', () => {
 
     const notifUpdate = utilsState.updates.find((u) => u.table === 'disable_notifications')
     expect(notifUpdate?.values).toMatchObject({ auto_resolved: false })
-    expect(notifUpdate?.filters.some((f) => f.method === 'is' && f.col === 'resolved_at')).toBeTruthy()
+    expect(
+      notifUpdate?.filters.some((f) => f.method === 'is' && f.col === 'resolved_at')
+    ).toBeTruthy()
     // Without opts.reason, no reason filter is applied.
     expect(notifUpdate?.filters.some((f) => f.col === 'reason')).toBeFalsy()
   })

@@ -11,7 +11,7 @@ vi.doMock(import('@dotabod/shared-utils'), () => ({
   botStatus: { isBanned: false },
   fetchConduitId: async () => 'conduit-1',
   logger: {
-    debug: () => undefined,
+    debug: () => {},
     error: (message: string, meta?: Record<string, unknown>) =>
       logCalls.error.push({ message, meta }),
     info: (message: string, meta?: Record<string, unknown>) =>
@@ -25,7 +25,7 @@ vi.doMock(import('@dotabod/shared-utils'), () => ({
 // Replace the heavy handleNewUser implementation with a test double whose
 // behavior the test owns turn-by-turn.
 vi.doMock(import('../../handleNewUser'), () => ({
-  handleNewUser:  async (id: string, resub: boolean) => handleNewUserBehavior(id, resub),
+  handleNewUser: async (id: string, resub: boolean) => await handleNewUserBehavior(id, resub),
 }))
 
 vi.doMock(import('../../twitch/lib/revokeEvent'), () => ({

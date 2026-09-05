@@ -41,8 +41,8 @@ export const state: {
   emitCalls: [],
   fetchCalls: [],
   fetchImpl: async () => ({
-    ok: true,
     json: async () => ({ data: [{ message_id: 'mid', is_sent: true }] }),
+    ok: true,
   }),
   fetchThrows: null,
   hasSocket: true,
@@ -59,7 +59,7 @@ export function resetState() {
   state.emitCalls = []
   state.fetchCalls = []
   state.fetchImpl = async () => ({
-    json: async () => ({ data: [{ message_id: 'mid', is_sent: true }] }),
+    json: async () => ({ data: [{ is_sent: true, message_id: 'mid' }] }),
     ok: true,
   })
   state.fetchThrows = null
@@ -106,12 +106,12 @@ vi.doMock(import('@dotabod/shared-utils'), () => ({
   checkBotStatus: async () => state.isBanned,
   getTwitchHeaders: async () => ({ Authorization: 'Bearer test' }),
   logger: {
-    debug: () => undefined,
+    debug: () => {},
     error: (message: string, meta?: Record<string, unknown>) =>
       state.logError.push({ message, meta: meta ?? {} }),
     info: (message: string, meta?: Record<string, unknown>) =>
       state.logInfo.push({ message, meta: meta ?? {} }),
-    warn: () => undefined,
+    warn: () => {},
   },
   supabase: supabaseMock,
 }))
@@ -127,7 +127,7 @@ vi.doMock(import('../utils/socketManager'), () => ({
     text: string,
     opts: Record<string, unknown>
   ) => {
-    state.emitCalls.push({ broadcasterLogin, chatterLogin, text, opts })
+    state.emitCalls.push({ broadcasterLogin, chatterLogin, opts, text })
   },
   hasDotabodSocket: () => state.hasSocket,
 }))
@@ -162,8 +162,9 @@ export class FakeWebSocket {
     this.handlers = {}
   }
   close() {
-    if (this.readyState === FakeWebSocket.CLOSED || this.readyState === FakeWebSocket.CLOSING)
-      {return}
+    if (this.readyState === FakeWebSocket.CLOSED || this.readyState === FakeWebSocket.CLOSING) {
+      return
+    }
     if (this.readyState === FakeWebSocket.CONNECTING) {
       // Mirror `ws`: closing a pending upgrade aborts the handshake and emits an
       // 'error' (then 'close') on a LATER tick. An unhandled 'error' crashes the
@@ -186,7 +187,9 @@ export class FakeWebSocket {
     if (type === 'error' && list.length === 0) {
       throw new Error(String((ev as { message?: string }).message ?? 'Unhandled error'))
     }
-    for (const cb of list) {cb({ target: this, ...ev })}
+    for (const cb of list) {
+      cb({ target: this, ...ev })
+    }
   }
   open() {
     this.readyState = FakeWebSocket.OPEN
@@ -209,7 +212,9 @@ vi.doMock(import('ws'), () => ({ default: FakeWebSocket }))
 // Route fetch through state so each test controls the HTTP response.
 globalThis.fetch = (async (url: string, options: RequestInit | undefined) => {
   state.fetchCalls.push({ options, url })
-  if (state.fetchThrows) {throw state.fetchThrows}
+  if (state.fetchThrows) {
+    throw state.fetchThrows
+  }
   return await state.fetchImpl(url, options)
 }) as unknown as typeof fetch
 
@@ -231,4 +236,4 @@ export const { sendTwitchChatMessage, handleChatMessage, clearDedupeCache } =
 // drive the controllable FakeWebSocket instead of a real connection.
 export const { EventsubSocket, isEventsubConnected } = await import('../eventSubSocket')
 
-export const flushMacrotasks =  async () => new Promise<void>((r) => setTimeout(r, 5))
+export const flushMacrotasks = async () => await new Promise<void>((r) => setTimeout(r, 5))

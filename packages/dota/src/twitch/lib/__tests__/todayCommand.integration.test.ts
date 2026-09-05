@@ -5,7 +5,11 @@ import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
 // !today reads getTodayHeroStats, which terminates its supabase query on
 // `.order()` and resolves to `state.recentList` (see setupMocks).
-interface TodayMatch { matchId: string; hero_name: string | null; won: boolean }
+interface TodayMatch {
+  matchId: string
+  hero_name: string | null
+  won: boolean
+}
 
 const setMatches = (matches: TodayMatch[]) => {
   state.recentList = matches

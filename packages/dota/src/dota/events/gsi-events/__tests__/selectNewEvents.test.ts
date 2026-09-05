@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { DotaEventTypes } from '../../../../types';
-import type { DotaEvent } from '../../../../types';
+import { DotaEventTypes } from '../../../../types'
+import type { DotaEvent } from '../../../../types'
 import { selectNewEvents } from '../selectNewEvents'
 
 // Characterizes the events[] sliding-window dedup that handleNewEvents (newdata.ts)
@@ -10,8 +10,7 @@ import { selectNewEvents } from '../selectNewEvents'
 // flow through here, and each distinct (game_time,event_type) emits exactly once.
 
 // Minimal DotaEvent — selectNewEvents only reads game_time + event_type.
-const ev = (game_time: number, event_type: DotaEventTypes): DotaEvent =>
-  ({ event_type, game_time })
+const ev = (game_time: number, event_type: DotaEventTypes): DotaEvent => ({ event_type, game_time })
 
 describe('selectNewEvents — basic selection', () => {
   it('returns all incoming events when nothing has been seen', () => {
@@ -59,7 +58,9 @@ describe('selectNewEvents — dedup across ticks (the sliding window)', () => {
     const processTick = (incoming: DotaEvent[]) => {
       const fresh = selectNewEvents(seen, incoming)
       seen = [...seen, ...fresh]
-      for (const e of fresh) {emitted.push(`${e.game_time}-${e.event_type}`)}
+      for (const e of fresh) {
+        emitted.push(`${e.game_time}-${e.event_type}`)
+      }
     }
 
     const bounty = ev(60, DotaEventTypes.BountyPickup)
@@ -84,7 +85,9 @@ describe('selectNewEvents — SAFETY CONTRACT: dropping a tick loses one-shot ev
     const processTick = (incoming: DotaEvent[]) => {
       const fresh = selectNewEvents(seen, incoming)
       seen = [...seen, ...fresh]
-      for (const e of fresh) {emitted.push(`${e.game_time}-${e.event_type}`)}
+      for (const e of fresh) {
+        emitted.push(`${e.game_time}-${e.event_type}`)
+      }
     }
 
     const bountyOnlyInTick2 = ev(60, DotaEventTypes.BountyPickup)
@@ -102,7 +105,9 @@ describe('selectNewEvents — SAFETY CONTRACT: dropping a tick loses one-shot ev
     const processTick2 = (incoming: DotaEvent[]) => {
       const fresh = selectNewEvents(seen2, incoming)
       seen2 = [...seen2, ...fresh]
-      for (const e of fresh) {emitted2.push(`${e.game_time}-${e.event_type}`)}
+      for (const e of fresh) {
+        emitted2.push(`${e.game_time}-${e.event_type}`)
+      }
     }
     processTick2([])
     processTick2([bountyOnlyInTick2]) // tick 2 NOT skipped

@@ -225,31 +225,31 @@ export async function genericSubscribe(
 export async function subscribeToAuthGrantOrRevoke(conduit_id: string, client_id: string) {
   const subscribeToAuthEvent = async (
     eventType: 'user.authorization.revoke' | 'user.authorization.grant'
-  ) => 
+  ) =>
     await rateLimiter.schedule(async (): Promise<boolean> => {
       // Get fresh headers for each request
       const headers = await getTwitchHeaders()
 
       const body = {
-        type: eventType,
-        version: '1',
         condition: {
           client_id,
         },
         transport: {
-          method: 'conduit',
           conduit_id,
+          method: 'conduit',
         },
+        type: eventType,
+        version: '1',
       }
 
       try {
         const subscribeReq = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
-          method: 'POST',
+          body: JSON.stringify(body),
           headers: {
             ...headers,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(body),
+          method: 'POST',
         })
 
         if (subscribeReq.status === 409) {
@@ -263,12 +263,12 @@ export async function subscribeToAuthGrantOrRevoke(conduit_id: string, client_id
           const freshHeaders = await getTwitchHeaders(undefined, true)
 
           const retryReq = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
-            method: 'POST',
+            body: JSON.stringify(body),
             headers: {
               ...freshHeaders,
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify(body),
+            method: 'POST',
           })
 
           if (retryReq.status === 409) {
@@ -307,7 +307,6 @@ export async function subscribeToAuthGrantOrRevoke(conduit_id: string, client_id
         return false
       }
     })
-  
 
   // Subscribe to both revoke and grant events
   const revokeResult = await subscribeToAuthEvent('user.authorization.revoke')

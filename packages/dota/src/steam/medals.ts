@@ -28,8 +28,12 @@ export async function gameMedals(
       const currentMedal = medalQuery.find(
         (temporaryMedal) => temporaryMedal.rank_tier === card.rank_tier
       )
-      if (!currentMedal) {return t('unknown', { lng: locale })}
-      if (card.leaderboard_rank > 0) {return `#${card.leaderboard_rank}`}
+      if (!currentMedal) {
+        return t('unknown', { lng: locale })
+      }
+      if (card.leaderboard_rank > 0) {
+        return `#${card.leaderboard_rank}`
+      }
       return currentMedal.name
     })
 
@@ -47,8 +51,12 @@ export async function gameMedals(
 
     // sort according to medal order
     const sortedMedals = Object.keys(medalsToPlayers).sort((a, b) => {
-      if (a === 'Uncalibrated') {return -1}
-      if (b === 'Uncalibrated') {return 1}
+      if (a === 'Uncalibrated') {
+        return -1
+      }
+      if (b === 'Uncalibrated') {
+        return 1
+      }
 
       const aIndex = ranks.findIndex((rank) => rank.title.startsWith(a))
       const bIndex = ranks.findIndex((rank) => rank.title.startsWith(b))
@@ -79,8 +87,8 @@ export async function gameMedals(
     })
 
     const avg = await calculateAvg({
-      locale,
       currentMatchId,
+      locale,
       players,
     })
 

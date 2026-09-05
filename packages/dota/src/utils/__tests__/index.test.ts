@@ -38,7 +38,7 @@ describe(is8500Plus, () => {
 
   it('is true when the matching steam account is at or above 8500', () => {
     expect(
-      is8500Plus(client({ SteamAccount: [{ steam32Id: 1, mmr: 8500 }], mmr: 0, steam32Id: 1 }))
+      is8500Plus(client({ SteamAccount: [{ mmr: 8500, steam32Id: 1 }], mmr: 0, steam32Id: 1 }))
     ).toBeTruthy()
   })
 
@@ -46,7 +46,7 @@ describe(is8500Plus, () => {
     expect(
       is8500Plus(
         client({
-          SteamAccount: [{ steam32Id: 1, mmr: 100, leaderboard_rank: 42 }],
+          SteamAccount: [{ leaderboard_rank: 42, mmr: 100, steam32Id: 1 }],
           mmr: 0,
           steam32Id: 1,
         })
@@ -56,14 +56,14 @@ describe(is8500Plus, () => {
 
   it('is false for a normal sub-8500 account', () => {
     expect(
-      is8500Plus(client({ SteamAccount: [{ steam32Id: 1, mmr: 3000 }], mmr: 3000, steam32Id: 1 }))
+      is8500Plus(client({ SteamAccount: [{ mmr: 3000, steam32Id: 1 }], mmr: 3000, steam32Id: 1 }))
     ).toBeFalsy()
   })
 })
 
 describe('Dotabod profile URLs', () => {
   const client = (overrides: Record<string, unknown>) => overrides as any
-  const normal = client({ SteamAccount: [{ steam32Id: 1, mmr: 3000 }], mmr: 3000, steam32Id: 1 })
+  const normal = client({ SteamAccount: [{ mmr: 3000, steam32Id: 1 }], mmr: 3000, steam32Id: 1 })
   const high = client({ SteamAccount: [], mmr: 9000 })
 
   it('normalizes channel names for profile and match-history routes', () => {

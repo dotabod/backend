@@ -7,10 +7,10 @@ import { buildSharedUtilsMock } from '../../../__tests__/sharedMocks.ts'
 import type { SocketClient } from '../../../types'
 
 const noopLogger = {
-  debug: () => undefined,
-  error: () => undefined,
-  info: () => undefined,
-  warn: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 
 const mockState: {
@@ -60,13 +60,13 @@ const { gsiHandlers } = await import('../consts.ts')
 function makeClient(overrides: Partial<SocketClient> = {}): SocketClient {
   return {
     Account: null,
-    SteamAccount: [{ mmr: 5000, leaderboard_rank: null, name: 'streamer', steam32Id: 99999 }],
+    SteamAccount: [{ leaderboard_rank: null, mmr: 5000, name: 'streamer', steam32Id: 99999 }],
     beta_tester: false,
     locale: 'en',
     mmr: 5000,
     name: 'streamer',
     settings: [],
-    steam32Id: 99999,
+    steam32Id: 99_999,
     stream_online: true,
     stream_start_date: null,
     token: 'token-abc',
@@ -90,7 +90,7 @@ describe('updateMmr (steam32Id branch)', () => {
       channel: '#streamer',
       currentMmr: 5000,
       newMmr: 5025,
-      steam32Id: 99999,
+      steam32Id: 99_999,
     })
 
     expect(client.mmr).toBe(5025)
@@ -109,13 +109,13 @@ describe('updateMmr (steam32Id branch)', () => {
       channel: '#streamer',
       currentMmr: client.mmr,
       newMmr: client.mmr + 25,
-      steam32Id: 99999,
+      steam32Id: 99_999,
     })
     await updateMmr({
       channel: '#streamer',
       currentMmr: client.mmr,
       newMmr: client.mmr + 25,
-      steam32Id: 99999,
+      steam32Id: 99_999,
     })
 
     expect(client.mmr).toBe(5050)
@@ -125,8 +125,8 @@ describe('updateMmr (steam32Id branch)', () => {
   it('only updates client.mmr when the account being updated is the currently-active one', async () => {
     const client = makeClient({ mmr: 5000, steam32Id: 11_111 })
     client.SteamAccount = [
-      { leaderboard_rank: null, mmr: 5000, name: 'main', steam32Id: 11111 },
-      { leaderboard_rank: null, mmr: 3000, name: 'smurf', steam32Id: 99999 },
+      { leaderboard_rank: null, mmr: 5000, name: 'main', steam32Id: 11_111 },
+      { leaderboard_rank: null, mmr: 3000, name: 'smurf', steam32Id: 99_999 },
     ]
     gsiHandlers.set('token-abc', { client } as any)
 
@@ -134,7 +134,7 @@ describe('updateMmr (steam32Id branch)', () => {
       channel: '#streamer',
       currentMmr: 3000,
       newMmr: 3025,
-      steam32Id: 99999, // updating the smurf, not the active account,
+      steam32Id: 99_999, // updating the smurf, not the active account,
     })
 
     expect(client.mmr).toBe(5000) // unchanged — active account is still 11111

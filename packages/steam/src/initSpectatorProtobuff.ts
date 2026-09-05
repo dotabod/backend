@@ -4,7 +4,10 @@ import type { Long } from 'mongodb'
 
 import { logger } from './utils/logger'
 
-interface SpectateFriendGameResponse { server_steamid: Long; watch_live_result: number }
+interface SpectateFriendGameResponse {
+  server_steamid: Long
+  watch_live_result: number
+}
 type SpectateFriendGameCallback = (response: SpectateFriendGameResponse, err?: unknown) => void
 
 function onGCSpectateFriendGameResponse(message: Buffer, callback?: SpectateFriendGameCallback) {
@@ -17,7 +20,7 @@ function onGCSpectateFriendGameResponse(message: Buffer, callback?: SpectateFrie
 }
 
 export function initSpectatorProtobuff() {
-  Dota2.Dota2Client.prototype.spectateFriendGame = function  spectateFriendGame(
+  Dota2.Dota2Client.prototype.spectateFriendGame = function spectateFriendGame(
     friend: { steam_id: number; live: boolean },
     callback: SpectateFriendGameCallback
   ) {

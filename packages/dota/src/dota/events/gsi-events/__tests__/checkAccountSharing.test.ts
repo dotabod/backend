@@ -65,19 +65,19 @@ function makeChainableSupabase() {
     delete: () => builder,
     eq: () => builder,
     gte: () => builder,
-    insert:  async () => Promise.resolve({ data: null, error: null }),
+    insert: async () => ({ data: null, error: null }),
     is: () => builder,
-    limit:  async () => Promise.resolve({ data: [], error: null }),
+    limit: async () => ({ data: [], error: null }),
     lte: () => builder,
     neq: () => builder,
     not: () => builder,
     order: () => builder,
     select: () => builder,
     single: async () => ({ data: null, error: null }),
-    then:  async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) =>
-      Promise.resolve({ data: [], error: null }).then(onFulfilled),
+    then: async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) =>
+      await Promise.resolve({ data: [], error: null }).then(onFulfilled),
     update: () => builder,
-    upsert:  async () => Promise.resolve({ data: null, error: null }),
+    upsert: async () => ({ data: null, error: null }),
   }
   return { from: () => builder, rpc: async () => ({ data: [], error: null }) }
 }
@@ -86,28 +86,28 @@ vi.doMock(import('@dotabod/shared-utils'), () =>
   buildSharedUtilsMock({
     commandDisable: {
       disable: async (userId, reason, metadata) => {
-        state.commandDisableCalls.push({ kind: 'disable', userId, reason, metadata })
+        state.commandDisableCalls.push({ kind: 'disable', metadata, reason, userId })
       },
       enable: async (userId, opts) => {
-        state.commandDisableCalls.push({ kind: 'enable', userId, opts })
+        state.commandDisableCalls.push({ kind: 'enable', opts, userId })
       },
       recordNotification: async (userId, reason, metadata) => {
-        state.commandDisableCalls.push({ kind: 'recordNotification', userId, reason, metadata })
+        state.commandDisableCalls.push({ kind: 'recordNotification', metadata, reason, userId })
       },
     },
     logger: {
-      debug: () => undefined,
+      debug: () => {},
       error: (message: string, meta?: Record<string, unknown>) => {
         state.loggerErrorCalls.push({ message, meta })
       },
-      info: () => undefined,
+      info: () => {},
       warn: (message: string, meta?: Record<string, unknown>) => {
         state.loggerWarnCalls.push({ message, meta })
       },
     },
     supabase: makeChainableSupabase(),
     trackDisableReason: async (userId, settingKey, reason, metadata, opts) => {
-      state.trackDisableReasonCalls.push({ userId, settingKey, reason, metadata, opts })
+      state.trackDisableReasonCalls.push({ metadata, opts, reason, settingKey, userId })
     },
   })
 )
@@ -156,7 +156,7 @@ const baseClient = () =>
   ({
     gsi: { player: { name: 'Streamer' } },
     locale: 'en',
-    steam32Id: 11111,
+    steam32Id: 11_111,
     token: 'token-abc',
   }) as any
 
@@ -176,7 +176,7 @@ describe('newdata multi-account recovery gate', () => {
     const handler: any = {
       client: {
         gsi: {},
-        multiAccount: 440614454,
+        multiAccount: 440_614_454,
         name: 'blocked',
         settings: [],
         stream_online: true,
@@ -207,14 +207,14 @@ describe('newdata multi-account recovery gate', () => {
     const handler: any = {
       client: {
         gsi: {},
-        multiAccount: 440614454,
+        multiAccount: 440_614_454,
         name: 'recovering',
         settings: [],
         stream_online: true,
         token,
       },
       disabled: false,
-      setupOBSBlockers: async () => undefined,
+      setupOBSBlockers: async () => {},
       updateSteam32Id: async () => {
         order.push('recover')
         handler.client.multiAccount = undefined

@@ -131,7 +131,9 @@ describe('getDBUser', () => {
     const res = await getDBUser({ token: 'tok-stale' })
     expect(res.result).toBeNull()
     expect(invalidTokens.has('tok-stale')).toBeTruthy()
-    expect(dbState.loggerErrorCalls.some((c) => c.message === '[USER] users lookup failed')).toBeFalsy()
+    expect(
+      dbState.loggerErrorCalls.some((c) => c.message === '[USER] users lookup failed')
+    ).toBeFalsy()
   })
 
   it('marks transient (non-PGRST116) accounts errors in the cache but routes through addEphemeral so they do NOT persist across deploys', async () => {
@@ -158,7 +160,9 @@ describe('getDBUser', () => {
     const res = await getDBUser({ token: 'tok-blip' })
     expect(res.result).toBeNull()
     expect(invalidTokens.has('tok-blip')).toBeTruthy()
-    expect(dbState.loggerErrorCalls.some((c) => c.message === '[USER] users lookup failed')).toBeTruthy()
+    expect(
+      dbState.loggerErrorCalls.some((c) => c.message === '[USER] users lookup failed')
+    ).toBeTruthy()
   })
 
   it('returns "no userId" when the accounts row has no userId', async () => {
@@ -236,7 +240,7 @@ describe('getDBUser', () => {
         steam32Id: 5,
         stream_online: false,
         stream_start_date: '2026-05-20T00:00:00.000Z',
-        subscriptions: [{ id: 'sub-1', tier: 'PRO', status: 'ACTIVE', isGift: false }],
+        subscriptions: [{ id: 'sub-1', isGift: false, status: 'ACTIVE', tier: 'PRO' }],
       },
       error: null,
     }
@@ -285,14 +289,14 @@ describe('getDBUser', () => {
           requires_refresh: false,
           scope: null,
         },
-        SteamAccount: [{ mmr: 5000, steam32Id: 99999, name: 'main', leaderboard_rank: 0 }],
+        SteamAccount: [{ leaderboard_rank: 0, mmr: 5000, name: 'main', steam32Id: 99999 }],
         beta_tester: false,
         id: 'user-1',
         locale: 'en',
         mmr: 5000,
         name: 'TheStreamer',
         settings: [],
-        steam32Id: 99999,
+        steam32Id: 99_999,
         stream_online: true,
         stream_start_date: null,
         subscriptions: [],

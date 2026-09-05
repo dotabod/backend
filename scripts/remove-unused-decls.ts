@@ -42,7 +42,7 @@ for (const [filename, diags] of byFile) {
   diags.sort((a, b) => b.labels[0].span.offset - a.labels[0].span.offset)
 
   for (const d of diags) {
-    const {offset} = d.labels[0].span
+    const { offset } = d.labels[0].span
     const ident = source.getDescendantAtPos(offset)
     if (!ident) {
       console.warn(`  skip (no node): ${filename}:${d.labels[0].span.line}`)
@@ -69,7 +69,9 @@ for (const [filename, diags] of byFile) {
     let toRemove = parent
     if (kind === SyntaxKind.VariableDeclaration || kind === SyntaxKind.BindingElement) {
       const stmt = parent.getFirstAncestorByKind(SyntaxKind.VariableStatement)
-      if (stmt) {toRemove = stmt}
+      if (stmt) {
+        toRemove = stmt
+      }
     }
 
     try {

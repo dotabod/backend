@@ -15,7 +15,9 @@ export async function getDotabodProfileUrl(
     steam32Id === client.steam32Id ||
     client.SteamAccount.some((account) => account.steam32Id === steam32Id)
 
-  if (belongsToStreamer) {return dotabodProfileUrl(client.name)}
+  if (belongsToStreamer) {
+    return dotabodProfileUrl(client.name)
+  }
 
   try {
     const { data, error } = await supabase
@@ -23,7 +25,9 @@ export async function getDotabodProfileUrl(
       .select('users(name)')
       .eq('steam32Id', steam32Id)
       .single()
-    if (error) {return null}
+    if (error) {
+      return null
+    }
 
     const relation = data?.users as ProfileRelation | ProfileRelation[] | null | undefined
     const profile = Array.isArray(relation) ? relation[0] : relation

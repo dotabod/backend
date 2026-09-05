@@ -10,25 +10,35 @@ interface EventOptions<T = unknown> {
 class EventHandler {
   registerEvent = <T = unknown>(eventName: string, options: EventOptions<T>) => {
     events.on(eventName, (data: unknown, token: string) => {
-      if (!gsiHandlers.has(token)) {return}
+      if (!gsiHandlers.has(token)) {
+        return
+      }
       const client = gsiHandlers.get(token)
 
-      if (!client) {return}
+      if (!client) {
+        return
+      }
 
       // if we disabled the backend processing from somewhere else
       // we shouldn't process events
-      if (client.disabled) {return}
+      if (client.disabled) {
+        return
+      }
 
       // if we r offline don't process events
-      if (!client.client.stream_online) {return}
+      if (!client.client.stream_online) {
+        return
+      }
 
       // dont send events if someone is sharing a computer for another steam account
-      if (client.client.multiAccount && !options.allowMultiAccount) {return}
+      if (client.client.multiAccount && !options.allowMultiAccount) {
+        return
+      }
 
       // check if options.handler is a promise first
       // the global emitter is untyped; each registration declares the payload type
       options.handler(client, data as T)?.catch((error) => {
-        console.error('Error handling event:', { token, eventName, error })
+        console.error('Error handling event:', { error, eventName, token })
       })
     })
   }

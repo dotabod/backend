@@ -1,8 +1,8 @@
 import { t } from 'i18next'
 
 import { getHeroById, getHeroByName, heroColors } from '../../dota/lib/heroes'
-import { MatchDataService } from '../../dota/lib/matchData';
-import type { RosterPlayer } from '../../dota/lib/matchData';
+import { MatchDataService } from '../../dota/lib/matchData'
+import type { RosterPlayer } from '../../dota/lib/matchData'
 import type { SocketClient } from '../../types'
 import CustomError from '../../utils/customError'
 

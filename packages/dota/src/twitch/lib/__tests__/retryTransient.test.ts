@@ -4,10 +4,10 @@ import { describe, expect, it, vi } from 'vitest'
 // the test stays offline and doesn't initialise the real winston/supabase deps.
 vi.doMock(import('@dotabod/shared-utils'), () => ({
   logger: {
-    debug: () => undefined,
-    error: () => undefined,
-    info: () => undefined,
-    warn: () => undefined,
+    debug: () => {},
+    error: () => {},
+    info: () => {},
+    warn: () => {},
   },
 }))
 
@@ -71,7 +71,9 @@ describe('retryTransient', () => {
     const result = await retryTransient(
       async () => {
         calls += 1
-        if (calls < 3) {throw transient()}
+        if (calls < 3) {
+          throw transient()
+        }
         return 'ok'
       },
       { baseDelayMs: 0, retries: 2 }

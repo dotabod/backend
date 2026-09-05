@@ -17,7 +17,9 @@ interface TellChatNewMMRParams {
 
 function tellChatNewMMR({ streamDelay, locale, token, mmr = 0, oldMmr = 0 }: TellChatNewMMRParams) {
   const client = findUser(token)
-  if (!client) {return}
+  if (!client) {
+    return
+  }
 
   const mmrEnabled = getValueOrDefault(
     DBSettings['mmr-tracker'],
@@ -38,7 +40,7 @@ function tellChatNewMMR({ streamDelay, locale, token, mmr = 0, oldMmr = 0 }: Tel
   const newMmr = mmr - oldMmr
   if (mmrEnabled && chattersEnabled && tellChatNewMMR && mmr !== 0) {
     if (newMmr === 0) {
-      chatClient.say(client.name, t('updateMmrNoChange', { mmr, lng: locale }))
+      chatClient.say(client.name, t('updateMmrNoChange', { lng: locale, mmr }))
     } else {
       const isAuto = [MULTIPLIER_PARTY, MULTIPLIER_SOLO].includes(Math.abs(newMmr))
       setTimeout(
@@ -47,9 +49,9 @@ function tellChatNewMMR({ streamDelay, locale, token, mmr = 0, oldMmr = 0 }: Tel
             client.name,
             t('updateMmr', {
               context: isAuto ? 'auto' : 'manual',
-              mmr,
               delta: `${newMmr > 0 ? '+' : ''}${newMmr}`,
               lng: locale,
+              mmr,
             })
           )
         },
@@ -79,7 +81,9 @@ export async function updateMmr({
   token,
 }: UpdateMmrParams) {
   // uncalibrated (0) mmr do not deserve an update
-  if (!currentMmr && !force) {return}
+  if (!currentMmr && !force) {
+    return
+  }
 
   let mmr = Number(newMmr)
   if (!newMmr || !mmr || mmr > 20_000 || mmr < 0) {

@@ -8,11 +8,11 @@ describe(GsiSelfResolver, () => {
   const r = new GsiSelfResolver()
 
   it('defers when GSI is undefined', async () => {
-    await expect(r.resolve(ctx(undefined))).resolves.toBeNull()
+    await expect(r.resolve(ctx())).resolves.toBeNull()
   })
 
   it('defers when GSI has no hero AND no accountid', async () => {
-    await expect(r.resolve(ctx({ map: {}, player: {}, hero: {} }))).resolves.toBeNull()
+    await expect(r.resolve(ctx({ hero: {}, map: {}, player: {} }))).resolves.toBeNull()
   })
 
   it('claims when only hero is set', async () => {

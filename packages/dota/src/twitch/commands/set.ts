@@ -13,7 +13,7 @@ commandHandler.registerCommand('set', {
     const {
       channel: { name: channel, client },
     } = message
-    const locale = client.locale
+    const {locale} = client
 
     const matchId = client.gsi?.map?.matchid
     const heroId = client.gsi?.hero?.id
@@ -43,10 +43,10 @@ commandHandler.registerCommand('set', {
     chatClient.say(
       channel,
       t('cosmetics.list', {
-        heroName,
         count: items.length,
-        url: `dotabod.com/${client.name}/set`,
+        heroName,
         lng: locale,
+        url: `dotabod.com/${client.name}/set`,
       }),
       message.user.messageId
     )

@@ -1,8 +1,8 @@
 import { t } from 'i18next'
 
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 const contributors = [
   { contributors: ['@techleed'], language: 'English', locale: 'en' },
@@ -30,8 +30,8 @@ commandHandler.registerCommand('locale', {
       chatClient.say(
         message.channel.name,
         t('translated.by', {
-          lng: message.channel.client.locale,
           count: 0,
+          lng: message.channel.client.locale,
           url: 'crowdin.com/project/dotabod',
         }),
         message.user.messageId

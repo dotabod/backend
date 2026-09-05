@@ -2,7 +2,9 @@ import RedisClient from '../db/RedisClient'
 import type { SocketClient } from '../types'
 
 export function steamID64toSteamID32(steamID64: string) {
-  if (!steamID64) {return null}
+  if (!steamID64) {
+    return null
+  }
   try {
     return Number(steamID64.substr(-16, 16)) - 6_561_197_960_265_728
   } catch {

@@ -16,8 +16,8 @@ describe(refundTwitchBet, () => {
         {
           id: mockPredictionId,
           outcomes: [
-            { id: 'outcome-1', users: 10, title: 'Yes' },
-            { id: 'outcome-2', users: 0, title: 'No' },
+            { id: 'outcome-1', title: 'Yes', users: 10 },
+            { id: 'outcome-2', title: 'No', users: 0 },
           ],
           status: 'ACTIVE',
         },
@@ -36,8 +36,8 @@ describe(refundTwitchBet, () => {
         {
           id: mockPredictionId,
           outcomes: [
-            { id: 'outcome-1', users: 10, title: 'Yes' },
-            { id: 'outcome-2', users: 0, title: 'No' },
+            { id: 'outcome-1', title: 'Yes', users: 10 },
+            { id: 'outcome-2', title: 'No', users: 0 },
           ],
           status: 'LOCKED',
         },
@@ -56,8 +56,8 @@ describe(refundTwitchBet, () => {
         {
           id: mockPredictionId,
           outcomes: [
-            { id: 'outcome-1', users: 10, title: 'Yes' },
-            { id: 'outcome-2', users: 0, title: 'No' },
+            { id: 'outcome-1', title: 'Yes', users: 10 },
+            { id: 'outcome-2', title: 'No', users: 0 },
           ],
           status: 'RESOLVED',
         },
@@ -82,8 +82,8 @@ describe(refundTwitchBet, () => {
         {
           id: mockPredictionId,
           outcomes: [
-            { id: 'outcome-1', users: 10, title: 'Yes' },
-            { id: 'outcome-2', users: 0, title: 'No' },
+            { id: 'outcome-1', title: 'Yes', users: 10 },
+            { id: 'outcome-2', title: 'No', users: 0 },
           ],
           status: 'CANCELED',
         },
@@ -130,7 +130,9 @@ describe(refundTwitchBet, () => {
 
       await refundTwitchBet(mockTwitchId, mockPredictionId)
 
-      expect(state.getPredictionsCalls).toStrictEqual([{ opts: { limit: 10 }, twitchId: mockTwitchId }])
+      expect(state.getPredictionsCalls).toStrictEqual([
+        { opts: { limit: 10 }, twitchId: mockTwitchId },
+      ])
     })
   })
 
@@ -172,7 +174,9 @@ describe(refundTwitchBet, () => {
 
       await refundTwitchBet(mockTwitchId)
 
-      expect(state.getPredictionsCalls).toStrictEqual([{ opts: { limit: 1 }, twitchId: mockTwitchId }])
+      expect(state.getPredictionsCalls).toStrictEqual([
+        { opts: { limit: 1 }, twitchId: mockTwitchId },
+      ])
     })
 
     it('should return null when no predictions found', async () => {

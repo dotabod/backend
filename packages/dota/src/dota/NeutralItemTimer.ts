@@ -40,13 +40,19 @@ export class NeutralItemTimer {
   constructor(private readonly dotaClient: GSIHandlerType) {}
 
   async checkNeutralItems() {
-    if (!this.dotaClient.client.gsi?.map?.game_time) {return}
-    if (!this.dotaClient.client.stream_online) {return}
+    if (!this.dotaClient.client.gsi?.map?.game_time) {
+      return
+    }
+    if (!this.dotaClient.client.stream_online) {
+      return
+    }
 
     const clockTime = this.dotaClient.client.gsi.map.clock_time || 0
 
     // Only check every CHECK_INTERVAL seconds
-    if (clockTime - this.lastCheckedTime < this.CHECK_INTERVAL) {return}
+    if (clockTime - this.lastCheckedTime < this.CHECK_INTERVAL) {
+      return
+    }
     this.lastCheckedTime = clockTime
 
     const matchId = await redisClient.client.get(`${this.dotaClient.client.token}:matchId`)
@@ -56,7 +62,9 @@ export class NeutralItemTimer {
     const isTurbo = playingGameMode === 23
 
     this.tierTimes.forEach((tierTime) => {
-      if (this.notifiedTiers.has(tierTime.tier)) {return}
+      if (this.notifiedTiers.has(tierTime.tier)) {
+        return
+      }
 
       const targetSeconds = (isTurbo ? tierTime.turboTime : tierTime.normalTime) * 60
       const timeDiff = clockTime - targetSeconds

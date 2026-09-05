@@ -45,14 +45,14 @@ commandHandler.registerCommand('fixdbl', {
       message.channel.name,
       t('toggleMatch', {
         context: bet.is_doubledown ? 'single' : 'double',
-        url: dotabodMatchHistoryUrl(message.channel.client),
         lng: message.channel.client.locale,
+        url: dotabodMatchHistoryUrl(message.channel.client),
       }),
       message.user.messageId
     )
 
     await updateMmr({
-      tellChat: !message.channel.client.stream_online,
+      channel: message.channel.name,
       currentMmr: message.channel.client.mmr,
       newMmr: toggleDoubledownMmr({
         currentMmr: message.channel.client.mmr,
@@ -61,7 +61,7 @@ commandHandler.registerCommand('fixdbl', {
         wasDoubledown: bet.is_doubledown,
       }),
       steam32Id: message.channel.client.steam32Id,
-      channel: message.channel.name,
+      tellChat: !message.channel.client.stream_online,
     })
 
     await supabase

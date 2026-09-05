@@ -2,8 +2,8 @@ import { t } from 'i18next'
 
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler';
-import type { MessageType } from '../lib/CommandHandler';
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('friends', {
   handler: (message: MessageType, _args: string[]) => {

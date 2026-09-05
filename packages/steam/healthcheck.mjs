@@ -14,7 +14,9 @@
 import { readFileSync } from 'node:fs'
 
 const service = process.env.SERVICE_CONTEXT ?? ''
-if (!service.endsWith('steam')) {process.exit(0)}
+if (!service.endsWith('steam')) {
+  process.exit(0)
+}
 
 // Matches steam.ts: VOLUME_DIR/gc-health.json, resolved against the /app WORKDIR.
 const HEALTH_PATH = './src/steam/volumes/gc-health.json'

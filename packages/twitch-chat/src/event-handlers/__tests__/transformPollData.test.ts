@@ -6,8 +6,8 @@ describe(transformPollData, () => {
   it('maps choice votes from the EventSub `votes` field (progress event)', () => {
     const result = transformPollData({
       choices: [
-        { id: 'a', title: 'Yes', votes: 42, channel_points_votes: 10, bits_votes: 0 },
-        { id: 'b', title: 'No', votes: 7, channel_points_votes: 0, bits_votes: 0 },
+        { bits_votes: 0, channel_points_votes: 10, id: 'a', title: 'Yes', votes: 42 },
+        { bits_votes: 0, channel_points_votes: 0, id: 'b', title: 'No', votes: 7 },
       ],
       ends_at: '2026-05-25T00:05:00.000Z',
       id: 'poll-1',
@@ -27,7 +27,7 @@ describe(transformPollData, () => {
 
   it('uses `ended_at` for the end event', () => {
     const result = transformPollData({
-      choices: [{ id: 'a', title: 'A', votes: 3, channel_points_votes: 0, bits_votes: 0 }],
+      choices: [{ bits_votes: 0, channel_points_votes: 0, id: 'a', title: 'A', votes: 3 }],
       ended_at: '2026-05-25T00:05:00.000Z',
       id: 'poll-1',
       started_at: '2026-05-25T00:00:00.000Z',

@@ -74,8 +74,11 @@ export async function getRealtimeStats({
       },
       (err: unknown, data: DelayedGames) => {
         clearTimeout(timeoutId)
-        if (err) {reject(err)}
-        else {resolve(data)}
+        if (err) {
+          reject(err)
+        } else {
+          resolve(data)
+        }
       }
     )
   })
@@ -90,10 +93,14 @@ export function findRealtimePlayer(
     const accountPlayer = game.teams
       .flatMap((team) => team.players)
       .find((player) => Number(player.accountid) === accountId)
-    if (accountPlayer) {return accountPlayer}
+    if (accountPlayer) {
+      return accountPlayer
+    }
   }
 
-  if (playerIdx === undefined) {return undefined}
+  if (playerIdx === undefined) {
+    return undefined
+  }
   const teamIndex = playerIdx > 4 ? 1 : 0
   return game.teams[teamIndex]?.players[playerIdx % 5]
 }

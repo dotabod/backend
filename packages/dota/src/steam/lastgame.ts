@@ -2,8 +2,8 @@ import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
 import { getHeroNameOrColor } from '../dota/lib/heroes'
-import { lookupRosterByMatchId } from '../dota/lib/matchData';
-import type { RosterPlayer } from '../dota/lib/matchData';
+import { lookupRosterByMatchId } from '../dota/lib/matchData'
+import type { RosterPlayer } from '../dota/lib/matchData'
 import type { DelayedGames, SocketClient } from '../types'
 import CustomError from '../utils/customError'
 import { dotabodMatchHistoryUrl } from '../utils/index'
@@ -133,7 +133,9 @@ export default async function lastgame({
         const old = oldMatchPlayers.find(
           (player) => player.accountId === currentGamePlayer.accountId
         )
-        if (!old) {return null}
+        if (!old) {
+          return null
+        }
 
         return {
           current: currentGamePlayer,

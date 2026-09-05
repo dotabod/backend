@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { ResolverChain } from '../../resolvers/ResolverChain'
-import { RosterResolver } from '../../resolvers/RosterResolver';
-import type { RawRoster, ResolverContext } from '../../resolvers/RosterResolver';
+import { RosterResolver } from '../../resolvers/RosterResolver'
+import type { RawRoster, ResolverContext } from '../../resolvers/RosterResolver'
 import type { RosterSource } from '../../types'
 
 class FakeResolver extends RosterResolver {
@@ -54,7 +54,7 @@ describe(ResolverChain, () => {
   it('priority is purely positional (no scoring/voting)', async () => {
     const a = new FakeResolver('gsi-spectator', { matchPlayers: [], source: 'gsi-spectator' })
     const b = new FakeResolver('sourcetv', {
-      matchPlayers: [{ heroid: 1, accountid: 1, playerid: null }],
+      matchPlayers: [{ accountid: 1, heroid: 1, playerid: null }],
       source: 'sourcetv',
     })
     // a wins by position even though b has "richer" data

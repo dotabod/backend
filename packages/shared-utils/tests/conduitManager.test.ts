@@ -37,7 +37,9 @@ beforeEach(() => {
   globalThis.fetch = (async () => {
     fetchCallCount++
     const next = fetchQueue.shift()
-    if (!next) {throw new Error('Unexpected fetch call (queue empty)')}
+    if (!next) {
+      throw new Error('Unexpected fetch call (queue empty)')
+    }
     return res(next)
   }) as unknown as typeof fetch
 })

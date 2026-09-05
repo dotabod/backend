@@ -18,7 +18,9 @@ events.setMaxListeners(20)
 let known: Set<string> | null = null
 
 function ensureIndex() {
-  if (known !== null) {return}
+  if (known !== null) {
+    return
+  }
   known = new Set<string>()
   for (const n of events.eventNames() as string[]) {
     known.add(n)
@@ -33,7 +35,9 @@ function ensureIndex() {
 function emitAll(prefix: string, obj: Record<string, any>, token: string) {
   Object.keys(obj).forEach((key) => {
     const name = prefix + key
-    if (known!.has(name)) {events.emit(name, obj[key], token)}
+    if (known!.has(name)) {
+      events.emit(name, obj[key], token)
+    }
   })
 }
 
@@ -56,7 +60,9 @@ function recursiveEmit(
 ) {
   Object.keys(changed).forEach((key) => {
     const name = prefix + key
-    if (!known!.has(name)) {return}
+    if (!known!.has(name)) {
+      return
+    }
     if (typeof changed[key] === 'object') {
       if (body[key] != null) {
         if (events.listenerCount(name) > 0) {
@@ -68,7 +74,9 @@ function recursiveEmit(
       if (typeof body[key] === 'object') {
         // Edge case on added:item/ability:x where added shows true at the top
         // level and doesn't contain each of the child keys
-        if (events.listenerCount(name) > 0) {events.emit(name, body[key], token)}
+        if (events.listenerCount(name) > 0) {
+          events.emit(name, body[key], token)
+        }
         emitAll(`${name}:`, body[key], token)
       } else {
         events.emit(name, body[key], token)
@@ -95,9 +103,13 @@ function getKillListDeltaKeys(body: Record<string, any>): Set<string> {
   for (const section of ['previously', 'added']) {
     const changed = body[section]?.player?.kill_list
     if (changed === true && current && typeof current === 'object') {
-      for (const key of Object.keys(current)) {keys.add(key)}
+      for (const key of Object.keys(current)) {
+        keys.add(key)
+      }
     } else if (changed && typeof changed === 'object') {
-      for (const key of Object.keys(changed)) {keys.add(key)}
+      for (const key of Object.keys(changed)) {
+        keys.add(key)
+      }
     }
   }
 
@@ -121,8 +133,8 @@ export function processUnmarkedKillListChanges(
   const matchId = String(req.body?.map?.matchid ?? '')
   const previous = killListSnapshots.get(handler)
   const currentValues = Object.fromEntries(
-    Object.entries(current).filter((entry): entry is [string, number] => 
-      typeof entry[1] === 'number'
+    Object.entries(current).filter(
+      (entry): entry is [string, number] => typeof entry[1] === 'number'
     )
   )
 
@@ -135,8 +147,8 @@ export function processUnmarkedKillListChanges(
 
   const markedKeys = getKillListDeltaKeys(req.body)
   const unmarkedIncreases = Object.fromEntries(
-    Object.entries(currentValues).filter(([key, value]) => 
-      !markedKeys.has(key) && value > (previous.values[key] ?? 0)
+    Object.entries(currentValues).filter(
+      ([key, value]) => !markedKeys.has(key) && value > (previous.values[key] ?? 0)
     )
   )
 

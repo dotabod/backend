@@ -18,7 +18,9 @@ const recordOverlaySocketActivity = vi.hoisted(() => vi.fn())
 vi.mock(import('node:http'), () => ({
   default: {
     createServer: () => ({
-      listen: (_port: number, callback: () => void) =>{  callback(); },
+      listen: (_port: number, callback: () => void) => {
+        callback()
+      },
     }),
   },
 }))
@@ -140,7 +142,9 @@ describe('overlay socket connection state', () => {
     const next = vi.fn()
 
     socketState.middleware?.(socket, next)
-    await vi.waitFor(() =>{  expect(next).toHaveBeenCalledWith(); })
+    await vi.waitFor(() => {
+      expect(next).toHaveBeenCalledWith()
+    })
 
     expect(getDBUser).toHaveBeenCalledWith({ twitchId: 'channel-1' })
     expect(socket.data).toStrictEqual({ clientType: 'profile-wl', dotabodClient: client })

@@ -1,5 +1,5 @@
-import { logger, supabase } from '@dotabod/shared-utils';
-import type { Database } from '@dotabod/shared-utils';
+import { logger, supabase } from '@dotabod/shared-utils'
+import type { Database } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../settings'
@@ -44,15 +44,21 @@ async function clearCompletedChallenge(userId: string, settings?: SocketClient['
 
   for (const { key } of values) {
     const setting = settings?.find((entry) => entry.key === key)
-    if (setting) {setting.value = null}
+    if (setting) {
+      setting.value = null
+    }
   }
 }
 
 function getAvailableStatsDays(statsDays: number | null, firstMatchAt?: string): number | null {
-  if (statsDays === null || !firstMatchAt) {return statsDays}
+  if (statsDays === null || !firstMatchAt) {
+    return statsDays
+  }
 
   const firstMatch = new Date(firstMatchAt)
-  if (!Number.isFinite(firstMatch.getTime())) {return statsDays}
+  if (!Number.isFinite(firstMatch.getTime())) {
+    return statsDays
+  }
 
   const now = new Date()
   const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
@@ -118,12 +124,12 @@ export async function getWL({
   }
 
   if (!channelId) {
-    return ({
-      record: [{ win: 0, lose: 0, type: 'U' }],
+    return {
       msg: null,
+      record: [{ win: 0, lose: 0, type: 'U' }],
       statsDays: activeChallenge?.elapsedDays ?? activeStatsDays,
       statsDaysTotal: activeChallenge?.totalDays ?? null,
-    })
+    }
   }
 
   const resetAt = settings?.find((setting) => setting.key === WL_RESET_SETTING_KEY)?.value
@@ -170,7 +176,7 @@ export async function getWL({
   if (matchResult.error) {
     return {
       msg: null,
-      record: [{ win: 0, lose: 0, type: 'U' }],
+      record: [{ lose: 0, type: 'U', win: 0 }],
       statsDays: availableStatsDays,
       statsDaysTotal,
     }
@@ -238,7 +244,9 @@ export async function getWL({
 
   const recordMessage = messages.filter(Boolean).join(' · ') || '0 W - 0 L'
   const windowMessage = (() => {
-    if (availableStatsDays === null) {return t('wl.statsWindow_stream', { lng })}
+    if (availableStatsDays === null) {
+      return t('wl.statsWindow_stream', { lng })
+    }
     if (statsDaysTotal !== null) {
       return t('wl.statsChallenge', {
         count: statsDaysTotal,

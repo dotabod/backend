@@ -46,10 +46,7 @@ export function updateUserEvent({
         return
       }
 
-      await supabase
-        .from('users')
-        .update(filteredData)
-        .eq('id', user.userId)
+      await supabase.from('users').update(filteredData).eq('id', user.userId)
     } catch (error) {
       console.error(error, 'updateUserEvent error', event.user_id)
     }

@@ -63,9 +63,9 @@ export function buildSharedUtilsMock(opts: {
     botStatus: { isBanned: false },
     checkBotStatus: opts.checkBotStatus ?? (async () => false),
     commandDisable: opts.commandDisable ?? {
-      disable: async () => undefined,
-      enable: async () => undefined,
-      recordNotification: async () => undefined,
+      disable: async () => {},
+      enable: async () => {},
+      recordNotification: async () => {},
     },
     default: opts.supabase,
     fetchConduitId: async () => '',
@@ -76,12 +76,12 @@ export function buildSharedUtilsMock(opts: {
     getTwitchTokens: async () => ({ access_token: '', refresh_token: '' }),
     hasTokens: () => true,
     logger: opts.logger,
-    recordDisableNotification: opts.recordDisableNotification ?? (async () => undefined),
-    resolveDisableNotifications: opts.resolveDisableNotifications ?? (async () => undefined),
+    recordDisableNotification: opts.recordDisableNotification ?? (async () => {}),
+    resolveDisableNotifications: opts.resolveDisableNotifications ?? (async () => {}),
     supabase: opts.supabase,
-    trackDisableReason: opts.trackDisableReason ?? (async () => undefined),
-    trackResolveReason: opts.trackResolveReason ?? (async () => undefined),
-    updateConduitShard: async () => undefined,
+    trackDisableReason: opts.trackDisableReason ?? (async () => {}),
+    trackResolveReason: opts.trackResolveReason ?? (async () => {}),
+    updateConduitShard: async () => {},
   }
 }
 
@@ -129,4 +129,4 @@ export const PRO_SUB = { id: 'sub-1', isGift: false, status: 'ACTIVE', tier: 'PR
 // Drain microtasks queued by fire-and-forget async handlers. `events.emit`
 // is synchronous, but handlers (and the `.then()` chains they spawn) run on
 // the microtask/macrotask queue — one macrotask boundary is enough.
-export const flushAsync =  async () => new Promise<void>((r) => setTimeout(r, 0))
+export const flushAsync = async () => await new Promise<void>((r) => setTimeout(r, 0))

@@ -46,7 +46,7 @@ describe('!lgs', () => {
   it('reports the multiAccount message when no steam id and multiAccount is set', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        clientOverrides: { steam32Id: null, multiAccount: true } as any,
+        clientOverrides: { multiAccount: true, steam32Id: null } as any,
         content: '!lgs',
       })
     )
