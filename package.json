@@ -21,7 +21,7 @@
     "check:fix": "pnpm run format:fix && pnpm run lint:fix",
     "quality": "pnpm run check && pnpm run knip",
     "knip": "knip",
-    "prepare": "lefthook install",
+    "prepare": "lefthook install || test ! -d .git",
     "test": "vitest run",
     "test:all": "vitest run"
   },
