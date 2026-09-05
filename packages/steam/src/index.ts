@@ -159,7 +159,7 @@ socketIoServer.on('connection', (socket) => {
       callback(null, result)
     } catch (error) {
       logger.error('[STEAM] Error getting user steam server, unknown error', {
-        error,
+        caughtError: error,
         error: (error as Error).message,
         steam32Id,
       })

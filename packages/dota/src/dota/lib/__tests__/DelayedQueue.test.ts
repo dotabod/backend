@@ -122,8 +122,8 @@ describe(DelayedQueue, () => {
     // Wait for queue's 1-second check interval to process all tasks
     await new Promise((resolve) => setTimeout(resolve, 1200))
 
-    expect(badCallback).toHaveBeenCalledWith()
-    expect(goodCallback).toHaveBeenCalledWith()
+    expect(badCallback).toHaveBeenCalledOnce()
+    expect(goodCallback).toHaveBeenCalledOnce()
   })
 
   it('should clamp delays to maximum allowed', () => {

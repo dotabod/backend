@@ -129,6 +129,6 @@ describe(handleStreamStatusTransition, () => {
     ).not.toThrow()
 
     expect(emit).toHaveBeenCalledWith('refresh-settings', 'mutate')
-    expect(logger.error).toHaveBeenCalledWith()
+    expect(logger.error).toHaveBeenCalledOnce()
   })
 })
