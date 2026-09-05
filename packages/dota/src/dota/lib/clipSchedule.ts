@@ -136,7 +136,8 @@ function realDeps(): ClipScheduleDeps {
     run: createAndSubmitClip,
     zAdd: async (member, score) =>
       await redisClient.client.zAdd(CLIP_SCHEDULE_KEY, { score, value: member }),
-    zRangeAll: async () => await redisClient.client.zRangeByScore(CLIP_SCHEDULE_KEY, '-inf', '+inf'),
+    zRangeAll: async () =>
+      await redisClient.client.zRangeByScore(CLIP_SCHEDULE_KEY, '-inf', '+inf'),
     zRem: async (member) => await redisClient.client.zRem(CLIP_SCHEDULE_KEY, member),
   }
 }
@@ -187,7 +188,7 @@ export async function scheduleClipWith(
     })
   }
 
-  deps.arm(delayMs, async () => await fireClip(deps, member))
+  deps.arm(delayMs, async () =>{  await fireClip(deps, member); })
 }
 
 export async function rearmWith(deps: ClipScheduleDeps): Promise<void> {
@@ -223,7 +224,7 @@ export async function rearmWith(deps: ClipScheduleDeps): Promise<void> {
     }
 
     const delayMs = lateBy <= 0 ? parsed.executeAt - now : 0
-    deps.arm(delayMs, async () => await fireClip(deps, member))
+    deps.arm(delayMs, async () =>{  await fireClip(deps, member); })
     rearmed++
   }
 
@@ -239,11 +240,11 @@ export async function rearmWith(deps: ClipScheduleDeps): Promise<void> {
 // fire-and-forget this; Redis is the durability backstop, the DelayedQueue is
 // the normal fire path.
 export async function scheduleClip(delayMs: number, payload: ClipTaskPayload): Promise<void> {
-  return await scheduleClipWith(realDeps(), delayMs, payload)
+   await scheduleClipWith(realDeps(), delayMs, payload)
 }
 
 // Re-arm clip tasks that outlived a restart. Future tasks keep their original
 // fire time; recently-passed tasks fire ~immediately; stale ones are dropped.
 export async function rearmPersistedClips(): Promise<void> {
-  return await rearmWith(realDeps())
+   await rearmWith(realDeps())
 }

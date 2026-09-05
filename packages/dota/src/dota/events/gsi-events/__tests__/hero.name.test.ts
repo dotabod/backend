@@ -38,8 +38,8 @@ const supabaseMock = {
       select: () => builder,
       single: async () =>
         nextPredictionId
-            ? { data: { predictionId: nextPredictionId }, error: null }
-            : { data: null, error: { message: 'not found' } },
+          ? { data: { predictionId: nextPredictionId }, error: null }
+          : { data: null, error: { message: 'not found' } },
       update: (values: Record<string, unknown>) => {
         updateValues = values
         return builder
@@ -143,7 +143,7 @@ function unregisterFakeHandler() {
 
 // `events.emit` is synchronous but the handler is async; emit then await a
 // macrotask boundary so the handler's awaits resolve before we drain queue.
-const flush = async () => await new Promise<void>((r) => setTimeout(r, 0))
+const flush = async () =>{  await new Promise<void>((r) => setTimeout(r, 0)); }
 
 describe('hero:name swap → matches.hero_name update', () => {
   beforeEach(() => {

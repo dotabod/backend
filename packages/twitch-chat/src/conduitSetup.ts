@@ -160,7 +160,8 @@ async function updateConduitShard(
       )
 
       await new Promise((resolve) => setTimeout(resolve, delay))
-       await updateConduitShard(session_id, conduitId, retryCount + 1); return;
+      await updateConduitShard(session_id, conduitId, retryCount + 1)
+      return
     }
   }
 }
@@ -443,7 +444,7 @@ async function initializeSocket() {
         } else {
           logger.info('Revocation with multiple types or non-chat type', {
             payload,
-            types: Array.from(state.types),
+            types: [...state.types],
             userId,
           })
           twitchEvent.emit('revoke', userId)

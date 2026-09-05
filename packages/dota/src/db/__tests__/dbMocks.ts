@@ -65,7 +65,7 @@ function createTableBuilder(table: string) {
     in: () => builder,
     insert: async (values: unknown) => {
       dbState.inserts.push({ table, values })
-      return ({ data: null, error: null })
+      return { data: null, error: null }
     },
     is: () => builder,
     limit: () => builder,
@@ -80,12 +80,12 @@ function createTableBuilder(table: string) {
     update: (values: unknown) => ({
       eq: async (col: string, val: unknown) => {
         dbState.updates.push({ table, values, whereCol: col, whereVal: val })
-        return ({ data: null, error: null })
+        return { data: null, error: null }
       },
     }),
     upsert: async (values: unknown, options?: unknown) => {
       dbState.upserts.push({ options, table, values })
-      return ({ data: null, error: null })
+      return { data: null, error: null }
     },
   }
   return builder

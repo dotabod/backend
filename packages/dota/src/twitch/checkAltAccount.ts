@@ -94,7 +94,7 @@ export async function checkAltAccount(
       }
     }
   } catch (error) {
-    logger.error('Error checking alt account', { error, channel, user: chattersUsername })
+    logger.error('Error checking alt account', { channel, error, user: chattersUsername })
     altAccountCache[chattersUsername] = false // Don't retry on error
   }
 }

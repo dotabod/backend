@@ -490,8 +490,8 @@ class SetupSupabase {
           } catch (error) {
             logger.error('Error constructing or sending gift notification to chat', {
               error,
-              userId: client.token,
               giftId: newObj.id,
+              userId: client.token,
             })
           }
         }

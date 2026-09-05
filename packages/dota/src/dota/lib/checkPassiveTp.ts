@@ -35,7 +35,8 @@ export async function checkPassiveTp(client: SocketClient) {
   if (hasTp) {
     // they got a tp within 30s so no scolding
     if (passiveTpData.firstNoticedPassive && !passiveTpData.told) {
-       await resetPassiveTime(client.token); return;
+      await resetPassiveTime(client.token)
+      return
     }
 
     // they got a tp after 30s so tell how long its been
@@ -55,7 +56,8 @@ export async function checkPassiveTp(client: SocketClient) {
           }),
           { chattersKey: 'noTp' }
         )
-         await resetPassiveTime(client.token); return;
+        await resetPassiveTime(client.token)
+        return
       }
 
       say(
@@ -69,7 +71,8 @@ export async function checkPassiveTp(client: SocketClient) {
         { chattersKey: 'noTp' }
       )
 
-       await resetPassiveTime(client.token); return;
+      await resetPassiveTime(client.token)
+      return
     }
   }
 

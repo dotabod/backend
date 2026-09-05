@@ -89,7 +89,9 @@ export async function retryTransient<T>(
     try {
       return await fn()
     } catch (error) {
-      if (attempt >= retries || !isTransientNetworkError(error)) {throw error}
+      if (attempt >= retries || !isTransientNetworkError(error)) {
+        throw error
+      }
       const delayMs = baseDelayMs * 2 ** attempt
       logger.info('[TWITCH] Retrying after transient network error', {
         attempt: attempt + 1,

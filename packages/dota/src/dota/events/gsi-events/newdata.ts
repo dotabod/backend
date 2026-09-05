@@ -656,7 +656,7 @@ const _maybeSendTooltipData = async (dotaClient: GSIHandlerType) => {
     items: backpackItems.map((item) => item.name),
     neutral: items?.neutral0?.name,
   }
-   await sendExtensionPubSubBroadcastMessageIfChanged(dotaClient, messageToSend)
+  await sendExtensionPubSubBroadcastMessageIfChanged(dotaClient, messageToSend)
 }
 
 // Catch all

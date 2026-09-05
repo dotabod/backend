@@ -15,7 +15,7 @@ commandHandler.registerCommand('apm', {
 
     try {
       const { player, hero, playerIdx } = await profileLink({
-        args: args,
+        args,
         client,
         command,
         locale: client.locale,

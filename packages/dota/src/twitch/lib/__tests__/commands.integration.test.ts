@@ -224,7 +224,7 @@ describe('!mmr', () => {
     await commandHandler.handleMessage(
       makeMessage({
         clientOverrides: {
-          SteamAccount: [{ steam32Id: 11111, name: 'other', mmr: 4000 }],
+          SteamAccount: [{ mmr: 4000, name: 'other', steam32Id: 11111 }],
           multiAccount: true,
         } as any,
         content: '!mmr',
@@ -338,7 +338,7 @@ describe('!apm', () => {
           gsi: {
             hero: { id: 1 },
             map: { game_time: 600, matchid: '7777777777' },
-            player: { accountid: 99999, commands_issued: 3000 },
+            player: { accountid: 99_999, commands_issued: 3000 },
           },
         } as any,
         content: '!apm',

@@ -22,20 +22,22 @@ let nextUpsertError: unknown = null
 const supabaseMock = {
   from: (table: string) => ({
     insert: async (row: Record<string, unknown>) => {
-      if (table === 'notifications') {notificationInserts.push(row)}
-      return ({ error: null })
+      if (table === 'notifications') {
+        notificationInserts.push(row)
+      }
+      return { error: null }
     },
     upsert: (values: { userId: string; key: string }) => ({
       select: async () => {
         if (nextUpsertError) {
           const error = nextUpsertError
           nextUpsertError = null
-          return ({ data: null, error })
+          return { data: null, error }
         }
         const k = `${values.userId}:${values.key}`
         const firstTime = !settingsInserted.has(k)
         settingsInserted.add(k)
-        return ({ data: firstTime ? [{ key: values.key }] : [], error: null })
+        return { data: firstTime ? [{ key: values.key }] : [], error: null }
       },
     }),
   }),

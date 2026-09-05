@@ -151,9 +151,9 @@ commandHandler.registerCommand('items', {
       })
       chatClient.say(client.name, t('heroItems.list', res), message.user.messageId)
     } catch (error) {
-      const msg = !(error as Error)?.message
-        ? t('gameNotFound', { lng: client.locale })
-        : (error as Error)?.message
+      const msg = (error as Error)?.message
+        ? (error as Error)?.message
+        : t('gameNotFound', { lng: client.locale })
       chatClient.say(client.name, msg, message.user.messageId)
     }
   },

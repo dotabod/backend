@@ -10,8 +10,8 @@ import { steamSocket } from '../steam/ws'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet'
 import { isPredictionAlreadyActiveError, openTwitchBet } from '../twitch/lib/openTwitchBet'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets'
-import { DotaGcTeam, EMatchOutcome } from '../types';
-import type { MatchMinimalDetailsResponse, BlockType, DotaEvent, SocketClient } from '../types';
+import { DotaGcTeam, EMatchOutcome } from '../types'
+import type { MatchMinimalDetailsResponse, BlockType, DotaEvent, SocketClient } from '../types'
 import { getRedisNumberValue, is8500Plus, steamID64toSteamID32 } from '../utils/index'
 import { maybeSendRoshAegisEvent } from './events/gsi-events/maybeSendRoshAegisEvent'
 import { clearPlayingHeroSlotCache } from './events/gsi-events/newdata'
@@ -847,7 +847,7 @@ class GSIHandler implements GSIHandlerType {
 
     this.openTheBetTaskId = delayedQueue.addTask(
       getStreamDelay(client.settings, client.subscription),
-      async () => await this.openTheBet(validatedMatchId, validatedHeroName, validatedMyTeam)
+      async () =>{  await this.openTheBet(validatedMatchId, validatedHeroName, validatedMyTeam); }
     )
 
     // .catch((e: any) => {

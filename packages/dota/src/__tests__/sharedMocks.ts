@@ -129,4 +129,4 @@ export const PRO_SUB = { id: 'sub-1', isGift: false, status: 'ACTIVE', tier: 'PR
 // Drain microtasks queued by fire-and-forget async handlers. `events.emit`
 // is synchronous, but handlers (and the `.then()` chains they spawn) run on
 // the microtask/macrotask queue — one macrotask boundary is enough.
-export const flushAsync = async () => await new Promise<void>((r) => setTimeout(r, 0))
+export const flushAsync = async () =>{  await new Promise<void>((r) => setTimeout(r, 0)); }

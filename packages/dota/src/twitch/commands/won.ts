@@ -65,7 +65,9 @@ commandHandler.registerCommand('won', {
           channel,
           message.user.messageId
         )
-        if (flipped) {return}
+        if (flipped) {
+          return
+        }
 
         chatClient.say(
           channel,
@@ -129,8 +131,8 @@ commandHandler.registerCommand('won', {
       } catch (error) {
         // If we can't get the data, we'll proceed without it
         logger.info('[BETS] Could not get match details for manual resolution, proceeding anyway', {
-          matchId,
           error: error,
+          matchId,
         })
       }
 

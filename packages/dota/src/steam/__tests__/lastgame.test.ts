@@ -45,14 +45,14 @@ await initTestI18n()
 const lastgame = (await import('../lastgame.ts')).default
 
 const normalClient = {
-  SteamAccount: [{ mmr: 3000, steam32Id: 86745912 }],
+  SteamAccount: [{ mmr: 3000, steam32Id: 86_745_912 }],
   mmr: 3000,
   name: 'streamer',
   steam32Id: 86_745_912,
 } as any
 
 const highMmrClient = {
-  SteamAccount: [{ mmr: 9000, steam32Id: 86745912 }],
+  SteamAccount: [{ mmr: 9000, steam32Id: 86_745_912 }],
   mmr: 9000,
   name: 'streamer',
   steam32Id: 86_745_912,

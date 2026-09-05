@@ -20,7 +20,7 @@ commandHandler.registerCommand('geo', {
       channel: { name: channel, client },
     } = message
 
-    const {locale} = client
+    const { locale } = client
     const currentMatchId = client.gsi?.map?.matchid
 
     if (!currentMatchId) {
@@ -70,7 +70,9 @@ commandHandler.registerCommand('geo', {
       const countriesList = matchPlayers
         .map((p) => {
           const cc = p.accountId === null ? undefined : summaries.get(p.accountId)?.countryCode
-          if (!cc) {return '?'}
+          if (!cc) {
+            return '?'
+          }
           return countryCodeEmoji(cc) || cc
         })
         .join(' · ')
@@ -84,7 +86,9 @@ commandHandler.registerCommand('geo', {
         message.user.messageId
       )
     } catch (error) {
-      const msg = !(error as Error)?.message ? t('gameNotFound', { lng: locale }) : (error as Error).message
+      const msg = (error as Error)?.message
+        ? (error as Error).message
+        : t('gameNotFound', { lng: locale })
       chatClient.say(channel, msg, message.user.messageId)
     }
   },

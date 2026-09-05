@@ -53,7 +53,7 @@ function createTableBuilder(table: string) {
     },
     insert: async (values: unknown) => {
       utilsState.inserts.push({ table, values })
-      return ({ data: null, error: null })
+      return { data: null, error: null }
     },
     select: () => builder,
     single: async () => utilsState.selectSingle[table] ?? { data: null, error: null },
@@ -63,7 +63,7 @@ function createTableBuilder(table: string) {
     },
     upsert: async (values: unknown, options?: unknown) => {
       utilsState.upserts.push({ options, table, values })
-      return ({ data: null, error: null })
+      return { data: null, error: null }
     },
   }
 

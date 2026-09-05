@@ -112,7 +112,9 @@ export class GcWatchdog {
       case 'loggedOn': {
         // CM is up but GC isn't ready yet; ensure the not-ready clock is running
         // so a logon that never reaches GC-ready still escalates.
-        if (!this.ready && this.notReadySince === undefined) {this.notReadySince = t}
+        if (!this.ready && this.notReadySince === undefined) {
+          this.notReadySince = t
+        }
         return { type: 'noop' }
       }
 
@@ -122,14 +124,18 @@ export class GcWatchdog {
         // These all mean the GC is not usable: flip out of ready and start (or
         // keep) the not-ready clock, then evaluate the ladder.
         this.ready = false
-        if (this.notReadySince === undefined) {this.notReadySince = t}
+        if (this.notReadySince === undefined) {
+          this.notReadySince = t
+        }
         return this.evaluateNotReady(t)
       }
 
       case 'tick': {
         // Neutral heartbeat: only escalates an already-not-ready state, never
         // manufactures one while healthy.
-        if (this.ready) {return { type: 'noop' }}
+        if (this.ready) {
+          return { type: 'noop' }
+        }
         return this.evaluateNotReady(t)
       }
     }

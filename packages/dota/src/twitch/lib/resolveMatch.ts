@@ -245,7 +245,7 @@ async function closeTwitchBetById(
     return true
   } catch (error) {
     logger.info('[BETS] Retroactive resolution - could not resolve prediction', {
-      error: error,
+      error,
       matchId,
       predictionId,
       twitchId,

@@ -41,7 +41,7 @@ export const state: {
   emitCalls: [],
   fetchCalls: [],
   fetchImpl: async () => ({
-    json: async () => ({ data: [{ message_id: 'mid', is_sent: true }] }),
+    json: async () => ({ data: [{ is_sent: true, message_id: 'mid' }] }),
     ok: true,
   }),
   fetchThrows: null,
@@ -236,4 +236,4 @@ export const { sendTwitchChatMessage, handleChatMessage, clearDedupeCache } =
 // drive the controllable FakeWebSocket instead of a real connection.
 export const { EventsubSocket, isEventsubConnected } = await import('../eventSubSocket')
 
-export const flushMacrotasks = async () => await new Promise<void>((r) => setTimeout(r, 5))
+export const flushMacrotasks = async () =>{  await new Promise<void>((r) => setTimeout(r, 5)); }

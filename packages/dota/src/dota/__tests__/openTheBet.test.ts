@@ -71,11 +71,11 @@ const supabaseMock = {
         supabaseInserts.push({ table, values })
         if (table === 'steam_accounts') {
           if (steamAccountInsertResult.throwError) {
-            throw steamAccountInsertResult.throwError;
+            throw steamAccountInsertResult.throwError
           }
-          return ({ ...steamAccountInsertResult })
+          return { ...steamAccountInsertResult }
         }
-        return ({ data: null, error: null })
+        return { data: null, error: null }
       },
       update: (values: Record<string, unknown>) => {
         supabaseUpdates.push({ table, values })
@@ -91,15 +91,15 @@ const supabaseMock = {
       limit: async () => ({ data: [...existingBetRows], error: null }),
       single: async () => {
         if (table === 'matches') {
-          return ({ ...matchPredictionLookup })
+          return { ...matchPredictionLookup }
         }
-        return ({ data: null, error: { message: 'not found' } })
+        return { data: null, error: { message: 'not found' } }
       },
       maybeSingle: async () => {
         if (table === 'steam_accounts') {
           steamAccountSelectCalls.push(Date.now())
         }
-        return ({ ...steamAccountLookup })
+        return { ...steamAccountLookup }
       },
       match: async () => ({ data: null, error: null }),
       then: async (onF: any) =>
@@ -188,7 +188,9 @@ vi.doMock(import('../lib/DelayedQueue'), () => ({
         delayMs,
         id,
         invoke: async () => {
-          if (task.cancelled) {return}
+          if (task.cancelled) {
+            return
+          }
           await cb(payload)
         },
       }
@@ -984,7 +986,7 @@ describe('updateSteam32Id — stale multi-account recovery', () => {
   it('blocks a first-time claimant when a uniqueness race rejects the Steam insert', async () => {
     const client = makeClient({
       SteamAccount: [],
-      gsi: liveGsi({ player: { name: 'Dota Account', steamid: steam64(440614454) } }),
+      gsi: liveGsi({ player: { name: 'Dota Account', steamid: steam64(440_614_454) } }),
       multiAccount: undefined,
       steam32Id: null,
     })
@@ -1015,7 +1017,7 @@ describe('updateSteam32Id — stale multi-account recovery', () => {
   it('blocks a first-time claimant when the Steam insert throws', async () => {
     const client = makeClient({
       SteamAccount: [],
-      gsi: liveGsi({ player: { name: 'Dota Account', steamid: steam64(440614454) } }),
+      gsi: liveGsi({ player: { name: 'Dota Account', steamid: steam64(440_614_454) } }),
       multiAccount: undefined,
       steam32Id: null,
     })
@@ -1033,7 +1035,7 @@ describe('updateSteam32Id — stale multi-account recovery', () => {
   it('starts the cooldown when a conflict is newly assigned', async () => {
     const client = makeClient({
       SteamAccount: [],
-      gsi: liveGsi({ player: { name: 'Dota Account', steamid: steam64(440614454) } }),
+      gsi: liveGsi({ player: { name: 'Dota Account', steamid: steam64(440_614_454) } }),
       multiAccount: undefined,
       steam32Id: null,
     })

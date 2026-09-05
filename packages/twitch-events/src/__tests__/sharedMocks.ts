@@ -191,7 +191,9 @@ function sbBuilder(table: string) {
       return { data: null, error: null }
     },
     then: async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => {
-      if (mode === 'update') {state.updates.push({ table, values })}
+      if (mode === 'update') {
+        state.updates.push({ table, values })
+      }
       const data = mode === 'select' && table === 'settings' ? state.dbSettings : null
       return await Promise.resolve({ data, error: null }).then(onFulfilled)
     },
@@ -202,7 +204,7 @@ function sbBuilder(table: string) {
     },
     upsert: async (v: Record<string, unknown>) => {
       state.upserts.push({ table, values: v })
-      return ({ data: null, error: null })
+      return { data: null, error: null }
     },
   }
   return b
@@ -243,7 +245,9 @@ function realtimeChannelMock(): RealtimeChannelMock {
 const supabaseMock = {
   channel: () => {
     state.channelCreationCount++
-    if (state.channelCreationError) {throw state.channelCreationError}
+    if (state.channelCreationError) {
+      throw state.channelCreationError
+    }
     return realtimeChannelMock()
   },
   from: (table: string) => sbBuilder(table),
@@ -288,7 +292,9 @@ vi.doMock(import('@dotabod/shared-utils'), () => ({
     moderation: {
       addModerator: async (broadcasterId: string) => {
         state.addModeratorCalls.push(broadcasterId)
-        if (state.addModeratorError) {throw state.addModeratorError}
+        if (state.addModeratorError) {
+          throw state.addModeratorError
+        }
       },
     },
   }),

@@ -149,10 +149,10 @@ twitchChat.on(
           })
         } catch (error) {
           logger.error('[TWITCH] Failed to delete message or timeout user', {
-            error,
             channel,
-            user,
+            error,
             messageId,
+            user,
           })
         }
 

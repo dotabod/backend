@@ -289,7 +289,7 @@ describe('getDBUser', () => {
           requires_refresh: false,
           scope: null,
         },
-        SteamAccount: [{ leaderboard_rank: 0, mmr: 5000, name: 'main', steam32Id: 99999 }],
+        SteamAccount: [{ leaderboard_rank: 0, mmr: 5000, name: 'main', steam32Id: 99_999 }],
         beta_tester: false,
         id: 'user-1',
         locale: 'en',

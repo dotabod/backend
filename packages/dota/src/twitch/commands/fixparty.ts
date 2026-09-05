@@ -58,9 +58,9 @@ commandHandler.registerCommand('fixparty', {
       currentMmr: message.channel.client.mmr,
       newMmr: togglePartyMmr({
         currentMmr: message.channel.client.mmr,
-        wasParty: bet.is_party,
         didWin: !!bet.won,
         isDoubledown: bet.is_doubledown,
+        wasParty: bet.is_party,
       }),
       steam32Id: message.channel.client.steam32Id,
       tellChat: !message.channel.client.stream_online,

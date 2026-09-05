@@ -62,7 +62,7 @@ describe(offlineEvent, () => {
   })
 
   // Drain the async handler's microtasks via the real timer.
-  const drain = async () => await new Promise<void>((r) => realSetTimeout(r, 5))
+  const drain = async () =>{  await new Promise<void>((r) => realSetTimeout(r, 5)); }
 
   it('marks the user offline when there was no recent online event', async () => {
     offlineEvent(evt('b1'))

@@ -8,16 +8,16 @@ const app = new Elysia()
     description: 'Multilingual profanity detection and filtering API',
     endpoints: [
       {
-        path: '/moderate',
-        method: 'POST',
-        description: 'Moderate text for profanity',
         body: { text: 'string or string[]' },
+        description: 'Moderate text for profanity',
+        method: 'POST',
+        path: '/moderate',
       },
       {
-        path: '/check',
-        method: 'POST',
-        description: 'Check text for profanity and get detailed information',
         body: { text: 'string or string[]' },
+        description: 'Check text for profanity and get detailed information',
+        method: 'POST',
+        path: '/check',
       },
     ],
     name: 'Profanity Filter API',
@@ -76,9 +76,7 @@ const app = new Elysia()
       if (Array.isArray(text)) {
         // Handle array input
         return {
-          containsProfanity: (details as { isFlagged: boolean }[]).some(
-            (item) => item.isFlagged
-          ),
+          containsProfanity: (details as { isFlagged: boolean }[]).some((item) => item.isFlagged),
           details,
           original: text,
         }

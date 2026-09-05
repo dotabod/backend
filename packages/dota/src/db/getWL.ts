@@ -126,7 +126,7 @@ export async function getWL({
   if (!channelId) {
     return {
       msg: null,
-      record: [{ win: 0, lose: 0, type: 'U' }],
+      record: [{ lose: 0, type: 'U', win: 0 }],
       statsDays: activeChallenge?.elapsedDays ?? activeStatsDays,
       statsDaysTotal: activeChallenge?.totalDays ?? null,
     }

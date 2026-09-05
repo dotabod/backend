@@ -15,7 +15,7 @@ const supabaseMock = {
   from: (table: string) => ({
     upsert: async (values: Record<string, unknown>, options?: unknown) => {
       upsertCalls.push({ options, table, values })
-      return ({ data: null, error: null })
+      return { data: null, error: null }
     },
   }),
 }

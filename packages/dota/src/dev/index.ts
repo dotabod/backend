@@ -31,9 +31,7 @@ async function postWinEventsForUsers(
       steam64: '123456',
       token: user.id,
       win_team,
-    }).map(async (step) => 
-      await apiClient.post('/', step)
-    )
+    }).map(async (step) => await apiClient.post('/', step))
   )
   return await Promise.allSettled(promises)
 }
@@ -44,20 +42,21 @@ async function postEventsForUsers(
   }[],
   eventType: DotaEventTypes
 ) {
-  const promises = users.map(async (user) =>
-    await apiClient.post('/', {
-      auth: { token: user.id },
-      events: [
-        {
-          event_type: eventType,
-          game_time: faker.number.int({ min: 0, max: 1_000_000 }),
-          player_id: faker.number.int({ min: 0, max: 9 }),
+  const promises = users.map(
+    async (user) =>
+      await apiClient.post('/', {
+        auth: { token: user.id },
+        events: [
+          {
+            event_type: eventType,
+            game_time: faker.number.int({ max: 1_000_000, min: 0 }),
+            player_id: faker.number.int({ max: 9, min: 0 }),
+          },
+        ],
+        player: {
+          activity: 'playing',
         },
-      ],
-      player: {
-        activity: 'playing',
-      },
-    })
+      })
   )
   await Promise.allSettled(promises)
 }

@@ -80,7 +80,9 @@ const fakeRedisClient = {
   json: {
     del: async (key: string) => {
       gsiState.redisJsonDelCalls.push(key)
-      if (gsiState.redisJsonDelError) {throw gsiState.redisJsonDelError}
+      if (gsiState.redisJsonDelError) {
+        throw gsiState.redisJsonDelError
+      }
       delete gsiState.redisJson[key]
       return 1
     },

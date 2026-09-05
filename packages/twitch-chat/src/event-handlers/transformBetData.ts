@@ -30,9 +30,9 @@ export const transformBetData = (event: PredictionEvent) => {
         title: outcome.title,
         topUsers: hasTopPredictors
           ? outcome.top_predictors?.map((topUser) => ({
-              userDisplayName: topUser.user_name,
               channelPointsUsed: topUser.channel_points_used,
               channelPointsWon: topUser.channel_points_won,
+              userDisplayName: topUser.user_name,
             }))
           : undefined,
         totalUsers: hasTopPredictors ? outcome.users : undefined,

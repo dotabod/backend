@@ -60,7 +60,7 @@ const { gsiHandlers } = await import('../consts.ts')
 function makeClient(overrides: Partial<SocketClient> = {}): SocketClient {
   return {
     Account: null,
-    SteamAccount: [{ leaderboard_rank: null, mmr: 5000, name: 'streamer', steam32Id: 99999 }],
+    SteamAccount: [{ leaderboard_rank: null, mmr: 5000, name: 'streamer', steam32Id: 99_999 }],
     beta_tester: false,
     locale: 'en',
     mmr: 5000,

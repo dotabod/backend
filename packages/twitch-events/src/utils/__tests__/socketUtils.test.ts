@@ -25,7 +25,7 @@ vi.doMock(import('@dotabod/shared-utils'), () => ({
 // Replace the heavy handleNewUser implementation with a test double whose
 // behavior the test owns turn-by-turn.
 vi.doMock(import('../../handleNewUser'), () => ({
-  handleNewUser: async (id: string, resub: boolean) => await handleNewUserBehavior(id, resub),
+  handleNewUser: async (id: string, resub: boolean) =>{  await handleNewUserBehavior(id, resub); },
 }))
 
 vi.doMock(import('../../twitch/lib/revokeEvent'), () => ({

@@ -32,20 +32,24 @@ function makeFakeRedis(
   const client = {
     del: async (key: string) => {
       calls.push({ key, op: 'del' })
-      if (opts.delThrows) {throw new Error('del failed')}
+      if (opts.delThrows) {
+        throw new Error('del failed')
+      }
       return 1
     },
     isReady: opts.isReady ?? true,
     setEx: async (key: string, ttl: number, value: string) => {
       calls.push({ key, op: 'setEx', ttl, value })
-      if (opts.setExThrows) {throw new Error('setEx failed')}
+      if (opts.setExThrows) {
+        throw new Error('setEx failed')
+      }
       return 'OK'
     },
   } as unknown as RedisLike
   return { calls, client }
 }
 
-const flushMicrotasks = async () => await new Promise<void>((r) => setTimeout(r, 0))
+const flushMicrotasks = async () =>{  await new Promise<void>((r) => setTimeout(r, 0)); }
 
 beforeEach(() => {
   // dbState reset is required so hydrateInvalidTokensFromDb sees fresh table
@@ -372,8 +376,12 @@ describe('hydrateInvalidTokensFromRedis', () => {
   function makeScannerClient(keys: string[], opts: { throws?: boolean } = {}) {
     return {
       async *scanIterator() {
-        if (opts.throws) {throw new Error('scan exploded')}
-        for (const k of keys) {yield k}
+        if (opts.throws) {
+          throw new Error('scan exploded')
+        }
+        for (const k of keys) {
+          yield k
+        }
       },
     }
   }
@@ -449,7 +457,9 @@ describe('hydrateInvalidTokensFromRedis', () => {
       scanIterator: (): AsyncIterable<string> => ({
         [Symbol.asyncIterator]() {
           return {
-            next: async () => { throw new Error('scan exploded'); },
+            next: async () => {
+              throw new Error('scan exploded')
+            },
           }
         },
       }),
@@ -625,7 +635,7 @@ describe('hydrateInvalidTokensFromDb', () => {
 
     // Inject a thenable that rejects to force the outer catch.
     dbState.tableResults.accounts = null
-    const {supabase} = (await import('@dotabod/shared-utils'))
+    const { supabase } = await import('@dotabod/shared-utils')
     const originalFrom = supabase.from
     supabase.from = () => {
       throw new Error('synchronous explode')

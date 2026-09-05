@@ -30,7 +30,7 @@ commandHandler.registerCommand('profile', {
       }
 
       const { hero, playerIdx, player } = await profileLink({
-        args: args,
+        args,
         client,
         command,
         locale: client.locale,

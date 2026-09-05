@@ -126,7 +126,7 @@ commandHandler.registerCommand('mmr', {
           }
         })
         .catch((error) => {
-          logger.error('[MMR] Failed to get rank description', { error, channel })
+          logger.error('[MMR] Failed to get rank description', { channel, error })
         })
       return
     }
@@ -186,7 +186,7 @@ commandHandler.registerCommand('mmr', {
         }
       })
       .catch((error) => {
-        logger.error('[MMR] Failed to get rank description', { error, channel })
+        logger.error('[MMR] Failed to get rank description', { channel, error })
       })
   },
 })

@@ -611,11 +611,13 @@ class Dota {
 
   public requestMatchDetails = async (matchIds: number): Promise<unknown> =>
     await new Promise((resolve, reject) => {
-      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
-        {reject(new CustomError('Not connected to Dota 2 GC'))}
-      else {
+      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {
+        reject(new CustomError('Not connected to Dota 2 GC'))
+      } else {
         this.dota2.requestMatchDetails(matchIds, (err: unknown, data: unknown) => {
-          if (err) {reject(err)}
+          if (err) {
+            reject(err)
+          }
           resolve(data)
         })
       }
@@ -695,7 +697,9 @@ class Dota {
     }
 
     if (accountId) {
-      fetchedCard = await retryCustom(async () => await this.getCard(accountId)).catch(() => fetchedCard)
+      fetchedCard = await retryCustom(async () => await this.getCard(accountId)).catch(
+        () => fetchedCard
+      )
     }
 
     const card = {
@@ -849,13 +853,15 @@ class Dota {
     matchIds: number[]
   ): Promise<MatchMinimalDetailsResponse> =>
     await new Promise((resolve, reject) => {
-      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn())
-        {reject(new CustomError('Not connected to Dota 2 GC'))}
-      else {
+      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {
+        reject(new CustomError('Not connected to Dota 2 GC'))
+      } else {
         this.dota2.requestMatchMinimalDetails(
           matchIds,
           (err: unknown, data: MatchMinimalDetailsResponse) => {
-            if (err) {reject(err)}
+            if (err) {
+              reject(err)
+            }
             resolve(data)
           }
         )

@@ -70,7 +70,7 @@ commandHandler.registerCommand('wl', {
         chatClient.say(channel, res.msg, message.user.messageId)
       }
     } catch (error) {
-      logger.error('[WL] Error getting WL', { error, channelId, name: client.name })
+      logger.error('[WL] Error getting WL', { channelId, error, name: client.name })
     }
   },
 })

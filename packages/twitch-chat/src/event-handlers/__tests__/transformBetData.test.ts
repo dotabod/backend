@@ -68,7 +68,7 @@ describe(transformBetData, () => {
           channel_points: 500,
           title: 'Yes',
           top_predictors: [
-            { user_name: 'alice', channel_points_used: 100, channel_points_won: 200 },
+            { channel_points_used: 100, channel_points_won: 200, user_name: 'alice' },
           ],
           users: 3,
         },
@@ -108,7 +108,7 @@ describe(transformBetData, () => {
           channel_points: 100,
           title: 'Yes',
           top_predictors: [
-            { user_name: 'bob', channel_points_used: 100, channel_points_won: null },
+            { channel_points_used: 100, channel_points_won: null, user_name: 'bob' },
           ],
           users: 1,
         },

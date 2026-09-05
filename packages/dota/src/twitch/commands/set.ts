@@ -13,7 +13,7 @@ commandHandler.registerCommand('set', {
     const {
       channel: { name: channel, client },
     } = message
-    const {locale} = client
+    const { locale } = client
 
     const matchId = client.gsi?.map?.matchid
     const heroId = client.gsi?.hero?.id

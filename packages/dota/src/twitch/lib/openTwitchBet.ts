@@ -110,7 +110,9 @@ export const openTwitchBet = async ({
       title: filteredTitle.slice(0, 45),
     })
     .catch(async (error) => {
-      if (isPredictionAlreadyActiveError(error)) {throw error}
+      if (isPredictionAlreadyActiveError(error)) {
+        throw error
+      }
 
       try {
         if (error.stack?.includes('The user context for the user')) {

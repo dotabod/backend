@@ -22,8 +22,8 @@ function makeDeps() {
       armed.push({ cb, delayMs })
     },
     logger: {
-      error: () => undefined,
-      info: () => undefined,
+      error: () => {},
+      info: () => {},
     },
     now: () => now,
     run: async () => {

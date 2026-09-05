@@ -71,10 +71,10 @@ export async function closeTwitchBet(
           ),
         { label: 'closeTwitchBet:resolvePrediction' }
       ).catch((error) => {
-        logger.error('[BETS] Could not resolve prediction', { error: error, token: twitchId })
+        logger.error('[BETS] Could not resolve prediction', { error, token: twitchId })
       })
     })
     .catch((error) => {
-      logger.error('[BETS] Could not get predictions', { error: error, token: twitchId })
+      logger.error('[BETS] Could not get predictions', { error, token: twitchId })
     })
 }

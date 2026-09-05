@@ -56,8 +56,8 @@ commandHandler.registerCommand('fixdbl', {
       currentMmr: message.channel.client.mmr,
       newMmr: toggleDoubledownMmr({
         currentMmr: message.channel.client.mmr,
-        isParty: bet.is_party,
         didWin: !!bet.won,
+        isParty: bet.is_party,
         wasDoubledown: bet.is_doubledown,
       }),
       steam32Id: message.channel.client.steam32Id,

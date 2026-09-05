@@ -257,7 +257,7 @@ function createSupabaseFromBuilder() {
     },
     upsert: async (values: Record<string, unknown>, options?: unknown) => {
       state.upsertCalls.push({ options, values })
-      return ({ data: null, error: null })
+      return { data: null, error: null }
     },
     eq: (col: string, val: string) => {
       if (mode === 'update' && col === 'id') {
@@ -353,7 +353,9 @@ const getTwitchAPIMock = async () => ({
       opts: { title: string; outcomes: string[]; autoLockAfter: number }
     ) => {
       state.createPredictionCalls.push({ opts, twitchId })
-      if (state.createPredictionError) {throw state.createPredictionError}
+      if (state.createPredictionError) {
+        throw state.createPredictionError
+      }
       return { id: 'new-prediction-id' }
     },
     getPredictions: async (twitchId: string, opts: { limit: number }) => {
@@ -366,7 +368,9 @@ const getTwitchAPIMock = async () => ({
         err.code = 'ERR_STREAM_PREMATURE_CLOSE'
         throw err
       }
-      if (state.getPredictionsError) {throw state.getPredictionsError}
+      if (state.getPredictionsError) {
+        throw state.getPredictionsError
+      }
       return { data: state.predictions }
     },
     resolvePrediction: async (twitchId: string, predictionId: string, outcomeId: string) => {
@@ -610,7 +614,9 @@ function installTwitchMocks() {
       to: (room: string) => ({
         emit: (event: string, ...args: unknown[]) => {
           state.socketEmitCalls.push({ args, event, room })
-          if (event === 'refresh-settings') {state.streamStatusEffectCalls.push('socket')}
+          if (event === 'refresh-settings') {
+            state.streamStatusEffectCalls.push('socket')
+          }
         },
       }),
     },
