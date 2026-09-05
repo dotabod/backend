@@ -6,7 +6,7 @@
 // ran BEFORE clearCacheForUser). Moving that responsibility to callers means
 // the order of operations no longer matters, but a future refactor could
 // re-introduce the bug — this test guards against that.
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildSharedUtilsMock } from '../../__tests__/sharedMocks'
 
 vi.doMock('@dotabod/shared-utils', () =>

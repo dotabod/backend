@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vite-plus/test'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import i18next from 'i18next'
 import { initTestI18n } from '../../../../__tests__/sharedMocks'
 

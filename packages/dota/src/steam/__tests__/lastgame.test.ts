@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vite-plus/test'
+import { describe, expect, it, vi } from 'vitest'
 import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks.ts'
 
 const noopLogger = {

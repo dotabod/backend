@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const getDBUserMock = vi.fn()
 const recordGsiActivityMock = vi.fn()

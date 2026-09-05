@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 // Route through the shared harness so `ws` and `@dotabod/shared-utils` are
 // mocked once, process-wide, without competing factories.
 import { EventsubSocket, FakeWebSocket, isEventsubConnected } from './sharedMocks.ts'

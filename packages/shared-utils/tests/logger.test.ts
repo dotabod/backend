@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vite-plus/test'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createAppLogger } from '../src/logger-impl'
 
 // Build the genuine winston logger directly from the factory rather than mocking

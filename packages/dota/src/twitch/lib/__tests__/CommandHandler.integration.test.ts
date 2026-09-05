@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { baseMatchRow, commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
 // End-to-end integration tests that exercise `commandHandler.handleMessage()`:

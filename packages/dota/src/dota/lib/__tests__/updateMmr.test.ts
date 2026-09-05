@@ -1,7 +1,7 @@
 // Exercises the real updateMmr() against a minimal hand-rolled supabase mock
 // (not the twitch/lib/__tests__/setupMocks.ts harness, which vi.doMock's this
 // exact module away — importing it here would replace the code under test).
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildSharedUtilsMock } from '../../../__tests__/sharedMocks.ts'
 import type { SocketClient } from '../../../types'
 

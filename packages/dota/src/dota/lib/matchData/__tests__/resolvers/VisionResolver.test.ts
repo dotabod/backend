@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it } from 'vitest'
 import { VisionResolver } from '../../resolvers/VisionResolver'
 
 const ctx = (matchId: string | undefined) => ({ gsi: undefined, matchId })

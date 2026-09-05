@@ -1,6 +1,6 @@
 name: Autofix
 
-# Runs `vp check --fix` on every PR and pushes the formatting/lint fixes back to
+# Runs the standalone quality tools' fixes on every PR and pushes them back to
 # the PR branch, so formatting never becomes a merge blocker. The push uses
 # GHA_PAT (not the default GITHUB_TOKEN) so it re-triggers CI on the fixed code.
 on:
@@ -21,8 +21,7 @@ jobs:
     # Fork PRs can't be pushed to from here. Dependabot PRs also cannot access
     # GHA_PAT, and CI already runs the same formatting/lint checks without fixes.
     if: >-
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      github.actor != 'dependabot[bot]'
+      github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -47,13 +46,13 @@ jobs:
       # `|| true`: commit whatever was auto-fixed even if unfixable lint/type
       # errors remain — those are still reported by the CI workflow's gate.
       - name: Auto-format
-        run: pnpm exec vp check --fix || true
+        run: pnpm run check:fix || true
       - name: Commit and push fixes
         run: |
           if [ -n "$(git status --porcelain)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add -A
-            git commit -m "style: auto-format via vp check --fix"
+            git commit -m "style: auto-format via standalone quality checks"
             git push
           fi

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { dbState, resetDbState } from './dbMocks.ts'
 
 const { getWL } = await import('../getWL')

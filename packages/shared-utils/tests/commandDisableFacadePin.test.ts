@@ -14,7 +14,7 @@
 // already used by openTwitchBet.ts.
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it } from 'vitest'
 
 // import.meta.dirname → packages/shared-utils/tests; '../..' lifts to packages/.
 const REPO_PACKAGES = join(import.meta.dirname, '../..')

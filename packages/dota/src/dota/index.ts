@@ -16,7 +16,7 @@ logger.info("Starting 'dota' package")
 
 const setupTranslations = async () => {
   await i18next.use(FsBackend).init<FsBackendOptions>({
-    initImmediate: false,
+    initAsync: false,
     lng: 'en',
     fallbackLng: 'en',
     returnEmptyString: false,

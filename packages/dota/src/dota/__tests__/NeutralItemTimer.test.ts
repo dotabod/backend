@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it } from 'vitest'
 
 import { NEUTRAL_ITEM_TIER_TIMES } from '../NeutralItemTimer'
 

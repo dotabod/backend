@@ -1,10 +1,10 @@
-// Explicit node types reference — vp staged runs single-file lint and doesn't
+// Explicit node types reference — staged single-file lint and doesn't
 // pick up the package's @types/node from the workspace tree (.test.ts is
 // excluded from tsconfig), so without this it spuriously errors on Buffer /
 // node:events / EventEmitter below.
 /// <reference types="node" />
 import { EventEmitter } from 'node:events'
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it } from 'vitest'
 import {
   SteamGameCoordinatorShim,
   type SteamUserClient,

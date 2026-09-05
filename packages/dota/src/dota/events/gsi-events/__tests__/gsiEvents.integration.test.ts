@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { t } from 'i18next'
 import { flushAsync } from '../../../../__tests__/sharedMocks.ts'
 import { getHeroNameOrColor } from '../../../lib/heroes.ts'

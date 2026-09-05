@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Project Commands
 
-- Install: `vp install` (delegates to pnpm via `packageManager`)
-- Build: `vp run build:all` or per package: `pnpm --filter @dotabod/{package} run build`
-- Lint + format + typecheck: `vp check` (auto-fix: `vp check --fix`)
-- Test: `vp test` for the whole workspace, or a specific path: `vp test packages/path/to/file.test.ts`
+- Install: `pnpm install`
+- Build: `pnpm run build:all` or per package: `pnpm --filter @dotabod/{package} run build`
+- Lint + format + typecheck + dead-code analysis: `pnpm run quality` (auto-fix: `pnpm run check:fix`)
+- Test: `pnpm test` for the whole workspace, or a specific path: `pnpm exec vitest run packages/path/to/file.test.ts`
 - Runtime: services are Node 24; dev with `tsx watch src/index.ts`, prod with `node dist/index.js`
 
 ## Code Style
@@ -84,19 +84,9 @@ that tells you where it landed). The **`dota-vision-roster-debug` skill** has th
 the DB/API recipes, and a list of plausible-sounding fixes that measurement has already
 disproved — read it before changing clip timing or alignment code.
 
-<!--VITE PLUS START-->
+## Quality tooling
 
-# Using Vite+, the Unified Toolchain for the Web
-
-This project is using Vite+, a unified toolchain built on top of Vite, Rolldown, Vitest, tsdown, Oxlint, Oxfmt, and Vite Task. Vite+ wraps runtime management, package management, and frontend tooling in a single global CLI called `vp`. Vite+ is distinct from Vite, and it invokes Vite through `vp dev` and `vp build`. Run `vp help` to print a list of commands and `vp <command> --help` for information about a specific command.
-
-Docs are local at `node_modules/vite-plus/docs` or online at https://viteplus.dev/guide/.
-
-## Review Checklist
-
-- [ ] Run `vp install` after pulling remote changes and before getting started.
-- [ ] Run `vp check` and `vp test` to format, lint, type check and test changes.
-- [ ] Check if there are `vite.config.ts` tasks or `package.json` scripts necessary for validation, run via `vp run <script>`.
-- [ ] If setup, runtime, or package-manager behavior looks wrong, run `vp env doctor` and include its output when asking for help.
-
-<!--VITE PLUS END-->
+Use standalone tools: Oxfmt, Oxlint with Ultracite anti-slop presets, TypeScript 7,
+Knip, Vitest 5, and tsdown. Run `pnpm run quality` and `pnpm test` before handing
+off a change. The quality gate intentionally treats warnings as errors; keep a
+rule enabled and fix the source instead of adding broad ignores or suppressions.

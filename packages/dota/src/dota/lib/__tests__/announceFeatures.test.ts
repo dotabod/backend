@@ -3,7 +3,7 @@
 // at one feature per match. Drives the real getValueOrDefault + isPlayingMatch; mocks supabase
 // (durable flag + notification), redis (per-match guard), say, and EventHandler. Each test uses
 // a fresh token so the module-level once-ever cache doesn't leak across cases.
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildSharedUtilsMock, initTestI18n } from '../../../__tests__/sharedMocks'
 
 const loggerMock = {

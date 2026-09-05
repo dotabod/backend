@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { beforeEach, describe, expect, it } from 'vitest'
 // setupMocks MUST be imported before any dota source modules — its top-level
 // `vi.doMock('@dotabod/shared-utils', …)` only applies to imports that evaluate
 // after it. Statically importing `getWL` or `fixdbl` ahead of this line would

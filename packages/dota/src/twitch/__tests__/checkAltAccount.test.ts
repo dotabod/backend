@@ -1,7 +1,7 @@
 // Regression tests for the inverted date subtraction in checkAltAccount: the
 // diff used to be `creation - follow`, which is always <= 0 (an account must
 // exist before it can follow), so the 0-10 day "alt" window almost never fired.
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks'
 
 const state: {

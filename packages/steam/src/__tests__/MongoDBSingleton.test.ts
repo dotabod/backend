@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vite-plus/test'
+import { describe, expect, it, vi } from 'vitest'
 
 // Regression test for the cached-rejection bug: a failed connect() used to leave
 // the rejected promise on the singleton, so every later connect() returned that

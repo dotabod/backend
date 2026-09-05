@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vite-plus/test'
+import { describe, expect, test } from 'vitest'
 import { getProfanityDetails, moderateText } from '../src/utils/moderation'
 
 // Helper function for testing

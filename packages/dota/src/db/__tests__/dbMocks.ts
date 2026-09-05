@@ -3,7 +3,7 @@
 // side-effect imports for plain DB unit/integration tests.
 //
 // Filename ends in `Mocks.ts` (not `.test.ts`) so bun's runner skips it.
-import { vi } from 'vite-plus/test'
+import { vi } from 'vitest'
 import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks'
 
 export type TableResult = { data: unknown; error: unknown } | null

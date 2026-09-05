@@ -1,4 +1,4 @@
-// Explicit node types reference — vp staged runs single-file lint and
+// Explicit node types reference — staged single-file lint and
 // doesn't pick up the package's @types/node from the workspace tree, so
 // without this it spuriously errors on the node:* imports below.
 /// <reference types="node" />
@@ -6,12 +6,12 @@ import { execSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it } from 'vitest'
 
 // Regression guard for the Node 24 ERR_AMBIGUOUS_MODULE_SYNTAX crash:
 //   subscriptionHealthCheck.ts had `if (require.main === module)` at the
 //   bottom for the CLI entry point. In ESM that block is dead, but the
-//   bundler (vp pack / Rolldown) inlined it verbatim into dist/index.js,
+//   bundler (tsdown / Rolldown) inlined it verbatim into dist/index.js,
 //   shimming `require` to `__require`. Combined with top-level await
 //   elsewhere in the bundle (e.g. handleNewUser.ts:5), Node 24 refused
 //   to pick a module format and crashed at startup.

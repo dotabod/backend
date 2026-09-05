@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../__tests__/sharedMocks.ts'
 import type { MessageType } from '../CommandHandler'
 

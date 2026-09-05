@@ -9,7 +9,7 @@
 // Before these tests existed, neither path had ANY test coverage and a
 // subtle ordering bug (invalidTokens.add → clearCacheForUser → invalidTokens
 // silently re-deleted) shipped to prod. See watcher.ts and clearCacheForUser.ts.
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   fire,
   gsiHandlers,

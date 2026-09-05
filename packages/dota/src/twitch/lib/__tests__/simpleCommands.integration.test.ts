@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vite-plus/test'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { t } from 'i18next'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 

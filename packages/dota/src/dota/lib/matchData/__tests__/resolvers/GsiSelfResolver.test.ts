@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it } from 'vitest'
 import { GsiSelfResolver } from '../../resolvers/GsiSelfResolver'
 
 const ctx = (gsi: unknown) => ({ gsi: gsi as never, matchId: '12345' })

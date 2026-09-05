@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it } from 'vitest'
 import { GcWatchdog } from '../utils/gcWatchdog'
 
 // Deterministic injectable clock: advance() moves virtual time forward so the

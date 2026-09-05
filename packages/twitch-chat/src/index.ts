@@ -38,7 +38,7 @@ async function startup() {
     }
 
     await use(FsBackend).init<FsBackendOptions>({
-      initImmediate: false,
+      initAsync: false,
       lng: 'en',
       fallbackLng: 'en',
       preload: readdirSync(join('./locales')).filter((fileName: string) => {

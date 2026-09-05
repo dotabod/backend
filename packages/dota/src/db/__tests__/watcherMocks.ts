@@ -4,7 +4,7 @@
 // The watcher registers postgres_changes handlers via supabase.channel().on().
 // This harness captures those handlers by event+table so tests can fire them
 // directly, mirroring the twitch-events sharedMocks pattern.
-import { vi } from 'vite-plus/test'
+import { vi } from 'vitest'
 import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks'
 
 type ChannelHandler = (payload: {

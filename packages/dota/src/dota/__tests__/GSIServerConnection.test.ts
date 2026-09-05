@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const socketState = vi.hoisted(() => ({
   emits: [] as Array<{ room: string; event: string; payload: unknown }>,

@@ -1,5 +1,5 @@
 import type { RedisLike } from '../invalidTokens.ts'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // dbMocks installs vi.doMock('@dotabod/shared-utils') at import time, so any
 // downstream module that imports `supabase` / `logger` from shared-utils picks

@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, it } from 'vite-plus/test'
+import { afterAll, describe, expect, it } from 'vitest'
 import type { AddressInfo, Server as HttpServer } from 'node:net'
 import { io as ioClient } from 'socket.io-client'
 import { createSocketServer } from '../socketServer'

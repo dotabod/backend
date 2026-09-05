@@ -5,7 +5,7 @@
 // this module so they share a single `vi.doMock()` factory and a single
 // state closure. Defining the harness once avoids races where two test files
 // register competing factories for the same module spec.
-import { vi } from 'vite-plus/test'
+import { vi } from 'vitest'
 import type { Database } from '@dotabod/shared-utils'
 import {
   buildSharedUtilsMock,

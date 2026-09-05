@@ -1,5 +1,4 @@
 import './commandLoader'
-
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import {
   EventSubChannelPollBeginEvent,
@@ -12,6 +11,8 @@ import {
 } from '@twurple/eventsub-base'
 import { t } from 'i18next'
 import { io as socketIo } from 'socket.io-client'
+import type { Socket } from 'socket.io-client'
+
 import getDBUser from '../db/getDBUser'
 import findUser, { getTokenFromTwitchId } from '../dota/lib/connectedStreamers'
 import { plebMode } from '../dota/lib/consts'
@@ -70,7 +71,7 @@ twitchChat.on(
         userId: string
       }
       messageId: string
-    },
+    }
   ) => {
     if (!channelId) {
       logger.error('No channelId', { channel, user, text })
@@ -118,7 +119,7 @@ twitchChat.on(
     const rankOnlySettings = getValueOrDefault(
       DBSettings.rankOnly,
       client.settings,
-      client.subscription,
+      client.subscription
     )
 
     // If rankOnly is enabled and the user isn't staff, check their rank
@@ -172,7 +173,7 @@ twitchChat.on(
               requiredRank,
               userRank: userRank || 'Uncalibrated',
               lng: client.locale || 'en',
-            }),
+            })
           )
 
           lastRankWarningTimestamps[channel] = now
@@ -197,7 +198,7 @@ twitchChat.on(
       })
       chatClient.say(
         channel,
-        t('pleb', { emote: 'EZ Clap', context: 'off', name: user, lng: 'en' }),
+        t('pleb', { emote: 'EZ Clap', context: 'off', name: user, lng: 'en' })
       )
       return
     }
@@ -207,7 +208,7 @@ twitchChat.on(
     const isBotDisabled = getValueOrDefault(
       DBSettings.commandDisable,
       client.settings,
-      client.subscription,
+      client.subscription
     )
     const toggleCommand = commandHandler.commands.get('toggle')
     if (
@@ -233,7 +234,7 @@ twitchChat.on(
       },
       content: text,
     })
-  },
+  }
 )
 
 const events = {
@@ -261,7 +262,7 @@ twitchChat.on('event', (eventName: keyof typeof events, broadcasterId: string, d
   server.io.to(token).emit('channelPollOrBet', data, eventName)
 })
 
-export const twitchEvent = socketIo(`ws://${process.env.HOST_TWITCH_EVENTS}:5015`)
+export const twitchEvent: Socket = socketIo(`ws://${process.env.HOST_TWITCH_EVENTS}:5015`)
 twitchEvent.on('connect', () => {
   logger.info('We alive on dotabod twitch events server!')
 })

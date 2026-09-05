@@ -7,7 +7,7 @@
 // module spec don't collide when the whole suite runs together. Import the SUT
 // from here, not from its real path. (The pure transform tests don't touch
 // these modules, so they import their SUTs directly.)
-import { vi } from 'vite-plus/test'
+import { vi } from 'vitest'
 
 type FetchResponse = {
   ok: boolean

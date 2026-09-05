@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it } from 'vitest'
 import { resolveCosmetics } from '../cosmetics.ts'
 
 // Wearables block from the gameEnd fixture (an Invoker loadout): a mix of

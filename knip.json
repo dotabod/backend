@@ -18,7 +18,9 @@
       "entry": ["src/example-client.ts", "tests/**/*.ts"]
     },
     "packages/shared-utils": {},
-    "packages/steam": {},
+    "packages/steam": {
+      "entry": ["healthcheck.mjs"]
+    },
     "packages/twitch": {},
     "packages/twitch-chat": {
       "entry": ["src/**/__tests__/**/*.ts"]

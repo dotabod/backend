@@ -14,9 +14,9 @@
     "docker:production": "node dist/index.js",
     "docker:development": "tsx watch src/index.ts",
     "prebuild": "rm -rf dist",
-    "build": "vp pack src/index.ts -f esm -d dist --sourcemap",
+    "build": "tsdown --config ../../tsdown.config.ts src/index.ts -f esm -d dist --sourcemap",
     "typecheck": "tsc --noEmit",
-    "test": "vp test"
+    "test": "vitest run"
   },
   "dependencies": {
     "@dotabod/shared-utils": "workspace:*",
@@ -33,7 +33,6 @@
     "winston": "^3.13.0"
   },
   "devDependencies": {
-    "@types/long": "^5.0.0",
     "@types/retry": "^0.12.5",
     "@types/steam": "^0.0.32"
   }

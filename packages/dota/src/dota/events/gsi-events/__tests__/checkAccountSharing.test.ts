@@ -8,7 +8,7 @@
 //
 // The fix swapped to `commandDisable.recordNotification`, which inserts the
 // audit row WITHOUT touching the settings row. These tests pin that behavior.
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildSharedUtilsMock, initTestI18n } from '../../../../__tests__/sharedMocks'
 
 type FacadeCall =

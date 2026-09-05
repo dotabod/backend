@@ -5,7 +5,7 @@
 // master (default on). The one-time "this feature is new" notice lives elsewhere
 // (announceFeatures.ts). These tests drive the handler directly, bypassing the stream_online gate
 // in EventHandler, so they also exercise the anti-snipe state gate end-to-end.
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildSharedUtilsMock, initTestI18n } from '../../../../__tests__/sharedMocks'
 
 const loggerMock = {

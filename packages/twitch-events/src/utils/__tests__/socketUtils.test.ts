@@ -2,7 +2,7 @@
 // `enable` / `resubscribe` handlers. handleNewUser rejects on critical-sub
 // failures; without the .catch those rejections become unhandledRejection
 // and Node 24 crashes the single-replica twitch-events service.
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const logCalls: { info: any[]; error: any[]; warn: any[] } = { info: [], error: [], warn: [] }
 let handleNewUserBehavior: (id: string, resub: boolean) => Promise<void> = async () => undefined

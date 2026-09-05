@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildSharedUtilsMock } from '../../../../__tests__/sharedMocks.ts'
 import type { RosterPlayer } from '../types'
 

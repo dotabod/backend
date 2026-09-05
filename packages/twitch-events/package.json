@@ -14,9 +14,9 @@
     "docker:production": "node dist/index.js",
     "docker:development": "tsx watch src/index.ts",
     "prebuild": "rm -rf dist",
-    "build": "vp pack src/index.ts -f esm -d dist --sourcemap",
+    "build": "tsdown --config ../../tsdown.config.ts src/index.ts -f esm -d dist --sourcemap",
     "subscription-health-check": "tsx src/scripts/runSubscriptionHealthCheck.ts",
-    "test": "vp test",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -24,11 +24,10 @@
     "@twurple/api": "7.2.1",
     "@twurple/auth": "7.2.1",
     "express": "^4.21.2",
-    "express-body-parser-error-handler": "^1.0.7",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
-    "@types/node": "^22.19.19"
+    "@types/node": "^24.13.3"
   }
 }

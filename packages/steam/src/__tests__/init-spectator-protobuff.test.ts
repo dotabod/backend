@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vite-plus/test'
+import { describe, expect, it, vi } from 'vitest'
 // @ts-expect-error no types
 import Dota2 from 'dota2'
 import { initSpectatorProtobuff } from '../initSpectatorProtobuff'
