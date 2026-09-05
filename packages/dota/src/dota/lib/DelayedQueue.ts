@@ -23,7 +23,7 @@ export class DelayedQueue {
     delayMs: number,
     callback: (payload: T) => void | Promise<void>,
     payload: T = null as T,
-    priority = 0,
+    priority = 0
   ): string {
     // Clamp delay to maximum allowed
     const clampedDelay = Math.min(delayMs, this.maxDelayMs)
@@ -31,11 +31,11 @@ export class DelayedQueue {
     const executeAt = Date.now() + clampedDelay
 
     const task: DelayedTask<T> = {
-      id: taskId,
-      executeAt,
-      priority,
-      payload,
       callback,
+      executeAt,
+      id: taskId,
+      payload,
+      priority,
     }
 
     // Insert task in sorted order (by executeAt, then by priority)
@@ -81,7 +81,7 @@ export class DelayedQueue {
   }
 
   private start(): void {
-    if (this.isRunning) return
+    if (this.isRunning) {return}
 
     this.isRunning = true
     this.intervalId = setInterval(() => {
@@ -110,7 +110,7 @@ export class DelayedQueue {
           } catch (error) {
             logger.error(`DelayedQueue: Error executing task ${task.id}`, { error })
           }
-        }),
+        })
       )
     }
   }
@@ -144,7 +144,7 @@ export class DelayedQueue {
               error,
             })
           }
-        }),
+        })
       )
     }
 

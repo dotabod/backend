@@ -1,11 +1,11 @@
 import { t } from 'i18next'
+
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('winprobability', {
   aliases: ['win%', 'wp'],
-  onlyOnline: true,
   dbkey: DBSettings.commandWinProbability,
   handler: async (message) => {
     const {
@@ -17,7 +17,7 @@ commandHandler.registerCommand('winprobability', {
       chatClient.say(
         channel,
         t('gameNotFound', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -25,7 +25,8 @@ commandHandler.registerCommand('winprobability', {
     chatClient.say(
       channel,
       t('matchDataValveDisabled', { emote: 'PoroSad', lng: message.channel.client.locale }),
-      message.user.messageId,
+      message.user.messageId
     )
   },
+  onlyOnline: true,
 })

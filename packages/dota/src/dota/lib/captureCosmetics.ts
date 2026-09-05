@@ -1,7 +1,9 @@
-import { type Json, supabase } from '@dotabod/shared-utils'
+import { supabase } from '@dotabod/shared-utils';
+import type { Json } from '@dotabod/shared-utils';
 
 import type { SocketClient } from '../../types'
-import { type ResolvedCosmetic, resolveCosmetics } from './cosmetics'
+import { resolveCosmetics } from './cosmetics';
+import type { ResolvedCosmetic } from './cosmetics';
 import { getHeroNameOrColor } from './heroes'
 
 // Resolve the played hero's equipped cosmetics from live GSI and snapshot them
@@ -12,21 +14,21 @@ import { getHeroNameOrColor } from './heroes'
 export async function captureCosmetics(client: SocketClient): Promise<ResolvedCosmetic[]> {
   const heroId = client.gsi?.hero?.id
   const matchId = client.gsi?.map?.matchid
-  if (!matchId || !heroId || heroId <= 0) return []
+  if (!matchId || !heroId || heroId <= 0) {return []}
 
   const items = resolveCosmetics(client.gsi?.wearables)
-  if (!items.length) return []
+  if (!items.length) {return []}
 
   await supabase.from('cosmetic_loadouts').upsert(
     {
-      userId: client.token,
-      matchId: String(matchId),
       heroId,
       heroName: getHeroNameOrColor(heroId),
       items: items as unknown as Json,
+      matchId: String(matchId),
       updated_at: new Date().toISOString(),
+      userId: client.token,
     },
-    { onConflict: 'userId,heroId' },
+    { onConflict: 'userId,heroId' }
   )
 
   return items

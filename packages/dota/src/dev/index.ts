@@ -2,6 +2,7 @@ import { getTwitchAPI, logger, supabase } from '@dotabod/shared-utils'
 import { faker } from '@faker-js/faker'
 import type { ApiClient } from '@twurple/api'
 import axios from 'axios'
+
 import { gameEnd } from '../__tests__/play-by-plays'
 import { fetchOnlineUsers } from '../dota/events/gsi-events/__tests__/fetchOnlineUsers'
 import { DotaEventTypes } from '../types'
@@ -21,19 +22,19 @@ async function postWinEventsForUsers(
   users: {
     id: string
   }[],
-  win_team: 'radiant' | 'dire' = 'radiant',
+  win_team: 'radiant' | 'dire' = 'radiant'
 ) {
-  const promises = users.flatMap((user) => {
-    return gameEnd({
+  const promises = users.flatMap((user) => 
+    gameEnd({
       win_team,
       matchId: '123',
       steam32: '123',
       steam64: '123456',
       token: user.id,
-    }).map((step) => {
+    }).map( async (step) => {
       return apiClient.post('/', step)
     })
-  })
+  )
   return await Promise.allSettled(promises)
 }
 
@@ -41,13 +42,11 @@ async function postEventsForUsers(
   users: {
     id: string
   }[],
-  eventType: DotaEventTypes,
+  eventType: DotaEventTypes
 ) {
-  const promises = users.map((user) =>
+  const promises = users.map( async (user) =>
     apiClient.post('/', {
-      player: {
-        activity: 'playing',
-      },
+      auth: { token: user.id },
       events: [
         {
           event_type: eventType,
@@ -55,8 +54,10 @@ async function postEventsForUsers(
           game_time: faker.number.int({ min: 0, max: 1_000_000 }),
         },
       ],
-      auth: { token: user.id },
-    }),
+      player: {
+        activity: 'playing',
+      },
+    })
   )
   await Promise.allSettled(promises)
 }
@@ -74,7 +75,7 @@ async function _fixNewUsers() {
     .select('id, Account:accounts(providerAccountId)')
     .is('displayName', null)
 
-  if (!users) return
+  if (!users) {return}
 
   const botApi = await getTwitchAPI()
   for (const user of users) {
@@ -82,7 +83,7 @@ async function _fixNewUsers() {
       console.log('no account for user', user.id)
       continue
     }
-    if (botApi) await handleNewUser(user.Account.providerAccountId, botApi)
+    if (botApi) {await handleNewUser(user.Account.providerAccountId, botApi)}
   }
   return
 }
@@ -90,7 +91,7 @@ async function _fixNewUsers() {
 // await fixNewUsers()
 
 async function handleNewUser(providerAccountId: string, botApi: ApiClient) {
-  if (!botApi) return
+  if (!botApi) {return}
   try {
     const stream = await botApi.streams.getStreamByUserId(providerAccountId)
     const streamer = await botApi.users.getUserById(providerAccountId)
@@ -108,7 +109,7 @@ async function handleNewUser(providerAccountId: string, botApi: ApiClient) {
 
     // remove falsy values from data (like displayName: undefined)
     const filteredData = Object.fromEntries(
-      Object.entries(data).filter(([_key, value]) => Boolean(value)),
+      Object.entries(data).filter(([_key, value]) => Boolean(value))
     ) as Partial<typeof data>
 
     let userId: string | null = null
@@ -122,7 +123,7 @@ async function handleNewUser(providerAccountId: string, botApi: ApiClient) {
       userId = data?.userId ?? null
     }
 
-    console.log({ userId, filteredData })
+    console.log({ filteredData, userId })
 
     if (!userId) {
       logger.error('[USER] 2 Error checking auth', { error: 'No token' })
@@ -130,8 +131,8 @@ async function handleNewUser(providerAccountId: string, botApi: ApiClient) {
     }
 
     await supabase.from('users').update(filteredData).eq('id', userId)
-  } catch (e) {
-    console.log(e, 'error on getStreamByUserId')
+  } catch (error) {
+    console.log(error, 'error on getStreamByUserId')
   }
 }
 

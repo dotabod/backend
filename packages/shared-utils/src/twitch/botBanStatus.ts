@@ -3,9 +3,9 @@ import { getTwitchTokens } from './getTwitchTokens'
 
 // Bot status tracking
 export const botStatus = {
+  banCheckCooldown: 60000, // Only check once per minute
   isBanned: false,
   lastChecked: 0,
-  banCheckCooldown: 60000, // Only check once per minute
 }
 
 /**
@@ -22,7 +22,7 @@ export async function checkBotStatus() {
 
   try {
     // Try to check the bot's validation status
-    const tokens = await getTwitchTokens(process.env.TWITCH_BOT_PROVIDERID!)
+    const tokens = await getTwitchTokens(process.env.TWITCH_BOT_PROVIDERID)
 
     if (!tokens || tokens.requires_refresh) {
       logger.info('[TWITCH] Bot is banned, tokens are invalid')

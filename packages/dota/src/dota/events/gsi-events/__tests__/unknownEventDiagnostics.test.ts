@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+
 import { ChatMessageType } from '../../../../types'
 import {
   __resetUnknownEventLogCacheForTests,
@@ -18,10 +19,10 @@ describe('known generic GSI event types', () => {
 describe('unknown GSI event diagnostics', () => {
   it('rate-limits each unknown type across clients while preserving future visibility', () => {
     expect([
-      shouldLogUnknownGsiEvent('message:CHAT_MESSAGE_FUTURE', 1_000),
-      shouldLogUnknownGsiEvent('message:CHAT_MESSAGE_FUTURE', 1_001),
-      shouldLogUnknownGsiEvent('message:CHAT_MESSAGE_OTHER', 1_001),
+      shouldLogUnknownGsiEvent('message:CHAT_MESSAGE_FUTURE', 1000),
+      shouldLogUnknownGsiEvent('message:CHAT_MESSAGE_FUTURE', 1001),
+      shouldLogUnknownGsiEvent('message:CHAT_MESSAGE_OTHER', 1001),
       shouldLogUnknownGsiEvent('message:CHAT_MESSAGE_FUTURE', 3_601_000),
-    ]).toEqual([true, false, true, true])
+    ]).toStrictEqual([true, false, true, true])
   })
 })

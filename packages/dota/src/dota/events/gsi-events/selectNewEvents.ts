@@ -11,10 +11,10 @@ import type { DotaEvent } from '../../../types'
 // that was never processed. Any pipeline change that skips/coalesces ticks must
 // still feed every tick's `events[]` through here, or one-shot events are lost.
 export function selectNewEvents(
-  seen: ReadonlyArray<Pick<DotaEvent, 'game_time' | 'event_type'>>,
-  incoming: ReadonlyArray<DotaEvent> | undefined,
+  seen: readonly Pick<DotaEvent, 'game_time' | 'event_type'>[],
+  incoming: readonly DotaEvent[] | undefined
 ): DotaEvent[] {
-  if (!incoming?.length) return []
+  if (!incoming?.length) {return []}
   const seenSet = new Set(seen.map((e) => `${e.game_time}-${e.event_type}`))
   return incoming.filter((e) => !seenSet.has(`${e.game_time}-${e.event_type}`))
 }

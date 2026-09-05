@@ -2,6 +2,7 @@ process.on('SIGTERM', () => process.exit(0))
 process.on('SIGINT', () => process.exit(0))
 
 import { checkBotStatus, checkSupabaseHealth, logger, startHeartbeat } from '@dotabod/shared-utils'
+
 import { fetchExistingSubscriptions, subsToCleanup } from './fetchExistingSubscriptions'
 import { subscribeToEvents } from './subscribeToEvents'
 import { deleteSubscription } from './twitch/lib/revokeEvent'
@@ -28,10 +29,10 @@ setupHealthServer()
 // unnoticed without this. On 2026-05-29 the watcher crash-looped on a DNS-level
 // Supabase outage — this gives the same class of failure a direct signal.
 startHeartbeat({
-  url: process.env.KUMA_PUSH_URL_SUPABASE,
-  name: 'twitch-events supabase heartbeat',
   debounceMs: 90_000,
   getStatus: checkSupabaseHealth,
+  name: 'twitch-events supabase heartbeat',
+  url: process.env.KUMA_PUSH_URL_SUPABASE,
 })
 
 // Supabase Realtime listener — replaces the old HTTP webhook receiver.
@@ -78,7 +79,7 @@ void (async () => {
               const now = Date.now()
               const shouldLog =
                 completed % 500 === 0 ||
-                now - lastLogTime > 10000 ||
+                now - lastLogTime > 10_000 ||
                 completed === subsToCleanup.length
 
               if (shouldLog) {
@@ -91,36 +92,36 @@ void (async () => {
 
                 logger.info('[TWITCHEVENTS] Deletion progress', {
                   completed,
-                  total: subsToCleanup.length,
                   percent: `${percentComplete}%`,
+                  rateLimit: {
+                    queueLength: rateLimiter.queueLength,
+                    remaining: rateLimiter.rateLimitStatus.remaining,
+                  },
                   timeElapsed: `${Math.round(elapsedSec / 60)}m ${Math.round(elapsedSec % 60)}s`,
                   timeRemaining: `~${Math.round(remainingSec / 60)} minutes`,
-                  rateLimit: {
-                    remaining: rateLimiter.rateLimitStatus.remaining,
-                    queueLength: rateLimiter.queueLength,
-                  },
+                  total: subsToCleanup.length,
                 })
               }
             })
-          }),
+          })
         )
       }
 
       const totalTime = (Date.now() - startTime) / 1000
       logger.info('[TWITCHEVENTS] Deletion completed', {
-        total: subsToCleanup.length,
         timing: {
-          totalTime: `${Math.floor(totalTime / 60)}m ${Math.round(totalTime % 60)}s`,
           averageRate: `${Math.round(subsToCleanup.length / totalTime)} deletions/sec`,
+          totalTime: `${Math.floor(totalTime / 60)}m ${Math.round(totalTime % 60)}s`,
         },
+        total: subsToCleanup.length,
       })
     } else {
       logger.info('[TWITCHEVENTS] No subscriptions to clean up')
     }
   } catch (error) {
     logger.error('[TWITCHEVENTS] Background reconciliation failed', {
-      error: error instanceof Error ? error.message : String(error),
       count: subsToCleanup.length,
+      error: error instanceof Error ? error.message : String(error),
     })
   }
 })()

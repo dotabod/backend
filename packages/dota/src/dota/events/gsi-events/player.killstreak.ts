@@ -2,18 +2,19 @@ import { t } from 'i18next'
 
 import { redisClient } from '../../../db/redisInstance'
 import { delayedQueue } from '../../lib/DelayedQueue'
-import getHero, { type HeroNames } from '../../lib/getHero'
+import getHero from '../../lib/getHero';
+import type { HeroNames } from '../../lib/getHero';
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import { say } from '../../say'
 import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent('player:kill_streak', {
   handler: async (dotaClient, streak: number) => {
-    if (!isPlayingMatch(dotaClient.client.gsi)) return
-    if (!dotaClient.client.stream_online) return
+    if (!isPlayingMatch(dotaClient.client.gsi)) {return}
+    if (!dotaClient.client.stream_online) {return}
 
     const playingHero = (await redisClient.client.get(
-      `${dotaClient.getToken()}:playingHero`,
+      `${dotaClient.getToken()}:playingHero`
     )) as HeroNames | null
     const heroName =
       getHero(playingHero ?? dotaClient.client.gsi?.hero?.name)?.localized_name ?? 'We'
@@ -29,31 +30,31 @@ eventHandler.registerEvent('player:kill_streak', {
       say(
         dotaClient.client,
         t('killstreak.lost', {
-          emote: 'BibleThump',
           count: previousStreak,
+          emote: 'BibleThump',
           heroName,
           lng: dotaClient.client.locale,
         }),
-        { chattersKey: 'killstreak' },
+        { chattersKey: 'killstreak' }
       )
       return
     }
 
-    if (streak <= 3) return
+    if (streak <= 3) {return}
 
     if (dotaClient.killstreakTaskId) {
       delayedQueue.removeTask(dotaClient.killstreakTaskId)
     }
-    dotaClient.killstreakTaskId = delayedQueue.addTask(15000, () => {
+    dotaClient.killstreakTaskId = delayedQueue.addTask(15_000, () => {
       say(
         dotaClient.client,
         t('killstreak.won', {
-          emote: 'POGGIES',
           count: streak,
+          emote: 'POGGIES',
           heroName,
           lng: dotaClient.client.locale,
         }),
-        { chattersKey: 'killstreak' },
+        { chattersKey: 'killstreak' }
       )
     })
   },

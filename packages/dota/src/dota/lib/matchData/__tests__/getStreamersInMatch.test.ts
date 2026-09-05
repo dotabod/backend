@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { buildSharedUtilsMock } from '../../../../__tests__/sharedMocks.ts'
 import type { RosterPlayer } from '../types'
 
 const noopLogger = {
-  info: () => undefined,
-  error: () => undefined,
-  warn: () => undefined,
   debug: () => undefined,
+  error: () => undefined,
+  info: () => undefined,
+  warn: () => undefined,
 }
 
 // Rows returned per source, set per test.
@@ -40,17 +41,17 @@ const supabase = {
   },
 }
 
-vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ supabase, logger: noopLogger }))
+vi.doMock(import('@dotabod/shared-utils'), () => buildSharedUtilsMock({ logger: noopLogger, supabase }))
 
 // getStreamersInMatch can fall through to MatchDataService when no roster
 // is provided, which reaches into Mongo. Stub it so tests without roster don't
 // hang trying to connect to a real Mongo singleton.
-vi.doMock('../../../../steam/MongoDBSingleton', () => ({
+vi.doMock(import('../../../../steam/MongoDBSingleton'), () => ({
   default: {
+    close: async () => undefined,
     connect: async () => ({
       collection: () => ({ findOne: async () => null }),
     }),
-    close: async () => undefined,
   },
 }))
 
@@ -58,13 +59,13 @@ const { getStreamersInMatch } = await import('../getStreamersInMatch.ts')
 
 const players = (accountIds: number[]): RosterPlayer[] =>
   accountIds.map((accountId) => ({
-    slot: null,
     accountId: accountId > 0 ? accountId : null,
     heroId: null,
-    team: null,
     playerName: null,
     rank: null,
     selected: null,
+    slot: null,
+    team: null,
   }))
 
 describe('getStreamersInMatch', () => {
@@ -77,7 +78,7 @@ describe('getStreamersInMatch', () => {
 
   it('counts other live streamers from the matches table at 8500+ (no roster)', async () => {
     matchesRows = [{ userId: 'me' }, { userId: 'a' }, { userId: 'b' }]
-    const count = await getStreamersInMatch({ matchId: '123', excludeUserId: 'me' })
+    const count = await getStreamersInMatch({ excludeUserId: 'me', matchId: '123' })
     expect(count).toBe(2)
     expect(queriedMatchId).toBe('123')
     expect(queriedAccountIds).toBeNull()
@@ -87,21 +88,21 @@ describe('getStreamersInMatch', () => {
     matchesRows = [{ userId: 'a' }]
     steamRows = [{ userId: 'c' }]
     const count = await getStreamersInMatch({
+      excludeUserId: 'me',
       matchId: '123',
       players: players([1, 2, 3]),
-      excludeUserId: 'me',
     })
     expect(count).toBe(2)
-    expect(queriedAccountIds).toEqual([1, 2, 3])
+    expect(queriedAccountIds).toStrictEqual([1, 2, 3])
   })
 
   it('dedupes a user appearing in both sources', async () => {
     matchesRows = [{ userId: 'a' }]
     steamRows = [{ userId: 'a' }, { userId: 'b' }]
     const count = await getStreamersInMatch({
+      excludeUserId: 'me',
       matchId: '123',
       players: players([1, 2]),
-      excludeUserId: 'me',
     })
     expect(count).toBe(2)
   })
@@ -110,15 +111,15 @@ describe('getStreamersInMatch', () => {
     matchesRows = [{ userId: 'me' }, { userId: 'a' }]
     steamRows = [{ userId: 'me' }, { userId: 'a' }]
     const count = await getStreamersInMatch({
+      excludeUserId: 'me',
       matchId: '123',
       players: players([1, 2]),
-      excludeUserId: 'me',
     })
     expect(count).toBe(1)
   })
 
   it('returns 0 and queries nothing when no matchId and no real account ids', async () => {
-    const count = await getStreamersInMatch({ players: players([0, 0]), excludeUserId: 'me' })
+    const count = await getStreamersInMatch({ excludeUserId: 'me', players: players([0, 0]) })
     expect(count).toBe(0)
     expect(queriedMatchId).toBeNull()
     expect(queriedAccountIds).toBeNull()
@@ -126,26 +127,26 @@ describe('getStreamersInMatch', () => {
 
   it('treats matchId "0" as no match', async () => {
     matchesRows = [{ userId: 'a' }]
-    const count = await getStreamersInMatch({ matchId: '0', excludeUserId: 'me' })
+    const count = await getStreamersInMatch({ excludeUserId: 'me', matchId: '0' })
     expect(count).toBe(0)
     expect(queriedMatchId).toBeNull()
   })
 
   it('works roster-only when no matchId is available', async () => {
     steamRows = [{ userId: 'a' }]
-    const count = await getStreamersInMatch({ players: players([5, 7]), excludeUserId: 'me' })
+    const count = await getStreamersInMatch({ excludeUserId: 'me', players: players([5, 7]) })
     expect(count).toBe(1)
     expect(queriedMatchId).toBeNull()
-    expect(queriedAccountIds).toEqual([5, 7])
+    expect(queriedAccountIds).toStrictEqual([5, 7])
   })
 
   it('ignores null userIds from either source', async () => {
     matchesRows = [{ userId: null }, { userId: 'a' }]
     steamRows = [{ userId: null }]
     const count = await getStreamersInMatch({
+      excludeUserId: 'me',
       matchId: '123',
       players: players([1]),
-      excludeUserId: 'me',
     })
     expect(count).toBe(1)
   })

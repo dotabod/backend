@@ -11,7 +11,6 @@ import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('ranked', {
   aliases: ['isranked'],
-  onlyOnline: true,
   dbkey: DBSettings.commandRanked,
   handler: async (message, _args) => {
     const {
@@ -27,7 +26,7 @@ commandHandler.registerCommand('ranked', {
               url: 'dotabod.com/dashboard/features',
             })
           : t('unknownSteam', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -38,7 +37,7 @@ commandHandler.registerCommand('ranked', {
       chatClient.say(
         channel,
         t('ranked_no', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -47,7 +46,7 @@ commandHandler.registerCommand('ranked', {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -64,7 +63,7 @@ commandHandler.registerCommand('ranked', {
         chatClient.say(
           channel,
           t('missingMatchData', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -73,7 +72,7 @@ commandHandler.registerCommand('ranked', {
         chatClient.say(
           channel,
           t('ranked', { context: 'yes', lng: message.channel.client.locale }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -83,7 +82,8 @@ commandHandler.registerCommand('ranked', {
     chatClient.say(
       channel,
       t('ranked', { context: 'no', lng: message.channel.client.locale }),
-      message.user.messageId,
+      message.user.messageId
     )
   },
+  onlyOnline: true,
 })

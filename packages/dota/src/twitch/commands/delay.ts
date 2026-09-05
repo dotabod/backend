@@ -2,11 +2,11 @@ import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler';
+import type { MessageType } from '../lib/CommandHandler';
 
 commandHandler.registerCommand('delay', {
   aliases: ['streamdelay'],
-  onlyOnline: true,
   dbkey: DBSettings.commandDelay,
   handler: (message: MessageType, _args: string[]) => {
     const {
@@ -21,8 +21,9 @@ commandHandler.registerCommand('delay', {
       delay / 1000 <= 0
         ? t('streamDelayNone', { lng: message.channel.client.locale })
         : t('streamDelay', { lng: message.channel.client.locale, seconds: delay / 1000 }),
-      message.user.messageId,
+      message.user.messageId
     )
     return
   },
+  onlyOnline: true,
 })

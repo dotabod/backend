@@ -1,4 +1,5 @@
 import { logger, supabase } from '@dotabod/shared-utils'
+
 import { initUserSubscriptions } from './initUserSubscriptions'
 import { getBotInstance } from './twitch/lib/BotApiSingleton'
 
@@ -27,17 +28,17 @@ async function findUserIdByProviderAccount(providerAccountId: string): Promise<s
       .eq('providerAccountId', providerAccountId)
       .eq('provider', 'twitch')
       .single()
-    if (data?.userId) return data.userId
+    if (data?.userId) {return data.userId}
     lastError = error ?? null
-    if (attempt === 0) await new Promise((r) => setTimeout(r, REPLICA_LAG_RETRY_MS))
+    if (attempt === 0) {await new Promise((r) => setTimeout(r, REPLICA_LAG_RETRY_MS))}
   }
-  if (lastError) throw lastError
+  if (lastError) {throw lastError}
   return null
 }
 
 export async function handleNewUser(
   providerAccountId: string,
-  resubscribeEvents = true,
+  resubscribeEvents = true
 ): Promise<void> {
   logger.info("[TWITCHEVENTS] New user, let's get their info", { providerAccountId })
 
@@ -70,9 +71,9 @@ export async function handleNewUser(
         // Transient DB error — log but keep going. The watcher's UPDATE:users
         // ban branch is the live-ban path; this lookup is a steady-state guard.
         logger.error('[TWITCHEVENTS] handleNewUser: ban check failed', {
+          error: banError,
           providerAccountId,
           userId,
-          error: banError,
         })
       } else if (banRow?.banned_at) {
         logger.info('[TWITCHEVENTS] handleNewUser: skipping banned user', {
@@ -97,13 +98,13 @@ export async function handleNewUser(
         stream_start_date: stream?.startDate.toISOString() ?? null,
       }
       const filteredData = Object.fromEntries(
-        Object.entries(data).filter(([_key, value]) => Boolean(value)),
+        Object.entries(data).filter(([_key, value]) => Boolean(value))
       )
 
       if (userId) {
         await supabase
           .from('users')
-          .update(filteredData as typeof data)
+          .update(filteredData)
           .eq('id', userId)
         profileUpdated = true
       } else {
@@ -123,8 +124,8 @@ export async function handleNewUser(
     // outages, but do NOT throw — Step 2 (subscription registration) should
     // still run so the user is at least subscribed to events.
     logger.error('[TWITCHEVENTS] handleNewUser: profile update failed', {
-      providerAccountId,
       error,
+      providerAccountId,
     })
   }
 
@@ -132,7 +133,7 @@ export async function handleNewUser(
   // sites that may want to differentiate "subscribed but profile stale".
   void profileUpdated
 
-  if (banShortCircuit) return
+  if (banShortCircuit) {return}
 
   if (resubscribeEvents) {
     // initUserSubscriptions returns false (not throws) when a critical sub
@@ -142,7 +143,7 @@ export async function handleNewUser(
     const ok = await initUserSubscriptions(providerAccountId)
     if (ok === false) {
       throw new Error(
-        `[TWITCHEVENTS] initUserSubscriptions: critical subscription failed for ${providerAccountId}`,
+        `[TWITCHEVENTS] initUserSubscriptions: critical subscription failed for ${providerAccountId}`
       )
     }
   }

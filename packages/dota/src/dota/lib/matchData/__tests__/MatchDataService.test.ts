@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { buildSharedUtilsMock } from '../../../../__tests__/sharedMocks.ts'
 
 const noopLogger = {
-  info: () => undefined,
-  error: () => undefined,
-  warn: () => undefined,
   debug: () => undefined,
+  error: () => undefined,
+  info: () => undefined,
+  warn: () => undefined,
 }
 
 // Per-test supabase rows for the streamers-in-match count test.
@@ -28,8 +29,8 @@ const supabaseStub = {
   },
 }
 
-vi.doMock('@dotabod/shared-utils', () =>
-  buildSharedUtilsMock({ supabase: supabaseStub, logger: noopLogger }),
+vi.doMock(import('@dotabod/shared-utils'), () =>
+  buildSharedUtilsMock({ logger: noopLogger, supabase: supabaseStub })
 )
 
 // Lower-level mocks (Mongo + steam socket). We let the real ResolverChain run end-to-end against
@@ -43,8 +44,9 @@ let mongoCallCount = 0
 // to fall back to the steady-state mock.
 let mongoFindOneOverride: (() => Promise<unknown>) | null = null
 
-vi.doMock('../../../../steam/MongoDBSingleton', () => ({
+vi.doMock(import('../../../../steam/MongoDBSingleton'), () => ({
   default: {
+    close: async () => undefined,
     connect: async () => ({
       collection: () => ({
         findOne: async () => {
@@ -57,28 +59,27 @@ vi.doMock('../../../../steam/MongoDBSingleton', () => ({
         },
       }),
     }),
-    close: async () => undefined,
   },
 }))
 
-let cardsResponse: Array<Record<string, unknown>> = []
+let cardsResponse: Record<string, unknown>[] = []
 let socketCallCount = 0
 let socketLastIds: number[] = []
 
-vi.doMock('../../../../steam/ws', () => ({
+vi.doMock(import('../../../../steam/ws'), () => ({
   steamSocket: {
     emit: (
       _event: string,
       ids: number[],
       _refetch: boolean,
-      cb: (err: unknown, cards: unknown) => void,
+      cb: (err: unknown, cards: unknown) => void
     ) => {
       socketCallCount++
       socketLastIds = ids
       cb(null, cardsResponse)
     },
   },
-  twitchChat: { on: () => undefined },
+  twitchChat: { on: () => {} },
 }))
 
 const { MatchDataService } = await import('../MatchDataService.ts')
@@ -88,7 +89,7 @@ const realFetch = globalThis.fetch
 const origVisionHost = process.env.VISION_API_HOST
 const origVisionKey = process.env.VISION_API_KEY
 function mockVision(payload: unknown, ok = true) {
-  globalThis.fetch = (async () => ({ ok, json: async () => payload })) as unknown as typeof fetch
+  globalThis.fetch = (async () => ({ json: async () => payload, ok })) as unknown as typeof fetch
 }
 function noVisionHost() {
   delete process.env.VISION_API_HOST
@@ -100,10 +101,10 @@ function withVisionHost() {
 
 afterEach(() => {
   globalThis.fetch = realFetch
-  if (origVisionHost === undefined) delete process.env.VISION_API_HOST
-  else process.env.VISION_API_HOST = origVisionHost
-  if (origVisionKey === undefined) delete process.env.VISION_API_KEY
-  else process.env.VISION_API_KEY = origVisionKey
+  if (origVisionHost === undefined) {delete process.env.VISION_API_HOST}
+  else {process.env.VISION_API_HOST = origVisionHost}
+  if (origVisionKey === undefined) {delete process.env.VISION_API_KEY}
+  else {process.env.VISION_API_KEY = origVisionKey}
 })
 
 // --- Client fixture ---
@@ -125,22 +126,16 @@ function makeClient(o: ClientOverrides = {}): any {
   const ownAccountId = o.ownAccountId ?? '111'
   const baseGsi = matchid
     ? {
-        map: { matchid, win_team: 'none', customgamename: '' },
-        player: { accountid: ownAccountId, team_name: 'radiant' },
         hero: o.ownHeroId !== undefined ? { id: o.ownHeroId } : undefined,
+        map: { customgamename: '', matchid, win_team: 'none' },
+        player: { accountid: ownAccountId, team_name: 'radiant' },
       }
     : {
+        hero: undefined,
         map: { customgamename: '' },
         player: { accountid: ownAccountId, team_name: 'radiant' },
-        hero: undefined,
       }
   return {
-    token: 'broadcaster',
-    name: 'channel',
-    stream_online: o.stream_online ?? true,
-    locale: 'en',
-    steam32Id: o.steam32Id === undefined ? 111 : o.steam32Id,
-    mmr: o.mmr ?? 4000,
     SteamAccount: [
       {
         steam32Id: 111,
@@ -149,27 +144,32 @@ function makeClient(o: ClientOverrides = {}): any {
         name: 'self',
       },
     ],
-    settings: o.disableAutoClipping ? [{ key: 'disableAutoClipping', value: true }] : [],
-    subscription: { tier: 'PRO', status: 'ACTIVE', isGift: false },
     gsi: o.gsi ?? baseGsi,
+    locale: 'en',
+    mmr: o.mmr ?? 4000,
+    name: 'channel',
+    settings: o.disableAutoClipping ? [{ key: 'disableAutoClipping', value: true }] : [],
+    steam32Id: o.steam32Id === undefined ? 111 : o.steam32Id,
+    stream_online: o.stream_online ?? true,
+    subscription: { isGift: false, status: 'ACTIVE', tier: 'PRO' },
+    token: 'broadcaster',
   }
 }
 
 function sourceTvDoc(opts: { partialHeroes?: boolean } = {}) {
   return {
-    match: { match_id: '8800000001', game_mode: 22, lobby_type: 7 },
     average_mmr: 6500,
-    spectators: 3,
+    match: { game_mode: 22, lobby_type: 7, match_id: '8800000001' },
     players: Array.from({ length: 10 }, (_, i) => ({
       heroid: opts.partialHeroes && i >= 7 ? 0 : i + 1,
       accountid: 1000 + i,
     })),
+    spectators: 3,
   }
 }
 
 function visionHeroesPayload() {
   return {
-    match_id: '8800000001',
     heroes: Array.from({ length: 10 }, (_, i) => ({
       hero_id: i + 1,
       hero_name: `hero${i + 1}`,
@@ -182,43 +182,44 @@ function visionHeroesPayload() {
       variant: '',
       player_id: i,
     })),
+    match_id: '8800000001',
     players: [],
   }
 }
 
 function visionDraftPayload(heroes_status: 'waiting' | 'failed' = 'waiting') {
   return {
-    match_id: '8800000001',
+    draft_player_order: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'],
     heroes: [],
     heroes_status,
-    draft_player_order: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'],
+    match_id: '8800000001',
   }
 }
 
 function gsiSpectatorClient(o: ClientOverrides = {}): any {
   const team2 = Object.fromEntries(
-    [0, 1, 2, 3, 4].map((i) => [`player${i}`, { id: i + 1, selected_unit: false }]),
+    [0, 1, 2, 3, 4].map((i) => [`player${i}`, { id: i + 1, selected_unit: false }])
   )
   const team3 = Object.fromEntries(
-    [5, 6, 7, 8, 9].map((i) => [`player${i}`, { id: i + 1, selected_unit: false }]),
+    [5, 6, 7, 8, 9].map((i) => [`player${i}`, { id: i + 1, selected_unit: false }])
   )
   const team2Players = Object.fromEntries(
-    [0, 1, 2, 3, 4].map((i) => [`player${i}`, { accountid: 2000 + i, name: `P${i}` }]),
+    [0, 1, 2, 3, 4].map((i) => [`player${i}`, { accountid: 2000 + i, name: `P${i}` }])
   )
   const team3Players = Object.fromEntries(
-    [5, 6, 7, 8, 9].map((i) => [`player${i}`, { accountid: 2000 + i, name: `P${i}` }]),
+    [5, 6, 7, 8, 9].map((i) => [`player${i}`, { accountid: 2000 + i, name: `P${i}` }])
   )
   return makeClient({
     ...o,
     gsi: {
-      map: { matchid: '8800000001', win_team: 'none', customgamename: '' },
+      hero: { team2, team3 },
+      map: { customgamename: '', matchid: '8800000001', win_team: 'none' },
       player: {
         accountid: '111',
-        team_name: 'spectator',
         team2: team2Players,
         team3: team3Players,
+        team_name: 'spectator',
       },
-      hero: { team2, team3 },
     },
   })
 }
@@ -240,51 +241,49 @@ describe('MatchDataService — sync getters', () => {
   })
 
   it('hasSteam32Id reflects client.steam32Id', () => {
-    expect(new MatchDataService(makeClient({ steam32Id: null })).hasSteam32Id).toBe(false)
-    expect(new MatchDataService(makeClient({ steam32Id: 42 })).hasSteam32Id).toBe(true)
+    expect(new MatchDataService(makeClient({ steam32Id: null })).hasSteam32Id).toBeFalsy()
+    expect(new MatchDataService(makeClient({ steam32Id: 42 })).hasSteam32Id).toBeTruthy()
   })
 
   it('isStreamOnline reflects client.stream_online', () => {
-    expect(new MatchDataService(makeClient({ stream_online: false })).isStreamOnline).toBe(false)
-    expect(new MatchDataService(makeClient({ stream_online: true })).isStreamOnline).toBe(true)
+    expect(new MatchDataService(makeClient({ stream_online: false })).isStreamOnline).toBeFalsy()
+    expect(new MatchDataService(makeClient({ stream_online: true })).isStreamOnline).toBeTruthy()
   })
 
   it('isHighMmr is true on >8500 mmr', () => {
-    expect(new MatchDataService(makeClient({ mmr: 9000 })).isHighMmr).toBe(true)
+    expect(new MatchDataService(makeClient({ mmr: 9000 })).isHighMmr).toBeTruthy()
   })
 
   it('isHighMmr is true when steam_account has leaderboard rank', () => {
-    expect(new MatchDataService(makeClient({ mmr: 100, leaderboard_rank: 500 })).isHighMmr).toBe(
-      true,
-    )
+    expect(new MatchDataService(makeClient({ leaderboard_rank: 500, mmr: 100 })).isHighMmr).toBeTruthy()
   })
 
   it('isHighMmr is false sub-8500 with no leaderboard', () => {
-    expect(new MatchDataService(makeClient({ mmr: 5000 })).isHighMmr).toBe(false)
+    expect(new MatchDataService(makeClient({ mmr: 5000 })).isHighMmr).toBeFalsy()
   })
 
   it('isArcade reflects gsi customgamename', () => {
     const arcadeClient = makeClient({
-      gsi: { map: { matchid: '1', customgamename: 'overthrow' }, player: { accountid: '111' } },
+      gsi: { map: { customgamename: 'overthrow', matchid: '1' }, player: { accountid: '111' } },
     })
-    expect(new MatchDataService(arcadeClient).isArcade).toBe(true)
-    expect(new MatchDataService(makeClient()).isArcade).toBe(false)
+    expect(new MatchDataService(arcadeClient).isArcade).toBeTruthy()
+    expect(new MatchDataService(makeClient()).isArcade).toBeFalsy()
   })
 
   it('hasWinTeam true when win_team is radiant/dire, false for "none"', () => {
     const winning = makeClient({
-      gsi: { map: { matchid: '1', win_team: 'radiant', customgamename: '' } },
+      gsi: { map: { customgamename: '', matchid: '1', win_team: 'radiant' } },
     })
-    expect(new MatchDataService(winning).hasWinTeam).toBe(true)
-    expect(new MatchDataService(makeClient()).hasWinTeam).toBe(false)
+    expect(new MatchDataService(winning).hasWinTeam).toBeTruthy()
+    expect(new MatchDataService(makeClient()).hasWinTeam).toBeFalsy()
   })
 
   it('visionEligible requires both isHighMmr AND autoClippingEnabled', () => {
-    expect(new MatchDataService(makeClient({ mmr: 9000 })).visionEligible).toBe(true)
+    expect(new MatchDataService(makeClient({ mmr: 9000 })).visionEligible).toBeTruthy()
     expect(
-      new MatchDataService(makeClient({ mmr: 9000, disableAutoClipping: true })).visionEligible,
-    ).toBe(false)
-    expect(new MatchDataService(makeClient({ mmr: 5000 })).visionEligible).toBe(false)
+      new MatchDataService(makeClient({ disableAutoClipping: true, mmr: 9000 })).visionEligible
+    ).toBeFalsy()
+    expect(new MatchDataService(makeClient({ mmr: 5000 })).visionEligible).toBeFalsy()
   })
 })
 
@@ -295,17 +294,17 @@ describe('MatchDataService — resolveRoster source/stage/completeness', () => {
     const r = await new MatchDataService(client).resolveRoster()
     expect(r.source).toBe('none')
     expect(r.stage).toBe('unknown')
-    expect(r.players).toEqual([])
+    expect(r.players).toStrictEqual([])
   })
 
   it("surfaces the streamer's GSI-self row even when matchid is '0'", async () => {
     mongoDoc = null
     noVisionHost()
     const r = await new MatchDataService(
-      makeClient({ matchid: '0', ownAccountId: '111', ownHeroId: 14 }),
+      makeClient({ matchid: '0', ownAccountId: '111', ownHeroId: 14 })
     ).resolveRoster()
     expect(r.source).toBe('gsi-self')
-    expect(r.players.length).toBe(1)
+    expect(r.players).toHaveLength(1)
     expect(r.players[0].accountId).toBe(111)
     expect(r.players[0].heroId).toBe(14)
   })
@@ -319,8 +318,8 @@ describe('MatchDataService — resolveRoster source/stage/completeness', () => {
     expect(r.completeness.accountIds).toBe('all')
     expect(r.completeness.heroIds).toBe('all')
     expect(r.completeness.teamAssignment).toBe('none')
-    expect(r.hasAllAccountIds).toBe(true)
-    expect(r.hasAllHeroes).toBe(true)
+    expect(r.hasAllAccountIds).toBeTruthy()
+    expect(r.hasAllHeroes).toBeTruthy()
   })
 
   it('sourcetv (early game) = hero-draft when heroes are partial', async () => {
@@ -341,7 +340,7 @@ describe('MatchDataService — resolveRoster source/stage/completeness', () => {
     expect(r.source).toBe('vision-heroes')
     expect(r.completeness.heroIds).toBe('all')
     expect(r.completeness.accountIds).toBe('partial')
-    expect(r.players.filter((p) => p.accountId === null).length).toBe(9)
+    expect(r.players.filter((p) => p.accountId === null)).toHaveLength(9)
   })
 
   it('vision-draft "waiting" = roster-draft (CM player-pick)', async () => {
@@ -370,7 +369,7 @@ describe('MatchDataService — resolveRoster source/stage/completeness', () => {
     noVisionHost()
     const r = await new MatchDataService(makeClient({ ownHeroId: 14 })).resolveRoster()
     expect(r.source).toBe('gsi-self')
-    expect(r.players.length).toBe(1)
+    expect(r.players).toHaveLength(1)
   })
 
   it('gsi-spectator: derives team from slot', async () => {
@@ -385,21 +384,21 @@ describe('MatchDataService — resolveRoster source/stage/completeness', () => {
     const client = gsiSpectatorClient()
     client.gsi.hero.team2.player3.selected_unit = true
     const r = await new MatchDataService(client).resolveRoster()
-    expect(r.players.find((p) => p.slot === 3)?.selected).toBe(true)
-    expect(r.players.find((p) => p.slot === 7)?.selected).toBe(false)
+    expect(r.players.find((p) => p.slot === 3)?.selected).toBeTruthy()
+    expect(r.players.find((p) => p.slot === 7)?.selected).toBeFalsy()
   })
 
   it('non-spectator sources have selected: null', async () => {
     mongoDoc = sourceTvDoc()
     noVisionHost()
     const r = await new MatchDataService(makeClient()).resolveRoster()
-    expect(r.players.every((p) => p.selected === null)).toBe(true)
+    expect(r.players.every((p) => p.selected === null)).toBeTruthy()
   })
 
   it("length===1 Mongo response is tagged 'sourcetv', not 'gsi-self'", async () => {
     mongoDoc = {
       match: { match_id: '8800000001' },
-      players: [{ heroid: 5, accountid: 999_999 }],
+      players: [{ accountid: 999_999, heroid: 5 }],
     }
     noVisionHost()
     const r = await new MatchDataService(makeClient()).resolveRoster()
@@ -415,23 +414,23 @@ describe('MatchDataService — account-linked roster names', () => {
     let fetchCalled = false
     globalThis.fetch = (async () => {
       fetchCalled = true
-      return { ok: true, json: async () => visionHeroesPayload() }
+      return { json: async () => visionHeroesPayload(), ok: true }
     }) as unknown as typeof fetch
     const r = await new MatchDataService(makeClient()).resolveRoster()
 
     expect(r.source).toBe('sourcetv')
-    expect(r.players.length).toBe(10)
-    expect(r.players.every((p) => p.accountId !== null)).toBe(true)
-    expect(r.players.every((p) => p.playerName === null)).toBe(true)
-    expect(fetchCalled).toBe(false)
+    expect(r.players).toHaveLength(10)
+    expect(r.players.every((p) => p.accountId !== null)).toBeTruthy()
+    expect(r.players.every((p) => p.playerName === null)).toBeTruthy()
+    expect(fetchCalled).toBeFalsy()
   })
 
   it('does not overwrite a name the winning resolver already knows', async () => {
     mongoDoc = {
       match: { match_id: '8800000001' },
       players: [
-        { heroid: 1, accountid: 1000, player_name: 'KnownPro' },
-        { heroid: 2, accountid: 1001 },
+        { accountid: 1000, heroid: 1, player_name: 'KnownPro' },
+        { accountid: 1001, heroid: 2 },
       ],
     }
     withVisionHost()
@@ -444,16 +443,16 @@ describe('MatchDataService — account-linked roster names', () => {
   it('skips the Vision fetch entirely when every player already has a name', async () => {
     mongoDoc = {
       match: { match_id: '8800000001' },
-      players: [{ heroid: 1, accountid: 1000, player_name: 'KnownPro' }],
+      players: [{ accountid: 1000, heroid: 1, player_name: 'KnownPro' }],
     }
     withVisionHost()
     let fetchCalled = false
     globalThis.fetch = (async () => {
       fetchCalled = true
-      return { ok: true, json: async () => visionHeroesPayload() }
+      return { json: async () => visionHeroesPayload(), ok: true }
     }) as unknown as typeof fetch
     await new MatchDataService(makeClient()).resolveRoster()
-    expect(fetchCalled).toBe(false)
+    expect(fetchCalled).toBeFalsy()
   })
 
   it('leaves names untouched when Vision has nothing (no host configured)', async () => {
@@ -461,7 +460,7 @@ describe('MatchDataService — account-linked roster names', () => {
     noVisionHost()
     const r = await new MatchDataService(makeClient()).resolveRoster()
     expect(r.source).toBe('sourcetv')
-    expect(r.players.every((p) => p.playerName === null)).toBe(true)
+    expect(r.players.every((p) => p.playerName === null)).toBeTruthy()
   })
 })
 
@@ -472,19 +471,19 @@ describe('MatchDataService — typed delayedGames accessors', () => {
   })
 
   it('getAverageMmr reads from the delayedGames doc', async () => {
-    expect(await new MatchDataService(makeClient()).getAverageMmr()).toBe(6500)
+    await expect(new MatchDataService(makeClient()).getAverageMmr()).resolves.toBe(6500)
   })
 
   it('getGameMode reads from match.game_mode', async () => {
-    expect(await new MatchDataService(makeClient()).getGameMode()).toBe(22)
+    await expect(new MatchDataService(makeClient()).getGameMode()).resolves.toBe(22)
   })
 
   it('getLobbyType reads from match.lobby_type', async () => {
-    expect(await new MatchDataService(makeClient()).getLobbyType()).toBe(7)
+    await expect(new MatchDataService(makeClient()).getLobbyType()).resolves.toBe(7)
   })
 
   it('getSpectatorCount reads from spectators', async () => {
-    expect(await new MatchDataService(makeClient()).getSpectatorCount()).toBe(3)
+    await expect(new MatchDataService(makeClient()).getSpectatorCount()).resolves.toBe(3)
   })
 
   it('all four accessors share ONE Mongo fetch (memoized via getDelayedGameDoc)', async () => {
@@ -501,10 +500,10 @@ describe('MatchDataService — typed delayedGames accessors', () => {
   it('all four return null when there is no doc', async () => {
     mongoDoc = null
     const svc = new MatchDataService(makeClient())
-    expect(await svc.getAverageMmr()).toBeNull()
-    expect(await svc.getGameMode()).toBeNull()
-    expect(await svc.getLobbyType()).toBeNull()
-    expect(await svc.getSpectatorCount()).toBeNull()
+    await expect(svc.getAverageMmr()).resolves.toBeNull()
+    await expect(svc.getGameMode()).resolves.toBeNull()
+    await expect(svc.getLobbyType()).resolves.toBeNull()
+    await expect(svc.getSpectatorCount()).resolves.toBeNull()
   })
 })
 
@@ -513,20 +512,20 @@ describe('MatchDataService — projections (getAccountIds / getHeroesStatus)', (
     mongoDoc = sourceTvDoc()
     noVisionHost()
     const ids = await new MatchDataService(makeClient()).getAccountIds()
-    expect(ids).toEqual([1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009])
+    expect(ids).toStrictEqual([1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009])
   })
 
   it('getHeroesStatus passes through "waiting" on vision-draft', async () => {
     mongoDoc = null
     withVisionHost()
     mockVision(visionDraftPayload('waiting'))
-    expect(await new MatchDataService(makeClient()).getHeroesStatus()).toBe('waiting')
+    await expect(new MatchDataService(makeClient()).getHeroesStatus()).resolves.toBe('waiting')
   })
 
   it('getHeroesStatus is undefined for sources without it', async () => {
     mongoDoc = sourceTvDoc()
     noVisionHost()
-    expect(await new MatchDataService(makeClient()).getHeroesStatus()).toBeUndefined()
+    await expect(new MatchDataService(makeClient()).getHeroesStatus()).resolves.toBeUndefined()
   })
 
   it('projections share ONE resolveRoster call (memoized)', async () => {
@@ -550,7 +549,7 @@ describe('MatchDataService — memoization', () => {
   })
 
   it('getDelayedGameDoc returns null without I/O when matchId is undefined', async () => {
-    expect(await new MatchDataService(makeClient({ matchid: '0' })).getDelayedGameDoc()).toBeNull()
+    await expect(new MatchDataService(makeClient({ matchid: '0' })).getDelayedGameDoc()).resolves.toBeNull()
     expect(mongoCallCount).toBe(0)
   })
 
@@ -562,7 +561,7 @@ describe('MatchDataService — memoization', () => {
     await svc.getCards()
     await svc.getCards()
     expect(socketCallCount).toBe(1)
-    expect(socketLastIds).toEqual([1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009])
+    expect(socketLastIds).toStrictEqual([1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009])
   })
 
   it('getCards returns [] without socket emit when there are no real accountIds', async () => {
@@ -570,7 +569,7 @@ describe('MatchDataService — memoization', () => {
     withVisionHost()
     mockVision(visionDraftPayload('waiting'))
     const svc = new MatchDataService(makeClient())
-    expect(await svc.getCards()).toEqual([])
+    await expect(svc.getCards()).resolves.toStrictEqual([])
     expect(socketCallCount).toBe(0)
   })
 
@@ -578,14 +577,14 @@ describe('MatchDataService — memoization', () => {
     mongoDoc = {
       match: { match_id: '8800000001' },
       players: [
-        { heroid: 1, accountid: 555 },
-        { heroid: 2, accountid: 555 },
-        { heroid: 3, accountid: 666 },
+        { accountid: 555, heroid: 1 },
+        { accountid: 555, heroid: 2 },
+        { accountid: 666, heroid: 3 },
       ],
     }
     noVisionHost()
     await new MatchDataService(makeClient()).getCards()
-    expect(socketLastIds).toEqual([555, 666])
+    expect(socketLastIds).toStrictEqual([555, 666])
   })
 
   it('getCards REJECTS on socket error (preserves the error signal)', async () => {
@@ -597,13 +596,13 @@ describe('MatchDataService — memoization', () => {
       _event: string,
       _ids: number[],
       _refetch: boolean,
-      cb: (err: unknown, cards: unknown) => void,
-    ) => cb(new Error('socket boom'), null)) as typeof ws.steamSocket.emit
+      cb: (err: unknown, cards: unknown) => void
+    ) =>{  cb(new Error('socket boom'), null); }) as typeof ws.steamSocket.emit
     let caught: unknown = null
     try {
       await new MatchDataService(makeClient()).getCards()
-    } catch (e) {
-      caught = e
+    } catch (error) {
+      caught = error
     }
     expect(caught).toBeInstanceOf(Error)
     expect((caught as Error).message).toContain('socket boom')
@@ -614,7 +613,7 @@ describe('MatchDataService — memoization', () => {
     let calls = 0
     mongoFindOneOverride = async () => {
       calls++
-      if (calls === 1) throw new Error('transient mongo')
+      if (calls === 1) {throw new Error('transient mongo')}
       return sourceTvDoc()
     }
     noVisionHost()
@@ -622,8 +621,8 @@ describe('MatchDataService — memoization', () => {
     let firstErr: unknown = null
     try {
       await svc.resolveRoster()
-    } catch (e) {
-      firstErr = e
+    } catch (error) {
+      firstErr = error
     }
     expect(firstErr).toBeInstanceOf(Error)
     const r = await svc.resolveRoster()
@@ -635,7 +634,7 @@ describe('MatchDataService — memoization', () => {
 
 describe('MatchDataService — per-slot lookups + getSelf + focused spectator', () => {
   it('findPlayerBySlot returns null for NaN', async () => {
-    expect(await new MatchDataService(makeClient()).findPlayerBySlot(Number.NaN)).toBeNull()
+    await expect(new MatchDataService(makeClient()).findPlayerBySlot(Number.NaN)).resolves.toBeNull()
   })
 
   it('findPlayerBySlot locates spectator slots', async () => {
@@ -649,7 +648,7 @@ describe('MatchDataService — per-slot lookups + getSelf + focused spectator', 
     mongoDoc = null
     withVisionHost()
     mockVision(visionHeroesPayload())
-    expect(await new MatchDataService(makeClient()).findPlayerByAccountId(0)).toBeNull()
+    await expect(new MatchDataService(makeClient()).findPlayerByAccountId(0)).resolves.toBeNull()
   })
 
   it('findPlayerByAccountId locates by real accountId', async () => {
@@ -663,15 +662,15 @@ describe('MatchDataService — per-slot lookups + getSelf + focused spectator', 
   it('findPlayerByHeroId(0) is a no-op', async () => {
     mongoDoc = sourceTvDoc()
     noVisionHost()
-    expect(await new MatchDataService(makeClient()).findPlayerByHeroId(0)).toBeNull()
+    await expect(new MatchDataService(makeClient()).findPlayerByHeroId(0)).resolves.toBeNull()
   })
 
   it("getSelf returns the broadcaster's own RosterPlayer when present", async () => {
     mongoDoc = {
       match: { match_id: '8800000001' },
       players: [
-        { heroid: 14, accountid: 111 }, // streamer (steam32Id 111)
-        { heroid: 99, accountid: 222 },
+        { accountid: 111, heroid: 14 }, // streamer (steam32Id 111)
+        { accountid: 222, heroid: 99 },
       ],
     }
     noVisionHost()
@@ -681,7 +680,7 @@ describe('MatchDataService — per-slot lookups + getSelf + focused spectator', 
   })
 
   it('getSelf returns null when steam32Id is unset', async () => {
-    expect(await new MatchDataService(makeClient({ steam32Id: null })).getSelf()).toBeNull()
+    await expect(new MatchDataService(makeClient({ steam32Id: null })).getSelf()).resolves.toBeNull()
   })
 
   it('getFocusedSpectatorPlayer returns the unit with `selected: true`', async () => {
@@ -694,7 +693,7 @@ describe('MatchDataService — per-slot lookups + getSelf + focused spectator', 
   it('getFocusedSpectatorPlayer returns null in non-spectator sources', async () => {
     mongoDoc = sourceTvDoc()
     noVisionHost()
-    expect(await new MatchDataService(makeClient()).getFocusedSpectatorPlayer()).toBeNull()
+    await expect(new MatchDataService(makeClient()).getFocusedSpectatorPlayer()).resolves.toBeNull()
   })
 })
 
@@ -702,7 +701,7 @@ describe('MatchDataService — resolveHeroNameForSlot tier rule', () => {
   it('returns name from roster when slot is present (spectator)', async () => {
     const svc = new MatchDataService(gsiSpectatorClient({ mmr: 9000 }))
     const r = await svc.resolveHeroNameForSlot({ eventPlayerId: 3 })
-    expect(r.resolvedFromRoster).toBe(true)
+    expect(r.resolvedFromRoster).toBeTruthy()
     expect(r.name).not.toBeNull()
   })
 
@@ -711,7 +710,7 @@ describe('MatchDataService — resolveHeroNameForSlot tier rule', () => {
     noVisionHost()
     const svc = new MatchDataService(makeClient({ mmr: 9500 }))
     const r = await svc.resolveHeroNameForSlot({ eventPlayerId: 7 })
-    expect(r.resolvedFromRoster).toBe(false)
+    expect(r.resolvedFromRoster).toBeFalsy()
     expect(r.name).toBeNull()
   })
 
@@ -733,7 +732,7 @@ describe('MatchDataService — resolveHeroNameForSlot tier rule', () => {
     const client = gsiSpectatorClient({ mmr: 9500 })
     client.gsi.hero.team2.player3.id = 0
     const r = await new MatchDataService(client).resolveHeroNameForSlot({ eventPlayerId: 3 })
-    expect(r.resolvedFromRoster).toBe(true)
+    expect(r.resolvedFromRoster).toBeTruthy()
     expect(r.name).toBeNull()
   })
 

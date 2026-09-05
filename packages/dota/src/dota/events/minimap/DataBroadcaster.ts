@@ -10,15 +10,10 @@ import type {
 } from './DataBroadcasterTypes'
 
 const DEFAULT_DATA: MinimapData = {
-  heroes: {
+  buildings: {
     data: [],
     lastUpdate: 0,
-    timeout: 500,
-  },
-  hero_units: {
-    data: [],
-    lastUpdate: 0,
-    timeout: 500,
+    timeout: 2000,
   },
   couriers: {
     data: [],
@@ -30,17 +25,22 @@ const DEFAULT_DATA: MinimapData = {
     lastUpdate: 0,
     timeout: 1000,
   },
-  buildings: {
+  hero_units: {
     data: [],
     lastUpdate: 0,
-    timeout: 2000,
+    timeout: 500,
   },
-  tp: {
+  heroes: {
     data: [],
     lastUpdate: 0,
     timeout: 500,
   },
   scan: {
+    data: [],
+    lastUpdate: 0,
+    timeout: 500,
+  },
+  tp: {
     data: [],
     lastUpdate: 0,
     timeout: 500,
@@ -66,7 +66,7 @@ export class DataBroadcaster implements DataBroadcasterInterface {
 
   resetData(): void {
     Object.keys(this.minimap).forEach((type) => {
-      const entity = this.minimap[type as MinimapEntityType] as EntityData
+      const entity = this.minimap[type as MinimapEntityType]
       entity.data = []
       entity.lastUpdate = 0
     })
@@ -77,7 +77,7 @@ export class DataBroadcaster implements DataBroadcasterInterface {
     // Update Data
     if (parsedData.minimap) {
       Object.keys(this.minimap).forEach((type) => {
-        const entity = this.minimap[type as MinimapEntityType] as EntityData
+        const entity = this.minimap[type as MinimapEntityType]
         const elapsedTime = Date.now() - entity.lastUpdate
         const minimapData = parsedData.minimap?.[type as MinimapEntityType]
         const emitFlag =

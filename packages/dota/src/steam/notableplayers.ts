@@ -1,6 +1,7 @@
 import { moderateText } from '@dotabod/profanity-filter'
 import { countryCodeEmoji } from 'country-code-emoji'
 import { t } from 'i18next'
+
 import { calculateAvg } from '../dota/lib/calculateAvg'
 import { getPlayers } from '../dota/lib/getPlayers'
 import { getHeroNameOrColor } from '../dota/lib/heroes'
@@ -41,13 +42,13 @@ export async function notablePlayers({
   // lookup) and use them directly.
   const { matchPlayers, accountIds, gameMode } = heroesStatus
     ? {
-        matchPlayers: players ?? [],
         accountIds: (players ?? []).map((p) => p.accountId ?? 0),
         gameMode: undefined,
+        matchPlayers: players ?? [],
       }
     : await getPlayers({
-        locale,
         currentMatchId,
+        locale,
         players,
       })
 
@@ -80,10 +81,10 @@ export async function notablePlayers({
               projection: {
                 _id: 0,
                 account_id: 1,
-                name: 1,
                 country_code: 1,
+                name: 1,
               },
-            },
+            }
           )
           .toArray()
       : []
@@ -98,9 +99,9 @@ export async function notablePlayers({
     const avg = heroesStatus
       ? null
       : await calculateAvg({
-          locale: locale,
-          currentMatchId: currentMatchId,
-          players: players,
+          locale,
+          currentMatchId,
+          players,
         })
 
     const proPlayers: NotablePlayer[] = []
@@ -109,7 +110,7 @@ export async function notablePlayers({
     for (const [i, player] of matchPlayers.entries()) {
       const np = nps.find((np) => np.account_id === player.accountId)
       const steamSummary =
-        player.accountId !== null ? steamSummaries.get(player.accountId) : undefined
+        player.accountId === null ? undefined : steamSummaries.get(player.accountId)
       const isCurrentPlayer = player.accountId === steam32Id
 
       // Determine hero name based on available data
@@ -127,23 +128,23 @@ export async function notablePlayers({
 
       const playerData = {
         account_id: player.accountId ?? 0,
+        country_code: np?.country_code || steamSummary?.countryCode || '',
         heroId: player.heroId ?? 0,
-        position: i,
         heroName:
           heroName === '?'
             ? matchPlayers?.[i]?.heroId && (matchPlayers?.[i]?.heroId ?? 0) > 0
               ? getHeroNameOrColor(matchPlayers[i].heroId ?? 0, i)
               : '?'
             : heroName,
+        isMe: isCurrentPlayer,
         name:
           (await moderateText(
             np?.name ||
               steamSummary?.personaName ||
               (rosterSource === 'sourcetv' ? undefined : matchPlayers[i].playerName) ||
-              `Player ${i + 1}`,
+              `Player ${i + 1}`
           )) ?? `Player ${i + 1}`,
-        country_code: np?.country_code || steamSummary?.countryCode || '',
-        isMe: isCurrentPlayer,
+        position: i,
       }
 
       // Show a player when they're a tracked pro (np), when a name was detected,

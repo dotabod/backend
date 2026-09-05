@@ -1,5 +1,6 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/getWL'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { chatClient } from '../../twitch/chatClient'
@@ -16,27 +17,29 @@ interface TellChatNewMMRParams {
 
 function tellChatNewMMR({ streamDelay, locale, token, mmr = 0, oldMmr = 0 }: TellChatNewMMRParams) {
   const client = findUser(token)
-  if (!client) return
+  if (!client) {return}
 
   const mmrEnabled = getValueOrDefault(
     DBSettings['mmr-tracker'],
     client.settings,
-    client.subscription,
+    client.subscription
   )
   const tellChatNewMMR = getValueOrDefault(
     DBSettings.tellChatNewMMR,
     client.settings,
-    client.subscription,
+    client.subscription
   )
   const chattersEnabled = getValueOrDefault(
     DBSettings.chatter,
     client.settings,
-    client.subscription,
+    client.subscription
   )
 
   const newMmr = mmr - oldMmr
   if (mmrEnabled && chattersEnabled && tellChatNewMMR && mmr !== 0) {
-    if (newMmr !== 0) {
+    if (newMmr === 0) {
+      chatClient.say(client.name, t('updateMmrNoChange', { mmr, lng: locale }))
+    } else {
       const isAuto = [MULTIPLIER_PARTY, MULTIPLIER_SOLO].includes(Math.abs(newMmr))
       setTimeout(
         () => {
@@ -47,13 +50,11 @@ function tellChatNewMMR({ streamDelay, locale, token, mmr = 0, oldMmr = 0 }: Tel
               mmr,
               delta: `${newMmr > 0 ? '+' : ''}${newMmr}`,
               lng: locale,
-            }),
+            })
           )
         },
-        isAuto ? streamDelay + GLOBAL_DELAY : 0,
+        isAuto ? streamDelay + GLOBAL_DELAY : 0
       )
-    } else {
-      chatClient.say(client.name, t('updateMmrNoChange', { mmr, lng: locale }))
     }
   }
 }
@@ -78,10 +79,10 @@ export async function updateMmr({
   token,
 }: UpdateMmrParams) {
   // uncalibrated (0) mmr do not deserve an update
-  if (!currentMmr && !force) return
+  if (!currentMmr && !force) {return}
 
   let mmr = Number(newMmr)
-  if (!newMmr || !mmr || mmr > 20000 || mmr < 0) {
+  if (!newMmr || !mmr || mmr > 20_000 || mmr < 0) {
     logger.info('Invalid mmr, forcing to 0', { channel, mmr })
     mmr = 0
   }
@@ -96,7 +97,7 @@ export async function updateMmr({
       '[UPDATE MMR] No steam32Id provided, will update the users table until they get one',
       {
         channel,
-      },
+      }
     )
 
     await supabase
@@ -112,15 +113,15 @@ export async function updateMmr({
       client.mmr = mmr
       if (tellChat) {
         tellChatNewMMR({
+          locale: client.locale,
+          mmr,
+          oldMmr: currentMmr,
           streamDelay: getValueOrDefault(
             DBSettings.streamDelay,
             client.settings,
-            client.subscription,
+            client.subscription
           ),
-          locale: client.locale,
           token: client.token,
-          mmr,
-          oldMmr: currentMmr,
         })
       }
     }
@@ -169,15 +170,15 @@ export async function updateMmr({
 
     if (tellChat) {
       tellChatNewMMR({
+        locale: client.locale,
+        mmr,
+        oldMmr: currentMmr,
         streamDelay: getValueOrDefault(
           DBSettings.streamDelay,
           client.settings,
-          client.subscription,
+          client.subscription
         ),
-        locale: client.locale,
         token: client.token,
-        mmr,
-        oldMmr: currentMmr,
       })
     }
   }

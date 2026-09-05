@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vitest'
 import { t } from 'i18next'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { flushAsync } from '../../../../__tests__/sharedMocks.ts'
 import { getHeroNameOrColor } from '../../../lib/heroes.ts'
 import {
@@ -27,9 +28,9 @@ describe('event:aegis_picked_up', () => {
   it('writes aegis state to redis and chats the pickup message', async () => {
     const handler = makeGsiHandler()
     registerHandler(handler)
-    gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 0 }]
 
-    events.emit('event:aegis_picked_up', { player_id: 0, game_time: 600 }, handler.getToken())
+    events.emit('event:aegis_picked_up', { game_time: 600, player_id: 0 }, handler.getToken())
     await flushAsync()
 
     expect(gsiState.redisJsonSetCalls).toHaveLength(1)
@@ -42,19 +43,19 @@ describe('event:aegis_picked_up', () => {
     const handler = makeGsiHandler()
     registerHandler(handler)
     gsiState.matchPlayers = [
-      { heroid: 1, accountid: 101, playerid: 0 },
-      { heroid: 2, accountid: 102, playerid: 1 },
-      { heroid: 5, accountid: 99999, playerid: 8 },
+      { accountid: 101, heroid: 1, playerid: 0 },
+      { accountid: 102, heroid: 2, playerid: 1 },
+      { accountid: 99999, heroid: 5, playerid: 8 },
     ]
     handler.client.gsi.player.kill_list = { victimid_8: 2 }
 
-    events.emit('event:aegis_picked_up', { player_id: 8, game_time: 600 }, handler.getToken())
+    events.emit('event:aegis_picked_up', { game_time: 600, player_id: 8 }, handler.getToken())
     await flushAsync()
 
     expect(gsiState.redisJsonSetCalls[0].value).toMatchObject({
-      playerId: 2,
       eventPlayerId: 8,
       holderKillCountAtPickup: 2,
+      playerId: 2,
     })
     expect(gsiState.ioEmitCalls[0].payload).not.toHaveProperty('eventPlayerId')
     expect(gsiState.ioEmitCalls[0].payload).not.toHaveProperty('holderKillCountAtPickup')
@@ -66,12 +67,12 @@ describe('event:aegis_picked_up', () => {
     // No roster (delayedGames no longer carries heroes) → falls back to color.
     gsiState.matchPlayers = []
 
-    events.emit('event:aegis_picked_up', { player_id: 8, game_time: 600 }, handler.getToken())
+    events.emit('event:aegis_picked_up', { game_time: 600, player_id: 8 }, handler.getToken())
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
     expect(gsiState.chatSayCalls[0].message).toBe(
-      t('aegis.pickup', { lng: 'en', heroName: getHeroNameOrColor(0, 8) }),
+      t('aegis.pickup', { heroName: getHeroNameOrColor(0, 8), lng: 'en' })
     )
     expect(gsiState.chatSayCalls[0].message).toContain('Green')
   })
@@ -82,7 +83,7 @@ describe('event:aegis_picked_up', () => {
     registerHandler(handler)
     gsiState.matchPlayers = []
 
-    events.emit('event:aegis_picked_up', { player_id: 8, game_time: 600 }, handler.getToken())
+    events.emit('event:aegis_picked_up', { game_time: 600, player_id: 8 }, handler.getToken())
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
@@ -99,12 +100,12 @@ describe('event:aegis_picked_up', () => {
     handler.client.mmr = 9000
     registerHandler(handler)
     gsiState.matchPlayers = Array.from({ length: 10 }, (_, i) => ({
-      heroid: 10 + i,
       accountid: 100 + i,
+      heroid: 10 + i,
       playerid: null,
     }))
 
-    events.emit('event:aegis_picked_up', { player_id: 3, game_time: 600 }, handler.getToken())
+    events.emit('event:aegis_picked_up', { game_time: 600, player_id: 3 }, handler.getToken())
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
@@ -115,21 +116,21 @@ describe('event:aegis_picked_up', () => {
   it('uses the snatched message when the aegis was snatched', async () => {
     const handler = makeGsiHandler()
     registerHandler(handler)
-    gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 0 }]
 
     events.emit(
       'event:aegis_picked_up',
-      { player_id: 0, game_time: 600, snatched: true },
-      handler.getToken(),
+      { game_time: 600, player_id: 0, snatched: true },
+      handler.getToken()
     )
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
     expect(gsiState.chatSayCalls[0].message).toBe(
-      t('aegis.snatched', { emote: 'PepeLaugh', lng: 'en', heroName: getHeroNameOrColor(5, 0) }),
+      t('aegis.snatched', { emote: 'PepeLaugh', heroName: getHeroNameOrColor(5, 0), lng: 'en' })
     )
     // snatched flag must survive the handler→redis→message wiring
-    expect((gsiState.redisJsonSetCalls[0].value as { snatched: boolean }).snatched).toBe(true)
+    expect((gsiState.redisJsonSetCalls[0].value as { snatched: boolean }).snatched).toBeTruthy()
   })
 
   it('skips when stream is offline', async () => {
@@ -138,7 +139,7 @@ describe('event:aegis_picked_up', () => {
     })
     registerHandler(handler)
 
-    events.emit('event:aegis_picked_up', { player_id: 0, game_time: 600 }, handler.getToken())
+    events.emit('event:aegis_picked_up', { game_time: 600, player_id: 0 }, handler.getToken())
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(0)
@@ -150,7 +151,7 @@ describe('event:aegis_picked_up', () => {
     handler.client.gsi.player.activity = 'observing'
     registerHandler(handler)
 
-    events.emit('event:aegis_picked_up', { player_id: 0, game_time: 600 }, handler.getToken())
+    events.emit('event:aegis_picked_up', { game_time: 600, player_id: 0 }, handler.getToken())
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(0)
@@ -163,22 +164,22 @@ describe('player:kill_list', () => {
     registerHandler(handler)
     const key = `${handler.getToken()}:aegis`
     gsiState.redisJson[key] = {
-      expireS: 300,
-      playerId: 2,
       eventPlayerId: 8,
-      holderKillCountAtPickup: 0,
-      expireTime: '15:00',
       expireDate: new Date(),
-      snatched: false,
+      expireS: 300,
+      expireTime: '15:00',
       heroName: 'Pudge',
+      holderKillCountAtPickup: 0,
+      playerId: 2,
+      snatched: false,
     }
 
     events.emit('player:kill_list', { victimid_8: 1 }, handler.getToken())
     await flushAsync()
 
-    expect(gsiState.redisJsonDelCalls).toEqual([key])
-    expect(gsiState.ioEmitCalls).toEqual([
-      { token: handler.getToken(), event: 'aegis-picked-up', payload: {} },
+    expect(gsiState.redisJsonDelCalls).toStrictEqual([key])
+    expect(gsiState.ioEmitCalls).toStrictEqual([
+      { event: 'aegis-picked-up', payload: {}, token: handler.getToken() },
     ])
   })
 
@@ -187,14 +188,14 @@ describe('player:kill_list', () => {
     registerHandler(handler)
     const key = `${handler.getToken()}:aegis`
     gsiState.redisJson[key] = {
-      expireS: 300,
-      playerId: 2,
       eventPlayerId: 8,
-      holderKillCountAtPickup: 0,
-      expireTime: '15:00',
       expireDate: new Date(),
-      snatched: false,
+      expireS: 300,
+      expireTime: '15:00',
       heroName: 'Pudge',
+      holderKillCountAtPickup: 0,
+      playerId: 2,
+      snatched: false,
     }
 
     events.emit('player:kill_list', { victimid_3: 2 }, handler.getToken())
@@ -209,12 +210,12 @@ describe('player:kill_list', () => {
     registerHandler(handler)
     const key = `${handler.getToken()}:aegis`
     gsiState.redisJson[key] = {
-      expireS: 300,
-      playerId: 2,
-      expireTime: '15:00',
       expireDate: new Date(),
-      snatched: false,
+      expireS: 300,
+      expireTime: '15:00',
       heroName: 'Pudge',
+      playerId: 2,
+      snatched: false,
     }
 
     events.emit('player:kill_list', { victimid_2: 1 }, handler.getToken())
@@ -229,13 +230,13 @@ describe('player:kill_list', () => {
     registerHandler(handler)
     const key = `${handler.getToken()}:aegis`
     gsiState.redisJson[key] = {
-      expireS: 300,
-      playerId: 2,
       eventPlayerId: 8,
-      expireTime: '15:00',
       expireDate: new Date(),
-      snatched: false,
+      expireS: 300,
+      expireTime: '15:00',
       heroName: 'Pudge',
+      playerId: 2,
+      snatched: false,
     }
 
     events.emit('player:kill_list', { victimid_8: 2 }, handler.getToken())
@@ -250,14 +251,14 @@ describe('player:kill_list', () => {
     registerHandler(handler)
     const key = `${handler.getToken()}:aegis`
     gsiState.redisJson[key] = {
-      expireS: 300,
-      playerId: 2,
       eventPlayerId: 8,
-      holderKillCountAtPickup: 2,
-      expireTime: '15:00',
       expireDate: new Date(),
-      snatched: false,
+      expireS: 300,
+      expireTime: '15:00',
       heroName: 'Pudge',
+      holderKillCountAtPickup: 2,
+      playerId: 2,
+      snatched: false,
     }
 
     events.emit('player:kill_list', { victimid_8: 2 }, handler.getToken())
@@ -272,21 +273,21 @@ describe('player:kill_list', () => {
     registerHandler(handler)
     const key = `${handler.getToken()}:aegis`
     gsiState.redisJson[key] = {
-      expireS: 300,
-      playerId: 2,
       eventPlayerId: 8,
-      holderKillCountAtPickup: 0,
-      expireTime: '15:00',
       expireDate: new Date(),
-      snatched: false,
+      expireS: 300,
+      expireTime: '15:00',
       heroName: 'Pudge',
+      holderKillCountAtPickup: 0,
+      playerId: 2,
+      snatched: false,
     }
     gsiState.redisJsonDelError = new Error('redis unavailable')
 
     events.emit('player:kill_list', { victimid_8: 1 }, handler.getToken())
     await flushAsync()
 
-    expect(gsiState.redisJsonDelCalls).toEqual([key])
+    expect(gsiState.redisJsonDelCalls).toStrictEqual([key])
     expect(gsiState.ioEmitCalls).toHaveLength(0)
   })
 })
@@ -295,14 +296,14 @@ describe('event:aegis_denied', () => {
   it('chats the deny message', async () => {
     const handler = makeGsiHandler()
     registerHandler(handler)
-    gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 0 }]
 
-    events.emit('event:aegis_denied', { player_id: 0, game_time: 600 }, handler.getToken())
+    events.emit('event:aegis_denied', { game_time: 600, player_id: 0 }, handler.getToken())
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
     expect(gsiState.chatSayCalls[0].message).toBe(
-      t('aegis.denied', { lng: 'en', heroName: getHeroNameOrColor(5, 0), emote: 'ICANT' }),
+      t('aegis.denied', { emote: 'ICANT', heroName: getHeroNameOrColor(5, 0), lng: 'en' })
     )
   })
 
@@ -311,12 +312,12 @@ describe('event:aegis_denied', () => {
     registerHandler(handler)
     gsiState.matchPlayers = []
 
-    events.emit('event:aegis_denied', { player_id: 8, game_time: 600 }, handler.getToken())
+    events.emit('event:aegis_denied', { game_time: 600, player_id: 8 }, handler.getToken())
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
     expect(gsiState.chatSayCalls[0].message).toBe(
-      t('aegis.denied', { lng: 'en', heroName: getHeroNameOrColor(0, 8), emote: 'ICANT' }),
+      t('aegis.denied', { emote: 'ICANT', heroName: getHeroNameOrColor(0, 8), lng: 'en' })
     )
     expect(gsiState.chatSayCalls[0].message).toContain('Green')
   })
@@ -327,12 +328,12 @@ describe('event:aegis_denied', () => {
     registerHandler(handler)
     gsiState.matchPlayers = []
 
-    events.emit('event:aegis_denied', { player_id: 8, game_time: 600 }, handler.getToken())
+    events.emit('event:aegis_denied', { game_time: 600, player_id: 8 }, handler.getToken())
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
     expect(gsiState.chatSayCalls[0].message).toBe(
-      t('aegis.deniedUnknown', { lng: 'en', emote: 'ICANT' }),
+      t('aegis.deniedUnknown', { emote: 'ICANT', lng: 'en' })
     )
     expect(gsiState.chatSayCalls[0].message).not.toContain('Green')
   })
@@ -342,17 +343,17 @@ describe('event:aegis_denied', () => {
     handler.client.mmr = 9000
     registerHandler(handler)
     gsiState.matchPlayers = Array.from({ length: 10 }, (_, i) => ({
-      heroid: 10 + i,
       accountid: 100 + i,
+      heroid: 10 + i,
       playerid: null,
     }))
 
-    events.emit('event:aegis_denied', { player_id: 3, game_time: 600 }, handler.getToken())
+    events.emit('event:aegis_denied', { game_time: 600, player_id: 3 }, handler.getToken())
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
     expect(gsiState.chatSayCalls[0].message).toBe(
-      t('aegis.deniedUnknown', { lng: 'en', emote: 'ICANT' }),
+      t('aegis.deniedUnknown', { emote: 'ICANT', lng: 'en' })
     )
     expect(gsiState.chatSayCalls[0].message).not.toContain(getHeroNameOrColor(13, 3))
   })
@@ -412,7 +413,7 @@ describe('map:paused', () => {
     expect(gsiState.ioEmitCalls[0]).toMatchObject({ event: 'paused', payload: true })
     expect(gsiState.chatSayCalls).toHaveLength(1)
     expect(gsiState.chatSayCalls[0].message).toBe(
-      t('chatters.pause', { emote: 'PauseChamp', lng: 'en' }),
+      t('chatters.pause', { emote: 'PauseChamp', lng: 'en' })
     )
   })
 
@@ -449,7 +450,7 @@ describe('map:win_team', () => {
     events.emit('map:win_team', 'radiant', handler.getToken())
     await flushAsync()
 
-    expect(handler.closeBetsCalls).toEqual(['radiant'])
+    expect(handler.closeBetsCalls).toStrictEqual(['radiant'])
   })
 
   it('skips closeBets when not in a playable match', async () => {
@@ -460,7 +461,7 @@ describe('map:win_team', () => {
     events.emit('map:win_team', 'dire', handler.getToken())
     await flushAsync()
 
-    expect(handler.closeBetsCalls).toEqual([])
+    expect(handler.closeBetsCalls).toStrictEqual([])
   })
 })
 
@@ -469,22 +470,22 @@ describe('event:tip', () => {
     const handler = makeGsiHandler()
     registerHandler(handler)
     gsiState.matchPlayers = [
-      { heroid: 1, accountid: 11, playerid: 0 },
-      { heroid: 2, accountid: 22, playerid: 1 },
+      { accountid: 11, heroid: 1, playerid: 0 },
+      { accountid: 22, heroid: 2, playerid: 1 },
     ]
     // local player is at slot 1 (the receiver in this tip).
     gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
 
     events.emit(
       'event:tip',
-      { sender_player_id: 0, receiver_player_id: 1, player_id: 0, game_time: 600 },
-      handler.getToken(),
+      { game_time: 600, player_id: 0, receiver_player_id: 1, sender_player_id: 0 },
+      handler.getToken()
     )
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
     expect(gsiState.chatSayCalls[0].message).toBe(
-      t('tip.from', { emote: 'ICANT', lng: 'en', heroName: getHeroNameOrColor(1, 0) }),
+      t('tip.from', { emote: 'ICANT', heroName: getHeroNameOrColor(1, 0), lng: 'en' })
     )
   })
 
@@ -492,21 +493,21 @@ describe('event:tip', () => {
     const handler = makeGsiHandler()
     registerHandler(handler)
     gsiState.matchPlayers = [
-      { heroid: 1, accountid: 11, playerid: 0 },
-      { heroid: 2, accountid: 22, playerid: 1 },
+      { accountid: 11, heroid: 1, playerid: 0 },
+      { accountid: 22, heroid: 2, playerid: 1 },
     ]
     gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '0'
 
     events.emit(
       'event:tip',
-      { sender_player_id: 0, receiver_player_id: 1, player_id: 0, game_time: 600 },
-      handler.getToken(),
+      { game_time: 600, player_id: 0, receiver_player_id: 1, sender_player_id: 0 },
+      handler.getToken()
     )
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
     expect(gsiState.chatSayCalls[0].message).toBe(
-      t('tip.to', { emote: 'PepeLaugh', lng: 'en', heroName: getHeroNameOrColor(2, 1) }),
+      t('tip.to', { emote: 'PepeLaugh', heroName: getHeroNameOrColor(2, 1), lng: 'en' })
     )
   })
 
@@ -519,14 +520,14 @@ describe('event:tip', () => {
 
     events.emit(
       'event:tip',
-      { sender_player_id: 0, receiver_player_id: 1, game_time: 600 },
-      handler.getToken(),
+      { game_time: 600, receiver_player_id: 1, sender_player_id: 0 },
+      handler.getToken()
     )
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
     expect(gsiState.chatSayCalls[0].message).toBe(
-      t('tip.fromUnknown', { emote: 'ICANT', lng: 'en' }),
+      t('tip.fromUnknown', { emote: 'ICANT', lng: 'en' })
     )
   })
 
@@ -540,14 +541,14 @@ describe('event:tip', () => {
 
     events.emit(
       'event:tip',
-      { sender_player_id: 0, receiver_player_id: 1, game_time: 600 },
-      handler.getToken(),
+      { game_time: 600, receiver_player_id: 1, sender_player_id: 0 },
+      handler.getToken()
     )
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
     expect(gsiState.chatSayCalls[0].message).toBe(
-      t('tip.toUnknown', { emote: 'PepeLaugh', lng: 'en' }),
+      t('tip.toUnknown', { emote: 'PepeLaugh', lng: 'en' })
     )
   })
 
@@ -556,8 +557,8 @@ describe('event:tip', () => {
     handler.client.mmr = 9000
     registerHandler(handler)
     gsiState.matchPlayers = Array.from({ length: 10 }, (_, i) => ({
-      heroid: 10 + i,
       accountid: 100 + i,
+      heroid: 10 + i,
       playerid: null,
     }))
     // local player is the receiver (slot 1)
@@ -565,14 +566,14 @@ describe('event:tip', () => {
 
     events.emit(
       'event:tip',
-      { sender_player_id: 3, receiver_player_id: 1, game_time: 600 },
-      handler.getToken(),
+      { game_time: 600, receiver_player_id: 1, sender_player_id: 3 },
+      handler.getToken()
     )
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
     expect(gsiState.chatSayCalls[0].message).toBe(
-      t('tip.fromUnknown', { emote: 'ICANT', lng: 'en' }),
+      t('tip.fromUnknown', { emote: 'ICANT', lng: 'en' })
     )
     expect(gsiState.chatSayCalls[0].message).not.toContain(getHeroNameOrColor(13, 3))
   })
@@ -582,8 +583,8 @@ describe('event:tip', () => {
     handler.client.mmr = 9000
     registerHandler(handler)
     gsiState.matchPlayers = Array.from({ length: 10 }, (_, i) => ({
-      heroid: 10 + i,
       accountid: 100 + i,
+      heroid: 10 + i,
       playerid: null,
     }))
     // local player is the sender (slot 0)
@@ -591,14 +592,14 @@ describe('event:tip', () => {
 
     events.emit(
       'event:tip',
-      { sender_player_id: 0, receiver_player_id: 4, game_time: 600 },
-      handler.getToken(),
+      { game_time: 600, receiver_player_id: 4, sender_player_id: 0 },
+      handler.getToken()
     )
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
     expect(gsiState.chatSayCalls[0].message).toBe(
-      t('tip.toUnknown', { emote: 'PepeLaugh', lng: 'en' }),
+      t('tip.toUnknown', { emote: 'PepeLaugh', lng: 'en' })
     )
     expect(gsiState.chatSayCalls[0].message).not.toContain(getHeroNameOrColor(14, 4))
   })
@@ -609,26 +610,26 @@ describe('event:bounty_rune_pickup', () => {
     const handler = makeGsiHandler()
     handler.client.gsi.map.clock_time = 60
     registerHandler(handler)
-    gsiState.matchPlayers = [{ heroid: 1, accountid: 11, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 11, heroid: 1, playerid: 0 }]
     gsiState.redisGet[`${handler.client.token}:playingTeam`] = 'radiant'
 
     events.emit(
       'event:bounty_rune_pickup',
-      { player_id: 0, team: 'radiant', bounty_value: 40, game_time: 60 },
-      handler.getToken(),
+      { bounty_value: 40, game_time: 60, player_id: 0, team: 'radiant' },
+      handler.getToken()
     )
     await flushAsync()
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
     expect(gsiState.chatSayCalls[0].message).toBe(
       t('bounties.pickup', {
+        bountyValue: 40,
         emote: 'EZ Clap',
         emote2: 'SeemsGood',
-        lng: 'en',
-        bountyValue: 40,
-        totalBounties: 1,
         heroNames: getHeroNameOrColor(1, 0),
-      }),
+        lng: 'en',
+        totalBounties: 1,
+      })
     )
   })
 
@@ -637,13 +638,13 @@ describe('event:bounty_rune_pickup', () => {
     handler.client.gsi.map.clock_time = 60
     registerHandler(handler)
     // roster present but the slot has no heroid (delayedGames is heroless now)
-    gsiState.matchPlayers = [{ heroid: undefined as unknown as number, accountid: 11, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 11, heroid: undefined as unknown as number, playerid: 0 }]
     gsiState.redisGet[`${handler.client.token}:playingTeam`] = 'radiant'
 
     events.emit(
       'event:bounty_rune_pickup',
-      { player_id: 0, team: 'radiant', bounty_value: 40, game_time: 60 },
-      handler.getToken(),
+      { bounty_value: 40, game_time: 60, player_id: 0, team: 'radiant' },
+      handler.getToken()
     )
     await flushAsync()
 
@@ -654,13 +655,13 @@ describe('event:bounty_rune_pickup', () => {
     const handler = makeGsiHandler()
     handler.client.gsi.map.clock_time = 200
     registerHandler(handler)
-    gsiState.matchPlayers = [{ heroid: 1, accountid: 11, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 11, heroid: 1, playerid: 0 }]
     gsiState.redisGet[`${handler.client.token}:playingTeam`] = 'radiant'
 
     events.emit(
       'event:bounty_rune_pickup',
-      { player_id: 0, team: 'radiant', bounty_value: 40, game_time: 200 },
-      handler.getToken(),
+      { bounty_value: 40, game_time: 200, player_id: 0, team: 'radiant' },
+      handler.getToken()
     )
     await flushAsync()
 
@@ -673,16 +674,16 @@ describe('event:bounty_rune_pickup', () => {
     handler.client.gsi.map.clock_time = 60
     registerHandler(handler)
     gsiState.matchPlayers = Array.from({ length: 10 }, (_, i) => ({
-      heroid: 10 + i,
       accountid: 100 + i,
+      heroid: 10 + i,
       playerid: null,
     }))
     gsiState.redisGet[`${handler.client.token}:playingTeam`] = 'radiant'
 
     events.emit(
       'event:bounty_rune_pickup',
-      { player_id: 3, team: 'radiant', bounty_value: 40, game_time: 60 },
-      handler.getToken(),
+      { bounty_value: 40, game_time: 60, player_id: 3, team: 'radiant' },
+      handler.getToken()
     )
     await flushAsync()
 
@@ -693,13 +694,13 @@ describe('event:bounty_rune_pickup', () => {
     const handler = makeGsiHandler()
     handler.client.gsi.map.clock_time = 60
     registerHandler(handler)
-    gsiState.matchPlayers = [{ heroid: 1, accountid: 11, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 11, heroid: 1, playerid: 0 }]
     gsiState.redisGet[`${handler.client.token}:playingTeam`] = 'radiant'
 
     events.emit(
       'event:bounty_rune_pickup',
-      { player_id: 0, team: 'dire', bounty_value: 40, game_time: 60 },
-      handler.getToken(),
+      { bounty_value: 40, game_time: 60, player_id: 0, team: 'dire' },
+      handler.getToken()
     )
     await flushAsync()
 
@@ -733,8 +734,6 @@ describe('hero:smoked', () => {
 
 describe('event:generic_event - smoke activated', () => {
   const smokeEvent = (playerid1: number) => ({
-    game_time: 600,
-    event_type: 'generic_event',
     data: JSON.stringify({
       type: 'CHAT_MESSAGE_SMOKE_ACTIVATED',
       value: 0,
@@ -742,15 +741,17 @@ describe('event:generic_event - smoke activated', () => {
       playerid2: -1,
       time: 537,
     }),
+    event_type: 'generic_event',
+    game_time: 600,
   })
 
   it('sends one message — roasts the streamer — when the team smokes without them', async () => {
     const handler = makeGsiHandler()
     handler.client.gsi.player.team_name = 'radiant'
-    handler.client.gsi.hero = { name: 'npc_dota_hero_lina', smoked: false, alive: true }
+    handler.client.gsi.hero = { alive: true, name: 'npc_dota_hero_lina', smoked: false }
     registerHandler(handler)
     // Teammate in slot 0 casts it; the streamer is slot 1 and never got the buff.
-    gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 0 }]
     gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
 
     events.emit('event:generic_event', smokeEvent(0), handler.getToken())
@@ -763,9 +764,9 @@ describe('event:generic_event - smoke activated', () => {
   it('stays silent when the streamer is in the smoke (hero:smoked announces instead)', async () => {
     const handler = makeGsiHandler()
     handler.client.gsi.player.team_name = 'radiant'
-    handler.client.gsi.hero = { name: 'npc_dota_hero_lina', smoked: true, alive: true }
+    handler.client.gsi.hero = { alive: true, name: 'npc_dota_hero_lina', smoked: true }
     registerHandler(handler)
-    gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 0 }]
     gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
 
     events.emit('event:generic_event', smokeEvent(0), handler.getToken())
@@ -779,9 +780,9 @@ describe('event:generic_event - smoke activated', () => {
   it('stays silent when the streamer cast the smoke themselves', async () => {
     const handler = makeGsiHandler()
     handler.client.gsi.player.team_name = 'radiant'
-    handler.client.gsi.hero = { name: 'npc_dota_hero_lina', smoked: false, alive: true }
+    handler.client.gsi.hero = { alive: true, name: 'npc_dota_hero_lina', smoked: false }
     registerHandler(handler)
-    gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 0 }]
     gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '0'
 
     events.emit('event:generic_event', smokeEvent(0), handler.getToken())
@@ -794,11 +795,11 @@ describe('event:generic_event - smoke activated', () => {
   it('stays silent when the streamer is dead (not "caught out")', async () => {
     const handler = makeGsiHandler()
     handler.client.gsi.player.team_name = 'radiant'
-    handler.client.gsi.hero = { name: 'npc_dota_hero_lina', smoked: false, alive: false }
+    handler.client.gsi.hero = { alive: false, name: 'npc_dota_hero_lina', smoked: false }
     registerHandler(handler)
     // Teammate smoked while the streamer is dead — a dead player wasn't left behind and
     // never gets the buff, so neither path has anything to say.
-    gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 0 }]
     gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
 
     events.emit('event:generic_event', smokeEvent(0), handler.getToken())
@@ -813,7 +814,7 @@ describe('event:generic_event - smoke activated', () => {
     registerHandler(handler)
     // Activator in dire slot 5 — opposite side; Dota would not surface this to
     // the streamer, and we must never leak it even if it did.
-    gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 5 }]
+    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 5 }]
 
     events.emit('event:generic_event', smokeEvent(5), handler.getToken())
     await flushAsync()
@@ -824,11 +825,11 @@ describe('event:generic_event - smoke activated', () => {
   it('does not double-post when a teammate smokes the streamer (hero:smoked + team event)', async () => {
     const handler = makeGsiHandler()
     handler.client.gsi.player.team_name = 'radiant'
-    handler.client.gsi.hero = { name: 'npc_dota_hero_lina', smoked: true, alive: true }
+    handler.client.gsi.hero = { alive: true, name: 'npc_dota_hero_lina', smoked: true }
     registerHandler(handler)
     gsiState.redisGet[`${handler.getToken()}:playingHero`] = 'npc_dota_hero_lina'
     // Teammate in slot 0 popped it; the streamer (slot 1) is in the smoke.
-    gsiState.matchPlayers = [{ heroid: 5, accountid: 99999, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 99999, heroid: 5, playerid: 0 }]
     gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
 
     // The same activation reaches both paths: the hero buff flip and the team chat event.
@@ -867,7 +868,7 @@ describe('player:kill_streak', () => {
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
     expect(gsiState.chatSayCalls[0].message).toBe(
-      t('killstreak.lost', { emote: 'BibleThump', count: 5, heroName: 'Lina', lng: 'en' }),
+      t('killstreak.lost', { count: 5, emote: 'BibleThump', heroName: 'Lina', lng: 'en' })
     )
   })
 

@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 
-import { type UpdateMmrParams, updateMmr } from '../../dota/lib/updateMmr'
+import { updateMmr } from '../../dota/lib/updateMmr';
+import type { UpdateMmrParams } from '../../dota/lib/updateMmr';
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
@@ -11,20 +12,18 @@ const sendMessage = (
   locale: string,
   key: string,
   messageId: string,
-  options = {},
+  options = {}
 ) => {
   chatClient.say(channel, t(key, { lng: locale, ...options }), messageId)
 }
 
-const performMmrUpdate = async (params: UpdateMmrParams) => {
-  return await updateMmr({ ...params, force: true, tellChat: true })
-}
+const performMmrUpdate = async (params: UpdateMmrParams) =>{  
+  await updateMmr({ ...params, force: true, tellChat: true }); }
+
 
 commandHandler.registerCommand('setmmr', {
   aliases: ['mmr=', 'mmrset'],
-  permission: 2,
   cooldown: 0,
-  onlyOnline: false,
   handler: async (message, args) => {
     const {
       channel: { name: channel, client },
@@ -90,4 +89,6 @@ commandHandler.registerCommand('setmmr', {
       token: client.token,
     })
   },
+  onlyOnline: false,
+  permission: 2,
 })

@@ -7,8 +7,8 @@ import type { AegisRes } from './AegisRes'
 
 eventHandler.registerEvent('hero:alive', {
   handler: async (dotaClient, alive: boolean) => {
-    if (!dotaClient.client.stream_online) return
-    if (!isPlayingMatch(dotaClient.client.gsi)) return
+    if (!dotaClient.client.stream_online) {return}
+    if (!isPlayingMatch(dotaClient.client.gsi)) {return}
 
     const redisClient = RedisClient.getInstance()
     const redisJson = await redisClient.getJson<AegisRes>(`${dotaClient.getToken()}:aegis`)

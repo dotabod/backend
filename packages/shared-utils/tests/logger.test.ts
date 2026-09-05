@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
 import { createAppLogger } from '../src/logger-impl'
 
 // Build the genuine winston logger directly from the factory rather than mocking
@@ -13,7 +14,7 @@ afterEach(() => {
 })
 
 // Winston delivers to transports via a stream, so flush a tick before asserting.
-const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
+const flush =  async () => new Promise((resolve) => setTimeout(resolve, 0))
 
 async function captureLogs(emit: (logger: any) => void) {
   const logger = createAppLogger()

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { resetUtilsState } from './setupMocks.ts'
 
 // The module reads TWITCH_CONDUIT_ID once at import time; clear it first so the
@@ -7,7 +8,7 @@ delete process.env.TWITCH_CONDUIT_ID
 
 const { fetchConduitId, updateConduitShard } = await import('../src/twitch/conduitManager')
 
-type FakeResponse = {
+interface FakeResponse {
   status?: number
   json?: unknown
   text?: string
@@ -21,10 +22,10 @@ let fetchCallCount = 0
 
 function res({ status = 200, json, text }: FakeResponse) {
   return {
+    json: async () => json,
     ok: status >= 200 && status < 300,
     status,
     statusText: 'Status',
-    json: async () => json,
     text: async () => text ?? '',
   }
 }
@@ -36,7 +37,7 @@ beforeEach(() => {
   globalThis.fetch = (async () => {
     fetchCallCount++
     const next = fetchQueue.shift()
-    if (!next) throw new Error('Unexpected fetch call (queue empty)')
+    if (!next) {throw new Error('Unexpected fetch call (queue empty)')}
     return res(next)
   }) as unknown as typeof fetch
 })
@@ -105,13 +106,13 @@ describe('fetchConduitId', () => {
 
 describe('updateConduitShard', () => {
   it('returns true on a 202 with no errors', async () => {
-    fetchQueue = [{ status: 202, json: {} }]
-    await expect(updateConduitShard('sess-1', 'conduit-1')).resolves.toBe(true)
+    fetchQueue = [{ json: {}, status: 202 }]
+    await expect(updateConduitShard('sess-1', 'conduit-1')).resolves.toBeTruthy()
   })
 
   it('returns false when the 202 response contains errors', async () => {
-    fetchQueue = [{ status: 202, json: { errors: [{ message: 'bad shard' }] } }]
-    await expect(updateConduitShard('sess-1', 'conduit-1')).resolves.toBe(false)
+    fetchQueue = [{ json: { errors: [{ message: 'bad shard' }] }, status: 202 }]
+    await expect(updateConduitShard('sess-1', 'conduit-1')).resolves.toBeFalsy()
   })
 
   it('retries after a 401 and succeeds on the next attempt', async () => {
@@ -121,8 +122,8 @@ describe('updateConduitShard', () => {
       return 0 as unknown as ReturnType<typeof setTimeout>
     }) as typeof setTimeout
 
-    fetchQueue = [{ status: 401 }, { status: 202, json: {} }]
-    await expect(updateConduitShard('sess-1', 'conduit-1')).resolves.toBe(true)
+    fetchQueue = [{ status: 401 }, { json: {}, status: 202 }]
+    await expect(updateConduitShard('sess-1', 'conduit-1')).resolves.toBeTruthy()
     expect(fetchCallCount).toBe(2)
   })
 
@@ -133,7 +134,7 @@ describe('updateConduitShard', () => {
     }) as typeof setTimeout
 
     fetchQueue = Array.from({ length: 6 }, () => ({ status: 500, text: 'nope' }))
-    await expect(updateConduitShard('sess-1', 'conduit-1')).resolves.toBe(false)
+    await expect(updateConduitShard('sess-1', 'conduit-1')).resolves.toBeFalsy()
     // initial attempt + 5 retries
     expect(fetchCallCount).toBe(6)
   })

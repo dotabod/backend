@@ -5,30 +5,30 @@ import { vi } from 'vitest'
 
 export const utilsState: {
   // Recorded supabase writes for assertions.
-  upserts: Array<{ table: string; values: unknown; options?: unknown }>
-  inserts: Array<{ table: string; values: unknown }>
-  updates: Array<{
+  upserts: { table: string; values: unknown; options?: unknown }[]
+  inserts: { table: string; values: unknown }[]
+  updates: {
     table: string
     values: unknown
     filters: Array<{ method: string; col: string; val: unknown }>
-  }>
+  }[]
   // Per-table single() result for select queries.
   selectSingle: Record<string, { data: unknown; error: unknown }>
   // What @twurple/auth's getAppToken should return.
   appToken: { accessToken: string } | null
   // Whether getAppToken should throw.
   appTokenError: unknown
-  loggerInfoCalls: Array<{ message: string; meta: Record<string, unknown> }>
-  loggerErrorCalls: Array<{ message: string; meta: Record<string, unknown> }>
+  loggerInfoCalls: { message: string; meta: Record<string, unknown> }[]
+  loggerErrorCalls: { message: string; meta: Record<string, unknown> }[]
 } = {
-  upserts: [],
-  inserts: [],
-  updates: [],
-  selectSingle: {},
   appToken: { accessToken: 'test-app-token' },
   appTokenError: null,
-  loggerInfoCalls: [],
+  inserts: [],
   loggerErrorCalls: [],
+  loggerInfoCalls: [],
+  selectSingle: {},
+  updates: [],
+  upserts: [],
 }
 
 export function resetUtilsState() {
@@ -43,42 +43,42 @@ export function resetUtilsState() {
 }
 
 function createTableBuilder(table: string) {
-  const filters: Array<{ method: string; col: string; val: unknown }> = []
+  const filters: { method: string; col: string; val: unknown }[] = []
   let updateValues: unknown = null
 
   const builder: any = {
-    select: () => builder,
-    upsert: (values: unknown, options?: unknown) => {
-      utilsState.upserts.push({ table, values, options })
-      return Promise.resolve({ data: null, error: null })
-    },
-    insert: (values: unknown) => {
-      utilsState.inserts.push({ table, values })
-      return Promise.resolve({ data: null, error: null })
-    },
-    update: (values: unknown) => {
-      updateValues = values
-      return updateChain
-    },
     eq: (col: string, val: unknown) => {
       filters.push({ method: 'eq', col, val })
       return builder
     },
+    insert:  async (values: unknown) => {
+      utilsState.inserts.push({ table, values })
+      return Promise.resolve({ data: null, error: null })
+    },
+    select: () => builder,
     single: async () => utilsState.selectSingle[table] ?? { data: null, error: null },
+    update: (values: unknown) => {
+      updateValues = values
+      return updateChain
+    },
+    upsert:  async (values: unknown, options?: unknown) => {
+      utilsState.upserts.push({ table, values, options })
+      return Promise.resolve({ data: null, error: null })
+    },
   }
 
   // .update() returns a separate chain that records filters then awaits.
   const updateChain: any = {
     eq: (col: string, val: unknown) => {
-      filters.push({ method: 'eq', col, val })
+      filters.push({ col, method: 'eq', val })
       return updateChain
     },
     is: (col: string, val: unknown) => {
-      filters.push({ method: 'is', col, val })
+      filters.push({ col, method: 'is', val })
       return updateChain
     },
-    then: (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => {
-      utilsState.updates.push({ table, values: updateValues, filters })
+    then:  async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => {
+      utilsState.updates.push({ filters, table, values: updateValues })
       return Promise.resolve({ data: null, error: null }).then(onFulfilled)
     },
   }
@@ -92,26 +92,26 @@ const supabaseMock = {
 
 vi.doMock('../src/db/supabase', () => ({
   default: supabaseMock,
-  supabase: supabaseMock,
   getSupabaseClient: () => supabaseMock,
+  supabase: supabaseMock,
 }))
 
 vi.doMock('../src/logger', () => ({
   logger: {
-    info: (message: string, meta?: Record<string, unknown>) => {
-      utilsState.loggerInfoCalls.push({ message, meta: meta ?? {} })
-    },
+    debug: () => undefined,
     error: (message: string, meta?: Record<string, unknown>) => {
       utilsState.loggerErrorCalls.push({ message, meta: meta ?? {} })
     },
+    info: (message: string, meta?: Record<string, unknown>) => {
+      utilsState.loggerInfoCalls.push({ message, meta: meta ?? {} })
+    },
     warn: () => undefined,
-    debug: () => undefined,
   },
 }))
 
 vi.doMock('@twurple/auth', () => ({
   getAppToken: async () => {
-    if (utilsState.appTokenError) throw utilsState.appTokenError
+    if (utilsState.appTokenError) {throw utilsState.appTokenError}
     return utilsState.appToken
   },
 }))

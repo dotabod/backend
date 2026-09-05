@@ -22,7 +22,7 @@ export interface BackoffOptions {
  * `exp = min(maxMs, baseMs * 2 ** (attempt - 1))`.
  */
 export function computeReconnectDelay(attempt: number, opts: BackoffOptions = {}): number {
-  const baseMs = opts.baseMs ?? 5_000
+  const baseMs = opts.baseMs ?? 5000
   const maxMs = opts.maxMs ?? 300_000
   const random = opts.random ?? Math.random
   // Clamp to >= 1 and cap the exponent so `2 ** n` can never reach Infinity.

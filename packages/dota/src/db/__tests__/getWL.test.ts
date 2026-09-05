@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { dbState, resetDbState } from './dbMocks.ts'
 
 const { getWL } = await import('../getWL')
@@ -14,27 +15,27 @@ describe('getWL', () => {
 
   it('returns the empty-record result when channelId is missing', async () => {
     const res = await getWL({
-      lng: 'en',
       channelId: '',
+      lng: 'en',
       mmrEnabled: false as const,
     })
 
     expect(res.msg).toBeNull()
-    expect(res.record).toEqual([{ win: 0, lose: 0, type: 'U' }])
+    expect(res.record).toStrictEqual([{ lose: 0, type: 'U', win: 0 }])
   })
 
   it('formats ranked-only results with W and L counts', async () => {
     dbState.rpcResult = {
       data: [
-        { won: true, _count_won: 3, lobby_type: 7, is_party: false, is_doubledown: false },
-        { won: false, _count_won: 1, lobby_type: 7, is_party: false, is_doubledown: false },
+        { _count_won: 3, is_doubledown: false, is_party: false, lobby_type: 7, won: true },
+        { _count_won: 1, is_doubledown: false, is_party: false, lobby_type: 7, won: false },
       ],
       error: null,
     }
 
     const res = await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: false as const,
     })
 
@@ -46,8 +47,8 @@ describe('getWL', () => {
   it('adds dated manual corrections to the same ranked and unranked totals', async () => {
     dbState.rpcResult = {
       data: [
-        { won: true, _count_won: 3, lobby_type: 7, is_party: false, is_doubledown: false },
-        { won: false, _count_won: 2, lobby_type: 0, is_party: false, is_doubledown: false },
+        { _count_won: 3, is_doubledown: false, is_party: false, lobby_type: 7, won: true },
+        { _count_won: 2, is_doubledown: false, is_party: false, lobby_type: 0, won: false },
       ],
       error: null,
     }
@@ -60,27 +61,27 @@ describe('getWL', () => {
     }
 
     const res = await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: false,
       settings: [{ key: 'wlStatsDays', value: 30 }],
       userId: 'user-1',
     })
 
-    expect(res.record).toEqual([
-      { win: 4, lose: 0, type: 'R' },
-      { win: 0, lose: 1, type: 'U' },
+    expect(res.record).toStrictEqual([
+      { lose: 0, type: 'R', win: 4 },
+      { lose: 1, type: 'U', win: 0 },
     ])
     expect(dbState.gteCalls).toContainEqual({
-      table: 'win_loss_adjustments',
       column: 'created_at',
+      table: 'win_loss_adjustments',
       value: expect.any(String),
     })
   })
 
   it('does not treat manual ranked corrections as an MMR change', async () => {
     dbState.rpcResult = {
-      data: [{ won: true, _count_won: 1, lobby_type: 7, is_party: false, is_doubledown: false }],
+      data: [{ _count_won: 1, is_doubledown: false, is_party: false, lobby_type: 7, won: true }],
       error: null,
     }
     dbState.tableResults.win_loss_adjustments = {
@@ -89,8 +90,8 @@ describe('getWL', () => {
     }
 
     const res = await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: true,
       userId: 'user-1',
     })
@@ -106,30 +107,30 @@ describe('getWL', () => {
     }
 
     const res = await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: false,
       userId: 'user-1',
     })
 
-    expect(res.record).toEqual([{ win: 0, lose: 0, type: 'U' }])
+    expect(res.record).toStrictEqual([{ lose: 0, type: 'U', win: 0 }])
     expect(res.msg).toBe('0 W - 0 L · This stream')
   })
 
   it('states the configured stats window in the command response', async () => {
     dbState.rpcResult = {
-      data: [{ won: true, _count_won: 3, lobby_type: 7, is_party: false, is_doubledown: false }],
+      data: [{ _count_won: 3, is_doubledown: false, is_party: false, lobby_type: 7, won: true }],
       error: null,
     }
 
     const res = await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: false as const,
       settings: [{ key: 'wlStatsDays', value: 30 }],
     })
 
-    expect(res.msg).toMatch(/\u00b7 Last 30 days$/)
+    expect(res.msg).toMatch(/\u00B7 Last 30 days$/)
     expect(res.statsDays).toBe(30)
   })
 
@@ -137,13 +138,13 @@ describe('getWL', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-09-04T12:00:00.000Z'))
     dbState.rpcResult = {
-      data: [{ won: true, _count_won: 3, lobby_type: 7, is_party: false, is_doubledown: false }],
+      data: [{ _count_won: 3, is_doubledown: false, is_party: false, lobby_type: 7, won: true }],
       error: null,
     }
 
     const res = await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: false,
       settings: [
         { key: 'wlStatsDays', value: 30 },
@@ -153,7 +154,7 @@ describe('getWL', () => {
     })
 
     expect(dbState.rpcCalls[0].args.start_date).toBe('2026-08-21T00:00:00.000Z')
-    expect(res.msg).toMatch(/\u00b7 14 of 30 days$/)
+    expect(res.msg).toMatch(/\u00B7 14 of 30 days$/)
     expect(res.statsDays).toBe(14)
     expect(res.statsDaysTotal).toBe(30)
   })
@@ -163,8 +164,8 @@ describe('getWL', () => {
     vi.setSystemTime(new Date('2026-09-20T12:00:00.000Z'))
 
     const res = await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: false,
       settings: [
         { key: 'wlStatsDays', value: 30 },
@@ -178,31 +179,31 @@ describe('getWL', () => {
     expect(res.statsDays).toBeNull()
     expect(res.statsDaysTotal).toBeNull()
     expect(dbState.upserts).toContainEqual({
+      options: { onConflict: 'userId, key' },
       table: 'settings',
       values: [
         expect.objectContaining({ key: 'wlStatsDays', userId: 'user-1', value: null }),
         expect.objectContaining({ key: 'wlStatsStartDate', userId: 'user-1', value: null }),
       ],
-      options: { onConflict: 'userId, key' },
     })
   })
 
   it('states that the default stats window is the current stream', async () => {
     const res = await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: false as const,
       streamStartDate: new Date('2026-09-04T08:00:00.000Z'),
     })
 
-    expect(res.msg).toMatch(/\u00b7 This stream$/)
+    expect(res.msg).toMatch(/\u00B7 This stream$/)
     expect(res.statsDays).toBeNull()
   })
 
   it('defaults the WL counter to the supplied stream session', async () => {
     await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: false as const,
       streamStartDate: new Date('2026-09-04T08:00:00.000Z'),
     })
@@ -215,15 +216,15 @@ describe('getWL', () => {
     vi.setSystemTime(new Date('2026-09-04T12:00:00.000Z'))
 
     const res = await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: false as const,
       settings: [{ key: 'wlStatsDays', value: 1 }],
       streamStartDate: new Date('2026-09-04T08:00:00.000Z'),
     })
 
     expect(dbState.rpcCalls[0].args.start_date).toBe('2026-09-03T12:00:00.000Z')
-    expect(res.msg).toMatch(/\u00b7 Last 1 day$/)
+    expect(res.msg).toMatch(/\u00B7 Last 1 day$/)
     expect(res.statsDays).toBe(1)
   })
 
@@ -232,18 +233,18 @@ describe('getWL', () => {
     vi.setSystemTime(new Date('2026-09-04T12:00:00.000Z'))
 
     await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: false as const,
       settings: [{ key: 'wlStatsDays', value: 30 }],
     })
 
     expect(dbState.rpcCalls).toContainEqual({
-      name: 'get_grouped_bets',
       args: {
         channel_id: 'ch-1',
         start_date: '2026-08-05T12:00:00.000Z',
       },
+      name: 'get_grouped_bets',
     })
   })
 
@@ -252,8 +253,8 @@ describe('getWL', () => {
     vi.setSystemTime(new Date('2026-09-04T12:00:00.000Z'))
 
     const res = await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: false as const,
       settings: [{ key: 'wlStatsDays', value: 7 }],
       statsDaysOverride: 30,
@@ -268,8 +269,8 @@ describe('getWL', () => {
     vi.setSystemTime(new Date('2026-09-04T12:00:00.000Z'))
 
     await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: false as const,
       settings: [
         { key: 'wlStatsDays', value: 30 },
@@ -282,8 +283,8 @@ describe('getWL', () => {
 
   it('starts a fresh per-stream counter after an older manual reset', async () => {
     await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: false as const,
       settings: [{ key: 'wlResetAt', value: '2026-09-03T09:30:00.000Z' }],
       streamStartDate: new Date('2026-09-04T08:00:00.000Z'),
@@ -295,15 +296,15 @@ describe('getWL', () => {
   it('formats unranked-only results without an MMR delta', async () => {
     dbState.rpcResult = {
       data: [
-        { won: true, _count_won: 2, lobby_type: 0, is_party: false, is_doubledown: false },
-        { won: false, _count_won: 1, lobby_type: 0, is_party: false, is_doubledown: false },
+        { _count_won: 2, is_doubledown: false, is_party: false, lobby_type: 0, won: true },
+        { _count_won: 1, is_doubledown: false, is_party: false, lobby_type: 0, won: false },
       ],
       error: null,
     }
 
     const res = await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: false as const,
     })
 
@@ -313,13 +314,13 @@ describe('getWL', () => {
 
   it('applies the doubledown multiplier to MMR delta when mmrEnabled', async () => {
     dbState.rpcResult = {
-      data: [{ won: true, _count_won: 1, lobby_type: 7, is_party: false, is_doubledown: true }],
+      data: [{ _count_won: 1, is_doubledown: true, is_party: false, lobby_type: 7, won: true }],
       error: null,
     }
 
     const res = await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: true,
     })
 
@@ -330,17 +331,17 @@ describe('getWL', () => {
   it('orders ranked first when currentGameIsRanked=true', async () => {
     dbState.rpcResult = {
       data: [
-        { won: true, _count_won: 1, lobby_type: 7, is_party: false, is_doubledown: false },
-        { won: true, _count_won: 1, lobby_type: 0, is_party: false, is_doubledown: false },
+        { _count_won: 1, is_doubledown: false, is_party: false, lobby_type: 7, won: true },
+        { _count_won: 1, is_doubledown: false, is_party: false, lobby_type: 0, won: true },
       ],
       error: null,
     }
 
     const res = await getWL({
-      lng: 'en',
       channelId: 'ch-1',
-      mmrEnabled: false as const,
       currentGameIsRanked: true,
+      lng: 'en',
+      mmrEnabled: false as const,
     })
 
     expect(res.msg).toMatch(/^[^·]*Ranked[^·]*·[^·]*Unranked/)
@@ -350,12 +351,12 @@ describe('getWL', () => {
     dbState.rpcResult = { data: null, error: { message: 'boom' } }
 
     const res = await getWL({
-      lng: 'en',
       channelId: 'ch-1',
+      lng: 'en',
       mmrEnabled: false as const,
     })
 
     expect(res.msg).toBeNull()
-    expect(res.record).toEqual([{ win: 0, lose: 0, type: 'U' }])
+    expect(res.record).toStrictEqual([{ lose: 0, type: 'U', win: 0 }])
   })
 })

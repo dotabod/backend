@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+
 import { baseMatchRow, commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
 // End-to-end integration tests that exercise `commandHandler.handleMessage()`:
@@ -17,7 +18,7 @@ describe('CommandHandler dispatch (integration)', () => {
 
   describe('parsing', () => {
     it('dispatches !recent and the handler emits chat output', async () => {
-      state.recentList = [{ matchId: '7777777777', hero_name: 'npc_dota_hero_lina', won: true }]
+      state.recentList = [{ hero_name: 'npc_dota_hero_lina', matchId: '7777777777', won: true }]
       await commandHandler.handleMessage(makeMessage({ content: '!recent', permission: 2 }))
 
       expect(state.chatSayCalls).toHaveLength(1)
@@ -39,7 +40,7 @@ describe('CommandHandler dispatch (integration)', () => {
 
     it('silently ignores unregistered commands', async () => {
       await commandHandler.handleMessage(
-        makeMessage({ content: '!totally_not_a_command', permission: 2 }),
+        makeMessage({ content: '!totally_not_a_command', permission: 2 })
       )
 
       expect(state.chatSayCalls).toHaveLength(0)
@@ -72,10 +73,10 @@ describe('CommandHandler dispatch (integration)', () => {
 
   describe('permission gating', () => {
     it('blocks viewers (permission=0) from running !recent', async () => {
-      state.recentList = [{ matchId: '7777777777', hero_name: 'npc_dota_hero_lina', won: true }]
+      state.recentList = [{ hero_name: 'npc_dota_hero_lina', matchId: '7777777777', won: true }]
 
       await commandHandler.handleMessage(
-        makeMessage({ content: '!recent', permission: 0, userName: 'someViewer' }),
+        makeMessage({ content: '!recent', permission: 0, userName: 'someViewer' })
       )
 
       expect(state.chatSayCalls).toHaveLength(0)
@@ -83,7 +84,7 @@ describe('CommandHandler dispatch (integration)', () => {
 
     it('blocks subscribers (permission=1) from running !won', async () => {
       await commandHandler.handleMessage(
-        makeMessage({ content: '!won', permission: 1, userName: 'someSub' }),
+        makeMessage({ content: '!won', permission: 1, userName: 'someSub' })
       )
 
       expect(state.chatSayCalls).toHaveLength(0)
@@ -99,7 +100,7 @@ describe('CommandHandler dispatch (integration)', () => {
 
     it('allows broadcaster (permission=3) to run !lost', async () => {
       await commandHandler.handleMessage(
-        makeMessage({ content: '!lost', permission: 3, userName: 'broadcaster' }),
+        makeMessage({ content: '!lost', permission: 3, userName: 'broadcaster' })
       )
 
       // The broadcaster has no recent resolved match in the harness, so the
@@ -112,15 +113,15 @@ describe('CommandHandler dispatch (integration)', () => {
 
   describe('!won / !lost end-to-end via handleMessage', () => {
     it('!lost with no arg and no pending resolution flips the most-recent resolved match', async () => {
-      state.recentList = [{ matchId: '7777777777', hero_name: null, won: true }]
+      state.recentList = [{ hero_name: null, matchId: '7777777777', won: true }]
       state.sessionMatch = baseMatchRow({ matchId: '7777777777', won: true })
 
       await commandHandler.handleMessage(makeMessage({ content: '!lost', permission: 2 }))
 
       expect(state.updateCalls).toHaveLength(1)
       expect(state.updateCalls[0].values).toMatchObject({ won: false })
-      expect(state.chatSayCalls[state.chatSayCalls.length - 1].message).toContain(
-        'corrected from WON to LOST',
+      expect(state.chatSayCalls.at(-1).message).toContain(
+        'corrected from WON to LOST'
       )
     })
 

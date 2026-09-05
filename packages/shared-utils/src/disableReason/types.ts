@@ -51,7 +51,7 @@ export interface DisableReasonMetadata extends Record<string, Json | undefined> 
 }
 
 // Use database types for disable notification data (with proper field names)
-export type DisableNotificationData = {
+export interface DisableNotificationData {
   user_id: string
   setting_key: string
   reason: DisableReason

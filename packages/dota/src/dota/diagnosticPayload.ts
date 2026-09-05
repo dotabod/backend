@@ -1,7 +1,7 @@
 export const DIAGNOSTIC_PAYLOAD_BYTES = 64 * 1024
 
 const payload = Buffer.allocUnsafe(DIAGNOSTIC_PAYLOAD_BYTES)
-let state = 0x1a2b3c4d
+let state = 0x1a_2b_3c_4d
 for (let index = 0; index < payload.length; index += 1) {
   state ^= state << 13
   state ^= state >>> 17

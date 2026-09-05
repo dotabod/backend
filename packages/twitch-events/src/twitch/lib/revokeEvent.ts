@@ -5,6 +5,7 @@ import {
   logger,
   supabase,
 } from '@dotabod/shared-utils'
+
 import { eventSubMap } from '../../chatSubIds'
 
 // Constants
@@ -12,15 +13,15 @@ const headers = await getTwitchHeaders()
 
 export const deleteSubscription = async (id: string) => {
   await fetch(`https://api.twitch.tv/helix/eventsub/subscriptions?id=${id}`, {
-    method: 'DELETE',
     headers,
+    method: 'DELETE',
   })
 }
 
 // Function to stop subscriptions for a user
 export const stopUserSubscriptions = async (providerAccountId: string) => {
   const subscriptions = eventSubMap[providerAccountId]
-  if (!subscriptions) return
+  if (!subscriptions) {return}
 
   // Delete each subscription and remove from map
   await Promise.all(
@@ -33,7 +34,7 @@ export const stopUserSubscriptions = async (providerAccountId: string) => {
           id: subscription.id,
         })
       }
-    }),
+    })
   )
 
   delete eventSubMap[providerAccountId]
@@ -74,8 +75,8 @@ async function disableChannel(broadcasterId: string) {
   logger.info('twitch-events Disabling user', { twitchId: broadcasterId })
 
   await commandDisable.disable(user.userId, 'TOKEN_REVOKED', {
-    requires_reauth: true,
     additional_info: 'User revoked app permissions on Twitch',
+    requires_reauth: true,
   })
 }
 
@@ -90,7 +91,7 @@ export async function revokeEvent({ providerAccountId }: { providerAccountId: st
 
   // Clear any existing timeout for this user
   if (pendingRevokes.has(providerAccountId)) {
-    clearTimeout(pendingRevokes.get(providerAccountId)!)
+    clearTimeout(pendingRevokes.get(providerAccountId))
   }
 
   // Set a new timeout
@@ -102,8 +103,8 @@ export async function revokeEvent({ providerAccountId }: { providerAccountId: st
 
       try {
         void stopUserSubscriptions(providerAccountId)
-      } catch (e) {
-        logger.info('Failed to delete subscriptions', { error: e, twitchId: providerAccountId })
+      } catch (error) {
+        logger.info('Failed to delete subscriptions', { error: error, twitchId: providerAccountId })
       }
 
       await supabase
@@ -116,6 +117,6 @@ export async function revokeEvent({ providerAccountId }: { providerAccountId: st
         .eq('providerAccountId', providerAccountId)
 
       await disableChannel(providerAccountId)
-    }, 3000),
+    }, 3000)
   )
 }

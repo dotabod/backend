@@ -1,16 +1,17 @@
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { redisClient } from '../../db/redisInstance'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { DBSettings } from '../../settings'
 import { steamSocket } from '../../steam/ws'
 import type { MatchMinimalDetailsResponse } from '../../types'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler';
+import type { MessageType } from '../lib/CommandHandler';
 import { resolveByMostRecentMatch, resolveMatchRetroactively } from '../lib/resolveMatch'
 
 commandHandler.registerCommand('won', {
-  permission: 2, // Mods and broadcaster only
   cooldown: 0,
   dbkey: DBSettings.commandWon,
   handler: async (message: MessageType, args: string[]) => {
@@ -31,7 +32,7 @@ commandHandler.registerCommand('won', {
             emote: 'PauseChamp',
             lng: client.locale,
           }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -42,7 +43,7 @@ commandHandler.registerCommand('won', {
         true, // won
         username,
         channel,
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -50,7 +51,7 @@ commandHandler.registerCommand('won', {
     try {
       // Check if there's a pending manual resolution
       const pendingResolution = await redisClient.client.get(
-        `${client.token}:pendingManualResolution`,
+        `${client.token}:pendingManualResolution`
       )
 
       if (!pendingResolution) {
@@ -62,7 +63,7 @@ commandHandler.registerCommand('won', {
           true,
           username,
           channel,
-          message.user.messageId,
+          message.user.messageId
         )
         if (flipped) return
 
@@ -72,7 +73,7 @@ commandHandler.registerCommand('won', {
             emote: 'PauseChamp',
             lng: client.locale,
           }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -102,7 +103,7 @@ commandHandler.registerCommand('won', {
             emote: 'PauseChamp',
             lng: client.locale,
           }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -118,7 +119,7 @@ commandHandler.registerCommand('won', {
             } else {
               resolve(response)
             }
-          },
+          }
         )
       })
 
@@ -150,7 +151,7 @@ commandHandler.registerCommand('won', {
             emote: 'PauseChamp',
             lng: client.locale,
           }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -166,7 +167,7 @@ commandHandler.registerCommand('won', {
           username,
           lng: client.locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
     } catch (error) {
       logger.error('[BETS] Error in manual resolution command (won)', { error, channel })
@@ -176,8 +177,9 @@ commandHandler.registerCommand('won', {
           emote: 'PauseChamp',
           lng: client.locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
     }
   },
+  permission: 2, // Mods and broadcaster only,
 })

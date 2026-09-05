@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events'
+
 import { logger } from '@dotabod/shared-utils'
 import WebSocket from 'ws'
 
@@ -17,14 +18,14 @@ function withJitter(baseMs: number): number {
   return Math.round(baseMs * (0.5 + Math.random() * 0.5))
 }
 
-type EventsubSocketOptions = {
+interface EventsubSocketOptions {
   url?: string
   connect?: boolean
   silenceReconnect?: boolean
   disableAutoReconnect?: boolean
 }
 
-type CloseCodeDescription = {
+interface CloseCodeDescription {
   [code: number]: string
 }
 
@@ -58,11 +59,11 @@ export class EventsubSocket extends EventEmitter {
     4006: 'Network error',
     4007: 'Invalid Reconnect',
   }
-  private mainUrl: string
-  private silenceReconnect: boolean
+  private readonly mainUrl: string
+  private readonly silenceReconnect: boolean
   private disableAutoReconnect: boolean
   private backoff = 0
-  private backoffStack = 100
+  private readonly backoffStack = 100
   private eventsub!: WebSocket & {
     twitch_websocket_id?: string
     counter?: number
@@ -96,19 +97,19 @@ export class EventsubSocket extends EventEmitter {
   }
 
   private connect(url = this.mainUrl, isReconnect = false): void {
-    if (this.disposed) return
+    if (this.disposed) {return}
     this.counter++
-    this.eventsub = new WebSocket(url) as WebSocket & { counter?: number }
+    this.eventsub = new WebSocket(url)
     this.eventsub.counter = this.counter
 
     this.eventsub.addEventListener('open', this.handleOpen.bind(this))
-    this.eventsub.addEventListener('close', (close) => this.handleClose(close, isReconnect))
+    this.eventsub.addEventListener('close', (close) =>{  this.handleClose(close, isReconnect); })
     this.eventsub.addEventListener('error', this.handleError.bind(this))
     this.eventsub.addEventListener('message', this.handleMessage.bind(this))
   }
 
   private handleOpen(): void {
-    if (this.disposed) return
+    if (this.disposed) {return}
     this.backoff = 0
     this.got429 = false
     logger.info('[EVENTSUB] WebSocket open', {
@@ -118,7 +119,7 @@ export class EventsubSocket extends EventEmitter {
   }
 
   private handleClose(close: WebSocket.CloseEvent, _isReconnect: boolean): void {
-    if (this.disposed) return
+    if (this.disposed) {return}
     const reasonText = this.closeCodes[close.code] || 'Unknown'
     const isStale = close.target !== this.eventsub
     const wsId = this.eventsub.twitch_websocket_id
@@ -129,9 +130,9 @@ export class EventsubSocket extends EventEmitter {
     if (isStale) {
       logger.info('[EVENTSUB] Stale close ignored', {
         code: close.code,
+        currentCounter: this.eventsub.counter,
         reason: reasonText,
         wsCounter: (close.target as typeof this.eventsub)?.counter,
-        currentCounter: this.eventsub.counter,
       })
       return
     }
@@ -140,10 +141,10 @@ export class EventsubSocket extends EventEmitter {
     this.emit('close', close)
     logger.info('[EVENTSUB] WebSocket closed', {
       code: close.code,
-      reason: reasonText,
-      wasClean: close.wasClean,
-      twitchWsId: wsId,
       counter: this.eventsub.counter,
+      reason: reasonText,
+      twitchWsId: wsId,
+      wasClean: close.wasClean,
     })
 
     // A socket told to stay down (e.g. after session_silenced — the conduitSetup
@@ -188,7 +189,7 @@ export class EventsubSocket extends EventEmitter {
       const delay = withJitter(this.backoff * this.backoffStack)
       logger.warn(
         '[EVENTSUB] 4004 on live socket — reconnect grace expired without handoff, retrying',
-        { backoff: this.backoff, delayMs: delay, twitchWsId: wsId },
+        { backoff: this.backoff, delayMs: delay, twitchWsId: wsId }
       )
       this.scheduleReconnect(delay)
       return
@@ -196,8 +197,8 @@ export class EventsubSocket extends EventEmitter {
 
     const delay = withJitter(this.backoff * this.backoffStack)
     logger.info('[EVENTSUB] Scheduling reconnect', {
-      code: close.code,
       backoff: this.backoff,
+      code: close.code,
       delayMs: delay,
     })
     this.scheduleReconnect(delay)
@@ -207,54 +208,60 @@ export class EventsubSocket extends EventEmitter {
   // cleared on dispose so a replaced socket can't resurrect itself.
   private scheduleReconnect(delayMs: number): void {
     clearTimeout(this.reconnectTimer)
-    this.reconnectTimer = setTimeout(() => this.connect(this.mainUrl, true), delayMs)
+    this.reconnectTimer = setTimeout(() =>{  this.connect(this.mainUrl, true); }, delayMs)
   }
 
   private handleError(err: WebSocket.ErrorEvent): void {
-    if (this.disposed) return
+    if (this.disposed) {return}
     // ws surfaces a rejected upgrade as "Unexpected server response: 429".
     // Flag it so the following close applies the rate-limit cooldown.
     const rateLimited = typeof err.message === 'string' && err.message.includes('429')
-    if (rateLimited) this.got429 = true
+    if (rateLimited) {this.got429 = true}
     logger.error('[EVENTSUB] WebSocket error', {
-      message: err.message,
-      type: err.type,
       counter: this.eventsub.counter,
+      message: err.message,
       rateLimited,
+      type: err.type,
     })
   }
 
   private handleMessage(message: WebSocket.MessageEvent): void {
-    if (this.disposed) return
+    if (this.disposed) {return}
     const data = JSON.parse(message.data as string)
     const { metadata, payload } = data
     const { message_type } = metadata
 
     switch (message_type) {
-      case 'session_welcome':
+      case 'session_welcome': {
         this.handleSessionWelcome(payload, this.eventsub.is_reconnecting || false)
         break
-      case 'session_keepalive':
+      }
+      case 'session_keepalive': {
         this.emit('session_keepalive')
         this.silence()
         break
-      case 'notification':
+      }
+      case 'notification': {
         this.handleNotification(metadata, payload)
         break
-      case 'session_reconnect':
+      }
+      case 'session_reconnect': {
         this.handleSessionReconnect(payload)
         break
-      case 'websocket_disconnect':
+      }
+      case 'websocket_disconnect': {
         logger.info('[EVENTSUB] Received websocket_disconnect from Twitch', { payload })
         break
+      }
       case 'revocation': {
         logger.info('[TWITCHEVENTS] Revocation', { data })
         this.emit('revocation', { metadata, payload })
         break
       }
-      default:
+      default: {
         logger.warn('[EVENTSUB] Unexpected message type', { metadata, payload })
         break
+      }
     }
   }
 
@@ -264,10 +271,10 @@ export class EventsubSocket extends EventEmitter {
 
     this.eventsub.twitch_websocket_id = id
     logger.info('[EVENTSUB] Session welcome', {
-      sessionId: id,
-      keepaliveSeconds: keepalive_timeout_seconds,
-      isReconnect,
       counter: this.eventsub.counter,
+      isReconnect,
+      keepaliveSeconds: keepalive_timeout_seconds,
+      sessionId: id,
     })
 
     eventsubConnected = true
@@ -282,7 +289,7 @@ export class EventsubSocket extends EventEmitter {
 
   private handleNotification(
     metadata: Record<string, unknown>,
-    payload: NotificationPayload,
+    payload: NotificationPayload
   ): void {
     const { type } = payload.subscription
     this.emit(type, { metadata, payload })
@@ -294,16 +301,16 @@ export class EventsubSocket extends EventEmitter {
     const { reconnect_url } = payload.session
 
     logger.info('[EVENTSUB] session_reconnect received', {
-      reconnectUrl: reconnect_url,
       oldCounter: this.eventsub.counter,
       oldWsId: this.eventsub.twitch_websocket_id,
+      reconnectUrl: reconnect_url,
     })
     this.emit('session_reconnect', reconnect_url)
     this.connect(reconnect_url, true)
   }
 
   private silence(keepalive_timeout_seconds?: number): void {
-    if (this.disposed) return
+    if (this.disposed) {return}
     if (keepalive_timeout_seconds) {
       this.silenceTime = keepalive_timeout_seconds + 1
     }
@@ -312,14 +319,14 @@ export class EventsubSocket extends EventEmitter {
     eventsubConnected = true
     clearTimeout(this.silenceHandler)
     this.silenceHandler = setTimeout(() => {
-      if (this.disposed) return
+      if (this.disposed) {return}
       eventsubConnected = false
       logger.warn('[EVENTSUB] session_silenced — no keepalive in window', {
+        counter: this.eventsub.counter,
         silenceTimeSec: this.silenceTime,
         twitchWsId: this.eventsub.twitch_websocket_id,
-        wsReadyState: this.eventsub.readyState,
-        counter: this.eventsub.counter,
         willClose: this.silenceReconnect,
+        wsReadyState: this.eventsub.readyState,
       })
       // The conduitSetup session_silenced backstop owns recovery (a single
       // guarded re-init that disposes this socket). Disable self-reconnect so
@@ -352,7 +359,7 @@ export class EventsubSocket extends EventEmitter {
    * the background — the leak that produced the 2026-06-19 connection storm.
    */
   public dispose(): void {
-    if (this.disposed) return
+    if (this.disposed) {return}
     this.disposed = true
     this.disableAutoReconnect = true
     clearTimeout(this.silenceHandler)

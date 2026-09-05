@@ -4,12 +4,13 @@
 // `openTheBet()` running. The fix captures both values at validation time and
 // passes them through the delayed callback closure.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../__tests__/sharedMocks'
 
-type InsertCall = { table: string; values: Record<string, unknown> }
-type UpdateCall = { table: string; values: Record<string, unknown> }
-type OpenBetCall = { heroName: string | undefined; matchidAtCallTime: string | undefined }
-type DelayedTask = {
+interface InsertCall { table: string; values: Record<string, unknown> }
+interface UpdateCall { table: string; values: Record<string, unknown> }
+interface OpenBetCall { heroName: string | undefined; matchidAtCallTime: string | undefined }
+interface DelayedTask {
   id: string
   delayMs: number
   invoke: () => void | Promise<void>
@@ -19,17 +20,17 @@ type DelayedTask = {
 const supabaseInserts: InsertCall[] = []
 const supabaseUpdates: UpdateCall[] = []
 const steamAccountSelectCalls: number[] = []
-const loggerErrorCalls: Array<{ message: string; meta?: Record<string, unknown> }> = []
-const loggerInfoCalls: Array<{ message: string; meta?: Record<string, unknown> }> = []
+const loggerErrorCalls: { message: string; meta?: Record<string, unknown> }[] = []
+const loggerInfoCalls: { message: string; meta?: Record<string, unknown> }[] = []
 const openBetCalls: OpenBetCall[] = []
 const closeBetCalls: unknown[][] = []
-const sayCalls: Array<{ message: string; options?: Record<string, unknown> }> = []
-const ioEmitCalls: Array<{
+const sayCalls: { message: string; options?: Record<string, unknown> }[] = []
+const ioEmitCalls: {
   token: string
   event: string
   payload: unknown
   trailingPayloads?: unknown[]
-}> = []
+}[] = []
 const heldTasks: DelayedTask[] = []
 const removedTaskIds: string[] = []
 const openTwitchBetControl: { throwOnNextCall: Error | null } = { throwOnNextCall: null }
@@ -39,7 +40,7 @@ const matchPredictionLookup: {
 } = { data: null, error: null }
 // Existing rows the supabase mock returns from a `.select(...).eq.eq.is(...)`
 // chain (the openBets duplicate-bet check at line 712-718). Default: empty.
-const existingBetRows: Array<Record<string, unknown>> = []
+const existingBetRows: Record<string, unknown>[] = []
 const steamAccountLookup: {
   data: Record<string, unknown> | null
   error: { code?: string; message: string } | null
@@ -57,7 +58,7 @@ const supabaseMock = {
       // existingBetRows; the existing-bet branch only fires when the test
       // seeds at least one row.
       select: () => builder,
-      insert: (values: Record<string, unknown>) => {
+      insert:  async (values: Record<string, unknown>) => {
         supabaseInserts.push({ table, values })
         if (table === 'steam_accounts') {
           if (steamAccountInsertResult.throwError) {
@@ -71,24 +72,24 @@ const supabaseMock = {
         supabaseUpdates.push({ table, values })
         return builder
       },
-      upsert: () => Promise.resolve({ data: null, error: null }),
+      upsert:  async () => Promise.resolve({ data: null, error: null }),
       eq: () => builder,
-      is: () => Promise.resolve({ data: existingBetRows.slice(), error: null }),
+      is:  async () => Promise.resolve({ data: [...existingBetRows], error: null }),
       neq: () => builder,
       not: () => builder,
       gte: () => builder,
       order: () => builder,
-      limit: () => Promise.resolve({ data: existingBetRows.slice(), error: null }),
-      single: () => {
-        if (table === 'matches') return Promise.resolve({ ...matchPredictionLookup })
+      limit:  async () => Promise.resolve({ data: [...existingBetRows], error: null }),
+      single:  async () => {
+        if (table === 'matches') {return Promise.resolve({ ...matchPredictionLookup })}
         return Promise.resolve({ data: null, error: { message: 'not found' } })
       },
-      maybeSingle: () => {
-        if (table === 'steam_accounts') steamAccountSelectCalls.push(Date.now())
+      maybeSingle:  async () => {
+        if (table === 'steam_accounts') {steamAccountSelectCalls.push(Date.now())}
         return Promise.resolve({ ...steamAccountLookup })
       },
-      match: () => Promise.resolve({ data: null, error: null }),
-      then: (onF: any) => Promise.resolve({ data: existingBetRows.slice(), error: null }).then(onF),
+      match:  async () => Promise.resolve({ data: null, error: null }),
+      then:  async (onF: any) => Promise.resolve({ data: [...existingBetRows], error: null }).then(onF),
     }
     return builder
   },
@@ -96,31 +97,31 @@ const supabaseMock = {
 }
 
 const loggerMock = {
-  info: (message: string, meta?: Record<string, unknown>) => {
-    loggerInfoCalls.push({ message, meta })
-  },
+  debug: () => undefined,
   error: (message: string, meta?: Record<string, unknown>) => {
     loggerErrorCalls.push({ message, meta })
   },
+  info: (message: string, meta?: Record<string, unknown>) => {
+    loggerInfoCalls.push({ message, meta })
+  },
   warn: () => undefined,
-  debug: () => undefined,
 }
 
-vi.doMock('@dotabod/shared-utils', () =>
-  buildSharedUtilsMock({ supabase: supabaseMock, logger: loggerMock }),
+vi.doMock(import('@dotabod/shared-utils'), () =>
+  buildSharedUtilsMock({ logger: loggerMock, supabase: supabaseMock })
 )
 
-vi.doMock('../../steam/ws', () => ({
-  steamSocket: { emit: () => undefined, on: () => undefined },
-  twitchChat: { emit: () => undefined, on: () => undefined },
-  twitchEvents: { emit: () => undefined, on: () => undefined },
+vi.doMock(import('../../steam/ws'), () => ({
+  steamSocket: { emit: () => {}, on: () => {} },
+  twitchChat: { emit: () => {}, on: () => {} },
+  twitchEvents: { emit: () => {}, on: () => {} },
 }))
 
-vi.doMock('../../twitch/lib/openTwitchBet', () => ({
+vi.doMock(import('../../twitch/lib/openTwitchBet'), () => ({
   isPredictionAlreadyActiveError: (error: unknown) => {
-    if (typeof error !== 'object' || error === null) return false
+    if (typeof error !== 'object' || error === null) {return false}
     const candidate = error as { statusCode?: unknown; body?: unknown }
-    if (candidate.statusCode !== 400 || typeof candidate.body !== 'string') return false
+    if (candidate.statusCode !== 400 || typeof candidate.body !== 'string') {return false}
     try {
       const body = JSON.parse(candidate.body) as { message?: unknown }
       return (
@@ -144,33 +145,33 @@ vi.doMock('../../twitch/lib/openTwitchBet', () => ({
   },
 }))
 
-vi.doMock('../../twitch/lib/closeTwitchBet', () => ({
+vi.doMock(import('../../twitch/lib/closeTwitchBet'), () => ({
   closeTwitchBet: async (...args: unknown[]) => {
     closeBetCalls.push(args)
   },
 }))
 
-vi.doMock('../say', () => ({
+vi.doMock(import('../say'), () => ({
   say: (_client: unknown, message: string, options?: Record<string, unknown>) => {
     sayCalls.push({ message, options })
   },
 }))
 
-vi.doMock('../lib/DelayedQueue', () => ({
+vi.doMock(import('../lib/DelayedQueue'), () => ({
   delayedQueue: {
     addTask: (
       delayMs: number,
       cb: (payload: unknown) => void | Promise<void>,
-      payload?: unknown,
+      payload?: unknown
     ) => {
       const id = `task-${heldTasks.length + 1}`
       const task: DelayedTask = {
-        id,
-        delayMs,
         cancelled: false,
+        delayMs,
+        id,
         invoke: async () => {
           if (task.cancelled) return
-          await cb(payload as unknown)
+          await cb(payload)
         },
       }
       heldTasks.push(task)
@@ -179,7 +180,7 @@ vi.doMock('../lib/DelayedQueue', () => ({
     removeTask: (id: string) => {
       removedTaskIds.push(id)
       const task = heldTasks.find((t) => t.id === id)
-      if (task) task.cancelled = true
+      if (task) {task.cancelled = true}
       return !!task
     },
   },
@@ -189,7 +190,7 @@ vi.doMock('../lib/DelayedQueue', () => ({
 // bypass these by constructing with stream_online=false so the ctor early-
 // returns, but the modules are still imported at file-load time so they
 // need to load cleanly.
-vi.doMock('../../db/getWL', async () => {
+vi.doMock(import('../../db/getWL'), async () => {
   const real = await vi.importActual<any>('../../db/getWL')
   return {
     ...real,
@@ -201,14 +202,14 @@ vi.doMock('../../db/getWL', async () => {
   }
 })
 
-vi.doMock('../lib/ranks', async () => {
+vi.doMock(import('../lib/ranks'), async () => {
   const real = await vi.importActual<any>('../lib/ranks')
   return {
     ...real,
-    getRankDetail: async () => null,
     getDotabodRankProfile: async () => null,
-    getRankTitle: () => 'Immortal',
     getRankDescription: async () => null,
+    getRankDetail: async () => null,
+    getRankTitle: () => 'Immortal',
   }
 })
 
@@ -217,18 +218,13 @@ await initTestI18n()
 const { redisClient } = await import('../../db/redisInstance')
 const redisStore: Record<string, string> = {}
 ;(redisClient as any).client = {
-  get: async (key: string) => redisStore[key] ?? null,
-  set: async (key: string, val: string) => {
-    redisStore[key] = val
-    return 'OK'
-  },
   del: async (key: string) => {
     delete redisStore[key]
     return 1
   },
-  setEx: async (key: string, _ttl: number, val: string) => {
-    redisStore[key] = val
-    return 'OK'
+  get: async (key: string) => redisStore[key] ?? null,
+  json: {
+    get: async () => null,
   },
   multi: () => {
     const ops: Array<() => void> = []
@@ -240,20 +236,27 @@ const redisStore: Record<string, string> = {}
         return chain
       },
       exec: async () => {
-        ops.forEach((op) => op())
+        ops.forEach((op) =>{  op(); })
         return []
       },
     }
     return chain
   },
-  json: {
-    get: async () => null,
+  set: async (key: string, val: string) => {
+    redisStore[key] = val
+    return 'OK'
+  },
+  setEx: async (key: string, _ttl: number, val: string) => {
+    redisStore[key] = val
+    return 'OK'
   },
 }
 
 const { server } = await import('../server')
 server.setServer({
   io: {
+    fetchSockets: async () => [],
+    in: () => ({ fetchSockets: async () => [] }),
     to: (token: string) => ({
       emit: (event: string, payload: unknown, ...trailingPayloads: unknown[]) => {
         ioEmitCalls.push({
@@ -264,8 +267,6 @@ server.setServer({
         })
       },
     }),
-    in: () => ({ fetchSockets: async () => [] }),
-    fetchSockets: async () => [],
   },
 } as any)
 
@@ -277,34 +278,34 @@ type Client = any
 
 function makeClient(overrides: Partial<Client> = {}): Client {
   return {
-    name: 'arteezy',
-    token: 'token-arteezy',
-    stream_online: false, // ctor early-returns; we re-enable after construction
-    locale: 'en',
-    steam32Id: 86745912,
-    mmr: 12000,
     Account: { providerAccountId: 'twitch-arteezy' },
     SteamAccount: [],
-    settings: [],
-    subscription: PRO_SUB,
     beta_tester: false,
-    multiAccount: false,
     gsi: undefined,
+    locale: 'en',
+    mmr: 12000,
+    multiAccount: false,
+    name: 'arteezy',
+    settings: [],
+    steam32Id: 86745912,
+    stream_online: false, // ctor early-returns; we re-enable after construction
+    subscription: PRO_SUB,
+    token: 'token-arteezy',
     ...overrides,
   }
 }
 
 function liveGsi(overrides: Record<string, any> = {}) {
   return {
-    map: { matchid: '8825999999', win_team: 'none', clock_time: 0, game_time: 0 },
-    player: { activity: 'playing', team_name: 'radiant' },
     hero: { name: 'npc_dota_hero_nevermore' },
+    map: { clock_time: 0, game_time: 0, matchid: '8825999999', win_team: 'none' },
+    player: { activity: 'playing', team_name: 'radiant' },
     ...overrides,
   }
 }
 
 function steam64(steam32Id: number) {
-  return (76561197960265728n + BigInt(steam32Id)).toString()
+  return (76_561_197_960_265_728n + BigInt(steam32Id)).toString()
 }
 
 function makeHandler(client: Client) {
@@ -338,7 +339,7 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     openTwitchBetControl.throwOnNextCall = null
     matchPredictionLookup.data = null
     matchPredictionLookup.error = null
-    for (const k of Object.keys(redisStore)) delete redisStore[k]
+    for (const k of Object.keys(redisStore)) {delete redisStore[k]}
   })
 
   afterEach(() => {
@@ -356,15 +357,15 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     handler.emitWLUpdate()
     await vi.waitFor(() => {
       expect(ioEmitCalls).toContainEqual({
-        token: 'token-arteezy',
         event: 'update-wl',
         payload: [{ lose: 2, type: 'R', win: 5 }],
+        token: 'token-arteezy',
         trailingPayloads: [14, 30],
       })
       expect(ioEmitCalls).toContainEqual({
-        token: 'profile-wl:twitch-arteezy',
         event: 'update-wl',
         payload: [{ lose: 2, type: 'R', win: 5 }],
+        token: 'profile-wl:twitch-arteezy',
         trailingPayloads: [14, 30],
       })
     })
@@ -378,14 +379,14 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
 
     await vi.waitFor(() => {
       expect(ioEmitCalls).toContainEqual({
-        token: 'profile-wl:twitch-arteezy',
         event: 'update-wl',
         payload: [{ lose: 2, type: 'R', win: 5 }],
+        token: 'profile-wl:twitch-arteezy',
         trailingPayloads: [14, 30],
       })
     })
     expect(ioEmitCalls).not.toContainEqual(
-      expect.objectContaining({ token: 'token-arteezy', event: 'update-wl' }),
+      expect.objectContaining({ event: 'update-wl', token: 'token-arteezy' })
     )
   })
 
@@ -397,7 +398,7 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
 
     await handler.openBets(handler.client)
 
-    expect(heldTasks.length).toBe(1)
+    expect(heldTasks).toHaveLength(1)
 
     // Simulate the Arteezy scenario: between openBets and the delayed callback,
     // the game abandons and GSI clears (or a new game has begun and reset
@@ -407,14 +408,14 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
 
     await heldTasks[0].invoke()
 
-    expect(supabaseInserts.length).toBe(1)
+    expect(supabaseInserts).toHaveLength(1)
     const insert = supabaseInserts[0]
     expect(insert.table).toBe('matches')
     expect(insert.values.matchId).toBe('8825999999')
     expect(insert.values.hero_name).toBe('npc_dota_hero_nevermore')
     expect(insert.values.predictionId).toBe('bet-id-1')
 
-    expect(openBetCalls.length).toBe(1)
+    expect(openBetCalls).toHaveLength(1)
     expect(openBetCalls[0].heroName).toBe('Shadow Fiend')
   })
 
@@ -424,9 +425,9 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
 
     await handler.openTheBet('', '')
 
-    expect(supabaseInserts.length).toBe(0)
-    expect(openBetCalls.length).toBe(0)
-    expect(handler.openingBets).toBe(false)
+    expect(supabaseInserts).toHaveLength(0)
+    expect(openBetCalls).toHaveLength(0)
+    expect(handler.openingBets).toBeFalsy()
   })
 
   it('inserts with the valid matchId, hero, and predictionId on the happy path', async () => {
@@ -436,11 +437,11 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     const handler = makeHandler(client)
 
     await handler.openBets(handler.client)
-    expect(heldTasks.length).toBe(1)
+    expect(heldTasks).toHaveLength(1)
 
     await heldTasks[0].invoke()
 
-    expect(supabaseInserts.length).toBe(1)
+    expect(supabaseInserts).toHaveLength(1)
     const insert = supabaseInserts[0]
     expect(insert.values.matchId).toBe('8825339220')
     expect(insert.values.hero_name).toBe('npc_dota_hero_nevermore')
@@ -466,8 +467,8 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
 
     await handler.openBets(handler.client)
 
-    expect(heldTasks.length).toBe(0)
-    expect(handler.openingBets).toBe(false)
+    expect(heldTasks).toHaveLength(0)
+    expect(handler.openingBets).toBeFalsy()
   })
 
   it('cleans up Redis matchId/playingTeam/playingHero when openTheBet bails without inserting a row', async () => {
@@ -478,8 +479,8 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     // silently, and checkEarlyDCWinner's .single() then errors out.
     const client = makeClient({
       gsi: liveGsi({
-        map: { matchid: '8825999999', win_team: 'none' },
         hero: { name: 'npc_dota_hero_does_not_exist' },
+        map: { matchid: '8825999999', win_team: 'none' },
       }),
     })
     const handler = makeHandler(client)
@@ -502,8 +503,8 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     // original "Will we win with " bug. Treat unresolved hero as missing.
     const client = makeClient({
       gsi: liveGsi({
-        map: { matchid: '8825999999', win_team: 'none' },
         hero: { name: 'npc_dota_hero_does_not_exist' },
+        map: { matchid: '8825999999', win_team: 'none' },
       }),
     })
     const handler = makeHandler(client)
@@ -511,9 +512,9 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     await handler.openBets(handler.client)
     await heldTasks[0].invoke()
 
-    expect(openBetCalls.length).toBe(0)
-    expect(supabaseInserts.length).toBe(0)
-    expect(handler.openingBets).toBe(false)
+    expect(openBetCalls).toHaveLength(0)
+    expect(supabaseInserts).toHaveLength(0)
+    expect(handler.openingBets).toBeFalsy()
   })
 
   it('keeps match history when openTwitchBet throws without announcing a prediction', async () => {
@@ -529,7 +530,7 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     await handler.openBets(handler.client)
     await heldTasks[0].invoke()
 
-    expect(openBetCalls.length).toBe(1)
+    expect(openBetCalls).toHaveLength(1)
     expect(supabaseInserts).toContainEqual({
       table: 'matches',
       values: expect.objectContaining({
@@ -539,7 +540,7 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     })
     expect(redisStore['token-arteezy:matchId']).toBe('8825999999')
     expect(sayCalls).toHaveLength(0)
-    expect(handler.openingBets).toBe(false)
+    expect(handler.openingBets).toBeFalsy()
   })
 
   it('records an active-prediction conflict once and keeps the match guard without announcing bets', async () => {
@@ -548,10 +549,10 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     })
     const handler = makeHandler(client)
     openTwitchBetControl.throwOnNextCall = Object.assign(new Error('Twitch API error'), {
-      statusCode: 400,
       body: JSON.stringify({
         message: 'prediction event already active, only one allowed at a time',
       }),
+      statusCode: 400,
     })
 
     await handler.openBets(handler.client)
@@ -573,8 +574,8 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     expect(loggerInfoCalls.filter((call) => call.meta?.event === 'open_bets')).toHaveLength(0)
     expect(
       loggerInfoCalls.filter(
-        (call) => call.message === '[BETS] Twitch prediction already active; tracking match only',
-      ),
+        (call) => call.message === '[BETS] Twitch prediction already active; tracking match only'
+      )
     ).toHaveLength(1)
 
     await handler.openBets(handler.client)
@@ -587,18 +588,18 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     const client = makeClient({
       gsi: liveGsi({
         map: {
-          matchid: '8825999999',
-          win_team: 'radiant',
-          radiant_score: 42,
           dire_score: 31,
+          matchid: '8825999999',
+          radiant_score: 42,
+          win_team: 'radiant',
         },
         player: {
           accountid: 86745912,
           activity: 'playing',
-          team_name: 'radiant',
-          kills: 10,
-          deaths: 2,
           assists: 15,
+          deaths: 2,
+          kills: 10,
+          team_name: 'radiant',
         },
       }),
     })
@@ -636,7 +637,7 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     const handler = makeHandler(client)
 
     await handler.openBets(handler.client)
-    expect(heldTasks.length).toBe(1)
+    expect(heldTasks).toHaveLength(1)
 
     handler.client.gsi.player = undefined
     handler.client.gsi.map = undefined
@@ -644,7 +645,7 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
 
     await heldTasks[0].invoke()
 
-    expect(supabaseInserts.length).toBe(1)
+    expect(supabaseInserts).toHaveLength(1)
     expect(supabaseInserts[0].values.myTeam).toBe('dire')
   })
 
@@ -662,7 +663,7 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     const handler = makeHandler(client)
 
     await handler.openBets(handler.client)
-    expect(heldTasks.length).toBe(1)
+    expect(heldTasks).toHaveLength(1)
     const queuedTaskId = heldTasks[0].id
 
     // Match ends abruptly (close + reset, or early-DC handler reset).
@@ -670,32 +671,31 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
 
     // The task must have been removed from the queue; firing it should be a no-op.
     expect(removedTaskIds).toContain(queuedTaskId)
-    expect(heldTasks[0].cancelled).toBe(true)
+    expect(heldTasks[0].cancelled).toBeTruthy()
 
     await heldTasks[0].invoke()
-    expect(supabaseInserts.length).toBe(0)
-    expect(openBetCalls.length).toBe(0)
+    expect(supabaseInserts).toHaveLength(0)
+    expect(openBetCalls).toHaveLength(0)
   })
 
   it('returns the overlay to the main screen and starts cleanup when a match reaches post-game', async () => {
     const client = makeClient({
       gsi: liveGsi({
         map: {
+          game_state: 'DOTA_GAMERULES_STATE_POST_GAME',
           matchid: '8978976957',
           win_team: 'none',
-          game_state: 'DOTA_GAMERULES_STATE_POST_GAME',
         },
       }),
     })
     const handler = makeHandler(client)
     handler.blockCache = 'playing'
     redisStore['token-arteezy:matchId'] = '8978976957'
-    const closeBets = vi.spyOn(handler, 'closeBets').mockResolvedValue(undefined)
+    const closeBets = vi.spyOn(handler, 'closeBets').mockResolvedValue()
 
     await handler.setupOBSBlockers('DOTA_GAMERULES_STATE_POST_GAME')
 
     expect(ioEmitCalls).toContainEqual({
-      token: 'token-arteezy',
       event: 'block',
       payload: {
         matchId: '8978976957',
@@ -703,6 +703,7 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
         team: 'radiant',
         type: null,
       },
+      token: 'token-arteezy',
     })
     expect(closeBets).toHaveBeenCalledOnce()
   })
@@ -711,20 +712,19 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     const client = makeClient({
       gsi: liveGsi({
         map: {
+          game_state: 'DOTA_GAMERULES_STATE_STRATEGY_TIME',
           matchid: '8978976957',
           win_team: 'none',
-          game_state: 'DOTA_GAMERULES_STATE_STRATEGY_TIME',
         },
       }),
     })
     const handler = makeHandler(client)
     handler.blockCache = 'strategy-2'
-    const closeBets = vi.spyOn(handler, 'closeBets').mockResolvedValue(undefined)
+    const closeBets = vi.spyOn(handler, 'closeBets').mockResolvedValue()
 
     await handler.setupOBSBlockers('DOTA_GAMERULES_STATE_STRATEGY_TIME')
 
     expect(ioEmitCalls).toContainEqual({
-      token: 'token-arteezy',
       event: 'block',
       payload: {
         matchId: '8978976957',
@@ -732,6 +732,7 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
         team: 'radiant',
         type: 'empty',
       },
+      token: 'token-arteezy',
     })
     expect(closeBets).not.toHaveBeenCalled()
   })
@@ -740,16 +741,16 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     const client = makeClient({
       gsi: liveGsi({
         map: {
+          game_state: 'DOTA_GAMERULES_STATE_POST_GAME',
           matchid: '8978976957',
           win_team: 'none',
-          game_state: 'DOTA_GAMERULES_STATE_POST_GAME',
         },
       }),
     })
     const handler = makeHandler(client)
     handler.blockCache = undefined
     redisStore['token-arteezy:matchId'] = '8978976957'
-    const closeBets = vi.spyOn(handler, 'closeBets').mockResolvedValue(undefined)
+    const closeBets = vi.spyOn(handler, 'closeBets').mockResolvedValue()
 
     await handler.setupOBSBlockers('DOTA_GAMERULES_STATE_POST_GAME')
 
@@ -760,9 +761,9 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     const client = makeClient({
       gsi: liveGsi({
         map: {
+          game_state: 'DOTA_GAMERULES_STATE_STRATEGY_TIME',
           matchid: '8978976957',
           win_team: 'none',
-          game_state: 'DOTA_GAMERULES_STATE_STRATEGY_TIME',
         },
       }),
     })
@@ -772,12 +773,11 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     ioEmitCalls.length = 0
     client.gsi.map.game_state = 'DOTA_GAMERULES_STATE_POST_GAME'
     redisStore['token-arteezy:matchId'] = '8978976957'
-    const closeBets = vi.spyOn(handler, 'closeBets').mockResolvedValue(undefined)
+    const closeBets = vi.spyOn(handler, 'closeBets').mockResolvedValue()
 
     await handler.setupOBSBlockers('DOTA_GAMERULES_STATE_POST_GAME')
 
     expect(ioEmitCalls).toContainEqual({
-      token: 'token-arteezy',
       event: 'block',
       payload: {
         matchId: '8978976957',
@@ -785,6 +785,7 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
         team: 'radiant',
         type: null,
       },
+      token: 'token-arteezy',
     })
     expect(closeBets).toHaveBeenCalledOnce()
   })
@@ -793,21 +794,20 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     const client = makeClient({
       gsi: liveGsi({
         map: {
+          game_state: 'DOTA_GAMERULES_STATE_INIT',
           matchid: '8978976957',
           win_team: 'none',
-          game_state: 'DOTA_GAMERULES_STATE_INIT',
         },
       }),
     })
     const handler = makeHandler(client)
     handler.blockCache = undefined
     redisStore['token-arteezy:matchId'] = '8978976957'
-    const closeBets = vi.spyOn(handler, 'closeBets').mockResolvedValue(undefined)
+    const closeBets = vi.spyOn(handler, 'closeBets').mockResolvedValue()
 
     await handler.setupOBSBlockers('DOTA_GAMERULES_STATE_INIT')
 
     expect(ioEmitCalls).toContainEqual({
-      token: 'token-arteezy',
       event: 'block',
       payload: {
         matchId: '8978976957',
@@ -815,6 +815,7 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
         team: 'radiant',
         type: null,
       },
+      token: 'token-arteezy',
     })
     expect(closeBets).toHaveBeenCalledOnce()
   })
@@ -847,12 +848,12 @@ describe('updateSteam32Id — stale multi-account recovery', () => {
     vi.useRealTimers()
   })
 
-  function makeBlockedHandler(steam32Id = 440614454) {
+  function makeBlockedHandler(steam32Id = 440_614_454) {
     const client = makeClient({
-      multiAccount: steam32Id,
-      steam32Id: null,
       SteamAccount: [],
       gsi: liveGsi({ player: { steamid: steam64(steam32Id), name: 'Dota Account' } }),
+      multiAccount: steam32Id,
+      steam32Id: null,
     })
     return makeHandler(client)
   }
@@ -864,7 +865,7 @@ describe('updateSteam32Id — stale multi-account recovery', () => {
     await handler.updateSteam32Id()
 
     expect(steamAccountSelectCalls).toHaveLength(0)
-    expect(handler.client.multiAccount).toBe(440614454)
+    expect(handler.client.multiAccount).toBe(440_614_454)
   })
 
   it('after 30 seconds creates the link when the Steam row is gone', async () => {
@@ -876,31 +877,31 @@ describe('updateSteam32Id — stale multi-account recovery', () => {
     expect(steamAccountSelectCalls).toHaveLength(1)
     expect(supabaseInserts).toContainEqual({
       table: 'steam_accounts',
-      values: expect.objectContaining({ steam32Id: 440614454, userId: 'token-arteezy' }),
+      values: expect.objectContaining({ steam32Id: 440_614_454, userId: 'token-arteezy' }),
     })
     expect(handler.client.multiAccount).toBeUndefined()
     expect(handler.multiAccountRevalidatedAt).toBeUndefined()
-    expect(handler.client.steam32Id).toBe(440614454)
+    expect(handler.client.steam32Id).toBe(440_614_454)
   })
 
   it('after 30 seconds restores the local account when ownership transferred to this user', async () => {
     const handler = makeBlockedHandler()
     handler.multiAccountRevalidatedAt = Date.now() - 30_000
     steamAccountLookup.data = {
-      id: 'steam-row',
-      userId: 'token-arteezy',
-      mmr: 6123,
       connectedUserIds: [],
+      id: 'steam-row',
+      mmr: 6123,
+      userId: 'token-arteezy',
     }
 
     await handler.updateSteam32Id()
 
     expect(handler.client.multiAccount).toBeUndefined()
     expect(handler.multiAccountRevalidatedAt).toBeUndefined()
-    expect(handler.client.steam32Id).toBe(440614454)
+    expect(handler.client.steam32Id).toBe(440_614_454)
     expect(handler.client.mmr).toBe(6123)
     expect(handler.client.SteamAccount).toContainEqual(
-      expect.objectContaining({ steam32Id: 440614454, mmr: 6123 }),
+      expect.objectContaining({ mmr: 6123, steam32Id: 440614454 })
     )
     expect(supabaseInserts.filter((call) => call.table === 'steam_accounts')).toHaveLength(0)
   })
@@ -909,15 +910,15 @@ describe('updateSteam32Id — stale multi-account recovery', () => {
     const handler = makeBlockedHandler()
     handler.multiAccountRevalidatedAt = Date.now() - 30_000
     steamAccountLookup.data = {
-      id: 'steam-row',
-      userId: 'different-user',
-      mmr: 5000,
       connectedUserIds: [],
+      id: 'steam-row',
+      mmr: 5000,
+      userId: 'different-user',
     }
 
     await handler.updateSteam32Id()
 
-    expect(handler.client.multiAccount).toBe(440614454)
+    expect(handler.client.multiAccount).toBe(440_614_454)
     expect(handler.multiAccountRevalidatedAt).toBe(Date.now())
     expect(steamAccountSelectCalls).toHaveLength(1)
 
@@ -932,10 +933,10 @@ describe('updateSteam32Id — stale multi-account recovery', () => {
 
     await handler.updateSteam32Id()
 
-    expect(handler.client.multiAccount).toBe(440614454)
+    expect(handler.client.multiAccount).toBe(440_614_454)
     expect(handler.multiAccountRevalidatedAt).toBe(Date.now())
     expect(supabaseInserts.filter((call) => call.table === 'steam_accounts')).toHaveLength(0)
-    expect(loggerErrorCalls.some((call) => call.message === 'Error in updateSteam32Id')).toBe(true)
+    expect(loggerErrorCalls.some((call) => call.message === 'Error in updateSteam32Id')).toBeTruthy()
   })
 
   it('keeps the claimant blocked when recreating the missing Steam row fails', async () => {
@@ -945,31 +946,29 @@ describe('updateSteam32Id — stale multi-account recovery', () => {
 
     await handler.updateSteam32Id()
 
-    expect(handler.client.multiAccount).toBe(440614454)
+    expect(handler.client.multiAccount).toBe(440_614_454)
     expect(handler.multiAccountRevalidatedAt).toBe(Date.now())
     expect(handler.client.steam32Id).toBeNull()
-    expect(handler.client.SteamAccount).toEqual([])
-    expect(loggerErrorCalls.some((call) => call.message === 'Error creating steam account')).toBe(
-      true,
-    )
+    expect(handler.client.SteamAccount).toStrictEqual([])
+    expect(loggerErrorCalls.some((call) => call.message === 'Error creating steam account')).toBeTruthy()
   })
 
   it('blocks a first-time claimant when a uniqueness race rejects the Steam insert', async () => {
     const client = makeClient({
-      multiAccount: undefined,
-      steam32Id: null,
       SteamAccount: [],
       gsi: liveGsi({ player: { steamid: steam64(440614454), name: 'Dota Account' } }),
+      multiAccount: undefined,
+      steam32Id: null,
     })
     const handler = makeHandler(client)
     steamAccountInsertResult.error = { code: '23505', message: 'duplicate key value' }
 
     await handler.updateSteam32Id()
 
-    expect(handler.client.multiAccount).toBe(440614454)
+    expect(handler.client.multiAccount).toBe(440_614_454)
     expect(handler.multiAccountRevalidatedAt).toBe(Date.now())
     expect(handler.client.steam32Id).toBeNull()
-    expect(handler.client.SteamAccount).toEqual([])
+    expect(handler.client.SteamAccount).toStrictEqual([])
   })
 
   it('keeps a stale claimant blocked when the Steam insert throws', async () => {
@@ -979,48 +978,48 @@ describe('updateSteam32Id — stale multi-account recovery', () => {
 
     await handler.updateSteam32Id()
 
-    expect(handler.client.multiAccount).toBe(440614454)
+    expect(handler.client.multiAccount).toBe(440_614_454)
     expect(handler.multiAccountRevalidatedAt).toBe(Date.now())
     expect(handler.client.steam32Id).toBeNull()
-    expect(handler.client.SteamAccount).toEqual([])
+    expect(handler.client.SteamAccount).toStrictEqual([])
   })
 
   it('blocks a first-time claimant when the Steam insert throws', async () => {
     const client = makeClient({
-      multiAccount: undefined,
-      steam32Id: null,
       SteamAccount: [],
       gsi: liveGsi({ player: { steamid: steam64(440614454), name: 'Dota Account' } }),
+      multiAccount: undefined,
+      steam32Id: null,
     })
     const handler = makeHandler(client)
     steamAccountInsertResult.throwError = new Error('network unavailable')
 
     await handler.updateSteam32Id()
 
-    expect(handler.client.multiAccount).toBe(440614454)
+    expect(handler.client.multiAccount).toBe(440_614_454)
     expect(handler.multiAccountRevalidatedAt).toBe(Date.now())
     expect(handler.client.steam32Id).toBeNull()
-    expect(handler.client.SteamAccount).toEqual([])
+    expect(handler.client.SteamAccount).toStrictEqual([])
   })
 
   it('starts the cooldown when a conflict is newly assigned', async () => {
     const client = makeClient({
-      multiAccount: undefined,
-      steam32Id: null,
       SteamAccount: [],
       gsi: liveGsi({ player: { steamid: steam64(440614454), name: 'Dota Account' } }),
+      multiAccount: undefined,
+      steam32Id: null,
     })
     const handler = makeHandler(client)
     steamAccountLookup.data = {
-      id: 'steam-row',
-      userId: 'different-user',
-      mmr: 5000,
       connectedUserIds: [],
+      id: 'steam-row',
+      mmr: 5000,
+      userId: 'different-user',
     }
 
     await handler.updateSteam32Id()
 
-    expect(handler.client.multiAccount).toBe(440614454)
+    expect(handler.client.multiAccount).toBe(440_614_454)
     expect(handler.multiAccountRevalidatedAt).toBe(Date.now())
   })
 })

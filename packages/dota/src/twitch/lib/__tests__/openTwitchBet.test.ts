@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+
 import { twitchIdToToken } from '../../../dota/lib/consts'
 import {
   isPredictionAlreadyActiveError,
@@ -10,12 +11,12 @@ import {
 
 function twitchApiError(body: Record<string, unknown>, statusCode = 400) {
   return Object.assign(new Error('Twitch API error'), {
-    statusCode,
     body: JSON.stringify(body),
+    statusCode,
   })
 }
 
-describe('openTwitchBet', () => {
+describe(openTwitchBet, () => {
   beforeEach(() => {
     resetState()
     // disableBetsForTwitchId looks the dotabod token up from the Twitch id.
@@ -26,18 +27,18 @@ describe('openTwitchBet', () => {
     // e.g. the real "prediction already active" conflict — has a JSON body,
     // but its message doesn't match either special-cased substring below.
     state.createPredictionError = twitchApiError({
-      status: 409,
       error: 'Conflict',
       message: 'ACTIVE_PREDICTION',
+      status: 409,
     })
 
-    await expect(openTwitchBet({ heroName: 'Slark', client: makeClient() })).rejects.toThrow(
-      'Twitch API error',
+    await expect(openTwitchBet({ client: makeClient(), heroName: 'Slark' })).rejects.toThrow(
+      'Twitch API error'
     )
 
     expect(state.loggerErrorCalls).toContainEqual({
       message: '[PREDICT] [BETS] Failed to open twitch bet',
-      meta: expect.objectContaining({ twitchId: 'twitch-channel-1', heroName: 'Slark' }),
+      meta: expect.objectContaining({ heroName: 'Slark', twitchId: 'twitch-channel-1' }),
     })
     // Must not be misclassified as the "channel points not enabled" case.
     expect(state.trackDisableReasonCalls).toHaveLength(0)
@@ -45,47 +46,47 @@ describe('openTwitchBet', () => {
 
   it('recognizes and quietly propagates the structured active-prediction conflict', async () => {
     const error = twitchApiError({
-      status: 400,
       error: 'Bad Request',
       message: 'prediction event already active, only one allowed at a time',
+      status: 400,
     })
     state.createPredictionError = error
 
-    expect(isPredictionAlreadyActiveError(error)).toBe(true)
-    await expect(openTwitchBet({ heroName: 'Slark', client: makeClient() })).rejects.toBe(error)
+    expect(isPredictionAlreadyActiveError(error)).toBeTruthy()
+    await expect(openTwitchBet({ client: makeClient(), heroName: 'Slark' })).rejects.toBe(error)
     expect(state.loggerErrorCalls).toHaveLength(0)
   })
 
   it('does not classify the same message without Twitch HTTP 400 status', () => {
     const error = twitchApiError(
       { message: 'prediction event already active, only one allowed at a time' },
-      409,
+      409
     )
 
-    expect(isPredictionAlreadyActiveError(error)).toBe(false)
+    expect(isPredictionAlreadyActiveError(error)).toBeFalsy()
   })
 
   it('swallows the error and disables bets when channel points are not enabled', async () => {
     state.createPredictionError = twitchApiError({
-      status: 400,
       error: 'Bad Request',
       message: 'channel points not enabled for this channel',
+      status: 400,
     })
 
-    const result = await openTwitchBet({ heroName: 'Slark', client: makeClient() })
+    const result = await openTwitchBet({ client: makeClient(), heroName: 'Slark' })
 
     expect(result).toBeUndefined()
     expect(state.loggerErrorCalls).toHaveLength(0)
     expect(state.trackDisableReasonCalls).toHaveLength(1)
     expect(state.upsertCalls).toContainEqual(
-      expect.objectContaining({ values: expect.objectContaining({ value: false }) }),
+      expect.objectContaining({ values: expect.objectContaining({ value: false }) })
     )
   })
 
   it('returns the created prediction on success', async () => {
-    const result = await openTwitchBet({ heroName: 'Slark', client: makeClient() })
+    const result = await openTwitchBet({ client: makeClient(), heroName: 'Slark' })
 
-    expect(result).toEqual({ id: 'new-prediction-id' })
+    expect(result).toStrictEqual({ id: 'new-prediction-id' })
     expect(state.createPredictionCalls).toHaveLength(1)
   })
 })

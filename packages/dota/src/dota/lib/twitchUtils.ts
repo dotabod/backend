@@ -26,7 +26,7 @@ type GqlDeleteResponse = [
 export async function deleteClipsBatch(
   clipSlugs: string[],
   authToken: string,
-  logContext: object,
+  logContext: object
 ): Promise<void> {
   if (clipSlugs.length === 0) {
     return // Nothing to delete
@@ -34,30 +34,30 @@ export async function deleteClipsBatch(
 
   const gqlPayload = [
     {
+      extensions: { persistedQuery: { sha256Hash: DELETE_CLIP_HASH, version: 1 } },
       operationName: 'Clips_DeleteClips',
-      variables: { input: { slugs: clipSlugs } }, // Use the array of slugs
-      extensions: { persistedQuery: { version: 1, sha256Hash: DELETE_CLIP_HASH } },
+      variables: { input: { slugs: clipSlugs } }, // Use the array of slugs,
     },
   ]
 
   const headers = {
-    'Client-ID': GQL_CLIENT_ID,
-    Authorization: `OAuth ${authToken}`,
-    'Content-Type': 'application/json',
     Accept: '*/*',
+    Authorization: `OAuth ${authToken}`,
+    'Client-ID': GQL_CLIENT_ID,
+    'Content-Type': 'application/json',
   }
 
   try {
     const response = await fetch(GQL_URL, {
-      method: 'POST',
-      headers,
       body: JSON.stringify(gqlPayload),
+      headers,
+      method: 'POST',
     })
 
     if (!response.ok) {
       const errorBody = await response.text()
       throw new Error(
-        `GQL delete batch failed: ${response.status} ${response.statusText} - ${errorBody}`,
+        `GQL delete batch failed: ${response.status} ${response.statusText} - ${errorBody}`
       )
     }
 
@@ -66,8 +66,8 @@ export async function deleteClipsBatch(
     if (result[0]?.errors?.[0]?.message) {
       logger.error('GQL delete batch returned error', {
         ...logContext,
-        slugsCount: clipSlugs.length,
         error: result[0].errors[0].message,
+        slugsCount: clipSlugs.length,
       })
       return // Don't throw, just log the error
     }
@@ -81,15 +81,15 @@ export async function deleteClipsBatch(
     } else {
       logger.warn('GQL delete batch response format unexpected', {
         ...logContext,
-        slugsCount: clipSlugs.length,
         response: result,
+        slugsCount: clipSlugs.length,
       })
     }
   } catch (error) {
     logger.error('Error deleting clip batch via GQL', {
       ...logContext,
-      slugsCount: clipSlugs.length,
       error: (error as Error).message,
+      slugsCount: clipSlugs.length,
     })
   }
 }

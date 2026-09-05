@@ -1,15 +1,16 @@
 import { moderateText } from '@dotabod/profanity-filter'
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { MatchDataService } from '../../dota/lib/matchData'
+
 import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/getCurrentMatchId'
+import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import MongoDBSingleton from '../../steam/MongoDBSingleton'
 import type { NotablePlayers } from '../../steam/notableplayers'
 import { notablePlayers } from '../../steam/notableplayers'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
 import { clippingDisabledNote } from '../lib/clippingNote'
+import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('np', {
   dbkey: DBSettings.commandNP,
@@ -29,7 +30,7 @@ commandHandler.registerCommand('np', {
               url: 'dotabod.com/dashboard/features',
             })
           : t('unknownSteam', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -41,7 +42,7 @@ commandHandler.registerCommand('np', {
           chatClient.say(
             channel,
             t('npAdd', { lng: message.channel.client.locale }),
-            message.user.messageId,
+            message.user.messageId
           )
           return
         }
@@ -55,21 +56,21 @@ commandHandler.registerCommand('np', {
             {
               $set: {
                 account_id: Number(forSteam32Id),
-                name: (await moderateText(forName)) ?? 'Player',
-                channel: twitchChannelId,
                 addedBy: chatterName,
+                channel: twitchChannelId,
                 createdAt: new Date(),
+                name: (await moderateText(forName)) ?? 'Player',
               },
             },
-            { upsert: true },
+            { upsert: true }
           )
           chatClient.say(
             channel,
             t('npAdded', {
-              name: (await moderateText(forName)) ?? 'Player',
               lng: message.channel.client.locale,
+              name: (await moderateText(forName)) ?? 'Player',
             }),
-            message.user.messageId,
+            message.user.messageId
           )
           return
         } finally {
@@ -82,7 +83,7 @@ commandHandler.registerCommand('np', {
           chatClient.say(
             channel,
             t('npRemove', { lng: message.channel.client.locale }),
-            message.user.messageId,
+            message.user.messageId
           )
           return
         }
@@ -93,18 +94,18 @@ commandHandler.registerCommand('np', {
         try {
           const removed = await db
             .collection<NotablePlayers>('notablePlayers')
-            .deleteOne({ channel: twitchChannelId, account_id: Number(forSteam32Id) })
+            .deleteOne({ account_id: Number(forSteam32Id), channel: twitchChannelId })
           if (removed.deletedCount) {
             chatClient.say(
               channel,
-              t('npRemoved', { steamid: forSteam32Id, lng: message.channel.client.locale }),
-              message.user.messageId,
+              t('npRemoved', { lng: message.channel.client.locale, steamid: forSteam32Id }),
+              message.user.messageId
             )
           } else {
             chatClient.say(
               channel,
-              t('npUnknown', { steamid: forSteam32Id, lng: message.channel.client.locale }),
-              message.user.messageId,
+              t('npUnknown', { lng: message.channel.client.locale, steamid: forSteam32Id }),
+              message.user.messageId
             )
           }
           return
@@ -120,8 +121,8 @@ commandHandler.registerCommand('np', {
     ) {
       try {
         await addRemoveHandler()
-      } catch (e) {
-        logger.error('Error in addremovehandler command', { e })
+      } catch (error) {
+        logger.error('Error in addremovehandler command', { error })
       }
       return
     }
@@ -130,7 +131,7 @@ commandHandler.registerCommand('np', {
       chatClient.say(
         message.channel.name,
         t('notLive', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -141,7 +142,7 @@ commandHandler.registerCommand('np', {
         t(isCurrentCustomGame(client) ? 'customGameNoRoster' : 'gameNotFound', {
           lng: client.locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -158,10 +159,10 @@ commandHandler.registerCommand('np', {
     const enableCountries = getValueOrDefault(
       DBSettings.notablePlayersOverlayFlagsCmd,
       client.settings,
-      client.subscription,
+      client.subscription
     )
     notablePlayers({
-      client: client,
+      client,
       locale: client.locale,
       twitchChannelId,
       currentMatchId: client.gsi?.map?.matchid,
@@ -172,11 +173,11 @@ commandHandler.registerCommand('np', {
       rosterSource: roster.source,
     })
       .then(async (desc) => {
-        let description = desc.description
+        let {description} = desc
         const showStreamers = getValueOrDefault(
           DBSettings.streamersNpSuffix,
           client.settings,
-          client.subscription,
+          client.subscription
         )
         if (showStreamers) {
           // Same `mds` instance memoizes the roster across resolveRoster + getStreamersInMatchCount,
@@ -188,11 +189,11 @@ commandHandler.registerCommand('np', {
         }
         chatClient.say(channel, description, message.user.messageId)
       })
-      .catch((e) => {
+      .catch((error) => {
         chatClient.say(
           channel,
-          e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-          message.user.messageId,
+          error?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+          message.user.messageId
         )
       })
   },

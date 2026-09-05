@@ -1,5 +1,6 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/getWL'
 import { updateMmr } from '../../dota/lib/updateMmr'
 import { dotabodMatchHistoryUrl } from '../../utils/index'
@@ -20,7 +21,6 @@ export function toggleDoubledownMmr({ currentMmr, isParty, didWin, wasDoubledown
 
 commandHandler.registerCommand('fixdbl', {
   aliases: ['fixdd'],
-  permission: 2,
   cooldown: 0,
   handler: async (message, _args) => {
     const { data } = await supabase
@@ -36,7 +36,7 @@ commandHandler.registerCommand('fixdbl', {
       chatClient.say(
         message.channel.name,
         t('noLastMatch', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -48,7 +48,7 @@ commandHandler.registerCommand('fixdbl', {
         url: dotabodMatchHistoryUrl(message.channel.client),
         lng: message.channel.client.locale,
       }),
-      message.user.messageId,
+      message.user.messageId
     )
 
     await updateMmr({
@@ -72,4 +72,5 @@ commandHandler.registerCommand('fixdbl', {
       })
       .eq('id', bet.id)
   },
+  permission: 2,
 })

@@ -5,7 +5,8 @@ import { steamSocket } from '../../steam/ws'
 import type { Cards, DelayedGames } from '../../types'
 import CustomError from '../../utils/customError'
 import { getHeroNameOrColor } from './heroes'
-import { lookupRosterByMatchId, type RosterPlayer } from './matchData'
+import { lookupRosterByMatchId } from './matchData';
+import type { RosterPlayer } from './matchData';
 
 export async function getPlayers({
   locale,
@@ -39,20 +40,20 @@ export async function getPlayers({
     // Use pre-supplied players when the caller already resolved them; otherwise look up
     // the historical roster from the delayedGames doc.
     const { matchPlayers, accountIds } = players?.length
-      ? { matchPlayers: players, accountIds: players.map((p) => p.accountId ?? 0) }
+      ? { accountIds: players.map((p) => p.accountId ?? 0), matchPlayers: players }
       : await lookupRosterByMatchId(currentMatchId)
 
     let cards: Cards[] = []
     // if match players has ranks, create that as cards instead of fetching them:
     cards = matchPlayers.map((player, i) => ({
       account_id: player.accountId ?? 0,
-      heroId: player.heroId ?? 0,
-      position: i,
-      heroName: getHeroNameOrColor(player.heroId ?? 0, i),
-      lifetime_games: 0,
-      leaderboard_rank: player.rank ?? 0,
-      rank_tier: 80,
       createdAt: new Date(),
+      heroId: player.heroId ?? 0,
+      heroName: getHeroNameOrColor(player.heroId ?? 0, i),
+      leaderboard_rank: player.rank ?? 0,
+      lifetime_games: 0,
+      position: i,
+      rank_tier: 80,
     }))
 
     if (cards.every((card) => card.leaderboard_rank === 0)) {
@@ -60,7 +61,7 @@ export async function getPlayers({
       const getCardsPromise = new Promise<Cards[]>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
           reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale })))
-        }, 10000) // 5 second timeout
+        }, 10_000) // 5 second timeout
 
         steamSocket.emit('getCards', accountIds, false, (err: unknown, cards: Cards[]) => {
           clearTimeout(timeoutId)
@@ -70,19 +71,19 @@ export async function getPlayers({
             resolve(cards)
           }
         })
-      }).catch(() => {
-        return []
-      })
+      }).catch(() => 
+        []
+      )
 
       cards = await getCardsPromise
     }
 
     return {
+      accountIds,
+      average_mmr: response?.average_mmr,
+      cards,
       gameMode: response ? Number(response.match.game_mode) : undefined,
       matchPlayers,
-      average_mmr: response?.average_mmr,
-      accountIds,
-      cards,
     }
   } finally {
     await mongo.close()

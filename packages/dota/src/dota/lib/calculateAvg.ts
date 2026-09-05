@@ -10,7 +10,7 @@ interface Avg {
 
 function calculateAverage(numbers: number[]): number {
   const validNumbers = numbers.filter(Boolean)
-  if (validNumbers.length === 0) return 0
+  if (validNumbers.length === 0) {return 0}
   const sum = validNumbers.reduce((a, b) => a + b, 0)
   return Math.round(sum / validNumbers.length)
 }
@@ -18,12 +18,12 @@ function calculateAverage(numbers: number[]): number {
 async function getRankTitle(
   avg: number,
   avgLeader: number,
-  averageMmrPostfix: string,
+  averageMmrPostfix: string
 ): Promise<string> {
   const rank = await getRankDetail(avg)
-  if (!rank && !avgLeader) return `Immortal${averageMmrPostfix}`
-  if (!rank) return `${avg || `#${avgLeader}${averageMmrPostfix}`}`
-  if (avgLeader) return `#${avgLeader}${averageMmrPostfix}`
+  if (!rank && !avgLeader) {return `Immortal${averageMmrPostfix}`}
+  if (!rank) {return `${avg || `#${avgLeader}${averageMmrPostfix}`}`}
+  if (avgLeader) {return `#${avgLeader}${averageMmrPostfix}`}
   if ('standing' in rank) {
     return `Immortal${averageMmrPostfix}`
   }
@@ -31,7 +31,7 @@ async function getRankTitle(
 }
 
 export async function calculateAvg({ locale, currentMatchId, players }: Avg): Promise<string> {
-  const { cards, average_mmr } = await getPlayers({ locale, currentMatchId, players })
+  const { cards, average_mmr } = await getPlayers({ currentMatchId, locale, players })
 
   const mmrs: number[] = []
   const leaderranks: number[] = []
@@ -44,5 +44,5 @@ export async function calculateAvg({ locale, currentMatchId, players }: Avg): Pr
   const avgLeader = calculateAverage(leaderranks)
   const averageMmrPostfix = average_mmr ? ` · ${average_mmr} MMR` : ''
 
-  return getRankTitle(avg, avgLeader, averageMmrPostfix)
+  return await getRankTitle(avg, avgLeader, averageMmrPostfix)
 }

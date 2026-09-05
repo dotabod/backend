@@ -1,13 +1,14 @@
 import type { Server } from 'socket.io'
+
 import type { GSIHandlerType } from '../dota/GSIHandlerTypes'
 import { GSI_STALE_AFTER_MS } from '../dota/lib/getCurrentMatchId'
 import type { SocketClient } from '../types'
 
-type Logger = {
+interface Logger {
   error: (message: string, meta?: Record<string, unknown>) => void
 }
 
-type StreamStatusTransitionResult = {
+interface StreamStatusTransitionResult {
   changed: boolean
   cameOnline: boolean
   wentOffline: boolean
@@ -37,7 +38,7 @@ export function handleStreamStatusTransition({
 }): StreamStatusTransitionResult {
   const changed = client.stream_online !== oldStreamOnline
   if (!changed) {
-    return { changed: false, cameOnline: false, wentOffline: false }
+    return { cameOnline: false, changed: false, wentOffline: false }
   }
 
   if (client.stream_online) {
@@ -54,9 +55,9 @@ export function handleStreamStatusTransition({
 
     try {
       connectedUser?.enable?.()
-    } catch (e) {
+    } catch (error) {
       logger.error('[WATCHER USER] Error enabling GSI handler after stream came online', {
-        e,
+        error,
         name: client.name,
         token: client.token,
       })
@@ -68,9 +69,9 @@ export function handleStreamStatusTransition({
     client.gsiUpdatedAt = undefined
     try {
       connectedUser?.disable?.()
-    } catch (e) {
+    } catch (error) {
       logger.error('[WATCHER USER] Error disabling GSI handler after stream went offline', {
-        e,
+        error,
         name: client.name,
         token: client.token,
       })
@@ -81,8 +82,8 @@ export function handleStreamStatusTransition({
   io.to(client.token).emit('refresh-settings', 'mutate')
 
   return {
-    changed: true,
     cameOnline: client.stream_online,
+    changed: true,
     wentOffline: !client.stream_online,
   }
 }

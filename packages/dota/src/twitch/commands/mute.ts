@@ -1,12 +1,12 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('mute', {
   aliases: ['unmute'],
-  permission: 2,
   cooldown: 0,
   handler: async (message, _args) => {
     const {
@@ -24,7 +24,7 @@ commandHandler.registerCommand('mute', {
       },
       {
         onConflict: 'userId, key',
-      },
+      }
     )
 
     chatClient.say(
@@ -36,7 +36,8 @@ commandHandler.registerCommand('mute', {
         : t('unmuted', {
             lng: message.channel.client.locale,
           }),
-      message.user.messageId,
+      message.user.messageId
     )
   },
+  permission: 2,
 })

@@ -22,10 +22,10 @@ export interface FeatureAnnouncement {
 
 export const FEATURE_ANNOUNCEMENTS: FeatureAnnouncement[] = [
   {
-    id: 'cosmetics',
-    trigger: 'hero:id',
     gateSettingKey: 'cosmeticsAnnounce',
+    id: 'cosmetics',
     messageKey: 'newFeatures.announce.cosmetics',
     releaseDate: '2026-06-10',
+    trigger: 'hero:id',
   },
 ]

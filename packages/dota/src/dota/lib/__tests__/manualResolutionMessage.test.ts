@@ -1,5 +1,6 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { t } from 'i18next'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+
 import { initTestI18n } from '../../../__tests__/sharedMocks.ts'
 
 // Regression: i18next's default escape function maps `/` → `&#x2F;`. When the
@@ -12,6 +13,7 @@ describe('bets.manualResolution chat rendering', () => {
   beforeAll(async () => {
     await initTestI18n()
   })
+
   afterAll(async () => {
     await initTestI18n()
   })
@@ -33,6 +35,7 @@ describe('bets.unresolvedReminder chat rendering', () => {
   beforeAll(async () => {
     await initTestI18n()
   })
+
   afterAll(async () => {
     await initTestI18n()
   })
@@ -41,9 +44,9 @@ describe('bets.unresolvedReminder chat rendering', () => {
     const matchList = '8822096213 (Dark Seer, 7/3/12, 21-18, 41:12, ~12m ago)'
     const rendered = t('bets.unresolvedReminder', {
       count: 1,
-      matchList,
       emote: 'PauseChamp',
       lng: 'en',
+      matchList,
     })
 
     expect(rendered).toContain('7/3/12')

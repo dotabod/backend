@@ -7,7 +7,7 @@ const TRUNCATION_SUFFIX = '…'
 export function formatTranslatedSpeakerLabel(
   heroName: string,
   playerId: number,
-  locale: string,
+  locale: string
 ): string {
   const fallbackSpeakerLabels = new Set([
     t('chatTranslation.legacyHeroLabel', {
@@ -89,7 +89,7 @@ function truncateToLimit(message: string, locale: string, maxLength: number): st
 export function formatTranslatedInGameChatMessages(
   mergedMessage: string,
   locale: string,
-  maxLength = TWITCH_CHAT_LIMIT,
+  maxLength = TWITCH_CHAT_LIMIT
 ): string[] {
   const parts = mergedMessage.split(MERGED_PART_SEPARATOR)
   const chunks: string[] = []

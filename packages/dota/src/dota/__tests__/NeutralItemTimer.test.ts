@@ -14,7 +14,7 @@ describe('Neutral Item Tier Times (patch 7.41)', () => {
 
   it('tiers are numbered 1 through 5', () => {
     const tierNumbers = NEUTRAL_ITEM_TIER_TIMES.map((t) => t.tier)
-    expect(tierNumbers).toEqual([1, 2, 3, 4, 5])
+    expect(tierNumbers).toStrictEqual([1, 2, 3, 4, 5])
   })
 
   it('Tier 1 spawns at 0 minutes in normal mode', () => {
@@ -61,6 +61,6 @@ describe('Neutral Item Tier Times (patch 7.41)', () => {
   it('normal times are in ascending order', () => {
     const times = NEUTRAL_ITEM_TIER_TIMES.map((t) => t.normalTime)
     const sorted = [...times].sort((a, b) => a - b)
-    expect(times).toEqual(sorted)
+    expect(times).toStrictEqual(sorted)
   })
 })

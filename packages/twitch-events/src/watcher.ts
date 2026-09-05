@@ -1,4 +1,6 @@
-import { botStatus, logger, supabase, type Tables } from '@dotabod/shared-utils'
+import { botStatus, logger, supabase } from '@dotabod/shared-utils';
+import type { Tables } from '@dotabod/shared-utils';
+
 import { handleNewUser } from './handleNewUser'
 import { stopUserSubscriptions } from './twitch/lib/revokeEvent'
 
@@ -37,7 +39,7 @@ export function setupAccountWatcher(): void {
   const scheduleReconnect = (status: string, err?: Error) => {
     // Don't pile up reconnect timers if the dead channel's callback fires
     // multiple times for the same outage.
-    if (reconnectTimer) return
+    if (reconnectTimer) {return}
     // Claim the guard and detach the dead channel BEFORE touching
     // removeChannel(). supabase-js tears the channel down synchronously and
     // re-fires THIS status callback with CLOSED on the same stack — which
@@ -53,9 +55,9 @@ export function setupAccountWatcher(): void {
     const deadChannel = activeChannel
     activeChannel = null
     logger.warn('[WATCHER] Realtime channel down, scheduling reconnect', {
-      status,
-      err: err?.message,
       delayMs: RECONNECT_DELAY_MS,
+      err: err?.message,
+      status,
     })
     if (deadChannel) {
       // Tear down the dead channel before re-creating it. supabase-js
@@ -75,17 +77,17 @@ export function setupAccountWatcher(): void {
     try {
       channel = supabase.channel(channelName)
       activeChannel = channel
-    } catch (err) {
+    } catch (error) {
       // supabase.channel() can throw synchronously if the Realtime client is
       // in a bad state. Without this guard, the throw propagates up and the
       // watcher silently dies — defeating the whole point of the reconnect
       // logic. Treat it as a CHANNEL_ERROR and schedule another attempt.
       logger.error('[WATCHER] supabase.channel() threw — scheduling reconnect', {
         channelName,
-        err: err instanceof Error ? err.message : String(err),
+        err: error instanceof Error ? error.message : String(error),
       })
       activeChannel = null
-      scheduleReconnect('CHANNEL_CREATION_THREW', err instanceof Error ? err : undefined)
+      scheduleReconnect('CHANNEL_CREATION_THREW', error instanceof Error ? error : undefined)
       return
     }
 
@@ -98,7 +100,7 @@ export function setupAccountWatcher(): void {
           { event: 'INSERT', schema: 'public', table: 'accounts' },
           async (payload: { new: Tables<'accounts'> }) => {
             const newObj = payload.new
-            if (newObj.provider !== 'twitch') return
+            if (newObj.provider !== 'twitch') {return}
             logger.info('[WATCHER] INSERT accounts → onboarding new user', {
               providerAccountId: newObj.providerAccountId,
             })
@@ -106,11 +108,11 @@ export function setupAccountWatcher(): void {
               await handleNewUser(newObj.providerAccountId)
             } catch (error) {
               logger.error('[WATCHER] INSERT handleNewUser failed', {
-                providerAccountId: newObj.providerAccountId,
                 error,
+                providerAccountId: newObj.providerAccountId,
               })
             }
-          },
+          }
         )
         .on(
           'postgres_changes',
@@ -118,7 +120,7 @@ export function setupAccountWatcher(): void {
           async (payload: { new: Tables<'accounts'>; old: Tables<'accounts'> }) => {
             const newObj = payload.new
             const oldObj = payload.old
-            if (newObj.provider !== 'twitch') return
+            if (newObj.provider !== 'twitch') {return}
             // Re-auth: requires_refresh flipped true → false.
             if (oldObj.requires_refresh === true && newObj.requires_refresh === false) {
               if (newObj.providerAccountId === process.env.TWITCH_BOT_PROVIDERID) {
@@ -132,19 +134,19 @@ export function setupAccountWatcher(): void {
                 await handleNewUser(newObj.providerAccountId)
               } catch (error) {
                 logger.error('[WATCHER] UPDATE handleNewUser failed', {
-                  providerAccountId: newObj.providerAccountId,
                   error,
+                  providerAccountId: newObj.providerAccountId,
                 })
               }
             }
-          },
+          }
         )
         .on(
           'postgres_changes',
           { event: 'DELETE', schema: 'public', table: 'accounts' },
           async (payload: { old: Tables<'accounts'> }) => {
             const oldObj = payload.old
-            if (oldObj.provider !== 'twitch') return
+            if (oldObj.provider !== 'twitch') {return}
             logger.info('[WATCHER] Account deleted, stopping subscriptions', {
               providerAccountId: oldObj.providerAccountId,
             })
@@ -152,11 +154,11 @@ export function setupAccountWatcher(): void {
               await stopUserSubscriptions(oldObj.providerAccountId)
             } catch (error) {
               logger.error('[WATCHER] DELETE stopUserSubscriptions failed', {
-                providerAccountId: oldObj.providerAccountId,
                 error,
+                providerAccountId: oldObj.providerAccountId,
               })
             }
-          },
+          }
         )
         .on(
           'postgres_changes',
@@ -180,8 +182,8 @@ export function setupAccountWatcher(): void {
                 .single()
               if (accountError) {
                 logger.error('[WATCHER] ban: provider lookup failed', {
-                  userId: newUser.id,
                   error: accountError,
+                  userId: newUser.id,
                 })
                 return
               }
@@ -192,16 +194,16 @@ export function setupAccountWatcher(): void {
                 return
               }
               logger.info('[WATCHER] User banned, stopping subscriptions', {
-                userId: newUser.id,
                 providerAccountId: account.providerAccountId,
+                userId: newUser.id,
               })
               try {
                 await stopUserSubscriptions(account.providerAccountId)
               } catch (error) {
                 logger.error('[WATCHER] ban: stopUserSubscriptions failed', {
-                  userId: newUser.id,
-                  providerAccountId: account.providerAccountId,
                   error,
+                  providerAccountId: account.providerAccountId,
+                  userId: newUser.id,
                 })
               }
               return
@@ -211,11 +213,11 @@ export function setupAccountWatcher(): void {
               return
             }
             logger.info('[WATCHER] User renamed', {
-              userId: newUser.id,
-              oldName: oldUser.name,
+              newDisplayName: newUser.displayName,
               newName: newUser.name,
               oldDisplayName: oldUser.displayName,
-              newDisplayName: newUser.displayName,
+              oldName: oldUser.name,
+              userId: newUser.id,
             })
             // We have userId from the users table; look up providerAccountId on the
             // accounts side so handleNewUser can call the Twitch API by twitch id.
@@ -230,8 +232,8 @@ export function setupAccountWatcher(): void {
               // it up. The next users UPDATE for this user (or the healthcheck
               // cycle for missing subs) will retry the lookup.
               logger.error('[WATCHER] DB error during user rename lookup', {
-                userId: newUser.id,
                 error: accountError,
+                userId: newUser.id,
               })
               return
             }
@@ -255,17 +257,17 @@ export function setupAccountWatcher(): void {
                 // doesn't fire for ~1 week post-deploy the warn can be removed.
                 logger.warn(
                   '[WATCHER] UPDATE users with legacy empty displayName (frontend not deployed?)',
-                  { userId: newUser.id },
+                  { userId: newUser.id }
                 )
               }
               await handleNewUser(account.providerAccountId, false)
             } catch (error) {
               logger.error('[WATCHER] UPDATE users handleNewUser failed', {
-                providerAccountId: account.providerAccountId,
                 error,
+                providerAccountId: account.providerAccountId,
               })
             }
-          },
+          }
         )
         .subscribe((status: string, err?: Error) => {
           if (status === 'SUBSCRIBED') {
@@ -276,15 +278,15 @@ export function setupAccountWatcher(): void {
             scheduleReconnect(status, err)
           }
         })
-    } catch (err) {
+    } catch (error) {
       // If `.on(...)` or `.subscribe(...)` throws synchronously, the chain
       // breaks before the status callback can attach. Without this guard the
       // channel sits in memory with no listener — reconnect would never fire.
       logger.error('[WATCHER] channel.on/.subscribe threw — scheduling reconnect', {
         channelName,
-        err: err instanceof Error ? err.message : String(err),
+        err: error instanceof Error ? error.message : String(error),
       })
-      scheduleReconnect('CHANNEL_SETUP_THREW', err instanceof Error ? err : undefined)
+      scheduleReconnect('CHANNEL_SETUP_THREW', error instanceof Error ? error : undefined)
     }
   }
 

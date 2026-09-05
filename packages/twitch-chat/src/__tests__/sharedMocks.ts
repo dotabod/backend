@@ -9,7 +9,7 @@
 // these modules, so they import their SUTs directly.)
 import { vi } from 'vitest'
 
-type FetchResponse = {
+interface FetchResponse {
   ok: boolean
   status?: number
   statusText?: string
@@ -20,24 +20,24 @@ type FetchResponse = {
 export const state: {
   isBanned: boolean
   hasSocket: boolean
-  emitCalls: Array<{
+  emitCalls: {
     broadcasterLogin: string
     chatterLogin: string
     text: string
     opts: Record<string, unknown>
-  }>
-  fetchCalls: Array<{ url: string; options: RequestInit | undefined }>
+  }[]
+  fetchCalls: { url: string; options: RequestInit | undefined }[]
   fetchImpl: (url: string, options: RequestInit | undefined) => Promise<FetchResponse>
   fetchThrows: unknown
-  logError: Array<{ message: string; meta: Record<string, unknown> }>
-  logInfo: Array<{ message: string; meta: Record<string, unknown> }>
+  logError: { message: string; meta: Record<string, unknown> }[]
+  logInfo: { message: string; meta: Record<string, unknown> }[]
   // supabase: accounts.select(...).single() result, and captured users.update() calls.
   dbAccount: { userId: string } | null
   accountError: unknown
-  userUpdates: Array<{ values: Record<string, unknown>; whereId: unknown }>
+  userUpdates: { values: Record<string, unknown>; whereId: unknown }[]
 } = {
-  isBanned: false,
-  hasSocket: true,
+  accountError: null,
+  dbAccount: { userId: 'user-1' },
   emitCalls: [],
   fetchCalls: [],
   fetchImpl: async () => ({
@@ -45,10 +45,10 @@ export const state: {
     json: async () => ({ data: [{ message_id: 'mid', is_sent: true }] }),
   }),
   fetchThrows: null,
+  hasSocket: true,
+  isBanned: false,
   logError: [],
   logInfo: [],
-  dbAccount: { userId: 'user-1' },
-  accountError: null,
   userUpdates: [],
 }
 
@@ -59,8 +59,8 @@ export function resetState() {
   state.emitCalls = []
   state.fetchCalls = []
   state.fetchImpl = async () => ({
-    ok: true,
     json: async () => ({ data: [{ message_id: 'mid', is_sent: true }] }),
+    ok: true,
   })
   state.fetchThrows = null
   state.logError = []
@@ -83,7 +83,7 @@ interface SupabaseBuilder {
 
 function createSupabaseBuilder() {
   const builder: SupabaseBuilder = {
-    select: () => builder,
+    _updateValues: null as Record<string, unknown> | null,
     eq: (col: string, val: unknown) => {
       if (builder._updateValues && col === 'id') {
         state.userUpdates.push({ values: builder._updateValues, whereId: val })
@@ -91,45 +91,45 @@ function createSupabaseBuilder() {
       }
       return builder
     },
+    select: () => builder,
     single: async () => ({ data: state.dbAccount, error: state.accountError }),
     update: (values: Record<string, unknown>) => {
       builder._updateValues = values
       return builder
     },
-    _updateValues: null as Record<string, unknown> | null,
   }
   return builder
 }
 const supabaseMock = { from: () => createSupabaseBuilder() }
 
-vi.doMock('@dotabod/shared-utils', () => ({
+vi.doMock(import('@dotabod/shared-utils'), () => ({
+  checkBotStatus: async () => state.isBanned,
+  getTwitchHeaders: async () => ({ Authorization: 'Bearer test' }),
   logger: {
-    info: (message: string, meta?: Record<string, unknown>) =>
-      state.logInfo.push({ message, meta: meta ?? {} }),
-    warn: () => undefined,
     debug: () => undefined,
     error: (message: string, meta?: Record<string, unknown>) =>
       state.logError.push({ message, meta: meta ?? {} }),
+    info: (message: string, meta?: Record<string, unknown>) =>
+      state.logInfo.push({ message, meta: meta ?? {} }),
+    warn: () => undefined,
   },
-  checkBotStatus: async () => state.isBanned,
-  getTwitchHeaders: async () => ({ Authorization: 'Bearer test' }),
   supabase: supabaseMock,
 }))
 
-vi.doMock('i18next', () => ({
+vi.doMock(import('i18next'), () => ({
   t: (key: string) => `t:${key}`,
 }))
 
-vi.doMock('../utils/socketManager', () => ({
-  hasDotabodSocket: () => state.hasSocket,
+vi.doMock(import('../utils/socketManager'), () => ({
   emitChatMessage: (
     broadcasterLogin: string,
     chatterLogin: string,
     text: string,
-    opts: Record<string, unknown>,
+    opts: Record<string, unknown>
   ) => {
     state.emitCalls.push({ broadcasterLogin, chatterLogin, text, opts })
   },
+  hasDotabodSocket: () => state.hasSocket,
 }))
 
 // Minimal controllable stand-in for the `ws` WebSocket so EventsubSocket tests
@@ -145,11 +145,11 @@ export class FakeWebSocket {
     FakeWebSocket.instances = []
   }
   static latest(): FakeWebSocket {
-    return FakeWebSocket.instances[FakeWebSocket.instances.length - 1]
+    return FakeWebSocket.instances.at(-1)
   }
   url: string
   readyState: number = FakeWebSocket.CONNECTING
-  private handlers: Record<string, Array<(ev: unknown) => void>> = {}
+  private handlers: Record<string, ((ev: unknown) => void)[]> = {}
   constructor(url: string) {
     this.url = url
     FakeWebSocket.instances.push(this)
@@ -163,7 +163,7 @@ export class FakeWebSocket {
   }
   close() {
     if (this.readyState === FakeWebSocket.CLOSED || this.readyState === FakeWebSocket.CLOSING)
-      return
+      {return}
     if (this.readyState === FakeWebSocket.CONNECTING) {
       // Mirror `ws`: closing a pending upgrade aborts the handshake and emits an
       // 'error' (then 'close') on a LATER tick. An unhandled 'error' crashes the
@@ -186,7 +186,7 @@ export class FakeWebSocket {
     if (type === 'error' && list.length === 0) {
       throw new Error(String((ev as { message?: string }).message ?? 'Unhandled error'))
     }
-    for (const cb of list) cb({ target: this, ...ev })
+    for (const cb of list) {cb({ target: this, ...ev })}
   }
   open() {
     this.readyState = FakeWebSocket.OPEN
@@ -204,13 +204,13 @@ export class FakeWebSocket {
   }
 }
 
-vi.doMock('ws', () => ({ default: FakeWebSocket }))
+vi.doMock(import('ws'), () => ({ default: FakeWebSocket }))
 
 // Route fetch through state so each test controls the HTTP response.
 globalThis.fetch = (async (url: string, options: RequestInit | undefined) => {
-  state.fetchCalls.push({ url, options })
-  if (state.fetchThrows) throw state.fetchThrows
-  return state.fetchImpl(url, options)
+  state.fetchCalls.push({ options, url })
+  if (state.fetchThrows) {throw state.fetchThrows}
+  return await state.fetchImpl(url, options)
 }) as unknown as typeof fetch
 
 // Import after mocks are registered. disableCache is the REAL module (not
@@ -231,4 +231,4 @@ export const { sendTwitchChatMessage, handleChatMessage, clearDedupeCache } =
 // drive the controllable FakeWebSocket instead of a real connection.
 export const { EventsubSocket, isEventsubConnected } = await import('../eventSubSocket')
 
-export const flushMacrotasks = () => new Promise<void>((r) => setTimeout(r, 5))
+export const flushMacrotasks =  async () => new Promise<void>((r) => setTimeout(r, 5))

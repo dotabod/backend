@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+
 import {
   clearSubscriptions,
   eventSubMap,
@@ -22,7 +23,7 @@ afterEach(() => {
   globalThis.setTimeout = realSetTimeout
 })
 
-describe('stopUserSubscriptions', () => {
+describe(stopUserSubscriptions, () => {
   it('deletes each subscription via the API and clears the map entry', async () => {
     seedSubscriptions('111', ['stream.online', 'stream.offline'])
     await stopUserSubscriptions('111')
@@ -36,7 +37,7 @@ describe('stopUserSubscriptions', () => {
   })
 })
 
-describe('revokeEvent', () => {
+describe(revokeEvent, () => {
   // The handler debounces with setTimeout(..., 3000); fire it immediately.
   beforeEach(() => {
     globalThis.setTimeout = ((cb: () => void) => {
@@ -54,8 +55,8 @@ describe('revokeEvent', () => {
     await new Promise((r) => realSetTimeout(r, 5))
 
     expect(
-      state.updates.some((u) => u.table === 'accounts' && u.values.requires_refresh === true),
-    ).toBe(true)
+      state.updates.some((u) => u.table === 'accounts' && u.values.requires_refresh === true)
+    ).toBeTruthy()
     // Routes through commandDisable.disable — single audited write,
     // no separate settings upsert (avoids watcher double-fire).
     expect(state.commandDisableCalls).toHaveLength(1)
@@ -64,8 +65,8 @@ describe('revokeEvent', () => {
       reason: 'TOKEN_REVOKED',
     })
     expect(
-      state.upserts.some((u) => u.table === 'settings' && u.values.key === 'commandDisable'),
-    ).toBe(false)
+      state.upserts.some((u) => u.table === 'settings' && u.values.key === 'commandDisable')
+    ).toBeFalsy()
   })
 
   it('does not re-disable a channel that is already disabled', async () => {

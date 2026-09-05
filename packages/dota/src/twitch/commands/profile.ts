@@ -9,9 +9,7 @@ import { getDotabodProfileUrl } from '../lib/getDotabodProfile'
 import { profileLink } from './profileLink'
 
 commandHandler.registerCommand('profile', {
-  onlyOnline: true,
   dbkey: DBSettings.commandProfile,
-
   handler: async (message, args, command) => {
     const {
       channel: { client },
@@ -26,7 +24,7 @@ commandHandler.registerCommand('profile', {
             lng: message.channel.client.locale,
             url: dotabodProfileUrl(message.channel.client.name),
           }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -48,7 +46,7 @@ commandHandler.registerCommand('profile', {
             lng: client.locale,
             player: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
           }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -67,8 +65,9 @@ commandHandler.registerCommand('profile', {
       chatClient.say(
         message.channel.name,
         (e as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
     }
   },
+  onlyOnline: true,
 })

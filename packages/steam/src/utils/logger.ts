@@ -6,27 +6,27 @@ const isDev = process.env.DOTABOD_ENV === 'development'
 
 const handleErrors = format((info) => {
   if (info instanceof Error) {
-    return Object.assign({}, info, { stack: info.stack })
+    return { ...info, stack: info.stack}
   }
   if (info.e instanceof Error) {
-    return Object.assign({}, info, { 'e.stack': info.e.stack })
+    return { ...info, 'e.stack': info.e.stack}
   }
   if (info.error instanceof Error) {
-    return Object.assign({}, info, { 'error.stack': info.error.stack })
+    return { ...info, 'error.stack': info.error.stack}
   }
   return info
 })
 
-const customFormat = printf(({ message, level, timestamp, ...rest }) => {
-  return `[${String(timestamp)}] ${level}: ${String(message)}${Object.keys(rest).length ? ` ${JSON.stringify(rest)}` : ''}`
-})
+const customFormat = printf(({ message, level, timestamp, ...rest }) => 
+  `[${String(timestamp)}] ${level}: ${String(message)}${Object.keys(rest).length ? ` ${JSON.stringify(rest)}` : ''}`
+)
 
 const prodFormats = combine(
   handleErrors(),
   errors({ stack: true }),
   timestamp(),
   json(),
-  customFormat,
+  customFormat
 )
 
 const devFormats = combine(
@@ -34,7 +34,7 @@ const devFormats = combine(
   errors({ stack: true }),
   json(),
   timestamp(),
-  customFormat,
+  customFormat
 )
 
 export const logger = createLogger({

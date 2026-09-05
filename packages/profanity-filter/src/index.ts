@@ -1,10 +1,11 @@
 import { Elysia } from 'elysia'
+
 import { getProfanityDetails, moderateText } from './utils/moderation'
 
 // Create Elysia app
 const app = new Elysia()
-  .get('/', () => {
-    return {
+  .get('/', () => (
+    {
       name: 'Profanity Filter API',
       version: '1.0.0',
       description: 'Multilingual profanity detection and filtering API',
@@ -23,7 +24,7 @@ const app = new Elysia()
         },
       ],
     }
-  })
+  ))
   .post('/moderate', async ({ body }) => {
     const { text } = body as { text: string | string[] }
 
@@ -39,11 +40,11 @@ const app = new Elysia()
         moderatedText = await moderateText(text)
         // Handle array input
         return {
-          original: text,
-          moderated: moderatedText,
           containsProfanity: (moderatedText as string[]).some(
-            (moderated, index) => moderated !== text[index],
+            (moderated, index) => moderated !== text[index]
           ),
+          moderated: moderatedText,
+          original: text,
         }
       }
 
@@ -51,9 +52,9 @@ const app = new Elysia()
 
       // Handle single string input
       return {
-        original: text,
-        moderated: moderatedText,
         containsProfanity: moderatedText !== text,
+        moderated: moderatedText,
+        original: text,
       }
     } catch (error) {
       return {
@@ -77,19 +78,19 @@ const app = new Elysia()
       if (Array.isArray(text)) {
         // Handle array input
         return {
-          original: text,
           containsProfanity: (details as Array<{ isFlagged: boolean }>).some(
-            (item) => item.isFlagged,
+            (item) => item.isFlagged
           ),
           details,
+          original: text,
         }
       }
 
       // Handle single string input
       return {
-        original: text,
         containsProfanity: (details as { isFlagged: boolean }).isFlagged,
         details,
+        original: text,
       }
     } catch (error) {
       return {

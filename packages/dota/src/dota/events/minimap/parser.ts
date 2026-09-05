@@ -78,11 +78,11 @@ class MinimapParser {
   ]
 
   init(data: Packet, dataBroadcaster: DataBroadcasterInterface) {
-    if (!isPlayingMatch(data)) return
+    if (!isPlayingMatch(data)) {return}
 
     const parsed = this.parse(data)
 
-    if (parsed.status.active === false) {
+    if (!parsed.status.active) {
       const currentTime = Date.now()
       if (currentTime - this.lastBroadcastTime >= 5000) {
         dataBroadcaster.sendData(parsed)
@@ -98,7 +98,7 @@ class MinimapParser {
     return (
       mapData &&
       ['DOTA_GAMERULES_STATE_GAME_IN_PROGRESS', 'DOTA_GAMERULES_STATE_PRE_GAME'].includes(
-        mapData.game_state,
+        mapData.game_state
       )
     )
   }
@@ -139,7 +139,7 @@ class MinimapParser {
 
     if (entity.ypos !== undefined) {
       if (entity.ypos >= 0) {
-        entity.ypos = entity.ypos + this.yLength
+        entity.ypos += this.yLength
       } else {
         entity.ypos = this.yLength - Math.abs(entity.ypos)
       }
@@ -156,14 +156,17 @@ class MinimapParser {
 
     // Name teams
     switch (entity.team) {
-      case 2:
+      case 2: {
         entity.teamP = 'radiant'
         break
-      case 3:
+      }
+      case 3: {
         entity.teamP = 'dire'
         break
-      default:
+      }
+      default: {
         entity.teamP = 'npc'
+      }
     }
 
     // Simplify hero names
@@ -217,9 +220,9 @@ class MinimapParser {
       team: string | undefined
     } = {
       active: true,
+      hero: this.isPlaying(data.player) ? data.hero?.name : data.hero?.team2?.player0.name,
       paused: this.isGamePaused(data.map),
       playing: this.isPlaying(data.player),
-      hero: this.isPlaying(data.player) ? data.hero?.name : data.hero?.team2?.player0.name,
       team: this.isPlaying(data.player) ? data.player?.team_name : 'radiant',
     }
 
@@ -233,19 +236,19 @@ class MinimapParser {
       tp: Entity[]
       scan: Entity[]
     } = {
-      heroes: [],
-      hero_units: [],
+      buildings: [],
       couriers: [],
       creeps: [],
-      buildings: [],
-      tp: [],
+      hero_units: [],
+      heroes: [],
       scan: [],
+      tp: [],
     }
     const entities = Object.keys(data.minimap)
 
     entities.forEach((key) => {
       const entity = data.minimap?.[key]
-      if (!entity) return
+      if (!entity) {return}
 
       // Heroes
       if (
@@ -302,8 +305,8 @@ class MinimapParser {
     })
 
     return {
-      minimap: minimap,
-      status: status,
+      minimap,
+      status,
     }
   }
 }

@@ -3,17 +3,18 @@ import type { Socket as ClientSocket } from 'socket.io-client'
 
 import { steamSocket, twitchChat, twitchEvents } from '../../steam/ws'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler';
+import type { MessageType } from '../lib/CommandHandler';
 
 const VERSION_ACK_TIMEOUT_MS = 2000
 
-function fetchVersion(socket: ClientSocket): Promise<string | null> {
+ async function fetchVersion(socket: ClientSocket): Promise<string | null> {
   return new Promise((resolve) => {
     if (!socket.connected) {
       resolve(null)
       return
     }
-    const timer = setTimeout(() => resolve(null), VERSION_ACK_TIMEOUT_MS)
+    const timer = setTimeout(() =>{  resolve(null); }, VERSION_ACK_TIMEOUT_MS)
     socket.emit('getVersion', (commitHash: string | null) => {
       clearTimeout(timer)
       resolve(commitHash ?? null)
@@ -43,17 +44,17 @@ commandHandler.registerCommand('version', {
       chatClient.say(
         message.channel.name,
         t('version.unknown', {
-          url: 'github.com/dotabod/backend',
           lng: message.channel.client.locale,
+          url: 'github.com/dotabod/backend',
         }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
 
     const allKnownAndSame = uniqueHashes.size === 1 && known.length === Object.keys(versions).length
     const versionStr = allKnownAndSame
-      ? (known[0] as string)
+      ? (known[0])
       : Object.entries(versions)
           .map(([name, hash]) => `${name}:${hash ?? '?'}`)
           .join(', ')
@@ -65,10 +66,10 @@ commandHandler.registerCommand('version', {
       message.channel.name,
       t('version.commit', {
         lng: message.channel.client.locale,
-        version: versionStr,
         url,
+        version: versionStr,
       }),
-      message.user.messageId,
+      message.user.messageId
     )
   },
 })

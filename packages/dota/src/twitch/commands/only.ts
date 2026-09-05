@@ -1,9 +1,11 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { ranks } from '../../dota/lib/consts'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler';
+import type { MessageType } from '../lib/CommandHandler';
 
 // Extract unique rank titles and map them to their base tier values
 const rankTitles: Record<string, number> = {}
@@ -23,7 +25,6 @@ ranks.forEach((rank) => {
 rankTitles.immortal = 80
 
 commandHandler.registerCommand('only', {
-  permission: 2, // Mod or broadcaster only
   cooldown: 0,
   dbkey: DBSettings.commandOnly,
   handler: async (message: MessageType, args: string[]) => {
@@ -36,7 +37,7 @@ commandHandler.registerCommand('only', {
     const rankOnlySettings = getValueOrDefault(
       DBSettings.rankOnly,
       client.settings,
-      client.subscription,
+      client.subscription
     )
 
     // If no args provided, show current status
@@ -51,7 +52,7 @@ commandHandler.registerCommand('only', {
             url: 'dotabod.com/verify',
             lng: message.channel.client.locale,
           }),
-          message.user.messageId,
+          message.user.messageId
         )
       } else {
         chatClient.say(
@@ -61,7 +62,7 @@ commandHandler.registerCommand('only', {
             rank: '',
             lng: message.channel.client.locale,
           }),
-          message.user.messageId,
+          message.user.messageId
         )
       }
       return
@@ -84,13 +85,13 @@ commandHandler.registerCommand('only', {
         },
         {
           onConflict: 'userId, key',
-        },
+        }
       )
 
       chatClient.say(
         channel,
         t('rankOnlyDisabled', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -119,7 +120,7 @@ commandHandler.registerCommand('only', {
           lng: message.channel.client.locale,
           validRanks,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -138,7 +139,7 @@ commandHandler.registerCommand('only', {
       },
       {
         onConflict: 'userId, key',
-      },
+      }
     )
 
     chatClient.say(
@@ -148,7 +149,8 @@ commandHandler.registerCommand('only', {
         url: 'dotabod.com/verify',
         lng: message.channel.client.locale,
       }),
-      message.user.messageId,
+      message.user.messageId
     )
   },
+  permission: 2, // Mod or broadcaster only,
 })

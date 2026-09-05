@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { scheduleNonOverlapping } from '../scheduler.ts'
 
 beforeEach(() => {
@@ -9,14 +10,14 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-describe('scheduleNonOverlapping', () => {
+describe(scheduleNonOverlapping, () => {
   it('skips a tick if the previous invocation is still in flight', async () => {
     let active = 0
     let maxConcurrent = 0
     let runs = 0
-    const resolvers: Array<() => void> = []
+    const resolvers: (() => void)[] = []
 
-    const stop = scheduleNonOverlapping(() => {
+    const stop = scheduleNonOverlapping( async () => {
       runs++
       active++
       maxConcurrent = Math.max(maxConcurrent, active)

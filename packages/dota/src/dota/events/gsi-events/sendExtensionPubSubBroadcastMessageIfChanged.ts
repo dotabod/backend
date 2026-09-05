@@ -1,9 +1,11 @@
 import { sendExtensionPubSubBroadcastMessage } from '@twurple/ebs-helper'
+
 import { redisClient } from '../../../db/redisInstance'
 import type { GSIHandlerType } from '../../GSIHandlerTypes'
+
 export const sendExtensionPubSubBroadcastMessageIfChanged = async (
   dotaClient: GSIHandlerType,
-  messageToSend: unknown,
+  messageToSend: unknown
 ) => {
   const { client } = dotaClient
   const redisKey = `${client.token}:lastMessage`
@@ -17,7 +19,7 @@ export const sendExtensionPubSubBroadcastMessageIfChanged = async (
   // Compare the current message with the previous one
   if (currentMessageString !== prevMessageString) {
     const accountId = client.Account?.providerAccountId ?? ''
-    if (!accountId) return
+    if (!accountId) {return}
 
     // If different, send the message and update Redis
     await sendExtensionPubSubBroadcastMessage(tooltipsConfig, accountId, currentMessageString)
@@ -27,6 +29,6 @@ export const sendExtensionPubSubBroadcastMessageIfChanged = async (
 
 const tooltipsConfig = {
   clientId: process.env.TWITCH_EXT_CLIENT_ID || '',
-  secret: process.env.TWITCH_EXT_SECRET || '',
   ownerId: process.env.TWITCH_BOT_PROVIDERID || '',
+  secret: process.env.TWITCH_EXT_SECRET || '',
 }

@@ -1,4 +1,5 @@
 import { getTwitchHeaders, logger } from '@dotabod/shared-utils'
+
 import { eventSubMap } from './chatSubIds'
 import type { TwitchEventSubSubscriptionsResponse } from './interfaces'
 import { rateLimiter } from './utils/rateLimiterCore'
@@ -23,11 +24,11 @@ export async function fetchExistingSubscriptions() {
     pageCount++
     await rateLimiter.schedule(async () => {
       const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
-      if (cursor) url.searchParams.append('after', cursor)
+      if (cursor) {url.searchParams.append('after', cursor)}
 
       const subsReq = await fetch(url.toString(), {
-        method: 'GET',
         headers,
+        method: 'GET',
       })
 
       // Update rate limit info
@@ -110,8 +111,8 @@ export async function fetchExistingSubscriptions() {
           timeElapsed: `${Math.round(elapsedSec / 60)}m ${Math.round(elapsedSec % 60)}s`,
           ...(timeEstimate ? { timeEstimate } : {}),
           rateLimit: {
-            remaining: rateLimiter.rateLimitStatus.remaining,
             queueLength: rateLimiter.queueLength,
+            remaining: rateLimiter.rateLimitStatus.remaining,
           },
         })
       }
@@ -127,20 +128,20 @@ export async function fetchExistingSubscriptions() {
 
   // Log comprehensive summary when complete
   logger.info('[TWITCHEVENTS] Finished loading subscriptions', {
-    total: {
-      subscriptions: fetchedCount,
-      broadcasters: uniqueBroadcasters.size,
-      cleanupNeeded: subsToCleanup.length,
+    rateLimit: {
+      queueLength: rateLimiter.queueLength,
+      remaining: rateLimiter.rateLimitStatus.remaining,
     },
     statusBreakdown: statusCounts,
     timing: {
-      totalTime: `${minutes}m ${seconds}s`,
-      pagesProcessed: pageCount,
       averageRate: `${Math.round(fetchedCount / totalTime)} subs/sec`,
+      pagesProcessed: pageCount,
+      totalTime: `${minutes}m ${seconds}s`,
     },
-    rateLimit: {
-      remaining: rateLimiter.rateLimitStatus.remaining,
-      queueLength: rateLimiter.queueLength,
+    total: {
+      broadcasters: uniqueBroadcasters.size,
+      cleanupNeeded: subsToCleanup.length,
+      subscriptions: fetchedCount,
     },
   })
 }

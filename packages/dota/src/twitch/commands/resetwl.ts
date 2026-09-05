@@ -1,13 +1,14 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { WL_RESET_SETTING_KEY } from '../../db/winLossWindow'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { server } from '../../dota/server'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler';
+import type { MessageType } from '../lib/CommandHandler';
 
 commandHandler.registerCommand('resetwl', {
-  permission: 2,
   cooldown: 0,
   handler: (message: MessageType, _args: string[]) => {
     async function handler() {
@@ -23,7 +24,7 @@ commandHandler.registerCommand('resetwl', {
           updated_at: resetAt,
           value: resetAt,
         },
-        { onConflict: 'userId, key' },
+        { onConflict: 'userId, key' }
       )
 
       const resetSetting = client.settings.find((setting) => setting.key === WL_RESET_SETTING_KEY)
@@ -37,7 +38,7 @@ commandHandler.registerCommand('resetwl', {
       chatClient.say(
         channel,
         t('refresh', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       if (server?.io) {
         server.io.to(client.token).emit('refresh')
@@ -49,7 +50,7 @@ commandHandler.registerCommand('resetwl', {
           lng: message.channel.client.locale,
           channel: message.channel.name,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
     }
 
@@ -59,4 +60,5 @@ commandHandler.registerCommand('resetwl', {
       logger.error('Error in resetwl command', e)
     }
   },
+  permission: 2,
 })

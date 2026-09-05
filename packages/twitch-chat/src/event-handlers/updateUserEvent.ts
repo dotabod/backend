@@ -31,7 +31,7 @@ export function updateUserEvent({
 
       // remove falsy values from data (like displayName: undefined)
       const filteredData = Object.fromEntries(
-        Object.entries(data).filter(([_key, value]) => Boolean(value)),
+        Object.entries(data).filter(([_key, value]) => Boolean(value))
       )
 
       const { data: user } = await supabase
@@ -48,10 +48,10 @@ export function updateUserEvent({
 
       await supabase
         .from('users')
-        .update(filteredData as typeof data)
+        .update(filteredData)
         .eq('id', user.userId)
-    } catch (err) {
-      console.error(err, 'updateUserEvent error', event.user_id)
+    } catch (error) {
+      console.error(error, 'updateUserEvent error', event.user_id)
     }
   }
 

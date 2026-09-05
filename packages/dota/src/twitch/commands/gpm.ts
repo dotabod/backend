@@ -7,7 +7,6 @@ import commandHandler from '../lib/CommandHandler'
 import { findAccountFromCmd } from '../lib/findGSIByAccountId'
 
 commandHandler.registerCommand('gpm', {
-  onlyOnline: true,
   dbkey: DBSettings.commandGPM,
   handler: async (message, args, command) => {
     const {
@@ -18,7 +17,7 @@ commandHandler.registerCommand('gpm', {
         client,
         args,
         client.locale,
-        command,
+        command
       )
       const heroName =
         player && 'gpm' in player
@@ -31,7 +30,7 @@ commandHandler.registerCommand('gpm', {
         chatClient.say(
           channel,
           t('gpm_zero', { heroName, num: 0, lng: message.channel.client.locale }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -54,14 +53,15 @@ commandHandler.registerCommand('gpm', {
           heroKills: gold_from_hero_kills ?? 0,
           creepKills: gold_from_creep_kills ?? 0,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
     } catch (e) {
       chatClient.say(
         message.channel.name,
         (e as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
     }
   },
+  onlyOnline: true,
 })

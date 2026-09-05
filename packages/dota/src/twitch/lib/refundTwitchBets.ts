@@ -1,4 +1,5 @@
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
+
 import { retryTransient } from './retryTransient'
 
 export const refundTwitchBet = async (twitchId: string, specificPredictionId?: string) => {
@@ -9,13 +10,13 @@ export const refundTwitchBet = async (twitchId: string, specificPredictionId?: s
     // Fetch more if we have a specific ID to find it in history
     const { data: predictions } = await retryTransient(
       () => api.predictions.getPredictions(twitchId, { limit: specificPredictionId ? 10 : 1 }),
-      { label: 'refundTwitchBet:getPredictions' },
+      { label: 'refundTwitchBet:getPredictions' }
     )
 
     if (!Array.isArray(predictions) || !predictions.length) {
       logger.info('[PREDICT] No predictions found', {
-        twitchId,
         specificPredictionId,
+        twitchId,
       })
       return null
     }
@@ -27,9 +28,9 @@ export const refundTwitchBet = async (twitchId: string, specificPredictionId?: s
 
     if (!prediction) {
       logger.info('[PREDICT] Specific prediction not found in recent list', {
-        twitchId,
-        specificPredictionId,
         availablePredictions: predictions.map((p) => ({ id: p.id, status: p.status })),
+        specificPredictionId,
+        twitchId,
       })
       return null
     }
@@ -38,25 +39,25 @@ export const refundTwitchBet = async (twitchId: string, specificPredictionId?: s
     // Only ACTIVE or LOCKED predictions can be canceled
     if (!['ACTIVE', 'LOCKED'].includes(prediction.status)) {
       logger.info('[PREDICT] Cannot refund prediction - already resolved or canceled', {
-        twitchId,
         predictionId: prediction.id,
         status: prediction.status,
+        twitchId,
       })
       return null
     }
 
     logger.info('[PREDICT] Refunding prediction', {
-      twitchId,
       predictionId: prediction.id,
       status: prediction.status,
+      twitchId,
     })
 
     await retryTransient(() => api.predictions.cancelPrediction(twitchId, prediction.id), {
       label: 'refundTwitchBet:cancelPrediction',
     })
     return prediction.id
-  } catch (e) {
-    logger.error('[PREDICT] Error refunding twitch bet', { twitchId, e })
+  } catch (error) {
+    logger.error('[PREDICT] Error refunding twitch bet', { twitchId, error })
   }
 
   return null

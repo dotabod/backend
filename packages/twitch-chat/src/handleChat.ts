@@ -1,5 +1,6 @@
 import { checkBotStatus, getTwitchHeaders, logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { isBroadcasterBeingDisabled } from './disableCache'
 import { emitChatMessage, hasDotabodSocket } from './utils/socketManager'
 
@@ -7,12 +8,12 @@ import { emitChatMessage, hasDotabodSocket } from './utils/socketManager'
 const messageDedupeCache = new Map<string, number>()
 const DEDUPE_WINDOW_MS = 5000 // 5 seconds
 const TWITCH_CHAT_MESSAGE_LIMIT = 500
-const DUPLICATE_DISAMBIGUATOR = ' \u034f'
+const DUPLICATE_DISAMBIGUATOR = ' \u034F'
 
 function fitTwitchChatMessage(message: string): string {
-  if (message.length <= TWITCH_CHAT_MESSAGE_LIMIT) return message
+  if (message.length <= TWITCH_CHAT_MESSAGE_LIMIT) {return message}
 
-  const trailingLink = message.match(/ · (?:https?:\/\/)?\S+\.\S+(?: · .*)?$/)?.[0] ?? ''
+  const trailingLink = (/ · (?:https?:\/\/)?\S+\.\S+(?: · .*)?$/.exec(message))?.[0] ?? ''
   const availableTextLength = TWITCH_CHAT_MESSAGE_LIMIT - trailingLink.length - 1
   if (availableTextLength <= 0) {
     return `${message.slice(0, TWITCH_CHAT_MESSAGE_LIMIT - 1)}…`
@@ -42,14 +43,14 @@ setInterval(() => {
       messageDedupeCache.delete(key)
     }
   }
-}, 30000) // Clean up every 30 seconds
+}, 30_000) // Clean up every 30 seconds
 
 function extractUserInfo(
   badges: {
     [key: string]: string
   }[],
   broadcasterUserId: string,
-  chatterUserId: string,
+  chatterUserId: string
 ): {
   isMod: boolean
   isBroadcaster: boolean
@@ -57,10 +58,10 @@ function extractUserInfo(
   userId: string
 } {
   return {
-    isMod: badges.some(
-      (badge) => badge.set_id === 'moderator' || badge.set_id === 'lead_moderator',
-    ),
     isBroadcaster: broadcasterUserId === chatterUserId,
+    isMod: badges.some(
+      (badge) => badge.set_id === 'moderator' || badge.set_id === 'lead_moderator'
+    ),
     isSubscriber: badges.some((badge) => badge.set_id === 'subscriber'),
     userId: chatterUserId,
   }
@@ -80,14 +81,14 @@ interface ChatMessageDropReason {
  * Response from sending a chat message
  */
 interface TwitchChatMessageResponse {
-  data: Array<{
+  data: {
     /** Unique ID of the sent message */
     message_id: string
     /** Whether message was successfully sent */
     is_sent: boolean
     /** Details if message was dropped */
     drop_reason?: ChatMessageDropReason
-  }>
+  }[]
 }
 
 /**
@@ -115,7 +116,7 @@ interface SendChatMessageParams {
  * @throws Error if the request fails
  */
 export async function sendTwitchChatMessage(
-  params: SendChatMessageParams,
+  params: SendChatMessageParams
 ): Promise<TwitchChatMessageResponse> {
   const message = fitTwitchChatMessage(params.message)
 
@@ -129,13 +130,13 @@ export async function sendTwitchChatMessage(
     return {
       data: [
         {
-          message_id: '',
-          is_sent: false,
           drop_reason: {
             code: 'user_being_disabled',
             message:
               'User is currently being disabled, skipping chat message to prevent race condition',
           },
+          is_sent: false,
+          message_id: '',
         },
       ],
     }
@@ -153,35 +154,35 @@ export async function sendTwitchChatMessage(
   if (lastSent && now - lastSent < DEDUPE_WINDOW_MS) {
     logger.info('[DEDUPE] Dropping duplicate chat message', {
       broadcaster_id: params.broadcaster_id,
-      message: params.message,
       last_sent_ms_ago: now - lastSent,
+      message: params.message,
     })
 
     return {
       data: [
         {
-          message_id: '',
-          is_sent: false,
           drop_reason: {
             code: 'duplicate_message',
             message: `Duplicate message dropped (sent ${now - lastSent}ms ago): ${params.message}`,
           },
+          is_sent: false,
+          message_id: '',
         },
       ],
     }
   }
 
   // Record this message in the cache
-  if (dedupeKey) messageDedupeCache.set(dedupeKey, now)
+  if (dedupeKey) {messageDedupeCache.set(dedupeKey, now)}
 
   const url = 'https://api.twitch.tv/helix/chat/messages'
   // Only the bot can send messages
   // Or a user with "user:bot" scope
   const headers = await getTwitchHeaders(params.sender_id)
   const options = {
-    method: 'POST',
-    headers: { ...headers, 'Content-Type': 'application/json' },
     body: JSON.stringify({ ...params, message }),
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    method: 'POST',
   }
 
   try {
@@ -210,12 +211,12 @@ export async function sendTwitchChatMessage(
       return {
         data: [
           {
-            message_id: '',
-            is_sent: false,
             drop_reason: {
               code: dropReasonCode,
               message: errorMessage,
             },
+            is_sent: false,
+            message_id: '',
           },
         ],
       }
@@ -240,12 +241,12 @@ export async function sendTwitchChatMessage(
       return {
         data: [
           {
-            message_id: '',
-            is_sent: false,
             drop_reason: {
               code: retryResponse.status === 429 ? 'rate_limited' : 'send_error',
               message: `Failed to send disambiguated chat message: ${retryResponse.status} ${retryResponse.statusText}`,
             },
+            is_sent: false,
+            message_id: '',
           },
         ],
       }
@@ -254,17 +255,17 @@ export async function sendTwitchChatMessage(
     return retryResponse.json() as Promise<TwitchChatMessageResponse>
   } catch (error) {
     // If it's not an HTTP error we already handled, log and return a formatted error
-    logger.error('Error sending chat message', { error, broadcaster_id: params.broadcaster_id })
+    logger.error('Error sending chat message', { broadcaster_id: params.broadcaster_id, error })
 
     return {
       data: [
         {
-          message_id: '',
-          is_sent: false,
           drop_reason: {
             code: 'send_error',
             message: error instanceof Error ? error.message : 'Unknown error',
           },
+          is_sent: false,
+          message_id: '',
         },
       ],
     }
@@ -297,8 +298,8 @@ export async function handleChatMessage(message: ChatMessageNotification): Promi
     return
   }
 
-  const event = message.payload.event
-  if (!event) return
+  const {event} = message.payload
+  if (!event) {return}
   const {
     chatter_user_login,
     chatter_user_id,
@@ -328,8 +329,8 @@ export async function handleChatMessage(message: ChatMessageNotification): Promi
   if (hasDotabodSocket()) {
     emitChatMessage(broadcaster_user_login, chatter_user_login, messageText, {
       channelId,
-      userInfo,
       messageId: reply?.parent_message_id || message_id,
+      userInfo,
     })
     return
   }
@@ -343,7 +344,7 @@ export async function handleChatMessage(message: ChatMessageNotification): Promi
 async function dotabodOfflineHandler(
   text: string,
   channelId: string,
-  reply_parent_message_id?: string,
+  reply_parent_message_id?: string
 ): Promise<void> {
   const isBanned = await checkBotStatus()
   if (isBanned) {
@@ -353,13 +354,13 @@ async function dotabodOfflineHandler(
   if (text === '!ping') {
     try {
       await sendTwitchChatMessage({
-        reply_parent_message_id,
         broadcaster_id: channelId,
-        sender_id: process.env.TWITCH_BOT_PROVIDERID || '',
         message: t('rebooting', { emote: 'PauseChamp', lng: 'en' }),
+        reply_parent_message_id,
+        sender_id: process.env.TWITCH_BOT_PROVIDERID || '',
       })
-    } catch (e) {
-      logger.error('Could not send rebooting message', { e })
+    } catch (error) {
+      logger.error('Could not send rebooting message', { error })
     }
   }
 }

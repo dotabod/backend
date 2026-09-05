@@ -1,5 +1,7 @@
-import { type Database, logger, supabase } from '@dotabod/shared-utils'
+import { logger, supabase } from '@dotabod/shared-utils';
+import type { Database } from '@dotabod/shared-utils';
 import { t } from 'i18next'
+
 import { DBSettings, getValueOrDefault } from '../settings'
 import type { SocketClient } from '../types'
 import {
@@ -30,8 +32,8 @@ const DAY_MS = 24 * 60 * 60 * 1000
 async function clearCompletedChallenge(userId: string, settings?: SocketClient['settings']) {
   const updatedAt = new Date().toISOString()
   const values = [
-    { key: DBSettings.wlStatsDays, userId, updated_at: updatedAt, value: null },
-    { key: DBSettings.wlStatsStartDate, userId, updated_at: updatedAt, value: null },
+    { key: DBSettings.wlStatsDays, updated_at: updatedAt, userId, value: null },
+    { key: DBSettings.wlStatsStartDate, updated_at: updatedAt, userId, value: null },
   ]
   const { error } = await supabase.from('settings').upsert(values, { onConflict: 'userId, key' })
 
@@ -42,22 +44,22 @@ async function clearCompletedChallenge(userId: string, settings?: SocketClient['
 
   for (const { key } of values) {
     const setting = settings?.find((entry) => entry.key === key)
-    if (setting) setting.value = null
+    if (setting) {setting.value = null}
   }
 }
 
 function getAvailableStatsDays(statsDays: number | null, firstMatchAt?: string): number | null {
-  if (statsDays === null || !firstMatchAt) return statsDays
+  if (statsDays === null || !firstMatchAt) {return statsDays}
 
   const firstMatch = new Date(firstMatchAt)
-  if (!Number.isFinite(firstMatch.getTime())) return statsDays
+  if (!Number.isFinite(firstMatch.getTime())) {return statsDays}
 
   const now = new Date()
   const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
   const firstMatchDay = Date.UTC(
     firstMatch.getUTCFullYear(),
     firstMatch.getUTCMonth(),
-    firstMatch.getUTCDate(),
+    firstMatch.getUTCDate()
   )
   const elapsedDays = Math.max(1, Math.floor((today - firstMatchDay) / DAY_MS))
   return Math.min(statsDays, elapsedDays)
@@ -70,7 +72,7 @@ const updateStats = (
     mmr?: number
   },
   match: Database['public']['Functions']['get_grouped_bets']['Returns'][0],
-  multiplier: number,
+  multiplier: number
 ) => {
   if (match.won) {
     stats.win += match._count_won
@@ -100,7 +102,7 @@ export async function getWL({
   const statsDays = normalizeStatsDays(
     statsDaysOverride === undefined
       ? getValueOrDefault(DBSettings.wlStatsDays, settings, subscription)
-      : statsDaysOverride,
+      : statsDaysOverride
   )
   const statsStartDate =
     statsStartDateOverride === undefined
@@ -116,7 +118,7 @@ export async function getWL({
   }
 
   if (!channelId) {
-    return Promise.resolve({
+    return ({
       record: [{ win: 0, lose: 0, type: 'U' }],
       msg: null,
       statsDays: activeChallenge?.elapsedDays ?? activeStatsDays,
@@ -130,7 +132,7 @@ export async function getWL({
     streamStartDate,
     resetAt,
     now,
-    activeChallenge?.startDate,
+    activeChallenge?.startDate
   ).toISOString()
 
   const [matchResult, adjustmentResult, firstMatchResult] = await Promise.all([
@@ -167,19 +169,19 @@ export async function getWL({
 
   if (matchResult.error) {
     return {
-      record: [{ win: 0, lose: 0, type: 'U' }],
       msg: null,
+      record: [{ win: 0, lose: 0, type: 'U' }],
       statsDays: availableStatsDays,
       statsDaysTotal,
     }
   }
 
   const ranked: { win: number; lose: number; mmr: number } = {
-    win: 0,
     lose: 0,
     mmr: 0,
+    win: 0,
   }
-  const unranked: { win: number; lose: number } = { win: 0, lose: 0 }
+  const unranked: { win: number; lose: number } = { lose: 0, win: 0 }
 
   matchResult.data.forEach(
     (match: Database['public']['Functions']['get_grouped_bets']['Returns'][0]) => {
@@ -188,7 +190,7 @@ export async function getWL({
       const multiplier = isRanked ? (match.is_party ? MULTIPLIER_PARTY : MULTIPLIER_SOLO) : 0
 
       updateStats(stats, match, multiplier)
-    },
+    }
   )
 
   if (!adjustmentResult.error) {
@@ -211,9 +213,9 @@ export async function getWL({
   const hasRanked = ranked.win + ranked.lose !== 0
 
   const record = [
-    hasRanked ? { win: ranked.win, lose: ranked.lose, type: 'R' } : null,
-    hasUnranked ? { win: unranked.win, lose: unranked.lose, type: 'U' } : null,
-    !hasRanked && !hasUnranked ? { win: 0, lose: 0, type: 'U' } : null,
+    hasRanked ? { lose: ranked.lose, type: 'R', win: ranked.win } : null,
+    hasUnranked ? { lose: unranked.lose, type: 'U', win: unranked.win } : null,
+    !hasRanked && !hasUnranked ? { lose: 0, type: 'U', win: 0 } : null,
   ].filter(Boolean)
 
   const mmrMsg = mmrEnabled ? ` | ${ranked.mmr >= 0 ? '+' : ''}${ranked.mmr} MMR` : ''
@@ -236,7 +238,7 @@ export async function getWL({
 
   const recordMessage = messages.filter(Boolean).join(' · ') || '0 W - 0 L'
   const windowMessage = (() => {
-    if (availableStatsDays === null) return t('wl.statsWindow_stream', { lng })
+    if (availableStatsDays === null) {return t('wl.statsWindow_stream', { lng })}
     if (statsDaysTotal !== null) {
       return t('wl.statsChallenge', {
         count: statsDaysTotal,
@@ -248,5 +250,5 @@ export async function getWL({
   })()
   const msg = `${recordMessage} · ${windowMessage}`
 
-  return { record, msg, statsDays: availableStatsDays, statsDaysTotal }
+  return { msg, record, statsDays: availableStatsDays, statsDaysTotal }
 }

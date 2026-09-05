@@ -6,6 +6,7 @@ import { execSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
 import { describe, expect, it } from 'vitest'
 
 // Regression guard for the Node 24 ERR_AMBIGUOUS_MODULE_SYNTAX crash:
@@ -21,7 +22,7 @@ import { describe, expect, it } from 'vitest'
 //
 // These tests fail FAST (source scan) and SLOW (actually build + parse).
 
-const SRC = dirname(dirname(fileURLToPath(import.meta.url)))
+const SRC = dirname(import.meta.dirname)
 const PKG = dirname(SRC)
 const BUNDLE = join(PKG, 'dist', 'index.js')
 
@@ -30,7 +31,7 @@ function walk(dir: string, out: string[] = []): string[] {
     const p = join(dir, entry)
     if (statSync(p).isDirectory()) {
       // CLI-only entries live under src/scripts/ and are never bundled.
-      if (entry === 'scripts' || entry === '__tests__') continue
+      if (entry === 'scripts' || entry === '__tests__') {continue}
       walk(p, out)
     } else if (entry.endsWith('.ts')) {
       out.push(p)
@@ -43,21 +44,21 @@ describe('bundle purity', () => {
   it('no `require.main` in any module reachable from src/index.ts', () => {
     const offenders: string[] = []
     for (const file of walk(SRC)) {
-      if (/\brequire\.main\b/.test(readFileSync(file, 'utf8'))) {
+      if (/\brequire\.main\b/.test(readFileSync(file, 'utf-8'))) {
         offenders.push(file)
       }
     }
-    expect(offenders).toEqual([])
+    expect(offenders).toStrictEqual([])
   })
 
   it('no `module.exports` in any module reachable from src/index.ts', () => {
     const offenders: string[] = []
     for (const file of walk(SRC)) {
-      if (/\bmodule\.exports\b/.test(readFileSync(file, 'utf8'))) {
+      if (/\bmodule\.exports\b/.test(readFileSync(file, 'utf-8'))) {
         offenders.push(file)
       }
     }
-    expect(offenders).toEqual([])
+    expect(offenders).toStrictEqual([])
   })
 
   it('dist/index.js parses cleanly as ESM (when present)', () => {
@@ -71,7 +72,7 @@ describe('bundle purity', () => {
     expect(() => execSync(`node --check ${BUNDLE}`, { stdio: 'pipe' })).not.toThrow()
     // Belt and suspenders: the specific CJS marker the bundler shimmed should
     // never appear in a pure-ESM bundle with top-level await.
-    const bundle = readFileSync(BUNDLE, 'utf8')
+    const bundle = readFileSync(BUNDLE, 'utf-8')
     expect(bundle).not.toMatch(/__require\.main/)
   })
 })

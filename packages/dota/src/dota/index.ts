@@ -1,10 +1,13 @@
 import './events/gsiEventLoader'
 import { lstatSync, readdirSync } from 'node:fs'
 import path, { join } from 'node:path'
+
 import { logger } from '@dotabod/shared-utils'
 import chokidar from 'chokidar'
 import i18next from 'i18next'
-import FsBackend, { type FsBackendOptions } from 'i18next-fs-backend'
+import FsBackend from 'i18next-fs-backend';
+import type { FsBackendOptions } from 'i18next-fs-backend';
+
 import RedisClient from '../db/RedisClient'
 import SetupSupabase from '../db/watcher'
 import GSIServer from './GSIServer'
@@ -16,27 +19,27 @@ logger.info("Starting 'dota' package")
 
 const setupTranslations = async () => {
   await i18next.use(FsBackend).init<FsBackendOptions>({
+    backend: {
+      loadPath: join('./locales/{{lng}}/{{ns}}.json'),
+    },
+    defaultNS: 'translation',
+    fallbackLng: 'en',
     initAsync: false,
     lng: 'en',
-    fallbackLng: 'en',
-    returnEmptyString: false,
-    returnNull: false,
     preload: readdirSync(join('./locales')).filter((fileName: string) => {
       const joinedPath = join(join('./locales'), fileName)
       const isDirectory = lstatSync(joinedPath).isDirectory()
       return !!isDirectory
     }),
-    defaultNS: 'translation',
-    backend: {
-      loadPath: join('./locales/{{lng}}/{{ns}}.json'),
-    },
+    returnEmptyString: false,
+    returnNull: false,
   })
 
   chokidar
     .watch('/app/packages/dota/locales/**/*.json', {
       ignoreInitial: true,
-      usePolling: true,
       interval: 5000,
+      usePolling: true,
     })
     .on('all', (_event, filePath) => {
       logger.info('chokidar updated', { _event, filePath })
@@ -105,8 +108,8 @@ const main = async () => {
         })
       }
     })
-  } catch (e) {
-    logger.error('Error in setup', { e })
+  } catch (error) {
+    logger.error('Error in setup', { error })
   }
 
   return initServer()

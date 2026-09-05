@@ -9,6 +9,7 @@
 // The fix swapped to `commandDisable.recordNotification`, which inserts the
 // audit row WITHOUT touching the settings row. These tests pin that behavior.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { buildSharedUtilsMock, initTestI18n } from '../../../../__tests__/sharedMocks'
 
 type FacadeCall =
@@ -21,7 +22,7 @@ type FacadeCall =
       metadata?: Record<string, unknown>
     }
 
-type TrackCall = {
+interface TrackCall {
   userId: string
   settingKey: string
   reason: string
@@ -31,20 +32,20 @@ type TrackCall = {
 
 const state: {
   redisGetReturn: string | null
-  redisSetExCalls: Array<{ key: string; ttl: number; value: string }>
+  redisSetExCalls: { key: string; ttl: number; value: string }[]
   commandDisableCalls: FacadeCall[]
   trackDisableReasonCalls: TrackCall[]
-  sayCalls: Array<{ message: string }>
-  loggerWarnCalls: Array<{ message: string; meta?: Record<string, unknown> }>
-  loggerErrorCalls: Array<{ message: string; meta?: Record<string, unknown> }>
+  sayCalls: { message: string }[]
+  loggerWarnCalls: { message: string; meta?: Record<string, unknown> }[]
+  loggerErrorCalls: { message: string; meta?: Record<string, unknown> }[]
 } = {
+  commandDisableCalls: [],
+  loggerErrorCalls: [],
+  loggerWarnCalls: [],
   redisGetReturn: null,
   redisSetExCalls: [],
-  commandDisableCalls: [],
-  trackDisableReasonCalls: [],
   sayCalls: [],
-  loggerWarnCalls: [],
-  loggerErrorCalls: [],
+  trackDisableReasonCalls: [],
 }
 
 function resetState() {
@@ -61,42 +62,28 @@ function resetState() {
 // don't crash on .from(...).select(...).eq(...).
 function makeChainableSupabase() {
   const builder: any = {
-    select: () => builder,
-    insert: () => Promise.resolve({ data: null, error: null }),
-    update: () => builder,
-    upsert: () => Promise.resolve({ data: null, error: null }),
     delete: () => builder,
     eq: () => builder,
-    is: () => builder,
-    not: () => builder,
-    neq: () => builder,
     gte: () => builder,
+    insert:  async () => Promise.resolve({ data: null, error: null }),
+    is: () => builder,
+    limit:  async () => Promise.resolve({ data: [], error: null }),
     lte: () => builder,
+    neq: () => builder,
+    not: () => builder,
     order: () => builder,
-    limit: () => Promise.resolve({ data: [], error: null }),
+    select: () => builder,
     single: async () => ({ data: null, error: null }),
-    then: (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) =>
+    then:  async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) =>
       Promise.resolve({ data: [], error: null }).then(onFulfilled),
+    update: () => builder,
+    upsert:  async () => Promise.resolve({ data: null, error: null }),
   }
   return { from: () => builder, rpc: async () => ({ data: [], error: null }) }
 }
 
-vi.doMock('@dotabod/shared-utils', () =>
+vi.doMock(import('@dotabod/shared-utils'), () =>
   buildSharedUtilsMock({
-    supabase: makeChainableSupabase(),
-    logger: {
-      info: () => undefined,
-      error: (message: string, meta?: Record<string, unknown>) => {
-        state.loggerErrorCalls.push({ message, meta })
-      },
-      warn: (message: string, meta?: Record<string, unknown>) => {
-        state.loggerWarnCalls.push({ message, meta })
-      },
-      debug: () => undefined,
-    },
-    trackDisableReason: async (userId, settingKey, reason, metadata, opts) => {
-      state.trackDisableReasonCalls.push({ userId, settingKey, reason, metadata, opts })
-    },
     commandDisable: {
       disable: async (userId, reason, metadata) => {
         state.commandDisableCalls.push({ kind: 'disable', userId, reason, metadata })
@@ -108,14 +95,28 @@ vi.doMock('@dotabod/shared-utils', () =>
         state.commandDisableCalls.push({ kind: 'recordNotification', userId, reason, metadata })
       },
     },
-  }),
+    logger: {
+      debug: () => undefined,
+      error: (message: string, meta?: Record<string, unknown>) => {
+        state.loggerErrorCalls.push({ message, meta })
+      },
+      info: () => undefined,
+      warn: (message: string, meta?: Record<string, unknown>) => {
+        state.loggerWarnCalls.push({ message, meta })
+      },
+    },
+    supabase: makeChainableSupabase(),
+    trackDisableReason: async (userId, settingKey, reason, metadata, opts) => {
+      state.trackDisableReasonCalls.push({ userId, settingKey, reason, metadata, opts })
+    },
+  })
 )
 
 // Replace `say` so we capture chat output (the "blocked" warning) and so the
 // real implementation's chatClient / settings lookups don't bootstrap. Path is
 // relative to this test file; vitest resolves it to the same file `newdata.ts`
 // imports as `../../say` from its own location.
-vi.doMock('../../../say', () => ({
+vi.doMock(import('../../../say'), () => ({
   say: (_client: unknown, message: string) => {
     state.sayCalls.push({ message })
   },
@@ -153,10 +154,10 @@ eventHandler.registerEvent('map:win_team', {
 
 const baseClient = () =>
   ({
-    token: 'token-abc',
-    steam32Id: 11111,
-    locale: 'en',
     gsi: { player: { name: 'Streamer' } },
+    locale: 'en',
+    steam32Id: 11111,
+    token: 'token-abc',
   }) as any
 
 beforeEach(() => {
@@ -173,20 +174,20 @@ describe('newdata multi-account recovery gate', () => {
     let gameplayCalls = 0
     const token = 'blocked-token'
     const handler: any = {
-      disabled: false,
       client: {
-        token,
-        name: 'blocked',
-        stream_online: true,
-        multiAccount: 440614454,
-        settings: [],
         gsi: {},
+        multiAccount: 440614454,
+        name: 'blocked',
+        settings: [],
+        stream_online: true,
+        token,
+      },
+      disabled: false,
+      setupOBSBlockers: async () => {
+        gameplayCalls++
       },
       updateSteam32Id: async () => {
         recoveryCalls++
-      },
-      setupOBSBlockers: async () => {
-        gameplayCalls++
       },
     }
     gsiHandlers.set(token, handler)
@@ -204,31 +205,31 @@ describe('newdata multi-account recovery gate', () => {
     const token = 'recovering-token'
     const order: string[] = []
     const handler: any = {
-      disabled: false,
       client: {
-        token,
-        name: 'recovering',
-        stream_online: true,
-        multiAccount: 440614454,
-        settings: [],
         gsi: {},
+        multiAccount: 440614454,
+        name: 'recovering',
+        settings: [],
+        stream_online: true,
+        token,
       },
+      disabled: false,
+      setupOBSBlockers: async () => undefined,
       updateSteam32Id: async () => {
         order.push('recover')
         handler.client.multiAccount = undefined
       },
-      setupOBSBlockers: async () => undefined,
     }
     gsiHandlers.set(token, handler)
 
     const req = {
       body: {
         auth: { token },
-        previously: { map: { win_team: 'none' } },
         map: { win_team: 'radiant' },
+        previously: { map: { win_team: 'none' } },
       },
     } as never
-    const res = { status: () => ({ json: () => undefined }) } as never
+    const res = { status: () => ({ json: () => {} }) } as never
 
     await recoverMultiAccount(req, res, () => {
       processChanges('previously')(req, res, () => {
@@ -239,7 +240,7 @@ describe('newdata multi-account recovery gate', () => {
     })
     order.push(winTeamHandlerCalls ? 'win' : 'missing-win')
 
-    expect(order).toEqual(['recover', 'win'])
+    expect(order).toStrictEqual(['recover', 'win'])
     expect(winTeamHandlerCalls).toBe(1)
   })
 })
@@ -249,9 +250,9 @@ describe('checkAccountSharing', () => {
     // Redis has no prior steam ids → the function should seed the cache and allow.
     const blocked = await checkAccountSharing(baseClient(), 'match-1')
 
-    expect(blocked).toBe(false)
+    expect(blocked).toBeFalsy()
     expect(state.redisSetExCalls).toHaveLength(1)
-    expect(JSON.parse(state.redisSetExCalls[0].value)).toEqual(['11111'])
+    expect(JSON.parse(state.redisSetExCalls[0].value)).toStrictEqual(['11111'])
     expect(state.commandDisableCalls).toHaveLength(0)
     expect(state.sayCalls).toHaveLength(0)
   })
@@ -261,7 +262,7 @@ describe('checkAccountSharing', () => {
     state.redisGetReturn = JSON.stringify(['11111', '22222'])
     const blocked = await checkAccountSharing(baseClient(), 'match-1')
 
-    expect(blocked).toBe(false)
+    expect(blocked).toBeFalsy()
     expect(state.commandDisableCalls).toHaveLength(0)
   })
 
@@ -269,13 +270,13 @@ describe('checkAccountSharing', () => {
     state.redisGetReturn = JSON.stringify(['22222'])
     const blocked = await checkAccountSharing(baseClient(), 'match-1')
 
-    expect(blocked).toBe(true)
+    expect(blocked).toBeTruthy()
     // The fix: recordNotification must be used, NOT disable or trackDisableReason.
     expect(state.commandDisableCalls).toHaveLength(1)
     expect(state.commandDisableCalls[0]).toMatchObject({
       kind: 'recordNotification',
-      userId: 'token-abc',
       reason: 'ACCOUNT_SHARING',
+      userId: 'token-abc',
     })
     expect((state.commandDisableCalls[0] as any).metadata).toMatchObject({
       blocked_steam32_id: '11111',
@@ -287,7 +288,7 @@ describe('checkAccountSharing', () => {
     state.redisGetReturn = JSON.stringify(['22222'])
     await checkAccountSharing(baseClient(), 'match-1')
 
-    expect(state.commandDisableCalls.some((c) => c.kind === 'disable')).toBe(false)
+    expect(state.commandDisableCalls.some((c) => c.kind === 'disable')).toBeFalsy()
     expect(state.trackDisableReasonCalls).toHaveLength(0)
   })
 
@@ -311,7 +312,7 @@ describe('checkAccountSharing', () => {
 
     const blocked = await checkAccountSharing(baseClient(), 'match-1')
 
-    expect(blocked).toBe(false)
+    expect(blocked).toBeFalsy()
     expect(state.loggerErrorCalls.length).toBeGreaterThanOrEqual(1)
     expect(state.commandDisableCalls).toHaveLength(0)
 

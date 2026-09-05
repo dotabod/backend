@@ -1,6 +1,6 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 
-type AccountRow = {
+interface AccountRow {
   providerAccountId: string | null
   users: { followers: number | null } | { followers: number | null }[] | null
 }
@@ -29,7 +29,7 @@ export async function getAccountIds(): Promise<string[]> {
       .eq('provider', 'twitch')
       .neq('requires_refresh', true)
       .ilike('scope', '%channel:bot%')
-      .order('followers', { referencedTable: 'users', ascending: false, nullsFirst: false })
+      .order('followers', { ascending: false, nullsFirst: false, referencedTable: 'users' })
       .order('providerAccountId', { ascending: true })
       .range(from, from + PAGE_SIZE - 1)
 
@@ -40,7 +40,7 @@ export async function getAccountIds(): Promise<string[]> {
 
     providerIds.push(...pluckProviderIds(data as AccountRow[] | null))
 
-    if (!data || data.length < PAGE_SIZE) break
+    if (!data || data.length < PAGE_SIZE) {break}
     from += PAGE_SIZE
   }
 

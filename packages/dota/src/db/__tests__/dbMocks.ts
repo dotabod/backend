@@ -4,6 +4,7 @@
 //
 // Filename ends in `Mocks.ts` (not `.test.ts`) so bun's runner skips it.
 import { vi } from 'vitest'
+
 import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks'
 
 export type TableResult = { data: unknown; error: unknown } | null
@@ -14,27 +15,27 @@ export const dbState: {
   tableResults: Record<string, TableResult>
   // RPC results, keyed by function name (currently only get_grouped_bets).
   rpcResult: TableResult
-  rpcCalls: Array<{ name: string; args: Record<string, unknown> }>
-  gteCalls: Array<{ table: string; column: string; value: unknown }>
+  rpcCalls: { name: string; args: Record<string, unknown> }[]
+  gteCalls: { table: string; column: string; value: unknown }[]
   // Recorded writes for assertions.
-  inserts: Array<{ table: string; values: unknown }>
-  updates: Array<{ table: string; values: unknown; whereCol?: string; whereVal?: unknown }>
-  upserts: Array<{ table: string; values: unknown; options?: unknown }>
+  inserts: { table: string; values: unknown }[]
+  updates: { table: string; values: unknown; whereCol?: string; whereVal?: unknown }[]
+  upserts: { table: string; values: unknown; options?: unknown }[]
   // Logger captures.
-  loggerErrorCalls: Array<{ message: string; meta: Record<string, unknown> }>
-  loggerInfoCalls: Array<{ message: string; meta: Record<string, unknown> }>
-  loggerWarnCalls: Array<{ message: string; meta: Record<string, unknown> }>
+  loggerErrorCalls: { message: string; meta: Record<string, unknown> }[]
+  loggerInfoCalls: { message: string; meta: Record<string, unknown> }[]
+  loggerWarnCalls: { message: string; meta: Record<string, unknown> }[]
 } = {
-  tableResults: {},
-  rpcResult: null,
-  rpcCalls: [],
   gteCalls: [],
   inserts: [],
-  updates: [],
-  upserts: [],
   loggerErrorCalls: [],
   loggerInfoCalls: [],
   loggerWarnCalls: [],
+  rpcCalls: [],
+  rpcResult: null,
+  tableResults: {},
+  updates: [],
+  upserts: [],
 }
 
 export function resetDbState() {
@@ -56,36 +57,36 @@ export function resetDbState() {
 function createTableBuilder(table: string) {
   const result = dbState.tableResults[table] ?? { data: null, error: null }
   const builder: any = {
-    select: () => builder,
-    insert: (values: unknown) => {
-      dbState.inserts.push({ table, values })
-      return Promise.resolve({ data: null, error: null })
-    },
-    upsert: (values: unknown, options?: unknown) => {
-      dbState.upserts.push({ table, values, options })
-      return Promise.resolve({ data: null, error: null })
-    },
-    update: (values: unknown) => ({
-      eq: (col: string, val: unknown) => {
-        dbState.updates.push({ table, values, whereCol: col, whereVal: val })
-        return Promise.resolve({ data: null, error: null })
-      },
-    }),
     eq: () => builder,
-    neq: () => builder,
-    is: () => builder,
-    in: () => builder,
-    not: () => builder,
     gte: (column: string, value: unknown) => {
       dbState.gteCalls.push({ table, column, value })
       return builder
     },
-    lte: () => builder,
-    order: () => builder,
+    in: () => builder,
+    insert:  async (values: unknown) => {
+      dbState.inserts.push({ table, values })
+      return Promise.resolve({ data: null, error: null })
+    },
+    is: () => builder,
     limit: () => builder,
+    lte: () => builder,
+    neq: () => builder,
+    not: () => builder,
+    order: () => builder,
+    select: () => builder,
     single: async () => result,
-    then: (onFulfilled: (value: TableResult) => unknown) =>
+    then:  async (onFulfilled: (value: TableResult) => unknown) =>
       Promise.resolve(result).then(onFulfilled),
+    update: (values: unknown) => ({
+      eq:  async (col: string, val: unknown) => {
+        dbState.updates.push({ table, values, whereCol: col, whereVal: val })
+        return Promise.resolve({ data: null, error: null })
+      },
+    }),
+    upsert:  async (values: unknown, options?: unknown) => {
+      dbState.upserts.push({ table, values, options })
+      return Promise.resolve({ data: null, error: null })
+    },
   }
   return builder
 }
@@ -93,27 +94,27 @@ function createTableBuilder(table: string) {
 const supabaseMock = {
   from: (table: string) => createTableBuilder(table),
   rpc: async (name: string, args: Record<string, unknown>) => {
-    dbState.rpcCalls.push({ name, args })
+    dbState.rpcCalls.push({ args, name })
     return dbState.rpcResult ?? { data: [], error: null }
   },
 }
 
 const loggerMock = {
-  info: (message: string, meta?: Record<string, unknown>) => {
-    dbState.loggerInfoCalls.push({ message, meta: meta ?? {} })
-  },
+  debug: () => undefined,
   error: (message: string, meta?: Record<string, unknown>) => {
     dbState.loggerErrorCalls.push({ message, meta: meta ?? {} })
+  },
+  info: (message: string, meta?: Record<string, unknown>) => {
+    dbState.loggerInfoCalls.push({ message, meta: meta ?? {} })
   },
   warn: (message: string, meta?: Record<string, unknown>) => {
     dbState.loggerWarnCalls.push({ message, meta: meta ?? {} })
   },
-  debug: () => undefined,
 }
 
 function reinstallDbMock() {
-  vi.doMock('@dotabod/shared-utils', () =>
-    buildSharedUtilsMock({ supabase: supabaseMock, logger: loggerMock }),
+  vi.doMock(import('@dotabod/shared-utils'), () =>
+    buildSharedUtilsMock({ logger: loggerMock, supabase: supabaseMock })
   )
 }
 reinstallDbMock()

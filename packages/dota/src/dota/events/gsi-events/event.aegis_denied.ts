@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 
-import { type AegisDeniedEvent, DotaEventTypes } from '../../../types'
+import { DotaEventTypes } from '../../../types';
+import type { AegisDeniedEvent } from '../../../types';
 import { is8500Plus } from '../../../utils/index'
 import { getHeroNameOrColor } from '../../lib/heroes'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
@@ -10,11 +11,11 @@ import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.AegisDenied}`, {
   handler: async (dotaClient, event: AegisDeniedEvent) => {
-    if (!isPlayingMatch(dotaClient.client.gsi)) return
-    if (!dotaClient.client.stream_online) return
+    if (!isPlayingMatch(dotaClient.client.gsi)) {return}
+    if (!dotaClient.client.stream_online) {return}
 
     const roster = await new MatchDataService(dotaClient.client).resolveRoster()
-    const players = roster.players
+    const {players} = roster
 
     const foundIndex = players.findIndex((p) => p.slot === event.player_id)
     const playerIdIndex = foundIndex === -1 ? event.player_id : foundIndex
@@ -33,15 +34,15 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisDenied}`, {
       dotaClient.client,
       heroName
         ? t('aegis.denied', {
-            lng: dotaClient.client.locale,
-            heroName,
             emote: 'ICANT',
+            heroName,
+            lng: dotaClient.client.locale,
           })
         : t('aegis.deniedUnknown', {
-            lng: dotaClient.client.locale,
             emote: 'ICANT',
+            lng: dotaClient.client.locale,
           }),
-      { chattersKey: 'roshDeny' },
+      { chattersKey: 'roshDeny' }
     )
   },
 })

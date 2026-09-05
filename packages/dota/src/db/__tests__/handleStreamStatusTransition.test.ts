@@ -1,9 +1,10 @@
 import type { Server } from 'socket.io'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { handleStreamStatusTransition } from '../handleStreamStatusTransition'
 
 const createIo = () => {
-  const emit = vi.fn(() => undefined)
+  const emit = vi.fn(() => {})
   const to = vi.fn(() => ({ emit }))
 
   return {
@@ -21,9 +22,9 @@ const createClient = (streamOnline: boolean) => ({
   token: 'token-1',
 })
 
-describe('handleStreamStatusTransition', () => {
+describe(handleStreamStatusTransition, () => {
   const logger = {
-    error: vi.fn(() => undefined),
+    error: vi.fn(() => {}),
   }
 
   beforeEach(() => {
@@ -32,18 +33,18 @@ describe('handleStreamStatusTransition', () => {
 
   it('emits refresh-settings when a stream goes offline', () => {
     const { emit, io, to } = createIo()
-    const disable = vi.fn(() => undefined)
+    const disable = vi.fn(() => {})
     const client = createClient(false)
 
     const result = handleStreamStatusTransition({
       client,
-      connectedUser: { disable } as any,
+      connectedUser: { disable },
       io,
       logger,
       oldStreamOnline: true,
     })
 
-    expect(result).toEqual({ changed: true, cameOnline: false, wentOffline: true })
+    expect(result).toStrictEqual({ cameOnline: false, changed: true, wentOffline: true })
     expect(to).toHaveBeenCalledWith('token-1')
     expect(emit).toHaveBeenCalledWith('refresh-settings', 'mutate')
     expect(client.gsi).toBeUndefined()
@@ -53,7 +54,7 @@ describe('handleStreamStatusTransition', () => {
 
   it('emits refresh-settings and enables the GSI handler when a stream comes online', () => {
     const { emit, io, to } = createIo()
-    const enable = vi.fn(() => undefined)
+    const enable = vi.fn(() => {})
 
     const result = handleStreamStatusTransition({
       client: createClient(true),
@@ -63,10 +64,10 @@ describe('handleStreamStatusTransition', () => {
       oldStreamOnline: false,
     })
 
-    expect(result).toEqual({ changed: true, cameOnline: true, wentOffline: false })
+    expect(result).toStrictEqual({ cameOnline: true, changed: true, wentOffline: false })
     expect(to).toHaveBeenCalledWith('token-1')
     expect(emit).toHaveBeenCalledWith('refresh-settings', 'mutate')
-    expect(enable).toHaveBeenCalled()
+    expect(enable).toHaveBeenCalledWith()
   })
 
   it('promotes a recently buffered offline GSI packet when the stream comes online', () => {
@@ -124,10 +125,10 @@ describe('handleStreamStatusTransition', () => {
         io,
         logger,
         oldStreamOnline: false,
-      }),
+      })
     ).not.toThrow()
 
     expect(emit).toHaveBeenCalledWith('refresh-settings', 'mutate')
-    expect(logger.error).toHaveBeenCalled()
+    expect(logger.error).toHaveBeenCalledWith()
   })
 })

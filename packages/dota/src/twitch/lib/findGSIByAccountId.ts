@@ -12,7 +12,7 @@ export function findSpectatorIdx(packet: Packet | undefined, heroOrAccountId: nu
   for (const team of teams) {
     const teamPlayers = packet?.player?.[team]
     const players: Player[] = Object.values(teamPlayers ?? {})
-    if (!players) continue
+    if (!players) {continue}
 
     for (let i = 0; i < players.length; i++) {
       const player = players[i]
@@ -36,7 +36,7 @@ export async function findAccountFromCmd(
   client: SocketClient | undefined,
   args: string[],
   locale: string,
-  command: string,
+  command: string
 ) {
   const packet = client?.gsi
   let accountIdFromArgs = Number.isNaN(Number(packet?.player?.accountid))
@@ -46,7 +46,7 @@ export async function findAccountFromCmd(
   let playerIdx: number | undefined
 
   if (args.length && !isSpectator(packet)) {
-    const data = await getPlayerFromArgs({ args, client, locale, command })
+    const data = await getPlayerFromArgs({ args, client, command, locale })
     accountIdFromArgs = Number(data?.player?.accountid)
     playerIdx = data?.playerIdx
 
@@ -56,17 +56,17 @@ export async function findAccountFromCmd(
 
     // the missing data (items) gets filled out from delayedGames data
     return {
-      ourHero: false,
-      playerIdx,
       accountIdFromArgs,
-      player: { accountid: accountIdFromArgs },
       hero: { id: data?.player?.heroid },
+      ourHero: false,
+      player: { accountid: accountIdFromArgs },
+      playerIdx,
     }
   }
 
   if (isSpectator(packet)) {
     if (args.length) {
-      const data = await getPlayerFromArgs({ args, client, locale, command })
+      const data = await getPlayerFromArgs({ args, client, command, locale })
       accountIdFromArgs = Number(data?.player?.accountid)
     }
 
@@ -87,18 +87,18 @@ export async function findAccountFromCmd(
     // @ts-expect-error we can iterate by team2 and team3
     const hero = packet?.hero?.[teamN]?.[playerN] as Hero
 
-    return { ourHero: false, playerIdx, accountIdFromArgs, player, items, hero }
+    return { accountIdFromArgs, hero, items, ourHero: false, player, playerIdx }
   }
 
   // Don't gate on accountIdFromArgs — packet.hero can be a valid flat hero
   // even during brief windows (draft transitions, etc.) where player.accountid
   // hasn't been populated yet. Callers run their own isValidHero check.
   return {
-    ourHero: true,
-    playerIdx,
     accountIdFromArgs,
-    player: packet?.player,
-    items: packet?.items,
     hero: packet?.hero,
+    items: packet?.items,
+    ourHero: true,
+    player: packet?.player,
+    playerIdx,
   }
 }

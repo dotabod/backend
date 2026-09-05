@@ -1,4 +1,5 @@
 import { t } from 'i18next'
+
 import { redisClient } from '../db/redisInstance'
 import { getRedisNumberValue } from '../utils/index'
 import type { GSIHandlerType } from './GSIHandlerTypes'
@@ -18,15 +19,15 @@ export interface TierTime {
  * Turbo times are exactly half of normal times.
  */
 export const NEUTRAL_ITEM_TIER_TIMES: TierTime[] = [
-  { tier: 1, normalTime: 0, turboTime: 0 },
-  { tier: 2, normalTime: 15, turboTime: 7.5 },
-  { tier: 3, normalTime: 25, turboTime: 12.5 },
-  { tier: 4, normalTime: 35, turboTime: 17.5 },
-  { tier: 5, normalTime: 60, turboTime: 30 },
+  { normalTime: 0, tier: 1, turboTime: 0 },
+  { normalTime: 15, tier: 2, turboTime: 7.5 },
+  { normalTime: 25, tier: 3, turboTime: 12.5 },
+  { normalTime: 35, tier: 4, turboTime: 17.5 },
+  { normalTime: 60, tier: 5, turboTime: 30 },
 ]
 
 export class NeutralItemTimer {
-  private notifiedTiers = new Set<number>()
+  private readonly notifiedTiers = new Set<number>()
   private readonly tierTimes: TierTime[] = NEUTRAL_ITEM_TIER_TIMES
 
   // Track the last game time checked to avoid spam
@@ -36,26 +37,26 @@ export class NeutralItemTimer {
   // Minimum time between checks in seconds
   private readonly CHECK_INTERVAL = 1
 
-  constructor(private dotaClient: GSIHandlerType) {}
+  constructor(private readonly dotaClient: GSIHandlerType) {}
 
   async checkNeutralItems() {
-    if (!this.dotaClient.client.gsi?.map?.game_time) return
-    if (!this.dotaClient.client.stream_online) return
+    if (!this.dotaClient.client.gsi?.map?.game_time) {return}
+    if (!this.dotaClient.client.stream_online) {return}
 
     const clockTime = this.dotaClient.client.gsi.map.clock_time || 0
 
     // Only check every CHECK_INTERVAL seconds
-    if (clockTime - this.lastCheckedTime < this.CHECK_INTERVAL) return
+    if (clockTime - this.lastCheckedTime < this.CHECK_INTERVAL) {return}
     this.lastCheckedTime = clockTime
 
     const matchId = await redisClient.client.get(`${this.dotaClient.client.token}:matchId`)
     const playingGameMode = await getRedisNumberValue(
-      `${matchId}:${this.dotaClient.client.token}:gameMode`,
+      `${matchId}:${this.dotaClient.client.token}:gameMode`
     )
     const isTurbo = playingGameMode === 23
 
     this.tierTimes.forEach((tierTime) => {
-      if (this.notifiedTiers.has(tierTime.tier)) return
+      if (this.notifiedTiers.has(tierTime.tier)) {return}
 
       const targetSeconds = (isTurbo ? tierTime.turboTime : tierTime.normalTime) * 60
       const timeDiff = clockTime - targetSeconds
@@ -72,12 +73,12 @@ export class NeutralItemTimer {
     say(
       this.dotaClient.client,
       t('neutralItems.tierAvailable', {
-        tier,
         lng: this.dotaClient.client.locale,
+        tier,
       }),
       {
         chattersKey: 'neutralItems',
-      },
+      }
     )
   }
 

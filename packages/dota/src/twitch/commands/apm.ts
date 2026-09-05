@@ -7,7 +7,6 @@ import commandHandler from '../lib/CommandHandler'
 import { profileLink } from './profileLink'
 
 commandHandler.registerCommand('apm', {
-  onlyOnline: true,
   dbkey: DBSettings.commandAPM,
   handler: async (message, args, command) => {
     const {
@@ -42,14 +41,15 @@ commandHandler.registerCommand('apm', {
           lng: message.channel.client.locale,
           count: apm,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
     } catch (e) {
       chatClient.say(
         message.channel.name,
         (e as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
     }
   },
+  onlyOnline: true,
 })

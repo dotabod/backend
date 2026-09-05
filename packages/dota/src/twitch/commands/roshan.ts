@@ -11,7 +11,6 @@ import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('roshan', {
-  onlyOnline: true,
   aliases: ['rosh', 'aegis'],
   dbkey: DBSettings.commandRosh,
   handler: async (message, _args) => {
@@ -23,7 +22,7 @@ commandHandler.registerCommand('roshan', {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -43,7 +42,7 @@ commandHandler.registerCommand('roshan', {
       chatClient.say(
         channel,
         t('roshanAlive', { emote: 'Happi', lng: client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -56,4 +55,5 @@ commandHandler.registerCommand('roshan', {
 
     chatClient.say(channel, msgs.join(' · '), message.user.messageId)
   },
+  onlyOnline: true,
 })

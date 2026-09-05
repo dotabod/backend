@@ -3,6 +3,7 @@ process.on('SIGINT', () => process.exit(0))
 
 import { startHeartbeat } from '@dotabod/shared-utils'
 import type { Socket } from 'socket.io'
+
 import { initSpectatorProtobuff } from './initSpectatorProtobuff'
 import { getSocketIoServer } from './socketServer'
 import Dota, { GetRealTimeStats } from './steam'
@@ -21,13 +22,13 @@ startHeartbeat()
 
 // Report whether the connection to the Steam/Dota game coordinator is live (separate monitor)
 startHeartbeat({
-  url: process.env.KUMA_PUSH_URL_GC,
-  name: 'steam gc heartbeat',
   debounceMs: 90_000,
   getStatus: () => ({
     up: isConnectedToSteam,
     msg: isConnectedToSteam ? 'connected' : 'steam gc disconnected',
   }),
+  name: 'steam gc heartbeat',
+  url: process.env.KUMA_PUSH_URL_GC,
 })
 
 const dota = Dota.getInstance()
@@ -61,7 +62,7 @@ socketIoServer.on('connection', (socket) => {
   try {
     void socket.join('steam')
     _hasDotabodSocket = true
-  } catch (_e) {
+  } catch {
     console.log('Could not join steam socket')
     cleanupSocket(socket)
     return
@@ -79,14 +80,14 @@ socketIoServer.on('connection', (socket) => {
   })
 
   // Add timeout for long-running operations (e.g., 30 seconds)
-  const withTimeout = <T>(fn: Promise<T>, timeoutMs = 30000): Promise<T> => {
-    return Promise.race([
+  const withTimeout =  async <T>(fn: Promise<T>, timeoutMs = 30_000): Promise<T> => 
+    Promise.race([
       fn,
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Operation timed out')), timeoutMs),
+        setTimeout(() =>{  reject(new Error('Operation timed out')); }, timeoutMs)
       ),
     ])
-  }
+  
 
   socket.on('getVersion', (ack: (commitHash: string | null) => void) => {
     ack(process.env.COMMIT_HASH ?? null)
@@ -104,14 +105,14 @@ socketIoServer.on('connection', (socket) => {
     try {
       const result = await withTimeout(dota.getCards(accountIds, refetchCards))
       callback(null, result)
-    } catch (e) {
+    } catch (error) {
       logger.error('[STEAM] Error getting cards', {
         accountIds,
         refetchCards,
-        errorAll: e,
-        error: (e as Error).message,
+        errorAll: error,
+        error: (error as Error).message,
       })
-      callback((e as Error).message, null)
+      callback((error as Error).message, null)
     }
   })
 
@@ -123,8 +124,8 @@ socketIoServer.on('connection', (socket) => {
     try {
       const result = await withTimeout(dota.getCard(accountId))
       callback(null, result)
-    } catch (e) {
-      callback((e as Error).message, null)
+    } catch (error) {
+      callback((error as Error).message, null)
     }
   })
 
@@ -136,8 +137,8 @@ socketIoServer.on('connection', (socket) => {
     try {
       const result = await withTimeout(dota.getPlayerSummaries(accountIds))
       callback(null, result)
-    } catch (e) {
-      callback((e as Error).message, null)
+    } catch (error) {
+      callback((error as Error).message, null)
     }
   })
 
@@ -153,15 +154,15 @@ socketIoServer.on('connection', (socket) => {
     }
     try {
       const result = await withTimeout(dota.getUserSteamServer(steam32Id))
-      logger.info('[STEAM] Got user steam server', { steam32Id, result })
+      logger.info('[STEAM] Got user steam server', { result, steam32Id })
       callback(null, result)
-    } catch (e) {
+    } catch (error) {
       logger.error('[STEAM] Error getting user steam server, unknown error', {
         steam32Id,
-        e,
-        error: (e as Error).message,
+        error,
+        error: (error as Error).message,
       })
-      callback((e as Error).message, null)
+      callback((error as Error).message, null)
     }
   })
 
@@ -175,10 +176,10 @@ socketIoServer.on('connection', (socket) => {
       try {
         const result = await withTimeout(GetRealTimeStats(data))
         callback(null, result)
-      } catch (e) {
-        callback((e as Error).message, null)
+      } catch (error) {
+        callback((error as Error).message, null)
       }
-    },
+    }
   )
 
   socket.on('getMatchMinimalDetails', async (data: { match_id: number }, callback: callback) => {
@@ -188,11 +189,11 @@ socketIoServer.on('connection', (socket) => {
     }
     try {
       const response: MatchMinimalDetailsResponse = await withTimeout(
-        dota.requestMatchMinimalDetails([data.match_id]),
+        dota.requestMatchMinimalDetails([data.match_id])
       )
       callback(null, response)
-    } catch (e) {
-      callback((e as Error).message, null)
+    } catch (error) {
+      callback((error as Error).message, null)
     }
   })
 })

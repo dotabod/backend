@@ -7,7 +7,8 @@ import type { SocketClient } from '../../types'
 import eventHandler from '../events/EventHandler'
 import type { GSIHandlerType } from '../GSIHandlerTypes'
 import { say } from '../say'
-import { type FeatureAnnouncement, FEATURE_ANNOUNCEMENTS } from './featureAnnouncements'
+import { FEATURE_ANNOUNCEMENTS } from './featureAnnouncements';
+import type { FeatureAnnouncement } from './featureAnnouncements';
 import { isPlayingMatch } from './isPlayingMatch'
 
 const WHATS_NEW_URL = 'dotabod.com/dashboard/whats-new'
@@ -20,7 +21,7 @@ const handledCache = new Set<string>()
 function markHandled(key: string) {
   if (handledCache.size >= CACHE_MAX) {
     const oldest = handledCache.values().next().value
-    if (oldest !== undefined) handledCache.delete(oldest)
+    if (oldest !== undefined) {handledCache.delete(oldest)}
   }
   handledCache.add(key)
 }
@@ -29,18 +30,18 @@ function markHandled(key: string) {
 // autoOptInNewFeatures master (default on). Mirrors hero.id.ts's cosmetics gate.
 export function isFeatureEnabled(
   client: SocketClient,
-  gateSettingKey?: FeatureAnnouncement['gateSettingKey'],
+  gateSettingKey?: FeatureAnnouncement['gateSettingKey']
 ): boolean {
   const master = getValueOrDefault(
     DBSettings.autoOptInNewFeatures,
     client.settings,
-    client.subscription,
+    client.subscription
   ) as boolean
-  if (!gateSettingKey) return master === true
+  if (!gateSettingKey) {return  master}
   const perFeature = getValueOrDefault(gateSettingKey, client.settings, client.subscription) as
     | boolean
     | null
-  return (perFeature ?? master) === true
+  return  (perFeature ?? master)
 }
 
 // Announce a single feature to a streamer at most once ever — durable (Postgres flag, survives
@@ -49,46 +50,46 @@ export function isFeatureEnabled(
 // dashboard notification (the bell) alongside the chat message.
 async function announceFeatureOnce(
   client: SocketClient,
-  feature: FeatureAnnouncement,
+  feature: FeatureAnnouncement
 ): Promise<boolean> {
   const cacheKey = `${client.token}:${feature.id}`
-  if (handledCache.has(cacheKey)) return false
-  if (!isFeatureEnabled(client, feature.gateSettingKey)) return false // may enable later; don't cache
+  if (handledCache.has(cacheKey)) {return false}
+  if (!isFeatureEnabled(client, feature.gateSettingKey)) {return false} // may enable later; don't cache
 
   const { data, error } = await supabase
     .from('settings')
     .upsert(
       {
-        userId: client.token,
         key: `featureAnnounced:${feature.id}`,
-        value: true,
         updated_at: new Date().toISOString(),
+        userId: client.token,
+        value: true,
       },
-      { onConflict: 'userId, key', ignoreDuplicates: true },
+      { ignoreDuplicates: true, onConflict: 'userId, key' }
     )
     .select('key')
 
   // A transient write error: don't cache or claim it — allow a retry on the next trigger
   // (otherwise the in-memory cache would block this streamer until the process restarts).
   if (error) {
-    logger.error('[feature-announce] settings flag upsert failed', { id: feature.id, error })
+    logger.error('[feature-announce] settings flag upsert failed', { error, id: feature.id })
     return false
   }
   // Recorded now (first time) or already recorded earlier — never look again.
   markHandled(cacheKey)
-  if (!data?.length) return false // already announced ever
+  if (!data?.length) {return false} // already announced ever
 
   const { error: notifyError } = await supabase
     .from('notifications')
-    .insert({ userId: client.token, type: 'NEW_FEATURE', isRead: false })
+    .insert({ isRead: false, type: 'NEW_FEATURE', userId: client.token })
   if (notifyError) {
     logger.error('[feature-announce] failed to create dashboard notification', {
-      id: feature.id,
       error: notifyError,
+      id: feature.id,
     })
   }
 
-  say(client, t(feature.messageKey, { url: WHATS_NEW_URL, lng: client.locale }))
+  say(client, t(feature.messageKey, { lng: client.locale, url: WHATS_NEW_URL }))
   return true
 }
 
@@ -98,24 +99,24 @@ async function announceFeatureOnce(
 export async function dispatchFeatureAnnouncements(
   dotaClient: GSIHandlerType,
   trigger: string,
-  data: unknown,
+  data: unknown
 ): Promise<void> {
-  const client = dotaClient.client
+  const {client} = dotaClient
   // EventHandler already gates events on stream_online; this explicit guard keeps the
   // dispatcher correct if ever called from another path, and never persists a
   // featureAnnounced flag (which would suppress the notice forever) for an offline streamer.
-  if (!client.stream_online) return
-  if (!isPlayingMatch(client.gsi)) return
+  if (!client.stream_online) {return}
+  if (!isPlayingMatch(client.gsi)) {return}
 
   const matchId = client.gsi?.map?.matchid
-  if (!matchId) return
+  if (!matchId) {return}
 
   const guardKey = `${client.token}:featureAnnouncedMatch`
-  if ((await redisClient.client.get(guardKey)) === String(matchId)) return
+  if ((await redisClient.client.get(guardKey)) === String(matchId)) {return}
 
   for (const feature of FEATURE_ANNOUNCEMENTS) {
-    if (feature.trigger !== trigger) continue
-    if (feature.when && !feature.when(dotaClient, data)) continue
+    if (feature.trigger !== trigger) {continue}
+    if (feature.when && !feature.when(dotaClient, data)) {continue}
     if (await announceFeatureOnce(client, feature)) {
       await redisClient.client.set(guardKey, String(matchId))
       return
@@ -129,7 +130,7 @@ export function registerFeatureAnnouncers(): void {
   const triggers = [...new Set(FEATURE_ANNOUNCEMENTS.map((f) => f.trigger))]
   for (const trigger of triggers) {
     eventHandler.registerEvent(trigger, {
-      handler: (dotaClient, data) => dispatchFeatureAnnouncements(dotaClient, trigger, data),
+      handler:  async (dotaClient, data) => dispatchFeatureAnnouncements(dotaClient, trigger, data),
     })
   }
 }

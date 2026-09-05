@@ -17,10 +17,10 @@ function formatItemList(itemList: string[]) {
   const result = [] as string[]
 
   for (const item of itemList) {
-    if (!itemCounts[item]) {
-      itemCounts[item] = 1
-    } else {
+    if (itemCounts[item]) {
       itemCounts[item]++
+    } else {
+      itemCounts[item] = 1
     }
   }
 
@@ -50,10 +50,10 @@ async function getItems({
 }) {
   const packet = client.gsi
   const { accountIdFromArgs, hero, items, playerIdx } = await profileLink({
-    command,
-    client,
-    locale,
     args: args,
+    client,
+    command,
+    locale,
   })
 
   let itemList: string[] | false | undefined = false
@@ -74,11 +74,11 @@ async function getItems({
   } else {
     const delayedData = await getRealtimeStats({
       client,
-      token,
-      locale,
       forceRefetchAll: true,
+      locale,
+      token,
     }).catch((error) => {
-      if (error instanceof CustomError) throw error
+      if (error instanceof CustomError) {throw error}
       throw new CustomError(t('gameNotFound', { lng: locale }))
     })
 
@@ -110,7 +110,7 @@ async function getItems({
       t('heroItems.empty', {
         heroName: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
         lng: locale,
-      }),
+      })
     )
   }
 
@@ -123,7 +123,6 @@ async function getItems({
 
 commandHandler.registerCommand('items', {
   aliases: ['item'],
-  onlyOnline: true,
   dbkey: DBSettings.commandItems,
   handler: async (message, args, command) => {
     const {
@@ -135,7 +134,7 @@ commandHandler.registerCommand('items', {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -156,4 +155,5 @@ commandHandler.registerCommand('items', {
       chatClient.say(client.name, msg, message.user.messageId)
     }
   },
+  onlyOnline: true,
 })

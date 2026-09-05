@@ -5,7 +5,7 @@ import type { DataBroadcasterInterface } from './events/minimap/DataBroadcasterT
 export interface GSIHandlerType {
   closeBets: (
     team: 'radiant' | 'dire' | null,
-    gcData?: MatchMinimalDetailsResponse,
+    gcData?: MatchMinimalDetailsResponse
   ) => Promise<void>
   openBets: (client: SocketClient) => Promise<void>
   emitNotablePlayers: () => Promise<void>

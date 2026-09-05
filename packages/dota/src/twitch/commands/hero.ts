@@ -6,11 +6,11 @@ import { hasCurrentGameContext } from '../../dota/lib/getCurrentMatchId'
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler';
+import type { MessageType } from '../lib/CommandHandler';
 import { findAccountFromCmd } from '../lib/findGSIByAccountId'
 
 commandHandler.registerCommand('hero', {
-  onlyOnline: true,
   dbkey: DBSettings.commandHero,
   handler: async (message, args, command) => {
     const { locale } = message.channel.client
@@ -19,14 +19,14 @@ commandHandler.registerCommand('hero', {
     } = message
 
     const gsi = gsiHandlers.get(client.token)
-    if (!gsi || !hasCurrentGameContext(client)) return handleNotPlaying(message)
+    if (!gsi || !hasCurrentGameContext(client)) {  handleNotPlaying(message); return; }
 
     try {
       const { ourHero, player, hero, playerIdx } = await findAccountFromCmd(
         client,
         args,
         client.locale,
-        command,
+        command
       )
 
       const steam32Id = Number(player?.accountid ?? (ourHero ? client.steam32Id : undefined))
@@ -57,17 +57,18 @@ commandHandler.registerCommand('hero', {
       chatClient.say(
         message.channel.name,
         (e as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
     }
   },
+  onlyOnline: true,
 })
 
 function handleNotPlaying(message: MessageType) {
   chatClient.say(
     message.channel.name,
     t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-    message.user.messageId,
+    message.user.messageId
   )
 }
 
@@ -95,12 +96,12 @@ function speakHeroStats({
     chatClient.say(
       channel,
       t(hasHero ? 'herostats.noneStreamer' : 'herostats.noneColor', {
-        lng,
-        heroName: heroNameOrColor,
-        timeperiod,
         color: heroNameOrColor,
+        heroName: heroNameOrColor,
+        lng,
+        timeperiod,
       }),
-      message.user.messageId,
+      message.user.messageId
     )
     return
   }
@@ -108,13 +109,13 @@ function speakHeroStats({
   chatClient.say(
     channel,
     t(hasHero ? 'herostats.winrateStreamer' : 'herostats.winrateColor', {
-      lng,
-      heroName: heroNameOrColor,
-      winrate: Math.round(((win || 0) / total) * 100),
-      timeperiod,
-      count: total,
       color: heroNameOrColor,
+      count: total,
+      heroName: heroNameOrColor,
+      lng,
+      timeperiod,
+      winrate: Math.round(((win || 0) / total) * 100),
     }),
-    message.user.messageId,
+    message.user.messageId
   )
 }

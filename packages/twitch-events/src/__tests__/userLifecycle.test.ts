@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import {
   clearSubscriptions,
   ensureBotIsModerator,
@@ -14,7 +15,7 @@ beforeEach(() => {
   clearSubscriptions()
 })
 
-describe('handleNewUser', () => {
+describe(handleNewUser, () => {
   it('returns early without a providerAccountId', async () => {
     await handleNewUser('')
     expect(state.updates).toHaveLength(0)
@@ -28,7 +29,7 @@ describe('handleNewUser', () => {
 
     await handleNewUser('111')
 
-    expect(state.updates.some((u) => u.table === 'users' && u.values.name === 'cool')).toBe(true)
+    expect(state.updates.some((u) => u.table === 'users' && u.values.name === 'cool')).toBeTruthy()
     // resubscribeEvents defaults true -> initUserSubscriptions ran.
     expect(state.subscribeCalls.length).toBeGreaterThan(0)
   })
@@ -49,11 +50,11 @@ describe('handleNewUser', () => {
     expect(state.updates).toHaveLength(0)
     expect(
       state.logError.some(
-        (l) => l.message === '[TWITCHEVENTS] handleNewUser: no accounts row after retry',
-      ),
-    ).toBe(true)
+        (l) => l.message === '[TWITCHEVENTS] handleNewUser: no accounts row after retry'
+      )
+    ).toBeTruthy()
     // The legacy warn must NOT fire — observability would miss the issue.
-    expect(state.logWarn.some((l) => l.message.includes('no accounts row'))).toBe(false)
+    expect(state.logWarn.some((l) => l.message.includes('no accounts row'))).toBeFalsy()
   })
 
   it('throws when initUserSubscriptions returns false (critical subscription failed)', async () => {
@@ -63,7 +64,7 @@ describe('handleNewUser', () => {
     state.subscribeResult = (_userId, type) => (type === 'stream.online' ? false : true)
 
     await expect(handleNewUser('222')).rejects.toThrow(
-      /initUserSubscriptions: critical subscription failed/,
+      /initUserSubscriptions: critical subscription failed/
     )
   })
 
@@ -84,7 +85,7 @@ describe('handleNewUser', () => {
     await work
     vi.useRealTimers()
 
-    expect(state.updates.some((u) => u.table === 'users' && u.values.name === 'l8')).toBe(true)
+    expect(state.updates.some((u) => u.table === 'users' && u.values.name === 'l8')).toBeTruthy()
     // Both queued results were consumed → the retry path actually ran.
     expect(state.accountsLookupResults).toHaveLength(0)
   })
@@ -108,16 +109,16 @@ describe('handleNewUser', () => {
     // The misleading warn must NOT fire — the row isn't missing, the lookup
     // errored.
     expect(
-      state.logWarn.some((l) => l.message.includes('no accounts row for providerAccountId')),
-    ).toBe(false)
+      state.logWarn.some((l) => l.message.includes('no accounts row for providerAccountId'))
+    ).toBeFalsy()
     // Instead, the error path is logged with the real cause.
     expect(
       state.logError.some(
         (l) =>
           l.message.includes('profile update failed') &&
-          String((l.meta?.error as Error | undefined)?.message).includes('connection reset'),
-      ),
-    ).toBe(true)
+          String((l.meta?.error as Error | undefined)?.message).includes('connection reset')
+      )
+    ).toBeTruthy()
     // And the users row was NOT updated (we never got a userId).
     expect(state.updates).toHaveLength(0)
   })
@@ -133,13 +134,13 @@ describe('handleNewUser', () => {
     await handleNewUser('555', true)
 
     // No profile update.
-    expect(state.updates.some((u) => u.table === 'users')).toBe(false)
+    expect(state.updates.some((u) => u.table === 'users')).toBeFalsy()
     // No EventSub subscription calls.
     expect(state.subscribeCalls).toHaveLength(0)
     // Banned-skip log line fired.
     expect(
-      state.logInfo.some((l) => l.message.includes('handleNewUser: skipping banned user')),
-    ).toBe(true)
+      state.logInfo.some((l) => l.message.includes('handleNewUser: skipping banned user'))
+    ).toBeTruthy()
   })
 
   it('still attempts subscriptions when the Twitch profile-fetch step fails', async () => {
@@ -155,17 +156,17 @@ describe('handleNewUser', () => {
     await handleNewUser('444', true)
 
     // Profile update never ran (Twitch fetch threw before reaching it).
-    expect(state.updates.some((u) => u.table === 'users')).toBe(false)
+    expect(state.updates.some((u) => u.table === 'users')).toBeFalsy()
     // But subscription registration DID run.
-    expect(state.subscribeCalls.some((c) => c.userId === '444')).toBe(true)
+    expect(state.subscribeCalls.some((c) => c.userId === '444')).toBeTruthy()
     // And the failure was surfaced at error level for observability.
     expect(
-      state.logError.some((l) => l.message.includes('handleNewUser: profile update failed')),
-    ).toBe(true)
+      state.logError.some((l) => l.message.includes('handleNewUser: profile update failed'))
+    ).toBeTruthy()
   })
 })
 
-describe('ensureBotIsModerator', () => {
+describe(ensureBotIsModerator, () => {
   beforeEach(() => {
     process.env.TWITCH_BOT_PROVIDERID = 'bot-1'
     process.env.TWITCH_CLIENT_ID = 'client-1'

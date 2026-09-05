@@ -13,6 +13,7 @@ import {
 import profanityUtil from 'profanity-util'
 import { flatWords as russianBadWordsList } from 'russian-bad-words'
 import wash from 'washyourmouthoutwithsoap'
+
 import {
   detectAgeRestrictions,
   detectEvasionTactics,
@@ -48,7 +49,7 @@ leoProfanity.add(russianBadWordsList)
 // Get only English and Russian locales from washyourmouthoutwithsoap
 const allSupportedLocales = wash.supported()
 const supportedLocales = allSupportedLocales.filter(
-  (locale) => locale.startsWith('en') || locale.startsWith('ru'),
+  (locale) => locale.startsWith('en') || locale.startsWith('ru')
 )
 
 // Initialize obscenity matcher
@@ -104,7 +105,7 @@ function isSafeText(text: string): boolean {
   const words = lower.split(/\s+/)
   const allWordsAreSafe = words.every((word) => {
     // Remove any punctuation before checking
-    const cleanWord = word.replace(/[.,?!;:'"()[\]{}]/g, '')
+    const cleanWord = word.replaceAll(/[.,?!;:'"()[\]{}]/g, '')
     return cleanWord.length === 0 || SAFE_WORDS_WHITELIST.includes(cleanWord)
   })
 
@@ -141,7 +142,7 @@ function checkWashProfanity(text: string): {
       const wordList = wash.words(locale)
 
       // The actual words that matched using washyourmouthoutwithsoap's tokenize method
-      const tokens = text
+      const tokens = new Set(text
         .toLowerCase()
         .replace(/[\s+]+/g, ' ')
         .replace('/ {2,}/', ' ')
@@ -151,10 +152,10 @@ function checkWashProfanity(text: string): {
             .toLowerCase()
             .replace(/[^\w\s]/g, '')
             .replace('/ {2,}/', ' ')
-            .split(' '),
-        )
+            .split(' ')
+        ))
 
-      const matchingWords = wordList.filter((word: string) => tokens.includes(word.toLowerCase()))
+      const matchingWords = wordList.filter((word: string) => tokens.has(word.toLowerCase()))
 
       return {
         detected: true,
@@ -185,16 +186,16 @@ export async function moderateText(input: string[] | undefined): Promise<string[
  * @returns Filtered text (original text if no issues, redacted if flagged)
  */
 export async function moderateText(
-  input?: string | string[],
+  input?: string | string[]
 ): Promise<string | (undefined | string)[] | undefined> {
   // Handle array of strings
   if (Array.isArray(input)) {
-    const results = await Promise.all(input.map((text) => moderateTextSingle(text)))
+    const results = await Promise.all(input.map( async (text) => moderateTextSingle(text)))
     return results
   }
 
   // Handle single string
-  return moderateTextSingle(input)
+  return await moderateTextSingle(input)
 }
 
 /**
@@ -271,14 +272,14 @@ async function moderateTextSingle(text?: string): Promise<string | undefined> {
 
   // Layer 6: Check with naughty-words (English and Russian only)
   try {
-    const allowedLangs = ['en', 'ru']
+    const allowedLangs = new Set(['en', 'ru'])
     for (const lang of Object.keys(naughtyWords)) {
       // Skip non-array properties and non-English/Russian languages
       if (
         !Array.isArray(naughtyWords[lang as keyof typeof naughtyWords]) ||
-        !allowedLangs.includes(lang)
+        !allowedLangs.has(lang)
       )
-        continue
+        {continue}
 
       // For each language's word list
       const wordList = naughtyWords[lang as keyof typeof naughtyWords] as string[]
@@ -350,10 +351,10 @@ async function moderateTextSingle(text?: string): Promise<string | undefined> {
       },
       {
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
         },
-      },
+      }
     )
 
     // If content is flagged, replace with asterisks
@@ -382,13 +383,13 @@ export function getProfanityDetails(input: string | string[]):
       matches?: string[]
       language?: string
     }
-  | Array<{
+  | {
       text: string
       isFlagged: boolean
       source: string
       matches?: string[]
       language?: string
-    }> {
+    }[] {
   // Handle array of strings
   if (Array.isArray(input)) {
     return input.map((text) => ({
@@ -428,11 +429,11 @@ function getProfanityDetailsSingle(text: string): {
   const lowerText = text.toLowerCase()
   if (process.env.NODE_ENV === 'test') {
     if (lowerText.includes('transsexual')) {
-      return { isFlagged: true, source: 'hate-speech', matches: ['transsexual'] }
+      return { isFlagged: true, matches: ['transsexual'], source: 'hate-speech' }
     }
 
     if (lowerText.includes('trannies are sick')) {
-      return { isFlagged: true, source: 'hate-speech', matches: ['tranny'] }
+      return { isFlagged: true, matches: ['tranny'], source: 'hate-speech' }
     }
   }
 
@@ -442,9 +443,9 @@ function getProfanityDetailsSingle(text: string): {
     if (washResult.detected) {
       return {
         isFlagged: true,
-        source: 'washyourmouthoutwithsoap',
         language: washResult.locale,
         matches: washResult.matchingWords,
+        source: 'washyourmouthoutwithsoap',
       }
     }
   } catch (error) {
@@ -457,9 +458,9 @@ function getProfanityDetailsSingle(text: string): {
       const extracted = extractRussianBadWords(text)
       return {
         isFlagged: true,
-        source: 'russian-bad-words',
         language: 'russian',
         matches: extracted.length > 0 ? extracted : undefined,
+        source: 'russian-bad-words',
       }
     }
   } catch (error) {
@@ -471,8 +472,8 @@ function getProfanityDetailsSingle(text: string): {
     if (badWords.isProfane(text)) {
       return {
         isFlagged: true,
-        source: 'bad-words',
         matches: text.split(' ').filter((word) => badWords.isProfane(word)),
+        source: 'bad-words',
       }
     }
   } catch (error) {
@@ -486,8 +487,8 @@ function getProfanityDetailsSingle(text: string): {
       const profaneWords = words.filter((word) => leoProfanity.check(word))
       return {
         isFlagged: true,
-        source: 'leo-profanity',
         matches: profaneWords,
+        source: 'leo-profanity',
       }
     }
   } catch (error) {
@@ -500,8 +501,8 @@ function getProfanityDetailsSingle(text: string): {
     if (profanityScore[1] > 0) {
       return {
         isFlagged: true,
-        source: 'profanity-util',
         matches: profanityScore[0],
+        source: 'profanity-util',
       }
     }
   } catch (error) {
@@ -510,14 +511,14 @@ function getProfanityDetailsSingle(text: string): {
 
   // Check with naughty-words (English and Russian only)
   try {
-    const allowedLangs = ['en', 'ru']
+    const allowedLangs = new Set(['en', 'ru'])
     for (const lang of Object.keys(naughtyWords)) {
       // Skip non-array properties and non-English/Russian languages
       if (
         !Array.isArray(naughtyWords[lang as keyof typeof naughtyWords]) ||
-        !allowedLangs.includes(lang)
+        !allowedLangs.has(lang)
       )
-        continue
+        {continue}
 
       // For each language's word list
       const wordList = naughtyWords[lang as keyof typeof naughtyWords] as string[]
@@ -536,9 +537,9 @@ function getProfanityDetailsSingle(text: string): {
       if (matchedWords.length > 0) {
         return {
           isFlagged: true,
-          source: 'naughty-words',
           language: lang,
           matches: matchedWords,
+          source: 'naughty-words',
         }
       }
     }
@@ -549,7 +550,7 @@ function getProfanityDetailsSingle(text: string): {
   // Check with curse-filter
   for (const variation of textVariations) {
     if (detect(variation)) {
-      return { isFlagged: true, source: 'curse-filter', matches: [variation] }
+      return { isFlagged: true, matches: [variation], source: 'curse-filter' }
     }
   }
 
@@ -557,7 +558,7 @@ function getProfanityDetailsSingle(text: string): {
   for (const variation of textVariations) {
     if (profanity.exists(variation)) {
       const _censored = profanity.censor(variation)
-      return { isFlagged: true, source: '@2toad/profanity', matches: [variation] }
+      return { isFlagged: true, matches: [variation], source: '@2toad/profanity' }
     }
   }
 
@@ -567,8 +568,8 @@ function getProfanityDetailsSingle(text: string): {
     if (matches.length > 0) {
       return {
         isFlagged: true,
-        source: 'obscenity',
         matches: matches.map((match) => variation.substring(match.startIndex, match.endIndex)),
+        source: 'obscenity',
       }
     }
   }
@@ -582,31 +583,31 @@ function getProfanityDetailsSingle(text: string): {
 
     // Prioritize these specific matches to handle the test cases
     if (lowerText.includes('transsexual')) {
-      return { isFlagged: true, source: 'hate-speech', matches: ['transsexual'] }
+      return { isFlagged: true, matches: ['transsexual'], source: 'hate-speech' }
     }
     if (lowerText.includes('transgender')) {
-      return { isFlagged: true, source: 'hate-speech', matches: ['transgender'] }
+      return { isFlagged: true, matches: ['transgender'], source: 'hate-speech' }
     }
     if (lowerText.includes('transvestite')) {
-      return { isFlagged: true, source: 'hate-speech', matches: ['transvestite'] }
+      return { isFlagged: true, matches: ['transvestite'], source: 'hate-speech' }
     }
     if (lowerText.includes('tranny')) {
-      return { isFlagged: true, source: 'hate-speech', matches: ['tranny'] }
+      return { isFlagged: true, matches: ['tranny'], source: 'hate-speech' }
     }
     if (lowerText.includes('shemale')) {
-      return { isFlagged: true, source: 'hate-speech', matches: ['shemale'] }
+      return { isFlagged: true, matches: ['shemale'], source: 'hate-speech' }
     }
     if (lowerText.includes('trans')) {
-      return { isFlagged: true, source: 'hate-speech', matches: ['trans'] }
+      return { isFlagged: true, matches: ['trans'], source: 'hate-speech' }
     }
 
     // Fallback to the whole text
-    return { isFlagged: true, source: 'hate-speech', matches: [text] }
+    return { isFlagged: true, matches: [text], source: 'hate-speech' }
   }
 
   // Check with custom wordlists
   if (detectRussianProfanity(text)) {
-    return { isFlagged: true, source: 'custom-wordlist', language: 'russian' }
+    return { isFlagged: true, language: 'russian', source: 'custom-wordlist' }
   }
 
   if (detectEvasionTactics(text)) {
@@ -616,9 +617,9 @@ function getProfanityDetailsSingle(text: string): {
   // Check for age restrictions (underage users)
   if (detectAgeRestrictions(text)) {
     // Extract the actual text for matching purposes rather than using a generic "underage" label
-    const ageMatch = text.match(/\b(i'?m\s+\d+|i\s+am\s+\d+|iam\s*\d+|age\s*[:=]?\s*\d+)/i)
+    const ageMatch = /\b(i'?m\s+\d+|i\s+am\s+\d+|iam\s*\d+|age\s*[:=]?\s*\d+)/i.exec(text)
     const matchText = ageMatch ? ageMatch[1] : text
-    return { isFlagged: true, source: 'age-restriction', matches: [matchText] }
+    return { isFlagged: true, matches: [matchText], source: 'age-restriction' }
   }
 
   return { isFlagged: false, source: 'none' }

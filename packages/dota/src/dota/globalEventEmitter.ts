@@ -1,5 +1,7 @@
 import { EventEmitter } from 'node:events'
+
 import type { NextFunction, Request, Response } from 'express'
+
 import { gsiHandlers } from './lib/consts'
 import { isPlayingMatch } from './lib/isPlayingMatch'
 
@@ -16,7 +18,7 @@ events.setMaxListeners(20)
 let known: Set<string> | null = null
 
 function ensureIndex() {
-  if (known !== null) return
+  if (known !== null) {return}
   known = new Set<string>()
   for (const n of events.eventNames() as string[]) {
     known.add(n)
@@ -31,18 +33,18 @@ function ensureIndex() {
 function emitAll(prefix: string, obj: Record<string, any>, token: string) {
   Object.keys(obj).forEach((key) => {
     const name = prefix + key
-    if (known!.has(name)) events.emit(name, obj[key], token)
+    if (known!.has(name)) {events.emit(name, obj[key], token)}
   })
 }
 
 function projectChangedValues(
   changed: Record<string, any>,
-  body: Record<string, any>,
+  body: Record<string, any>
 ): Record<string, any> {
   return Object.fromEntries(
     Object.keys(changed)
       .filter((key) => body[key] != null)
-      .map((key) => [key, body[key]]),
+      .map((key) => [key, body[key]])
   )
 }
 
@@ -50,11 +52,11 @@ function recursiveEmit(
   prefix: string,
   changed: Record<string, any>,
   body: Record<string, any>,
-  token: string,
+  token: string
 ) {
   Object.keys(changed).forEach((key) => {
     const name = prefix + key
-    if (!known!.has(name)) return
+    if (!known!.has(name)) {return}
     if (typeof changed[key] === 'object') {
       if (body[key] != null) {
         if (events.listenerCount(name) > 0) {
@@ -66,7 +68,7 @@ function recursiveEmit(
       if (typeof body[key] === 'object') {
         // Edge case on added:item/ability:x where added shows true at the top
         // level and doesn't contain each of the child keys
-        if (events.listenerCount(name) > 0) events.emit(name, body[key], token)
+        if (events.listenerCount(name) > 0) {events.emit(name, body[key], token)}
         emitAll(`${name}:`, body[key], token)
       } else {
         events.emit(name, body[key], token)
@@ -93,9 +95,9 @@ function getKillListDeltaKeys(body: Record<string, any>): Set<string> {
   for (const section of ['previously', 'added']) {
     const changed = body[section]?.player?.kill_list
     if (changed === true && current && typeof current === 'object') {
-      for (const key of Object.keys(current)) keys.add(key)
+      for (const key of Object.keys(current)) {keys.add(key)}
     } else if (changed && typeof changed === 'object') {
-      for (const key of Object.keys(changed)) keys.add(key)
+      for (const key of Object.keys(changed)) {keys.add(key)}
     }
   }
 
@@ -105,7 +107,7 @@ function getKillListDeltaKeys(body: Record<string, any>): Set<string> {
 export function processUnmarkedKillListChanges(
   req: Request,
   _res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): void {
   const token = req.body?.auth?.token as string | undefined
   const handler = token ? gsiHandlers.get(token) : undefined
@@ -119,9 +121,9 @@ export function processUnmarkedKillListChanges(
   const matchId = String(req.body?.map?.matchid ?? '')
   const previous = killListSnapshots.get(handler)
   const currentValues = Object.fromEntries(
-    Object.entries(current).filter((entry): entry is [string, number] => {
-      return typeof entry[1] === 'number'
-    }),
+    Object.entries(current).filter((entry): entry is [string, number] => 
+      typeof entry[1] === 'number'
+    )
   )
 
   killListSnapshots.set(handler, { matchId, values: currentValues })
@@ -133,9 +135,9 @@ export function processUnmarkedKillListChanges(
 
   const markedKeys = getKillListDeltaKeys(req.body)
   const unmarkedIncreases = Object.fromEntries(
-    Object.entries(currentValues).filter(([key, value]) => {
-      return !markedKeys.has(key) && value > (previous.values[key] ?? 0)
-    }),
+    Object.entries(currentValues).filter(([key, value]) => 
+      !markedKeys.has(key) && value > (previous.values[key] ?? 0)
+    )
   )
 
   if (Object.keys(unmarkedIncreases).length > 0) {
@@ -148,7 +150,7 @@ export function processUnmarkedKillListChanges(
 export async function recoverMultiAccount(
   req: Request,
   _res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> {
   const token = req.body?.auth?.token as string | undefined
   const handler = token ? gsiHandlers.get(token) : undefined

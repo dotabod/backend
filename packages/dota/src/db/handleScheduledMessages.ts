@@ -1,4 +1,5 @@
 import { logger, supabase } from '@dotabod/shared-utils'
+
 import { chatClient } from '../twitch/chatClient'
 
 /**
@@ -7,7 +8,7 @@ import { chatClient } from '../twitch/chatClient'
  * - {username}: The Twitch username of the channel
  */
 function processMessagePlaceholders(message: string, data: { username: string }): string {
-  return message.replace(/\{username\}/g, data.username)
+  return message.replaceAll('{username}', data.username)
 }
 
 /**
@@ -114,12 +115,12 @@ export async function handleUserOnlineMessages(userId: string, username: string)
 
       // Create a delivery record
       const { error: createDeliveryError } = await supabase.from('MessageDelivery').insert({
-        scheduledMessageId: message.id,
-        userId,
-        status: 'DELIVERED',
-        deliveredAt: now,
         createdAt: now,
+        deliveredAt: now,
+        scheduledMessageId: message.id,
+        status: 'DELIVERED',
         updatedAt: now,
+        userId,
       })
 
       if (createDeliveryError) {
@@ -128,19 +129,7 @@ export async function handleUserOnlineMessages(userId: string, username: string)
       }
 
       // For user-specific messages, mark the message as delivered
-      if (!message.isForAllUsers) {
-        const { error: updateError } = await supabase
-          .from('ScheduledMessage')
-          .update({
-            status: 'DELIVERED',
-            updatedAt: new Date().toISOString(),
-          })
-          .eq('id', message.id)
-
-        if (updateError) {
-          logger.error('Error updating message status:', updateError)
-        }
-      } else {
+      if (message.isForAllUsers) {
         // For global messages, check if all users have received it
         const { count: userCount, error: userCountError } = await supabase
           .from('users')
@@ -175,6 +164,18 @@ export async function handleUserOnlineMessages(userId: string, username: string)
           if (updateError) {
             logger.error('Error updating global message status:', updateError)
           }
+        }
+      } else {
+        const { error: updateError } = await supabase
+          .from('ScheduledMessage')
+          .update({
+            status: 'DELIVERED',
+            updatedAt: new Date().toISOString(),
+          })
+          .eq('id', message.id)
+
+        if (updateError) {
+          logger.error('Error updating message status:', updateError)
         }
       }
 

@@ -23,25 +23,25 @@ export async function announceCapturedCosmetics(client: SocketClient): Promise<v
   try {
     // EventHandler already gates events on stream_online; re-checked so any future caller stays
     // correct and we never announce while offline.
-    if (!client.stream_online) return
-    if (!isPlayingMatch(client.gsi)) return
+    if (!client.stream_online) {return}
+    if (!isPlayingMatch(client.gsi)) {return}
 
     // Hold the reveal until the same "all heroes locked in for everyone" window the picks
     // blocker uses. During hero selection / draft this returns and the strategy-time trigger
     // takes over, so the pick is never tipped to snipers.
-    if (!heroRevealableStates.includes(client.gsi?.map?.game_state ?? '')) return
+    if (!heroRevealableStates.includes(client.gsi?.map?.game_state ?? '')) {return}
 
     const heroId = client.gsi?.hero?.id
-    if (!heroId || heroId <= 0) return
+    if (!heroId || heroId <= 0) {return}
 
     // Snapshot the loadout regardless of the chat toggle so dotabod.com/<name>/set fills in
     // even for streamers who opted out of the announcement. No-ops without real wearables.
     const items = await captureCosmetics(client)
-    if (!items.length) return
+    if (!items.length) {return}
 
     // The chat line is the opt-out-able "new feature": an explicit per-feature choice wins,
     // else the autoOptInNewFeatures master decides. Shared with the feature announcer.
-    if (!isFeatureEnabled(client, 'cosmeticsAnnounce')) return
+    if (!isFeatureEnabled(client, 'cosmeticsAnnounce')) {return}
 
     // Announce at most once per match+hero. The stamp self-corrects across matches (new
     // matchid) and hero swaps (new heroId), and dedups the pick vs. strategy-time triggers.
@@ -49,21 +49,21 @@ export async function announceCapturedCosmetics(client: SocketClient): Promise<v
     const matchId = client.gsi?.map?.matchid
     const announcedKey = `${token}:cosmeticsAnnounced`
     const stamp = `${matchId}:${heroId}`
-    if ((await redisClient.client.get(announcedKey)) === stamp) return
+    if ((await redisClient.client.get(announcedKey)) === stamp) {return}
     await redisClient.client.set(announcedKey, stamp)
 
     say(
       client,
       t('cosmetics.captured', {
-        heroName: getHeroNameOrColor(heroId),
         count: items.length,
-        url: `dotabod.com/${name}/set`,
+        heroName: getHeroNameOrColor(heroId),
         lng: locale,
-      }),
+        url: `dotabod.com/${name}/set`,
+      })
     )
-  } catch (err) {
+  } catch (error) {
     // Never let a cosmetics hiccup bubble into the callers (e.g. the clip scheduler shares the
     // map:game_state handler) — log and move on.
-    logger.error('[cosmetics] failed to announce captured set', { token: client?.token, err })
+    logger.error('[cosmetics] failed to announce captured set', { token: client?.token, error })
   }
 }

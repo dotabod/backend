@@ -1,4 +1,5 @@
 import { t } from 'i18next'
+
 import { DBSettings, getValueOrDefault } from '../../../settings'
 import type { SocketClient } from '../../../types'
 import { server } from '../../server'
@@ -29,26 +30,26 @@ export function generateRoshanMessage(res: RoshRes, lng: string) {
   if (res.maxS > 0) {
     msgs.push(
       t('roshanKilled', {
-        min: res.minTime,
-        max: res.maxTime,
         lng,
-      }),
+        max: res.maxTime,
+        min: res.minTime,
+      })
     )
   }
 
-  msgs.push(getRoshCountMessage({ lng, count: res.count }))
+  msgs.push(getRoshCountMessage({ count: res.count, lng }))
 
   return msgs.join(' · ')
 }
 export function emitRoshEvent(res: RoshRes, token: string, client: SocketClient) {
-  if (!res?.minDate) return
+  if (!res?.minDate) {return}
   res = getNewRoshTime(res)
 
   // Only check settings if client is provided
-  if (!client) return
+  if (!client) {return}
 
   const tellChatRosh = getValueOrDefault(DBSettings.rosh, client.settings, client.subscription)
-  if (!tellChatRosh) return
+  if (!tellChatRosh) {return}
 
   server.io.to(token).emit('roshan-killed', res)
 }

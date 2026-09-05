@@ -7,16 +7,16 @@ export function getSpectatorPlayers(gsi?: Packet) {
       ...Object.keys(gsi.hero.team2).map((playerIdx) => {
         const key = playerIdx as Team2PlayerId
         return {
-          heroid: gsi.hero!.team2![key].id,
           accountid: Number(gsi.player!.team2![key].accountid),
+          heroid: gsi.hero!.team2![key].id,
           selected: !!gsi.hero!.team2![key].selected_unit,
         }
       }),
       ...Object.keys(gsi.hero.team3).map((playerIdx) => {
         const key = playerIdx as Team3PlayerId
         return {
-          heroid: gsi.hero!.team3![key].id,
           accountid: Number(gsi.player!.team3![key].accountid),
+          heroid: gsi.hero!.team3![key].id,
           selected: !!gsi.hero!.team3![key].selected_unit,
         }
       }),

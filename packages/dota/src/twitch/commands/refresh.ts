@@ -2,11 +2,10 @@ import { t } from 'i18next'
 
 import { server } from '../../dota/server'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler';
+import type { MessageType } from '../lib/CommandHandler';
 
 commandHandler.registerCommand('refresh', {
-  permission: 2,
-
   handler: (message: MessageType, _args: string[]) => {
     const {
       channel: { name: channel, client },
@@ -15,9 +14,11 @@ commandHandler.registerCommand('refresh', {
       chatClient.say(
         channel,
         t('refresh', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       server.io.to(client.token).emit('refresh')
     }
   },
+
+  permission: 2,
 })

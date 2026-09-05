@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import {
   clearSubscriptions,
   eventSubMap,
@@ -13,10 +14,10 @@ import {
 async function fire(
   event: 'INSERT' | 'UPDATE' | 'DELETE',
   table: 'accounts' | 'users',
-  payload: { new?: Record<string, unknown>; old?: Record<string, unknown> },
+  payload: { new?: Record<string, unknown>; old?: Record<string, unknown> }
 ) {
   const handler = state.channelHandlers.get(`${event}:${table}`)
-  if (!handler) throw new Error(`no handler registered for ${event}:${table}`)
+  if (!handler) {throw new Error(`no handler registered for ${event}:${table}`)}
   await handler(payload)
 }
 
@@ -28,7 +29,7 @@ beforeEach(() => {
   setupAccountWatcher()
 })
 
-describe('setupAccountWatcher', () => {
+describe(setupAccountWatcher, () => {
   it("UPDATE:users banned_at null→set → stops the user's Twitch subscriptions", async () => {
     // Seed an active EventSub registration for this user so we can verify
     // the teardown actually ran (the no-subs path early-returns inside
@@ -39,8 +40,8 @@ describe('setupAccountWatcher', () => {
     ]
 
     await fire('UPDATE', 'users', {
-      new: { id: 'u-banned', banned_at: '2026-05-24T00:00:00.000Z' },
-      old: { id: 'u-banned', banned_at: null },
+      new: { banned_at: '2026-05-24T00:00:00.000Z', id: 'u-banned' },
+      old: { banned_at: null, id: 'u-banned' },
     })
 
     // Each seeded sub triggers a Twitch DELETE call.
@@ -49,14 +50,14 @@ describe('setupAccountWatcher', () => {
     expect(eventSubMap['tw-banned']).toBeUndefined()
     // Rename path must NOT also run for this payload (no double-handling).
     expect(state.subscribeCalls).toHaveLength(0)
-    expect(state.updates.some((u) => u.table === 'users')).toBe(false)
+    expect(state.updates.some((u) => u.table === 'users')).toBeFalsy()
   })
 
   it('UPDATE:users with banned_at unchanged → no teardown', async () => {
     seedSubscriptions('tw-still', ['stream.online'])
     await fire('UPDATE', 'users', {
-      new: { id: 'u-still', name: 'same', displayName: 'Same', banned_at: null },
-      old: { id: 'u-still', name: 'same', displayName: 'Same', banned_at: null },
+      new: { banned_at: null, displayName: 'Same', id: 'u-still', name: 'same' },
+      old: { banned_at: null, displayName: 'Same', id: 'u-still', name: 'same' },
     })
     // Sub map left intact.
     expect(eventSubMap['tw-still']).toBeDefined()
@@ -64,10 +65,10 @@ describe('setupAccountWatcher', () => {
 
   it('registers four Realtime listeners and a subscribe callback', () => {
     expect(state.channelHandlers.size).toBe(4)
-    expect(state.channelHandlers.has('INSERT:accounts')).toBe(true)
-    expect(state.channelHandlers.has('UPDATE:accounts')).toBe(true)
-    expect(state.channelHandlers.has('DELETE:accounts')).toBe(true)
-    expect(state.channelHandlers.has('UPDATE:users')).toBe(true)
+    expect(state.channelHandlers.has('INSERT:accounts')).toBeTruthy()
+    expect(state.channelHandlers.has('UPDATE:accounts')).toBeTruthy()
+    expect(state.channelHandlers.has('DELETE:accounts')).toBeTruthy()
+    expect(state.channelHandlers.has('UPDATE:users')).toBeTruthy()
     expect(state.channelSubscribeStatuses).toContain('SUBSCRIBED')
   })
 
@@ -79,8 +80,8 @@ describe('setupAccountWatcher', () => {
       new: { provider: 'twitch', providerAccountId: 'tw-new' },
     })
 
-    expect(state.subscribeCalls.some((c) => c.userId === 'tw-new')).toBe(true)
-    expect(state.updates.some((u) => u.table === 'users' && u.values.name === 'newbie')).toBe(true)
+    expect(state.subscribeCalls.some((c) => c.userId === 'tw-new')).toBeTruthy()
+    expect(state.updates.some((u) => u.table === 'users' && u.values.name === 'newbie')).toBeTruthy()
   })
 
   it('INSERT:accounts (non-twitch provider) → ignored', async () => {
@@ -100,7 +101,7 @@ describe('setupAccountWatcher', () => {
       old: { provider: 'twitch', providerAccountId: 'tw-back', requires_refresh: true },
     })
 
-    expect(state.subscribeCalls.some((c) => c.userId === 'tw-back')).toBe(true)
+    expect(state.subscribeCalls.some((c) => c.userId === 'tw-back')).toBeTruthy()
   })
 
   it('UPDATE:accounts that does NOT flip requires_refresh → no-op', async () => {
@@ -128,9 +129,7 @@ describe('setupAccountWatcher', () => {
     expect(deleteCalls).toHaveLength(2)
     // And the user's entry should be removed from the in-memory map.
     expect(eventSubMap['tw-gone']).toBeUndefined()
-    expect(state.logError.some((l) => l.message.includes('DELETE stopUserSubscriptions'))).toBe(
-      false,
-    )
+    expect(state.logError.some((l) => l.message.includes('DELETE stopUserSubscriptions'))).toBeFalsy()
   })
 
   it('UPDATE:accounts (non-twitch provider) → ignored even on requires_refresh flip', async () => {
@@ -149,14 +148,14 @@ describe('setupAccountWatcher', () => {
   it('UPDATE:users with a DB error during lookup → logs at error level (not silent warn)', async () => {
     state.accountsLookupResults = [{ data: null, error: new Error('postgrest connection reset') }]
     await fire('UPDATE', 'users', {
-      new: { id: 'u-1', name: 'new', displayName: 'New' },
-      old: { id: 'u-1', name: 'old', displayName: 'Old' },
+      new: { displayName: 'New', id: 'u-1', name: 'new' },
+      old: { displayName: 'Old', id: 'u-1', name: 'old' },
     })
     // A transient DB error must surface at error level so observability picks
     // it up — not be silently swallowed as "no twitch account row found".
     expect(
-      state.logError.some((l) => l.message.includes('DB error during user rename lookup')),
-    ).toBe(true)
+      state.logError.some((l) => l.message.includes('DB error during user rename lookup'))
+    ).toBeTruthy()
     // And handleNewUser should NOT be called (we don't know the providerAccountId).
     expect(state.subscribeCalls).toHaveLength(0)
   })
@@ -171,8 +170,8 @@ describe('setupAccountWatcher', () => {
 
   it('UPDATE:users with no name/displayName change → no-op', async () => {
     await fire('UPDATE', 'users', {
-      new: { id: 'u-1', name: 'same', displayName: 'Same' },
-      old: { id: 'u-1', name: 'same', displayName: 'Same' },
+      new: { displayName: 'Same', id: 'u-1', name: 'same' },
+      old: { displayName: 'Same', id: 'u-1', name: 'same' },
     })
     expect(state.subscribeCalls).toHaveLength(0)
   })
@@ -193,8 +192,8 @@ describe('setupAccountWatcher', () => {
       { data: { userId: 'u-rename' }, error: null }, // handleNewUser's findUserIdByProviderAccount
     ]
     await fire('UPDATE', 'users', {
-      new: { id: 'u-rename', name: 'techleed', displayName: 'JAMESLEED' },
-      old: { id: 'u-rename', name: 'techleed', displayName: 'TECHLEED' },
+      new: { displayName: 'JAMESLEED', id: 'u-rename', name: 'techleed' },
+      old: { displayName: 'TECHLEED', id: 'u-rename', name: 'techleed' },
     })
     // handleNewUser ran and wrote the Helix-canonical name + displayName.
     const userUpdate = state.updates.find((u) => u.table === 'users')
@@ -222,11 +221,11 @@ describe('setupAccountWatcher', () => {
       { data: { userId: 'u-1' }, error: null },
     ]
     await fire('UPDATE', 'users', {
-      new: { id: 'u-1', name: 'newlogin', displayName: 'New' },
-      old: { id: 'u-1', name: 'newlogin', displayName: null },
+      new: { displayName: 'New', id: 'u-1', name: 'newlogin' },
+      old: { displayName: null, id: 'u-1', name: 'newlogin' },
     })
     // Profile update DID run (handleNewUser was called with resubscribe=false).
-    expect(state.updates.some((u) => u.table === 'users')).toBe(true)
+    expect(state.updates.some((u) => u.table === 'users')).toBeTruthy()
     // But initUserSubscriptions was NOT called.
     expect(state.subscribeCalls).toHaveLength(0)
   })
@@ -298,7 +297,7 @@ describe('setupAccountWatcher', () => {
       expect(state.removeChannelCount).toBe(1)
       // Exactly one reconnect scheduled, and the warn logged once (not 390×).
       expect(state.logWarn.filter((l) => l.message.includes('Realtime channel down'))).toHaveLength(
-        1,
+        1
       )
 
       await vi.advanceTimersByTimeAsync(5100)
@@ -325,7 +324,7 @@ describe('setupAccountWatcher', () => {
 
       // The status callback never attached (channel() threw), but the catch
       // path logged an error and scheduled a reconnect.
-      expect(state.logError.some((l) => l.message.includes('supabase.channel() threw'))).toBe(true)
+      expect(state.logError.some((l) => l.message.includes('supabase.channel() threw'))).toBeTruthy()
 
       // Clear the error so the next channel() call succeeds.
       state.channelCreationError = null
@@ -345,9 +344,7 @@ describe('setupAccountWatcher', () => {
       state.channelOnError = new Error('invalid event filter')
       setupAccountWatcher()
 
-      expect(state.logError.some((l) => l.message.includes('channel.on/.subscribe threw'))).toBe(
-        true,
-      )
+      expect(state.logError.some((l) => l.message.includes('channel.on/.subscribe threw'))).toBeTruthy()
 
       // Clear the error and let the reconnect tick.
       state.channelOnError = null
@@ -368,8 +365,6 @@ describe('setupAccountWatcher', () => {
       new: { provider: 'twitch', providerAccountId: 'tw-broken' },
     })
 
-    expect(state.logError.some((l) => l.message === '[WATCHER] INSERT handleNewUser failed')).toBe(
-      true,
-    )
+    expect(state.logError.some((l) => l.message === '[WATCHER] INSERT handleNewUser failed')).toBeTruthy()
   })
 })

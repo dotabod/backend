@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+
 import { getProfanityDetails, moderateText } from '../src/utils/moderation'
 
 // Helper function for testing
@@ -14,7 +15,7 @@ function testBadPhrase(phrase: string, description: string) {
       matches?: string[]
       language?: string
     }
-    expect(details.isFlagged).toBe(true)
+    expect(details.isFlagged).toBeTruthy()
   })
 }
 

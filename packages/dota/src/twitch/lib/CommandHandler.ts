@@ -1,6 +1,8 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
-import { getRawSettingValue, getValueOrDefault, type SettingKeys } from '../../settings'
+
+import { getRawSettingValue, getValueOrDefault } from '../../settings';
+import type { SettingKeys } from '../../settings';
 import MongoDBSingleton from '../../steam/MongoDBSingleton'
 import type { SocketClient } from '../../types'
 import type { SubscriptionRow } from '../../types/subscription'
@@ -37,7 +39,7 @@ export interface CommandOptions {
   handler: (message: MessageType, args: string[], commandUsed: string) => Promise<void> | void
 }
 
-const defaultCooldown = 15000
+const defaultCooldown = 15_000
 
 class CommandHandler {
   aliases = new Map<string, string>()
@@ -107,10 +109,10 @@ class CommandHandler {
     // current date in yyyy-mm-dd format
     const date = new Date().toISOString().slice(0, 10)
     const data = {
-      date,
-      channelId,
       channel,
+      channelId,
       command,
+      date,
     }
 
     const mongo = MongoDBSingleton
@@ -118,17 +120,17 @@ class CommandHandler {
 
     try {
       await db.collection('commandstats').updateOne(
-        { command, channel, date },
+        { channel, command, date },
         {
-          $set: data,
           $inc: {
             count: 1,
           },
+          $set: data,
         },
-        { upsert: true },
+        { upsert: true }
       )
-    } catch (e) {
-      logger.error('Error in commandstats update', { e })
+    } catch (error) {
+      logger.error('Error in commandstats update', { error })
     } finally {
       await mongo.close()
     }
@@ -161,7 +163,7 @@ class CommandHandler {
       chatClient.say(
         message.channel.name,
         t('notLive', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -172,7 +174,7 @@ class CommandHandler {
     const isCommandEnabled = this.isEnabled(
       message.channel.settings,
       options.dbkey,
-      message.channel.client.subscription,
+      message.channel.client.subscription
     )
 
     // Check if the command is currently on cooldown for this user/channel
@@ -180,7 +182,7 @@ class CommandHandler {
       commandName,
       options.cooldown ?? defaultCooldown,
       message.user,
-      message.channel.id,
+      message.channel.id
     )
 
     // If the command is disabled (by settings or subscription)
@@ -204,7 +206,7 @@ class CommandHandler {
                 command: `!${commandName}`,
                 lng: message.channel.client.locale,
               }),
-              message.user.messageId,
+              message.user.messageId
             )
           }
         }
@@ -236,7 +238,7 @@ class CommandHandler {
   parseMessage(message: MessageType) {
     // Use a regular expression to match the command and its arguments
     // `/\uDB40\uDC00/g` is unicode empty space that 7tv adds to spam a command
-    const match = message.content.replace(/\uDB40\uDC00/g, '').match(/^!(\w+=?)\s*(.*)/)
+    const match = /^!(\w+=?)\s*(.*)/.exec(message.content.replaceAll('\\uDB40\\uDC00', ''))
 
     if (!match) {
       return [] // Return an empty array if the message is not a command
@@ -290,17 +292,17 @@ class CommandHandler {
   isEnabled(
     settings: SocketClient['settings'],
     dbkey?: SettingKeys,
-    subscription?: SubscriptionRow,
+    subscription?: SubscriptionRow
   ) {
     // Default enabled if no dbkey is provided
-    if (!dbkey) return true
+    if (!dbkey) {return true}
 
     return !!getValueOrDefault(dbkey, settings, subscription)
   }
 
   isEnabledRaw(settings: SocketClient['settings'], dbkey?: SettingKeys) {
     // Default enabled if no dbkey is provided
-    if (!dbkey) return true
+    if (!dbkey) {return true}
 
     return !!getRawSettingValue(dbkey, settings)
   }

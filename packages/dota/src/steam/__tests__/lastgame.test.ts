@@ -1,41 +1,42 @@
 import { describe, expect, it, vi } from 'vitest'
+
 import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks.ts'
 
 const noopLogger = {
-  info: () => undefined,
-  error: () => undefined,
-  warn: () => undefined,
   debug: () => undefined,
+  error: () => undefined,
+  info: () => undefined,
+  warn: () => undefined,
 }
 
 // Mutable holders so each test controls what Supabase and the delayedGames cache
 // return without re-registering the process-wide module mocks.
 let supabaseMatchRow: { matchId: number } | null = null
-let delayedGamesRows: Array<{ match: { match_id: string } }> = []
+let delayedGamesRows: { match: { match_id: string } }[] = []
 
 const supabaseChain: any = {
-  from: () => supabaseChain,
-  select: () => supabaseChain,
   eq: () => supabaseChain,
+  from: () => supabaseChain,
+  limit: () => supabaseChain,
   not: () => supabaseChain,
   order: () => supabaseChain,
-  limit: () => supabaseChain,
+  select: () => supabaseChain,
   single: async () => ({ data: supabaseMatchRow }),
 }
 
-vi.doMock('@dotabod/shared-utils', () =>
-  buildSharedUtilsMock({ supabase: supabaseChain, logger: noopLogger }),
+vi.doMock(import('@dotabod/shared-utils'), () =>
+  buildSharedUtilsMock({ logger: noopLogger, supabase: supabaseChain })
 )
 
-vi.doMock('../MongoDBSingleton', () => ({
+vi.doMock(import('../MongoDBSingleton'), () => ({
   default: {
+    close: async () => undefined,
     connect: async () => ({
       collection: () => ({
         find: () => ({ toArray: async () => delayedGamesRows }),
         findOne: async () => null,
       }),
     }),
-    close: async () => undefined,
   },
 }))
 
@@ -44,30 +45,30 @@ await initTestI18n()
 const lastgame = (await import('../lastgame.ts')).default
 
 const normalClient = {
-  name: 'streamer',
-  mmr: 3000,
-  steam32Id: 86745912,
   SteamAccount: [{ steam32Id: 86745912, mmr: 3000 }],
+  mmr: 3000,
+  name: 'streamer',
+  steam32Id: 86745912,
 } as any
 
 const highMmrClient = {
-  name: 'streamer',
-  mmr: 9000,
-  steam32Id: 86745912,
   SteamAccount: [{ steam32Id: 86745912, mmr: 9000 }],
+  mmr: 9000,
+  name: 'streamer',
+  steam32Id: 86745912,
 } as any
 
 describe('lastgame — not-playing "last game" link', () => {
   it('links match history when Supabase has a finished match', async () => {
-    supabaseMatchRow = { matchId: 8821057580 }
+    supabaseMatchRow = { matchId: 8_821_057_580 }
     delayedGamesRows = [{ match: { match_id: '8516216993' } }]
 
     const desc = await lastgame({
-      locale: 'en',
-      steam32Id: 86745912,
       client: normalClient,
       currentMatchId: undefined,
       currentPlayers: [],
+      locale: 'en',
+      steam32Id: 86745912,
     })
 
     expect(desc).toContain('dotabod.com/streamer/matches')
@@ -78,26 +79,26 @@ describe('lastgame — not-playing "last game" link', () => {
     delayedGamesRows = [{ match: { match_id: '8516216993' } }]
 
     const desc = await lastgame({
-      locale: 'en',
-      steam32Id: 86745912,
       client: normalClient,
       currentMatchId: undefined,
       currentPlayers: [],
+      locale: 'en',
+      steam32Id: 86745912,
     })
 
     expect(desc).toContain('dotabod.com/streamer/matches')
   })
 
   it('keeps the first-party match-history link for 8500+ clients', async () => {
-    supabaseMatchRow = { matchId: 8821057580 }
+    supabaseMatchRow = { matchId: 8_821_057_580 }
     delayedGamesRows = [{ match: { match_id: '8516216993' } }]
 
     const desc = await lastgame({
-      locale: 'en',
-      steam32Id: 86745912,
       client: highMmrClient,
       currentMatchId: undefined,
       currentPlayers: [],
+      locale: 'en',
+      steam32Id: 86745912,
     })
 
     expect(desc).toContain('dotabod.com/streamer/matches')

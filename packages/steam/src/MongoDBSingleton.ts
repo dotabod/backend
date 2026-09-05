@@ -1,5 +1,7 @@
-import { type Db, MongoClient } from 'mongodb'
+import { MongoClient } from 'mongodb';
+import type { Db } from 'mongodb';
 import retry from 'retry'
+
 import { logger } from './utils/logger'
 
 class MongoDBSingleton {
@@ -9,17 +11,17 @@ class MongoDBSingleton {
   async connect(): Promise<Db> {
     // If the client promise is already resolved, return it
     if (this.clientPromise) {
-      return this.clientPromise
+      return await this.clientPromise
     }
 
     // Create a new promise that will be resolved with the MongoDB client
     this.clientPromise = new Promise((resolve, reject) => {
       // Set up the retry operation
       const operation = retry.operation({
-        retries: 5, // Number of retries
         factor: 3, // Exponential backoff factor
-        minTimeout: 1 * 1000, // Minimum retry timeout (1 second)
         maxTimeout: 60 * 1000, // Maximum retry timeout (60 seconds)
+        minTimeout: 1 * 1000, // Minimum retry timeout (1 second)
+        retries: 5, // Number of retries
       })
 
       // Attempt to connect to MongoDB with the retry operation
@@ -27,9 +29,9 @@ class MongoDBSingleton {
         try {
           // Connect to MongoDB
           const mongoURL = process.env.MONGO_URL
-          if (!mongoURL) throw new Error('MONGO_URL not set')
+          if (!mongoURL) {throw new Error('MONGO_URL not set')}
           const parsedUrl = new URL(mongoURL)
-          const host = parsedUrl.host
+          const {host} = parsedUrl
           const client = await MongoClient.connect(mongoURL, {
             // Only use SSL for MongoDB Atlas
             ssl: host === 'mongodb.net' || host.endsWith('.mongodb.net'),
@@ -53,7 +55,7 @@ class MongoDBSingleton {
       })
     })
 
-    return this.clientPromise
+    return await this.clientPromise
   }
 
   async close(): Promise<void> {
@@ -62,7 +64,7 @@ class MongoDBSingleton {
     // if (this.mongoClient) {
     //   await this.mongoClient.close()
     // }
-    return Promise.resolve()
+    return
   }
 }
 

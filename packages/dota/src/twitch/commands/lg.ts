@@ -8,7 +8,6 @@ import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('lg', {
   aliases: ['lastgame'],
-  onlyOnline: true,
   dbkey: DBSettings.commandLG,
   handler: async (message, _args) => {
     const {
@@ -24,7 +23,7 @@ commandHandler.registerCommand('lg', {
               url: 'dotabod.com/dashboard/features',
             })
           : t('unknownSteam', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -45,8 +44,9 @@ commandHandler.registerCommand('lg', {
         chatClient.say(
           message.channel.name,
           e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-          message.user.messageId,
+          message.user.messageId
         )
       })
   },
+  onlyOnline: true,
 })

@@ -3,6 +3,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
+
 import { DelayedQueue } from '../DelayedQueue'
 
 describe('DelayedQueue Integration', () => {
@@ -19,7 +20,7 @@ describe('DelayedQueue Integration', () => {
         results.push('task1')
       },
       null,
-      1,
+      1
     ) // 50ms, priority 1 (higher)
     queue.addTask(
       50,
@@ -27,7 +28,7 @@ describe('DelayedQueue Integration', () => {
         results.push('task2')
       },
       null,
-      3,
+      3
     ) // 50ms, priority 3 (lower)
     queue.addTask(
       100,
@@ -35,7 +36,7 @@ describe('DelayedQueue Integration', () => {
         results.push('task3')
       },
       null,
-      1,
+      1
     ) // 100ms, priority 1
     queue.addTask(
       25,
@@ -43,7 +44,7 @@ describe('DelayedQueue Integration', () => {
         results.push('task4')
       },
       null,
-      1,
+      1
     ) // 25ms, priority 1
 
     // Wait for queue's 1-second check interval to process all tasks
@@ -51,7 +52,7 @@ describe('DelayedQueue Integration', () => {
 
     // Verify execution order: task4 (25ms), then task1 (50ms, priority 1),
     // then task2 (50ms, priority 3), then task3 (100ms)
-    expect(results).toEqual(['task4', 'task1', 'task2', 'task3'])
+    expect(results).toStrictEqual(['task4', 'task1', 'task2', 'task3'])
 
     await queue.shutdown()
   })

@@ -1,9 +1,5 @@
-import {
-  type ChatterKeys,
-  settingsKeys as DBSettings,
-  defaultSettingsStructure,
-  type SettingKeys,
-} from './types/settings'
+import { settingsKeys as DBSettings, defaultSettingsStructure } from './types/settings';
+import type { ChatterKeys, SettingKeys } from './types/settings';
 import type { SubscriptionRow } from './types/subscription'
 import { canAccessFeature } from './utils/subscription'
 
@@ -38,7 +34,7 @@ export const getRawSettingValue = (key: SettingKeys, data?: { key: string; value
 
   try {
     if (typeof dbVal === 'string') {
-      const val = JSON.parse(dbVal) as any
+      const val = JSON.parse(dbVal)
       if (isPlainObject(val) && isPlainObject(defaultValue)) {
         return {
           ...(defaultValue as object),
@@ -66,7 +62,7 @@ export const getValueOrDefault = (
   key: SettingKeys,
   data?: { key: string; value: unknown }[],
   subscription?: SubscriptionRow,
-  chatterKey?: ChatterKeys,
+  chatterKey?: ChatterKeys
 ) => {
   // Check subscription access
   const featureKey = chatterKey ? (`chatters.${chatterKey}` as const) : key

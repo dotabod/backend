@@ -1,4 +1,5 @@
 import { supabase } from '@dotabod/shared-utils'
+
 import type { SocketClient } from '../../../types'
 import { MatchDataService } from './MatchDataService'
 import type { RosterPlayer } from './types'
@@ -32,9 +33,9 @@ export async function getStreamersInMatch({
 
   // Source 1: live Dotabod streamers tracked in this exact match.
   if (matchId && matchId !== '0') {
-    const { data } = await supabase.from('matches').select('userId').eq('matchId', `${matchId}`)
+    const { data } = await supabase.from('matches').select('userId').eq('matchId', matchId)
     for (const row of data ?? []) {
-      if (row.userId) userIds.add(row.userId)
+      if (row.userId) {userIds.add(row.userId)}
     }
   }
 
@@ -52,7 +53,7 @@ export async function getStreamersInMatch({
       .select('userId')
       .in('steam32Id', accountIds)
     for (const row of data ?? []) {
-      if (row.userId) userIds.add(row.userId)
+      if (row.userId) {userIds.add(row.userId)}
     }
   }
 

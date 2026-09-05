@@ -8,7 +8,6 @@ import { findAccountFromCmd } from '../lib/findGSIByAccountId'
 
 commandHandler.registerCommand('d2pt', {
   aliases: ['dota2pt', 'build', 'builds', 'getbuild'],
-  onlyOnline: true,
   dbkey: DBSettings.commandBuilds,
   handler: async (message, args, command) => {
     const {
@@ -26,14 +25,15 @@ commandHandler.registerCommand('d2pt', {
           url: `dota2protracker.com/hero/${encodeURI(heroName).replace(/'/g, '%27')}`,
           lng: message.channel.client.locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
     } catch (e) {
       chatClient.say(
         message.channel.name,
         (e as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
     }
   },
+  onlyOnline: true,
 })

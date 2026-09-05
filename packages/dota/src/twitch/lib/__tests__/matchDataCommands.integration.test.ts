@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vitest'
 import { t } from 'i18next'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { LOBBY_TYPE_RANKED } from '../../../db/getWL.ts'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
@@ -19,7 +20,7 @@ beforeEach(() => {
 describe('!spectators', () => {
   it('blocks when the stream is offline', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!spectators', clientOverrides: { stream_online: false } }),
+      makeMessage({ clientOverrides: { stream_online: false }, content: '!spectators' })
     )
     expect(state.chatSayCalls[0].message).toBe(notLive)
   })
@@ -33,7 +34,7 @@ describe('!spectators', () => {
   it('reports missingMatchData when Mongo has no row for the match', async () => {
     state.delayedGame = null
     await commandHandler.handleMessage(
-      makeMessage({ content: '!spectators', clientOverrides: { gsi: liveGsi() } }),
+      makeMessage({ clientOverrides: { gsi: liveGsi() }, content: '!spectators' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(missingMatchData)
@@ -42,7 +43,7 @@ describe('!spectators', () => {
   it('reports the spectator count from Mongo', async () => {
     state.delayedGame = { spectators: 137 }
     await commandHandler.handleMessage(
-      makeMessage({ content: '!spectators', clientOverrides: { gsi: liveGsi() } }),
+      makeMessage({ clientOverrides: { gsi: liveGsi() }, content: '!spectators' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(t('spectators.count', { count: 137, lng: 'en' }))
@@ -52,7 +53,7 @@ describe('!spectators', () => {
 describe('!ranked', () => {
   it('reports unknownSteam when there is no steam32Id', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!ranked', clientOverrides: { steam32Id: null } }),
+      makeMessage({ clientOverrides: { steam32Id: null }, content: '!ranked' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(unknownSteam)
@@ -61,9 +62,9 @@ describe('!ranked', () => {
   it('reports not-ranked for a non-match lobby id of 0', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        content: '!ranked',
         clientOverrides: { gsi: { map: { matchid: '0' } } as any },
-      }),
+        content: '!ranked',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(t('ranked_no', { lng: 'en' }))
@@ -72,7 +73,7 @@ describe('!ranked', () => {
   it('reports ranked yes when the Mongo lobby_type is ranked', async () => {
     state.delayedGame = { match: { lobby_type: LOBBY_TYPE_RANKED } }
     await commandHandler.handleMessage(
-      makeMessage({ content: '!ranked', clientOverrides: { gsi: liveGsi() } }),
+      makeMessage({ clientOverrides: { gsi: liveGsi() }, content: '!ranked' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(t('ranked', { context: 'yes', lng: 'en' }))
@@ -81,7 +82,7 @@ describe('!ranked', () => {
   it('reports ranked no when the Mongo lobby_type is unranked', async () => {
     state.delayedGame = { match: { lobby_type: 0 } }
     await commandHandler.handleMessage(
-      makeMessage({ content: '!ranked', clientOverrides: { gsi: liveGsi() } }),
+      makeMessage({ clientOverrides: { gsi: liveGsi() }, content: '!ranked' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(t('ranked', { context: 'no', lng: 'en' }))
@@ -90,7 +91,7 @@ describe('!ranked', () => {
   it('reports missingMatchData when Mongo has no row', async () => {
     state.delayedGame = null
     await commandHandler.handleMessage(
-      makeMessage({ content: '!ranked', clientOverrides: { gsi: liveGsi() } }),
+      makeMessage({ clientOverrides: { gsi: liveGsi() }, content: '!ranked' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(missingMatchData)

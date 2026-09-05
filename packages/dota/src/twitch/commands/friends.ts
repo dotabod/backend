@@ -2,11 +2,10 @@ import { t } from 'i18next'
 
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler';
+import type { MessageType } from '../lib/CommandHandler';
 
 commandHandler.registerCommand('friends', {
-  permission: 4,
-
   handler: (message: MessageType, _args: string[]) => {
     const {
       channel: { name: channel, client },
@@ -17,7 +16,7 @@ commandHandler.registerCommand('friends', {
       chatClient.say(
         channel,
         t('noHero', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -25,7 +24,7 @@ commandHandler.registerCommand('friends', {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -33,7 +32,9 @@ commandHandler.registerCommand('friends', {
     chatClient.say(
       channel,
       t('matchId', { lng: message.channel.client.locale, matchId }),
-      message.user.messageId,
+      message.user.messageId
     )
   },
+
+  permission: 4,
 })

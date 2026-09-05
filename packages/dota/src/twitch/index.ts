@@ -26,7 +26,7 @@ import commandHandler from './lib/CommandHandler'
 
 // Map to track the last time a rank warning message was sent to a channel
 const lastRankWarningTimestamps: Record<string, number> = {}
-const RANK_WARNING_COOLDOWN_MS = 30000 // 30 seconds
+const RANK_WARNING_COOLDOWN_MS = 30_000 // 30 seconds
 
 let disableAltAccountCheck = true
 
@@ -37,7 +37,7 @@ twitchChat.on('connect', () => {
 })
 
 twitchChat.on('disconnect', (reason, details) => {
-  logger.warn('Disconnected from dotabod chat server', { reason, details })
+  logger.warn('Disconnected from dotabod chat server', { details, reason })
 })
 
 // Function to check if a user meets the rank requirement
@@ -45,7 +45,7 @@ async function getUserRankTier(twitchUsername: string): Promise<number> {
   try {
     const profile = await getDotabodRankProfile(twitchUsername)
     return profile?.rank_tier || 0
-  } catch (_error) {
+  } catch {
     return 0
   }
 }
@@ -74,7 +74,7 @@ twitchChat.on(
     }
   ) => {
     if (!channelId) {
-      logger.error('No channelId', { channel, user, text })
+      logger.error('No channelId', { channel, text, user })
       return
     }
 
@@ -87,11 +87,11 @@ twitchChat.on(
     if (!client) {
       const now = Date.now()
       const lastMessageTime = lastMissingUserMessageTimestamps[channel] || 0
-      const RATE_LIMIT_MS = 10000
+      const RATE_LIMIT_MS = 10_000
       const shouldSendMessage = now - lastMessageTime > RATE_LIMIT_MS
 
       if (shouldSendMessage && text.startsWith('!')) {
-        logger.info('[TWITCH] Missing user', { channelId, channel, user, reason })
+        logger.info('[TWITCH] Missing user', { channel, channelId, reason, user })
         chatClient.say(channel, t('missingUser', { lng: 'en' }))
         lastMissingUserMessageTimestamps[channel] = now
         return
@@ -110,7 +110,7 @@ twitchChat.on(
     }
 
     // Looks up the chatter's followage date, and their Twitch account creation date, and if its within 10 days of each other, sends a message replying to them
-    const shouldCheckAltAccount = !disableAltAccountCheck && `${channelId}` === '40754777' // Only check this for now
+    const shouldCheckAltAccount = !disableAltAccountCheck && channelId === '40754777' // Only check this for now
     if (shouldCheckAltAccount) {
       await checkAltAccount(channel, user, channelId, userInfo, messageId, client)
     }
@@ -137,7 +137,6 @@ twitchChat.on(
             const requiredRank =
               rankOnlySettings.minimumRank || getRankTitle(rankOnlySettings.minimumRankTier)
             await ctx.moderation.banUser(channelId, {
-              user: userInfo.userId,
               duration: 30,
               reason: t('rankOnlyMode', {
                 url: 'dotabod.com/verify',
@@ -145,11 +144,12 @@ twitchChat.on(
                 requiredRank,
                 lng: client.locale || 'en',
               }),
+              user: userInfo.userId,
             })
           })
-        } catch (e) {
+        } catch (error) {
           logger.error('[TWITCH] Failed to delete message or timeout user', {
-            error: e,
+            error: error,
             channel,
             user,
             messageId,
@@ -168,11 +168,11 @@ twitchChat.on(
           chatClient.say(
             channel,
             t('rankOnlyMode', {
-              url: 'dotabod.com/verify',
+              lng: client.locale || 'en',
               name: user,
               requiredRank,
+              url: 'dotabod.com/verify',
               userRank: userRank || 'Uncalibrated',
-              lng: client.locale || 'en',
             })
           )
 
@@ -198,12 +198,12 @@ twitchChat.on(
       })
       chatClient.say(
         channel,
-        t('pleb', { emote: 'EZ Clap', context: 'off', name: user, lng: 'en' })
+        t('pleb', { context: 'off', emote: 'EZ Clap', lng: 'en', name: user })
       )
       return
     }
 
-    if (!text.startsWith('!')) return
+    if (!text.startsWith('!')) {return}
 
     const isBotDisabled = getValueOrDefault(
       DBSettings.commandDisable,
@@ -216,7 +216,7 @@ twitchChat.on(
       !toggleCommand?.aliases?.includes(text.replace('!', '').split(' ')[0]) &&
       text.split(' ')[0] !== '!toggle'
     ) {
-      logger.debug('Bot is disabled', { channel, user, text })
+      logger.debug('Bot is disabled', { channel, text, user })
       return
     }
 
@@ -225,39 +225,39 @@ twitchChat.on(
     // add a hashtag to the beginning of the channel name if its not there already
     const channelName = channel.startsWith('#') ? channel : `#${channel}`
     await commandHandler.handleMessage({
-      channel: { name: channelName, id: channelId, client, settings: client.settings },
+      channel: { client, id: channelId, name: channelName, settings: client.settings },
+      content: text,
       user: {
         messageId: messageId,
         name: user,
-        userId: userInfo.userId,
         permission: userInfo.isBroadcaster ? 3 : userInfo.isMod ? 2 : userInfo.isSubscriber ? 1 : 0,
+        userId: userInfo.userId,
       },
-      content: text,
     })
   }
 )
 
 const events = {
-  subscribeToChannelPredictionBeginEvents: EventSubChannelPredictionBeginEvent,
-  subscribeToChannelPredictionProgressEvents: EventSubChannelPredictionProgressEvent,
-  subscribeToChannelPredictionLockEvents: EventSubChannelPredictionLockEvent,
-  subscribeToChannelPredictionEndEvents: EventSubChannelPredictionEndEvent,
   subscribeToChannelPollBeginEvents: EventSubChannelPollBeginEvent,
-  subscribeToChannelPollProgressEvents: EventSubChannelPollProgressEvent,
   subscribeToChannelPollEndEvents: EventSubChannelPollEndEvent,
+  subscribeToChannelPollProgressEvents: EventSubChannelPollProgressEvent,
+  subscribeToChannelPredictionBeginEvents: EventSubChannelPredictionBeginEvent,
+  subscribeToChannelPredictionEndEvents: EventSubChannelPredictionEndEvent,
+  subscribeToChannelPredictionLockEvents: EventSubChannelPredictionLockEvent,
+  subscribeToChannelPredictionProgressEvents: EventSubChannelPredictionProgressEvent,
 }
 
 twitchChat.on('event', (eventName: keyof typeof events, broadcasterId: string, data: unknown) => {
   // Can start doing something with the events
 
   const token = getTokenFromTwitchId(broadcasterId)
-  if (!token) return
+  if (!token) {return}
 
   const client = findUser(token)
-  if (!client) return
+  if (!client) {return}
 
   const isEnabled = getValueOrDefault(DBSettings.livePolls, client.settings, client.subscription)
-  if (!isEnabled) return
+  if (!isEnabled) {return}
 
   server.io.to(token).emit('channelPollOrBet', data, eventName)
 })

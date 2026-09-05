@@ -1,5 +1,6 @@
 import DOTA_AGHS from 'dotaconstants/build/aghs_desc.json' with { type: 'json' }
 import { t } from 'i18next'
+
 import type { GSIHandlerType } from '../../dota/GSIHandlerTypes'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { hasCurrentGameContext } from '../../dota/lib/getCurrentMatchId'
@@ -10,7 +11,6 @@ import commandHandler from '../lib/CommandHandler'
 import { findAccountFromCmd } from '../lib/findGSIByAccountId'
 
 commandHandler.registerCommand('shard', {
-  onlyOnline: true,
   dbkey: DBSettings.commandShard,
   handler: async (message, args, command) => {
     const {
@@ -23,7 +23,7 @@ commandHandler.registerCommand('shard', {
       chatClient.say(
         channelName,
         t('notPlaying', { emote: 'PauseChamp', lng: channelClient.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -33,13 +33,13 @@ commandHandler.registerCommand('shard', {
         channelClient,
         args,
         channelClient.locale,
-        command,
+        command
       )
       if (!isValidHero(hero) || !hero) {
         chatClient.say(
           channelName,
           t('gameNotFound', { lng: channelClient.locale }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -51,23 +51,23 @@ commandHandler.registerCommand('shard', {
         chatClient.say(
           channelName,
           t('missingMatchData', { emote: 'PauseChamp', lng: channelClient.locale }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
 
       if (!heroShard.has_shard) {
-        return chatClient.say(
+         chatClient.say(
           channelName,
           withHeroLink(
             t('noShard', {
               lng: channelClient.locale,
               heroName: getHeroNameOrColor(hero.id, playerIdx),
             }),
-            hero.id,
+            hero.id
           ),
-          message.user.messageId,
-        )
+          message.user.messageId
+        ); return;
       }
 
       chatClient.say(
@@ -79,27 +79,28 @@ commandHandler.registerCommand('shard', {
             title: heroShard?.shard_skill_name,
             description: heroShard?.shard_desc,
           }),
-          hero.id,
+          hero.id
         ),
-        message.user.messageId,
+        message.user.messageId
       )
     } catch (error) {
       chatClient.say(
         channelName,
         (error as Error).message ?? t('gameNotFound', { lng: channelClient.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
     }
   },
+  onlyOnline: true,
 })
 
 const isValidGSIHandler = (
   gsiHandler: GSIHandlerType | undefined,
-  hasCurrentGame: boolean,
-): boolean => {
-  return !!gsiHandler && hasCurrentGame
-}
+  hasCurrentGame: boolean
+): boolean => 
+  !!gsiHandler && hasCurrentGame
 
-const isValidHero = (hero: { id?: number } | null | undefined): boolean => {
-  return typeof hero?.id === 'number' && !!getHeroById(hero.id)
-}
+
+const isValidHero = (hero: { id?: number } | null | undefined): boolean => 
+  typeof hero?.id === 'number' && !!getHeroById(hero.id)
+

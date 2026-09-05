@@ -9,7 +9,7 @@ export function getBotInstance() {
     logger.info('[TWITCH] Retrieving twitch dotabod api')
     const authProvider = new AppTokenAuthProvider(
       process.env.TWITCH_CLIENT_ID ?? '',
-      process.env.TWITCH_CLIENT_SECRET ?? '',
+      process.env.TWITCH_CLIENT_SECRET ?? ''
     )
     const api = new ApiClient({
       authProvider,

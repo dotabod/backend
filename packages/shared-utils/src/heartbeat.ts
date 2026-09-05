@@ -1,8 +1,8 @@
 import { logger } from './logger'
 
-type HeartbeatStatus = { up: boolean; msg?: string }
+interface HeartbeatStatus { up: boolean; msg?: string }
 
-type HeartbeatOptions = {
+interface HeartbeatOptions {
   url?: string
   getStatus?: () => HeartbeatStatus | Promise<HeartbeatStatus>
   intervalMs?: number
@@ -13,7 +13,7 @@ type HeartbeatOptions = {
 export function startHeartbeat(opts: HeartbeatOptions = {}): void {
   const {
     url = process.env.KUMA_PUSH_URL,
-    getStatus = () => ({ up: true, msg: 'OK' }),
+    getStatus = () => ({ msg: 'OK', up: true }),
     intervalMs = 30_000,
     debounceMs = 0,
     name = 'uptime heartbeat',
@@ -35,7 +35,7 @@ export function startHeartbeat(opts: HeartbeatOptions = {}): void {
       downSince = null
     } else {
       const now = Date.now()
-      if (downSince === null) downSince = now
+      if (downSince === null) {downSince = now}
       report = now - downSince < debounceMs
     }
 
@@ -45,8 +45,8 @@ export function startHeartbeat(opts: HeartbeatOptions = {}): void {
       await fetch(`${url}?status=${status}&msg=${encodeURIComponent(message)}`, {
         signal: AbortSignal.timeout(10_000),
       })
-    } catch (e) {
-      logger.error(`${name}: failed to send heartbeat`, e)
+    } catch (error) {
+      logger.error(`${name}: failed to send heartbeat`, error)
     }
   }
 

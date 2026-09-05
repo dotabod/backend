@@ -1,12 +1,12 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('setdelay', {
   aliases: ['delay=', 'setstreamdelay', 'streamdelay='],
-  permission: 2,
   cooldown: 0,
   handler: async (message, args) => {
     if (Number.isNaN(Number(args[0]))) {
@@ -15,7 +15,7 @@ commandHandler.registerCommand('setdelay', {
         t('setStreamDelayNoArgs', {
           lng: message.channel.client.locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
 
       return
@@ -37,7 +37,7 @@ commandHandler.registerCommand('setdelay', {
       },
       {
         onConflict: 'userId, key',
-      },
+      }
     )
 
     chatClient.say(
@@ -50,7 +50,8 @@ commandHandler.registerCommand('setdelay', {
             lng: message.channel.client.locale,
             seconds: delayInSeconds,
           }),
-      message.user.messageId,
+      message.user.messageId
     )
   },
+  permission: 2,
 })

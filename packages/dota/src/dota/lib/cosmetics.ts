@@ -19,15 +19,15 @@ const cosmetics = COSMETICS as Record<string, CosmeticMeta>
 // model parts (e.g. Invoker's base arms) and are skipped, leaving only the
 // player-equipped wearables.
 export function resolveCosmetics(wearables?: Record<string, number>): ResolvedCosmetic[] {
-  if (!wearables) return []
+  if (!wearables) {return []}
 
   const items: ResolvedCosmetic[] = []
   for (const [key, defindex] of Object.entries(wearables)) {
-    if (!/^wearable\d+$/.test(key)) continue
-    if (typeof defindex !== 'number') continue
+    if (!/^wearable\d+$/.test(key)) {continue}
+    if (typeof defindex !== 'number') {continue}
 
     const meta = cosmetics[String(defindex)]
-    if (!meta) continue
+    if (!meta) {continue}
 
     items.push({ defindex, ...meta })
   }

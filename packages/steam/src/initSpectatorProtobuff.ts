@@ -1,9 +1,10 @@
 // @ts-expect-error no types
 import Dota2 from 'dota2'
 import type { Long } from 'mongodb'
+
 import { logger } from './utils/logger'
 
-type SpectateFriendGameResponse = { server_steamid: Long; watch_live_result: number }
+interface SpectateFriendGameResponse { server_steamid: Long; watch_live_result: number }
 type SpectateFriendGameCallback = (response: SpectateFriendGameResponse, err?: unknown) => void
 
 function onGCSpectateFriendGameResponse(message: Buffer, callback?: SpectateFriendGameCallback) {
@@ -16,9 +17,9 @@ function onGCSpectateFriendGameResponse(message: Buffer, callback?: SpectateFrie
 }
 
 export function initSpectatorProtobuff() {
-  Dota2.Dota2Client.prototype.spectateFriendGame = function (
+  Dota2.Dota2Client.prototype.spectateFriendGame = function  spectateFriendGame(
     friend: { steam_id: number; live: boolean },
-    callback: SpectateFriendGameCallback,
+    callback: SpectateFriendGameCallback
   ) {
     const localCallback = callback || null
     if (!this._gcReady) {
@@ -31,7 +32,7 @@ export function initSpectatorProtobuff() {
       Dota2.schema.EDOTAGCMsg.k_EMsgGCSpectateFriendGame,
       payload,
       onGCSpectateFriendGameResponse,
-      localCallback,
+      localCallback
     )
   }
   Dota2.Dota2Client.prototype._handlers[

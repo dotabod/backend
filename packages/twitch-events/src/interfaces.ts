@@ -2,7 +2,7 @@ import type { TwitchEventTypes } from './TwitchEventTypes'
 
 export interface TwitchEventSubResponse {
   // A list that contains the single subscription that you created
-  data: Array<{
+  data: {
     // An ID that identifies the subscription
     id: string
     // The subscription's status. Only enabled subscriptions receive events
@@ -30,7 +30,7 @@ export interface TwitchEventSubResponse {
     }
     // Subscription cost against limit
     cost: number
-  }>
+  }[]
   // Total subscriptions created
   total: number
   // Sum of all subscription costs

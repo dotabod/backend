@@ -1,12 +1,14 @@
 import { botStatus, fetchConduitId, logger } from '@dotabod/shared-utils'
-import { Server, type Socket } from 'socket.io'
+import { Server } from 'socket.io';
+import type { Socket } from 'socket.io';
+
 import { handleNewUser } from '../handleNewUser'
 import { revokeEvent } from '../twitch/lib/revokeEvent'
 
 const socketIo = new Server(5015, {
   cors: {
-    origin: '*', // This allows any origin - adjust for production
     methods: ['GET', 'POST'],
+    origin: '*', // This allows any origin - adjust for production,
   },
 })
 
@@ -32,7 +34,7 @@ async function sendConduitData(socket: Socket, forceRefresh = false) {
     }
 
     logger.info('[TWITCHEVENTS] Sending conduit data', {
-      conduitId: `${conduitId.substring(0, 8)}...`,
+      conduitId: `${conduitId.slice(0, 8)}...`,
     })
     socket.emit('conduitData', { conduitId })
   } catch (error) {
@@ -53,8 +55,8 @@ export function onSocketEnable(providerAccountId: string): void {
   logger.info('[TWITCHEVENTS] Enabling events for user', { providerAccountId })
   handleNewUser(providerAccountId, true).catch((error) => {
     logger.error('[TWITCHEVENTS] socket enable handleNewUser failed', {
-      providerAccountId,
       error: error instanceof Error ? error.message : String(error),
+      providerAccountId,
     })
   })
 }
@@ -63,8 +65,8 @@ export function onSocketResubscribe(providerAccountId: string): void {
   logger.info('[TWITCHEVENTS] Resubscribing to events for user', { providerAccountId })
   handleNewUser(providerAccountId, true).catch((error) => {
     logger.error('[TWITCHEVENTS] socket resubscribe handleNewUser failed', {
-      providerAccountId,
       error: error instanceof Error ? error.message : String(error),
+      providerAccountId,
     })
   })
 }

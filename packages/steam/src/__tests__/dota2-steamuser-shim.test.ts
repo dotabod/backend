@@ -4,12 +4,11 @@
 // node:events / EventEmitter below.
 /// <reference types="node" />
 import { EventEmitter } from 'node:events'
+
 import { describe, expect, it } from 'vitest'
-import {
-  SteamGameCoordinatorShim,
-  type SteamUserClient,
-  SteamUserShim,
-} from '../utils/dota2SteamUser'
+
+import { SteamGameCoordinatorShim, SteamUserShim } from '../utils/dota2SteamUser';
+import type { SteamUserClient } from '../utils/dota2SteamUser';
 
 const DOTA_APP_ID = 570
 
@@ -19,13 +18,13 @@ const DOTA_APP_ID = 570
 class FakeSteamUser extends EventEmitter {
   steamID = { toString: () => '76561198000000000' }
   loggedOn = false
-  sentToGC: Array<{
+  sentToGC: {
     appid: number
     msgType: number
     header: Record<string, unknown> | null
     body: Buffer
     callback?: (appid: number, msgType: number, payload: Buffer) => void
-  }> = []
+  }[] = []
   playedApps: unknown[] = []
 
   sendToGC(
@@ -33,9 +32,9 @@ class FakeSteamUser extends EventEmitter {
     msgType: number,
     header: Record<string, unknown> | null,
     body: Buffer,
-    callback?: (appid: number, msgType: number, payload: Buffer) => void,
+    callback?: (appid: number, msgType: number, payload: Buffer) => void
   ) {
-    this.sentToGC.push({ appid, msgType, header, body, callback })
+    this.sentToGC.push({ appid, body, callback, header, msgType })
   }
 
   gamesPlayed(apps: unknown) {
@@ -45,7 +44,7 @@ class FakeSteamUser extends EventEmitter {
 
 const asClient = (u: FakeSteamUser): SteamUserClient => u as unknown as SteamUserClient
 
-describe('SteamGameCoordinatorShim', () => {
+describe(SteamGameCoordinatorShim, () => {
   it('maps v1 .send() to sendToGC on the protobuf path (header {}, no mask handling)', () => {
     const user = new FakeSteamUser()
     const gc = new SteamGameCoordinatorShim(asClient(user), DOTA_APP_ID)
@@ -57,8 +56,8 @@ describe('SteamGameCoordinatorShim', () => {
     const call = user.sentToGC[0]
     expect(call.appid).toBe(DOTA_APP_ID)
     expect(call.msgType).toBe(4006)
-    expect(call.header).toEqual({})
-    expect(call.body).toEqual(body)
+    expect(call.header).toStrictEqual({})
+    expect(call.body).toStrictEqual(body)
     expect(call.callback).toBeUndefined()
   })
 
@@ -68,8 +67,8 @@ describe('SteamGameCoordinatorShim', () => {
 
     gc.send({ msg: 4006, proto: {} }, Uint8Array.from([9, 8, 7]))
 
-    expect(Buffer.isBuffer(user.sentToGC[0].body)).toBe(true)
-    expect(user.sentToGC[0].body).toEqual(Buffer.from([9, 8, 7]))
+    expect(Buffer.isBuffer(user.sentToGC[0].body)).toBeTruthy()
+    expect(user.sentToGC[0].body).toStrictEqual(Buffer.from([9, 8, 7]))
   })
 
   it('routes a job response back to the v1-style (header, body) callback', () => {
@@ -78,7 +77,7 @@ describe('SteamGameCoordinatorShim', () => {
 
     let received: { header: unknown; body: Buffer } | undefined
     gc.send({ msg: 7000, proto: {} }, Buffer.from([9]), (header, respBody) => {
-      received = { header, body: respBody }
+      received = { body: respBody, header }
     })
 
     const jobCb = user.sentToGC[0].callback
@@ -89,25 +88,25 @@ describe('SteamGameCoordinatorShim', () => {
     jobCb?.(DOTA_APP_ID, 7001, resp)
 
     // node-dota2 expects (header{msg}, body); only msg + body are read.
-    expect(received?.header).toEqual({ msg: 7001, proto: {} })
-    expect(received?.body).toEqual(resp)
+    expect(received?.header).toStrictEqual({ msg: 7001, proto: {} })
+    expect(received?.body).toStrictEqual(resp)
   })
 
   it("re-emits non-job GC pushes as a v1 'message' event (callback null)", () => {
     const user = new FakeSteamUser()
     const gc = new SteamGameCoordinatorShim(asClient(user), DOTA_APP_ID)
 
-    const events: Array<{ header: unknown; body: Buffer; cb: unknown }> = []
+    const events: { header: unknown; body: Buffer; cb: unknown }[] = []
     gc.on('message', (header: unknown, body: Buffer, cb: unknown) =>
-      events.push({ header, body, cb }),
+      events.push({ body, cb, header })
     )
 
     const payload = Buffer.from([7, 7, 7])
     user.emit('receivedFromGC', DOTA_APP_ID, 4004 /* k_EMsgGCClientWelcome */, payload)
 
     expect(events).toHaveLength(1)
-    expect(events[0].header).toEqual({ msg: 4004, proto: {} })
-    expect(events[0].body).toEqual(payload)
+    expect(events[0].header).toStrictEqual({ msg: 4004, proto: {} })
+    expect(events[0].body).toStrictEqual(payload)
     expect(events[0].cb).toBeNull()
   })
 
@@ -124,7 +123,7 @@ describe('SteamGameCoordinatorShim', () => {
   })
 })
 
-describe('SteamUserShim', () => {
+describe(SteamUserShim, () => {
   it('forwards gamesPlayed (node-dota2 launch/exit) to the steam-user instance', () => {
     const user = new FakeSteamUser()
     const shim = new SteamUserShim(asClient(user))
@@ -132,6 +131,6 @@ describe('SteamUserShim', () => {
     shim.gamesPlayed([{ game_id: DOTA_APP_ID }])
     shim.gamesPlayed([])
 
-    expect(user.playedApps).toEqual([[{ game_id: DOTA_APP_ID }], []])
+    expect(user.playedApps).toStrictEqual([[{ game_id: DOTA_APP_ID }], []])
   })
 })

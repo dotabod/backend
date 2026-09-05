@@ -1,7 +1,8 @@
 import { t } from 'i18next'
 
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler';
+import type { MessageType } from '../lib/CommandHandler';
 
 commandHandler.registerCommand('dotabod', {
   handler: (message: MessageType) => {
@@ -11,8 +12,8 @@ commandHandler.registerCommand('dotabod', {
 
     chatClient.say(
       channel,
-      t('dotabod', { url: 'dotabod.com', author: '@techleed ', lng: client.locale }),
-      message.user.messageId,
+      t('dotabod', { author: '@techleed ', lng: client.locale, url: 'dotabod.com' }),
+      message.user.messageId
     )
   },
 })

@@ -1,10 +1,8 @@
 import type { Database } from '@dotabod/shared-utils'
+
 import type { ChatterSettingKeys, SettingKeys } from '../types/settings'
-import {
-  isSubscriptionActive,
-  SUBSCRIPTION_TIERS,
-  type SubscriptionRow,
-} from '../types/subscription'
+import { isSubscriptionActive, SUBSCRIPTION_TIERS } from '../types/subscription';
+import type { SubscriptionRow } from '../types/subscription';
 
 const TIER_LEVELS: Record<Database['public']['Enums']['SubscriptionTier'], number> = {
   [SUBSCRIPTION_TIERS.FREE]: 0,
@@ -153,19 +151,19 @@ export type FeatureTier = keyof typeof FEATURE_TIERS
 
 // Add new mapping for generic features
 const GENERIC_FEATURE_TIERS = {
-  managers: SUBSCRIPTION_TIERS.PRO,
-  autoOBS: SUBSCRIPTION_TIERS.PRO,
+  auto7TV: SUBSCRIPTION_TIERS.PRO,
   autoInstaller: SUBSCRIPTION_TIERS.PRO,
   autoModerator: SUBSCRIPTION_TIERS.PRO,
-  auto7TV: SUBSCRIPTION_TIERS.PRO,
+  autoOBS: SUBSCRIPTION_TIERS.PRO,
+  managers: SUBSCRIPTION_TIERS.PRO,
 } as const
 
 export type GenericFeature = keyof typeof GENERIC_FEATURE_TIERS
 
 export function getRequiredTier(
-  feature?: FeatureTier | GenericFeature,
+  feature?: FeatureTier | GenericFeature
 ): Database['public']['Enums']['SubscriptionTier'] {
-  if (!feature) return SUBSCRIPTION_TIERS.PRO
+  if (!feature) {return SUBSCRIPTION_TIERS.PRO}
 
   return (
     FEATURE_TIERS[feature as FeatureTier] ||
@@ -189,7 +187,7 @@ export function isInGracePeriod(): boolean {
 // Update canAccessFeature to handle chatter keys
 export function canAccessFeature(
   feature: FeatureTier | GenericFeature,
-  subscription: SubscriptionRow | null | undefined,
+  subscription: SubscriptionRow | null | undefined
 ): { hasAccess: boolean; requiredTier: Database['public']['Enums']['SubscriptionTier'] } {
   const requiredTier = getRequiredTier(feature)
   const isFreeFeature = requiredTier === SUBSCRIPTION_TIERS.FREE
@@ -211,10 +209,10 @@ export function canAccessFeature(
   }
 
   if (!subscription?.tier)
-    return {
+    {return {
       hasAccess: false,
       requiredTier: requiredTier,
-    }
+    }}
 
   // Return early if feature is free or subscription is invalid
   if (isFreeFeature || !subscription || !isSubscriptionActive(subscription)) {

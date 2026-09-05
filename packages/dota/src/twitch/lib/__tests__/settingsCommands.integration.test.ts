@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+
 import { DBSettings } from '../../../settings.ts'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
@@ -55,7 +56,7 @@ describe('!only', () => {
     await commandHandler.handleMessage(makeMessage({ content: '!only off' }))
     expect(state.upsertCalls).toHaveLength(1)
     const value = JSON.parse(state.upsertCalls[0].values.value as string)
-    expect(value.enabled).toBe(false)
+    expect(value.enabled).toBeFalsy()
   })
 
   it('rejects an unrecognized rank', async () => {
@@ -76,9 +77,9 @@ describe('!mute', () => {
   it('un-mutes by persisting chatter=true when it was already off', async () => {
     await commandHandler.handleMessage(
       makeMessage({
+        clientOverrides: { settings: [{ key: DBSettings.chatter, value: false }] },
         content: '!mute',
-        clientOverrides: { settings: [{ key: DBSettings.chatter, value: false }] } as any,
-      }),
+      })
     )
     expect(state.upsertCalls[0].values).toMatchObject({ key: DBSettings.chatter, value: true })
     expect(state.chatSayCalls).toHaveLength(1)
@@ -86,7 +87,7 @@ describe('!mute', () => {
 
   it('blocks viewers (permission below mod)', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!mute', permission: 0, userName: 'viewer' }),
+      makeMessage({ content: '!mute', permission: 0, userName: 'viewer' })
     )
     expect(state.upsertCalls).toHaveLength(0)
     expect(state.chatSayCalls).toHaveLength(0)

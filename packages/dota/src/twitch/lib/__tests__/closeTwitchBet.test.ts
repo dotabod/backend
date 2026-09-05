@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+
 import { DBSettings } from '../../../settings'
 import type { SocketClient } from '../../../types'
 import { closeTwitchBet, PRO_SUB, resetState, state } from './setupMocks'
 
-describe('closeTwitchBet', () => {
+describe(closeTwitchBet, () => {
   const mockTwitchId = '123456789'
   const mockMatchId = 'match-123'
   const mockPredictionId = 'pred-456'
@@ -16,11 +17,11 @@ describe('closeTwitchBet', () => {
     state.predictions = [
       {
         id: mockPredictionId,
-        status: 'ACTIVE',
         outcomes: [
           { id: 'outcome-1', users: 10, title: 'Yes' },
           { id: 'outcome-2', users: 0, title: 'No' },
         ],
+        status: 'ACTIVE',
       },
     ]
 
@@ -28,8 +29,8 @@ describe('closeTwitchBet', () => {
 
     await closeTwitchBet(true, mockTwitchId, mockMatchId, settings, PRO_SUB)
 
-    expect(state.resolvePredictionCalls).toEqual([
-      { twitchId: mockTwitchId, predictionId: mockPredictionId, outcomeId: 'outcome-1' },
+    expect(state.resolvePredictionCalls).toStrictEqual([
+      { outcomeId: 'outcome-1', predictionId: mockPredictionId, twitchId: mockTwitchId },
     ])
     expect(state.cancelPredictionCalls).toHaveLength(0)
   })
@@ -38,11 +39,11 @@ describe('closeTwitchBet', () => {
     state.predictions = [
       {
         id: mockPredictionId,
-        status: 'ACTIVE',
         outcomes: [
           { id: 'outcome-1', users: 0, title: 'Yes' },
           { id: 'outcome-2', users: 5, title: 'No' },
         ],
+        status: 'ACTIVE',
       },
     ]
 
@@ -50,17 +51,17 @@ describe('closeTwitchBet', () => {
 
     await closeTwitchBet(true, mockTwitchId, mockMatchId, settings, PRO_SUB)
 
-    expect(state.cancelPredictionCalls).toEqual([
-      { twitchId: mockTwitchId, predictionId: mockPredictionId },
+    expect(state.cancelPredictionCalls).toStrictEqual([
+      { predictionId: mockPredictionId, twitchId: mockTwitchId },
     ])
     expect(state.resolvePredictionCalls).toHaveLength(0)
     expect(state.loggerInfoCalls).toContainEqual({
       message: '[PREDICT] [BETS] Refunding prediction - zero predictions on one side',
       meta: expect.objectContaining({
-        twitchId: mockTwitchId,
-        matchId: mockMatchId,
-        wonOutcomeUsers: 0,
         lossOutcomeUsers: 5,
+        matchId: mockMatchId,
+        twitchId: mockTwitchId,
+        wonOutcomeUsers: 0,
       }),
     })
   })
@@ -69,11 +70,11 @@ describe('closeTwitchBet', () => {
     state.predictions = [
       {
         id: mockPredictionId,
-        status: 'ACTIVE',
         outcomes: [
           { id: 'outcome-1', users: 8, title: 'Yes' },
           { id: 'outcome-2', users: 0, title: 'No' },
         ],
+        status: 'ACTIVE',
       },
     ]
 
@@ -81,8 +82,8 @@ describe('closeTwitchBet', () => {
 
     await closeTwitchBet(false, mockTwitchId, mockMatchId, settings, PRO_SUB)
 
-    expect(state.cancelPredictionCalls).toEqual([
-      { twitchId: mockTwitchId, predictionId: mockPredictionId },
+    expect(state.cancelPredictionCalls).toStrictEqual([
+      { predictionId: mockPredictionId, twitchId: mockTwitchId },
     ])
     expect(state.resolvePredictionCalls).toHaveLength(0)
   })
@@ -91,11 +92,11 @@ describe('closeTwitchBet', () => {
     state.predictions = [
       {
         id: mockPredictionId,
-        status: 'ACTIVE',
         outcomes: [
           { id: 'outcome-1', users: 10, title: 'Yes' },
           { id: 'outcome-2', users: 5, title: 'No' },
         ],
+        status: 'ACTIVE',
       },
     ]
 
@@ -103,8 +104,8 @@ describe('closeTwitchBet', () => {
 
     await closeTwitchBet(true, mockTwitchId, mockMatchId, settings, PRO_SUB)
 
-    expect(state.resolvePredictionCalls).toEqual([
-      { twitchId: mockTwitchId, predictionId: mockPredictionId, outcomeId: 'outcome-1' },
+    expect(state.resolvePredictionCalls).toStrictEqual([
+      { outcomeId: 'outcome-1', predictionId: mockPredictionId, twitchId: mockTwitchId },
     ])
     expect(state.cancelPredictionCalls).toHaveLength(0)
   })
@@ -113,18 +114,18 @@ describe('closeTwitchBet', () => {
     state.predictions = [
       {
         id: mockPredictionId,
-        status: 'ACTIVE',
         outcomes: [
           { id: 'outcome-1', users: 10, title: 'Yes' },
           { id: 'outcome-2', users: 0, title: 'No' },
         ],
+        status: 'ACTIVE',
       },
     ]
 
-    await closeTwitchBet(true, mockTwitchId, mockMatchId, undefined, undefined)
+    await closeTwitchBet(true, mockTwitchId, mockMatchId)
 
-    expect(state.resolvePredictionCalls).toEqual([
-      { twitchId: mockTwitchId, predictionId: mockPredictionId, outcomeId: 'outcome-1' },
+    expect(state.resolvePredictionCalls).toStrictEqual([
+      { outcomeId: 'outcome-1', predictionId: mockPredictionId, twitchId: mockTwitchId },
     ])
     expect(state.cancelPredictionCalls).toHaveLength(0)
   })
@@ -132,7 +133,7 @@ describe('closeTwitchBet', () => {
   it('should handle case with no predictions found', async () => {
     state.predictions = []
 
-    await closeTwitchBet(true, mockTwitchId, mockMatchId, undefined, undefined)
+    await closeTwitchBet(true, mockTwitchId, mockMatchId)
 
     expect(state.resolvePredictionCalls).toHaveLength(0)
     expect(state.cancelPredictionCalls).toHaveLength(0)
@@ -146,21 +147,21 @@ describe('closeTwitchBet', () => {
     state.predictions = [
       {
         id: mockPredictionId,
-        status: 'ACTIVE',
         outcomes: [
           { id: 'outcome-1', users: 10, title: 'Yes' },
           { id: 'outcome-2', users: 5, title: 'No' },
         ],
+        status: 'ACTIVE',
       },
     ]
     // Fail twice (the two retries), succeed on the third attempt.
     state.getPredictionsTransientFailures = 2
 
-    await closeTwitchBet(true, mockTwitchId, mockMatchId, undefined, undefined)
+    await closeTwitchBet(true, mockTwitchId, mockMatchId)
 
     expect(state.getPredictionsCalls).toHaveLength(3)
-    expect(state.resolvePredictionCalls).toEqual([
-      { twitchId: mockTwitchId, predictionId: mockPredictionId, outcomeId: 'outcome-1' },
+    expect(state.resolvePredictionCalls).toStrictEqual([
+      { outcomeId: 'outcome-1', predictionId: mockPredictionId, twitchId: mockTwitchId },
     ])
     // The blip was absorbed by the retry, so no error was surfaced.
     expect(state.loggerErrorCalls).toHaveLength(0)

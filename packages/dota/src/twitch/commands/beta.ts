@@ -1,11 +1,12 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler';
+import type { MessageType } from '../lib/CommandHandler';
 
 commandHandler.registerCommand('beta', {
   aliases: ['joinbeta', 'leavebeta', 'betaoff', 'betaon'],
-  permission: 2,
   cooldown: 0,
   handler: (message: MessageType, _args: string[]) => {
     async function handler() {
@@ -24,7 +25,7 @@ commandHandler.registerCommand('beta', {
           channel: message.channel.name,
           context: message.channel.client.beta_tester ? 'off' : 'on',
         }),
-        message.user.messageId,
+        message.user.messageId
       )
     }
 
@@ -34,4 +35,5 @@ commandHandler.registerCommand('beta', {
       logger.error('Error in beta command', { e })
     }
   },
+  permission: 2,
 })

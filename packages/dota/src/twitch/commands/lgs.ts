@@ -1,7 +1,9 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { LOBBY_TYPE_RANKED } from '../../db/getWL'
-import getHero, { type HeroNames } from '../../dota/lib/getHero'
+import getHero from '../../dota/lib/getHero';
+import type { HeroNames } from '../../dota/lib/getHero';
 import { DBSettings } from '../../settings'
 import { dotabodMatchHistoryUrl } from '../../utils/index'
 import { chatClient } from '../chatClient'
@@ -20,7 +22,7 @@ commandHandler.registerCommand('lgs', {
               url: 'dotabod.com/dashboard/features',
             })
           : t('unknownSteam', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -38,7 +40,7 @@ commandHandler.registerCommand('lgs', {
           hero_name,
           created_at,
           updated_at
-        `,
+        `
       )
       .eq('steam32Id', steam32Id)
       .not('won', 'is', null)
@@ -50,7 +52,7 @@ commandHandler.registerCommand('lgs', {
       chatClient.say(
         message.channel.name,
         t('noLastMatch', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -60,7 +62,7 @@ commandHandler.registerCommand('lgs', {
     returnMsg.push(
       lg.won
         ? t('lastgamescore.won', { lng: message.channel.client.locale })
-        : t('lastgamescore.lost', { lng: message.channel.client.locale }),
+        : t('lastgamescore.lost', { lng: message.channel.client.locale })
     )
 
     const kda = lg.kda as {
@@ -72,32 +74,32 @@ commandHandler.registerCommand('lgs', {
       const kdaMsg = `${kda.kills ?? 0}/${kda.deaths ?? 0}/${kda.assists ?? 0}`
       returnMsg.push(
         t('lastgamescore.kda', {
-          lng: message.channel.client.locale,
           heroName:
             getHero(lg.hero_name as HeroNames)?.localized_name ??
             t('unknown', { lng: message.channel.client.locale }),
           kdavalue: kdaMsg,
-        }),
+          lng: message.channel.client.locale,
+        })
       )
     }
 
     // calculate the time difference in minutes between created_at and updated_at
     const lasted = Math.floor(
-      (new Date(lg.updated_at).getTime() - new Date(lg.created_at).getTime()) / 1000 / 60,
+      (new Date(lg.updated_at).getTime() - new Date(lg.created_at).getTime()) / 1000 / 60
     )
 
     returnMsg.push(
-      t('lastgamescore.duration', { minutes: lasted, lng: message.channel.client.locale }),
+      t('lastgamescore.duration', { lng: message.channel.client.locale, minutes: lasted })
     )
 
     if (lg.is_party)
-      returnMsg.push(t('lastgamescore.party', { lng: message.channel.client.locale }))
+      {returnMsg.push(t('lastgamescore.party', { lng: message.channel.client.locale }))}
     if (lg.is_doubledown)
-      returnMsg.push(t('lastgamescore.double', { lng: message.channel.client.locale }))
+      {returnMsg.push(t('lastgamescore.double', { lng: message.channel.client.locale }))}
     if (lg.lobby_type !== LOBBY_TYPE_RANKED)
-      returnMsg.push(t('lastgamescore.unranked', { lng: message.channel.client.locale }))
+      {returnMsg.push(t('lastgamescore.unranked', { lng: message.channel.client.locale }))}
     const url = dotabodMatchHistoryUrl(message.channel.client)
-    if (url) returnMsg.push(url)
+    if (url) {returnMsg.push(url)}
 
     chatClient.say(message.channel.name, returnMsg.join(' · '), message.user.messageId)
   },

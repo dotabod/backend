@@ -1,5 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { t } from 'i18next'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { flushAsync } from '../../../__tests__/sharedMocks.ts'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
@@ -43,7 +44,7 @@ describe('!locale', () => {
 
   it('falls back to the no-translator message for an unknown locale', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!locale', clientOverrides: { locale: 'xx-XX' } }),
+      makeMessage({ clientOverrides: { locale: 'xx-XX' }, content: '!locale' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain('crowdin.com/project/dotabod')
@@ -67,11 +68,11 @@ describe('!delay', () => {
   it('reports the configured delay in seconds', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        content: '!delay',
         clientOverrides: {
-          settings: [{ key: 'streamDelay', value: 5000 }] as any,
+          settings: [{ key: 'streamDelay', value: 5000 }],
         },
-      }),
+        content: '!delay',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain('5')
@@ -79,7 +80,7 @@ describe('!delay', () => {
 
   it('blocks when stream is offline (onlyOnline gate)', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!delay', clientOverrides: { stream_online: false } }),
+      makeMessage({ clientOverrides: { stream_online: false }, content: '!delay' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(notLive)
@@ -90,9 +91,9 @@ describe('!wl', () => {
   it('reports the multiAccount message when steam32Id is unset and multiAccount is true', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        content: '!wl',
         clientOverrides: { steam32Id: null, multiAccount: true } as any,
-      }),
+        content: '!wl',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(multiAccount)
@@ -100,7 +101,7 @@ describe('!wl', () => {
 
   it('reports unknownSteam when steam32Id is unset and not multiAccount', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!wl', clientOverrides: { steam32Id: null } }),
+      makeMessage({ clientOverrides: { steam32Id: null }, content: '!wl' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(unknownSteam)
@@ -109,31 +110,31 @@ describe('!wl', () => {
   it('reports ranked + unranked W/L from supabase.rpc results', async () => {
     state.groupedBets = [
       {
-        won: true,
+        _count_is_doubledown: 0,
+        _count_is_party: 0,
         _count_won: 3,
-        lobby_type: 7,
-        is_party: false,
         is_doubledown: false,
-        _count_is_party: 0,
-        _count_is_doubledown: 0,
-      },
-      {
-        won: false,
-        _count_won: 1,
-        lobby_type: 7,
         is_party: false,
-        is_doubledown: false,
-        _count_is_party: 0,
-        _count_is_doubledown: 0,
-      },
-      {
+        lobby_type: 7,
         won: true,
-        _count_won: 2,
-        lobby_type: 0,
-        is_party: false,
-        is_doubledown: false,
-        _count_is_party: 0,
+      },
+      {
         _count_is_doubledown: 0,
+        _count_is_party: 0,
+        _count_won: 1,
+        is_doubledown: false,
+        is_party: false,
+        lobby_type: 7,
+        won: false,
+      },
+      {
+        _count_is_doubledown: 0,
+        _count_is_party: 0,
+        _count_won: 2,
+        is_doubledown: false,
+        is_party: false,
+        lobby_type: 0,
+        won: true,
       },
     ]
     await commandHandler.handleMessage(makeMessage({ content: '!wl' }))
@@ -143,12 +144,12 @@ describe('!wl', () => {
     expect(msg).toContain('1 L')
     expect(msg).toContain('2 W')
     expect(msg).toMatch(/· This stream$/)
-    expect(state.rpcCalls[0]).toEqual({
-      name: 'get_grouped_bets',
+    expect(state.rpcCalls[0]).toStrictEqual({
       args: {
         channel_id: 'channel-1',
         start_date: '2026-05-19T08:00:00.000Z',
       },
+      name: 'get_grouped_bets',
     })
   })
 
@@ -158,19 +159,19 @@ describe('!wl', () => {
 
     await commandHandler.handleMessage(
       makeMessage({
-        content: '!wl',
         clientOverrides: {
           settings: [{ key: 'wlStatsDays', value: 30 }],
         },
-      }),
+        content: '!wl',
+      })
     )
 
-    expect(state.rpcCalls[0]).toEqual({
-      name: 'get_grouped_bets',
+    expect(state.rpcCalls[0]).toStrictEqual({
       args: {
         channel_id: 'channel-1',
         start_date: '2026-08-05T12:00:00.000Z',
       },
+      name: 'get_grouped_bets',
     })
     expect(state.chatSayCalls[0].message).toMatch(/· Last 30 days$/)
   })
@@ -185,7 +186,7 @@ describe('!wl', () => {
 
 describe('!mmr', () => {
   it('chats chattersRank when a username profile is found', async () => {
-    state.dotabodRankProfile = { rank_tier: 75, leaderboard_rank: 0 }
+    state.dotabodRankProfile = { leaderboard_rank: 0, rank_tier: 75 }
     state.rankTitle = 'Immortal'
     await commandHandler.handleMessage(makeMessage({ content: '!mmr someguy' }))
     expect(state.chatSayCalls).toHaveLength(1)
@@ -194,7 +195,7 @@ describe('!mmr', () => {
   })
 
   it('appends a leaderboard rank when present', async () => {
-    state.dotabodRankProfile = { rank_tier: 80, leaderboard_rank: 42 }
+    state.dotabodRankProfile = { leaderboard_rank: 42, rank_tier: 80 }
     state.rankTitle = 'Immortal'
     await commandHandler.handleMessage(makeMessage({ content: '!mmr someguy' }))
     expect(state.chatSayCalls).toHaveLength(1)
@@ -203,7 +204,7 @@ describe('!mmr', () => {
 
   it('reports the unknown-mmr message when no SteamAccount and mmr=0', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!mmr', clientOverrides: { mmr: 0, SteamAccount: [] } as any }),
+      makeMessage({ clientOverrides: { mmr: 0, SteamAccount: [] }, content: '!mmr' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain('dotabod.com/dashboard/features')
@@ -212,7 +213,7 @@ describe('!mmr', () => {
   it('chats the rank description for legacy MMR (no SteamAccount, mmr > 0)', async () => {
     state.rankDescription = 'Divine 5 | 6000 MMR'
     await commandHandler.handleMessage(
-      makeMessage({ content: '!mmr', clientOverrides: { mmr: 6000, SteamAccount: [] } as any }),
+      makeMessage({ clientOverrides: { mmr: 6000, SteamAccount: [] }, content: '!mmr' })
     )
     await flushAsync()
     expect(state.chatSayCalls).toHaveLength(1)
@@ -222,12 +223,12 @@ describe('!mmr', () => {
   it('reports multiAccount when SteamAccount has entries but none match steam32Id', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        content: '!mmr',
         clientOverrides: {
           multiAccount: true,
           SteamAccount: [{ steam32Id: 11111, name: 'other', mmr: 4000 }],
         } as any,
-      }),
+        content: '!mmr',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(multiAccount)
@@ -237,7 +238,7 @@ describe('!mmr', () => {
 describe('!gpm', () => {
   it('blocks when the stream is offline', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!gpm', clientOverrides: { stream_online: false } }),
+      makeMessage({ clientOverrides: { stream_online: false }, content: '!gpm' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(notLive)
@@ -253,14 +254,14 @@ describe('!gpm', () => {
   it('chats gpm_other when GSI has a non-zero gpm', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        content: '!gpm',
         clientOverrides: {
           gsi: {
             player: { gpm: 650, gold_from_hero_kills: 100, gold_from_creep_kills: 500 },
             hero: { id: 1 },
           },
         } as any,
-      }),
+        content: '!gpm',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain('650')
@@ -277,7 +278,7 @@ describe('!dotabuff', () => {
 
   it('still links the Dotabod profile when no steam account is connected', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!dotabuff', clientOverrides: { steam32Id: null } }),
+      makeMessage({ clientOverrides: { steam32Id: null }, content: '!dotabuff' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain('dotabod.com/streamer')
@@ -297,7 +298,7 @@ describe('!pleb', () => {
     state.subscriberOnlyMode = true
     await commandHandler.handleMessage(makeMessage({ content: '!pleb', permission: 2 }))
     expect(state.chatSettingsUpdates).toHaveLength(1)
-    expect(state.chatSettingsUpdates[0].settings).toEqual({
+    expect(state.chatSettingsUpdates[0].settings).toStrictEqual({
       emoteOnlyModeEnabled: false,
       subscriberOnlyModeEnabled: false,
     })
@@ -316,7 +317,7 @@ describe('!pleb', () => {
   it('blocks viewers (permission=0)', async () => {
     state.subscriberOnlyMode = true
     await commandHandler.handleMessage(
-      makeMessage({ content: '!pleb', permission: 0, userName: 'viewer' }),
+      makeMessage({ content: '!pleb', permission: 0, userName: 'viewer' })
     )
     expect(state.chatSayCalls).toHaveLength(0)
     expect(state.chatSettingsUpdates).toHaveLength(0)
@@ -333,7 +334,6 @@ describe('!apm', () => {
   it('chats an apm number when GSI has commands_issued and game_time', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        content: '!apm',
         clientOverrides: {
           gsi: {
             map: { matchid: '7777777777', game_time: 600 },
@@ -341,7 +341,8 @@ describe('!apm', () => {
             hero: { id: 1 },
           },
         } as any,
-      }),
+        content: '!apm',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     // 3000 commands over 600s = 10min → 300 apm.
@@ -352,7 +353,7 @@ describe('!apm', () => {
 describe('!avg', () => {
   it('reports unknownSteam when steam32Id is unset (no multiAccount)', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!avg', clientOverrides: { steam32Id: null } }),
+      makeMessage({ clientOverrides: { steam32Id: null }, content: '!avg' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(unknownSteam)
@@ -361,9 +362,9 @@ describe('!avg', () => {
   it('reports multiAccount when steam32Id is unset and multiAccount is true', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        content: '!avg',
         clientOverrides: { steam32Id: null, multiAccount: true } as any,
-      }),
+        content: '!avg',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(multiAccount)
@@ -379,13 +380,13 @@ describe('auto-clipping disabled at 8500+ (no readable game data)', () => {
   // mmr 9000 → is8500Plus; gsi undefined → every roster resolver no-ops → empty
   // roster → clippingDisabledNote fires.
   const noData = {
+    gsi: undefined,
     mmr: 9000,
     settings: [{ key: 'disableAutoClipping', value: true }],
-    gsi: undefined,
   } as any
 
   it('!np replies with only the clipping-disabled note', async () => {
-    await commandHandler.handleMessage(makeMessage({ content: '!np', clientOverrides: noData }))
+    await commandHandler.handleMessage(makeMessage({ clientOverrides: noData, content: '!np' }))
     await flushAsync()
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(clippingDisabled)
@@ -393,7 +394,7 @@ describe('auto-clipping disabled at 8500+ (no readable game data)', () => {
   })
 
   it('!gm replies with only the clipping-disabled note', async () => {
-    await commandHandler.handleMessage(makeMessage({ content: '!gm', clientOverrides: noData }))
+    await commandHandler.handleMessage(makeMessage({ clientOverrides: noData, content: '!gm' }))
     await flushAsync()
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(clippingDisabled)
@@ -401,7 +402,7 @@ describe('auto-clipping disabled at 8500+ (no readable game data)', () => {
   })
 
   it('!avg replies with only the clipping-disabled note', async () => {
-    await commandHandler.handleMessage(makeMessage({ content: '!avg', clientOverrides: noData }))
+    await commandHandler.handleMessage(makeMessage({ clientOverrides: noData, content: '!avg' }))
     await flushAsync()
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(clippingDisabled)
@@ -411,8 +412,8 @@ describe('auto-clipping disabled at 8500+ (no readable game data)', () => {
 describe('stale roster GSI', () => {
   const staleGsi = {
     map: {
-      matchid: '7777777777',
       game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+      matchid: '7777777777',
       win_team: 'none',
     },
     player: { activity: 'playing' },
@@ -423,51 +424,51 @@ describe('stale roster GSI', () => {
     async (content) => {
       await commandHandler.handleMessage(
         makeMessage({
+          clientOverrides: { gsi: staleGsi, gsiUpdatedAt: Date.now() - 120_000 },
           content,
-          clientOverrides: { gsi: staleGsi, gsiUpdatedAt: Date.now() - 120_000 } as any,
-        }),
+        })
       )
       await flushAsync()
       expect(state.chatSayCalls).toHaveLength(1)
       expect(state.chatSayCalls[0].message).toBe(t('gameNotFound', { lng: 'en' }))
-    },
+    }
   )
 })
 
 describe('spectator roster GSI', () => {
   const spectatorGsi = {
+    hero: {
+      team2: { player0: { id: 1, selected_unit: true } },
+      team3: { player5: { id: 2 } },
+    },
     map: {
-      matchid: '7777777777',
       game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+      matchid: '7777777777',
       win_team: 'none',
     },
     player: {
       activity: 'watching',
-      team_name: 'spectator',
       team2: {
         player0: { accountid: 100, name: 'Radiant Player' },
       },
       team3: {
         player5: { accountid: 200, name: 'Dire Player' },
       },
-    },
-    hero: {
-      team2: { player0: { id: 1, selected_unit: true } },
-      team3: { player5: { id: 2 } },
+      team_name: 'spectator',
     },
   } as any
 
   it('!np reads the same fresh spectator roster shown on the overlay', async () => {
     state.notablePlayers = [
-      { account_id: 100, name: 'Radiant Player', country_code: '' },
-      { account_id: 200, name: 'Dire Player', country_code: '' },
+      { account_id: 100, country_code: '', name: 'Radiant Player' },
+      { account_id: 200, country_code: '', name: 'Dire Player' },
     ]
 
     await commandHandler.handleMessage(
       makeMessage({
+        clientOverrides: { gsi: spectatorGsi, gsiUpdatedAt: Date.now() },
         content: '!np',
-        clientOverrides: { gsi: spectatorGsi, gsiUpdatedAt: Date.now() } as any,
-      }),
+      })
     )
     await flushAsync()
 
@@ -479,26 +480,26 @@ describe('spectator roster GSI', () => {
 
 describe('Hero Demo roster commands', () => {
   const heroDemoGsi = {
+    hero: { id: 1 },
     map: {
       customgamename: 'hero_demo',
-      matchid: '0',
       game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+      matchid: '0',
       win_team: 'none',
     },
     player: { accountid: 99999, activity: 'playing' },
-    hero: { id: 1 },
   } as any
 
   it.each(['!np', '!gm', '!avg'])(
     '%s explains why public match data is unavailable',
     async (content) => {
       await commandHandler.handleMessage(
-        makeMessage({ content, clientOverrides: { gsi: heroDemoGsi } }),
+        makeMessage({ clientOverrides: { gsi: heroDemoGsi }, content })
       )
       await flushAsync()
 
       expect(state.chatSayCalls).toHaveLength(1)
       expect(state.chatSayCalls[0].message).toBe(t('customGameNoRoster', { lng: 'en' }))
-    },
+    }
   )
 })

@@ -9,7 +9,7 @@ import eventHandler from '../EventHandler'
 // strategy, so they post right away.
 eventHandler.registerEvent('hero:id', {
   handler: async (dotaClient, heroId: number) => {
-    if (!heroId || heroId <= 0) return
+    if (!heroId || heroId <= 0) {return}
     await announceCapturedCosmetics(dotaClient.client)
   },
 })

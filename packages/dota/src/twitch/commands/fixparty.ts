@@ -1,5 +1,6 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { MULTIPLIER_PARTY } from '../../db/getWL'
 import { updateMmr } from '../../dota/lib/updateMmr'
 import { dotabodMatchHistoryUrl } from '../../utils/index'
@@ -22,7 +23,6 @@ function togglePartyMmr({ currentMmr, wasParty, didWin, isDoubledown }: PartyMmr
 
 commandHandler.registerCommand('fixparty', {
   aliases: ['fixsolo'],
-  permission: 2,
   cooldown: 0,
   handler: async (message, _args) => {
     const { data } = await supabase
@@ -38,7 +38,7 @@ commandHandler.registerCommand('fixparty', {
       chatClient.say(
         message.channel.name,
         t('noLastMatch', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -50,7 +50,7 @@ commandHandler.registerCommand('fixparty', {
         url: dotabodMatchHistoryUrl(message.channel.client),
         lng: message.channel.client.locale,
       }),
-      message.user.messageId,
+      message.user.messageId
     )
 
     await updateMmr({
@@ -74,4 +74,5 @@ commandHandler.registerCommand('fixparty', {
       })
       .eq('id', bet.id)
   },
+  permission: 2,
 })

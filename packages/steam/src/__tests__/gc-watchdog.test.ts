@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+
 import { GcWatchdog } from '../utils/gcWatchdog'
 
 // Deterministic injectable clock: advance() moves virtual time forward so the
@@ -6,26 +7,26 @@ import { GcWatchdog } from '../utils/gcWatchdog'
 function makeClock(start = 1_000_000) {
   let t = start
   return {
-    now: () => t,
     advance: (ms: number) => {
       t += ms
     },
+    now: () => t,
   }
 }
 
 const opts = (clock: ReturnType<typeof makeClock>) => ({
-  now: clock.now,
   deadExitMs: 180_000,
+  now: clock.now,
   relaunchIntervalMs: 30_000,
 })
 
-describe('GcWatchdog', () => {
+describe(GcWatchdog, () => {
   it('starts not-ready and becomes ready on gcReady', () => {
     const clock = makeClock()
     const wd = new GcWatchdog(opts(clock))
-    expect(wd.isReady()).toBe(false)
-    expect(wd.step({ type: 'gcReady' })).toEqual({ type: 'noop' })
-    expect(wd.isReady()).toBe(true)
+    expect(wd.isReady()).toBeFalsy()
+    expect(wd.step({ type: 'gcReady' })).toStrictEqual({ type: 'noop' })
+    expect(wd.isReady()).toBeTruthy()
   })
 
   it('relaunches at most once per relaunchInterval — never two knock loops at once', () => {
@@ -39,11 +40,11 @@ describe('GcWatchdog', () => {
     expect(wd.step({ type: 'helloTimeout' }).type).toBe('relaunch')
 
     // A second hello timeout 5s later must NOT relaunch again (would fork a loop).
-    clock.advance(5_000)
+    clock.advance(5000)
     expect(wd.step({ type: 'helloTimeout' }).type).toBe('noop')
 
     // A tick shortly after also stays quiet.
-    clock.advance(5_000)
+    clock.advance(5000)
     expect(wd.step({ type: 'tick' }).type).toBe('noop')
 
     // Only once the interval elapses again do we permit the next relaunch.
@@ -67,7 +68,7 @@ describe('GcWatchdog', () => {
     clock.advance(30_000) // now 180_000 since unready
     const action = wd.step({ type: 'helloTimeout' })
     expect(action.type).toBe('exit')
-    if (action.type === 'exit') expect(action.reason).toContain('exiting')
+    if (action.type === 'exit') {expect(action.reason).toContain('exiting')}
   })
 
   it('a gcReady resets the ladder so later trouble starts fresh', () => {
@@ -78,7 +79,7 @@ describe('GcWatchdog', () => {
 
     // Recovered.
     wd.step({ type: 'gcReady' })
-    expect(wd.isReady()).toBe(true)
+    expect(wd.isReady()).toBeTruthy()
 
     // New trouble much later must not inherit the old not-ready age (no instant exit).
     clock.advance(1_000_000)
@@ -104,7 +105,7 @@ describe('GcWatchdog', () => {
     wd.step({ type: 'gcReady' })
     clock.advance(10_000_000)
     expect(wd.step({ type: 'tick' }).type).toBe('noop')
-    expect(wd.isReady()).toBe(true)
+    expect(wd.isReady()).toBeTruthy()
   })
 
   it('loggedOn without reaching gcReady still escalates to exit', () => {

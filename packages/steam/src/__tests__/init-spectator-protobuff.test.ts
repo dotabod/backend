@@ -1,16 +1,17 @@
-import { describe, expect, it, vi } from 'vitest'
 // @ts-expect-error no types
 import Dota2 from 'dota2'
+import { describe, expect, it, vi } from 'vitest'
+
 import { initSpectatorProtobuff } from '../initSpectatorProtobuff'
 
-describe('initSpectatorProtobuff', () => {
+describe(initSpectatorProtobuff, () => {
   it('patches Dota2Client.prototype with spectateFriendGame and the response handler', () => {
     initSpectatorProtobuff()
 
-    expect(typeof Dota2.Dota2Client.prototype.spectateFriendGame).toBe('function')
+    expect(Dota2.Dota2Client.prototype.spectateFriendGame).toBeTypeOf('function')
 
     const opcode = Dota2.schema.EDOTAGCMsg.k_EMsgGCSpectateFriendGameResponse
-    expect(typeof Dota2.Dota2Client.prototype._handlers[opcode]).toBe('function')
+    expect(Dota2.Dota2Client.prototype._handlers[opcode]).toBeTypeOf('function')
   })
 
   it('spectateFriendGame returns null and does not call the GC when not ready', () => {
@@ -20,8 +21,8 @@ describe('initSpectatorProtobuff', () => {
 
     const result = Dota2.Dota2Client.prototype.spectateFriendGame.call(
       ctx,
-      { steam_id: 123, live: true },
-      () => {},
+      { live: true, steam_id: 123 },
+      () => {}
     )
 
     expect(result).toBeNull()
@@ -35,11 +36,11 @@ describe('initSpectatorProtobuff', () => {
 
     Dota2.Dota2Client.prototype.spectateFriendGame.call(
       ctx,
-      { steam_id: 123, live: true },
-      () => {},
+      { live: true, steam_id: 123 },
+      () => {}
     )
 
-    expect(sendToGC).toHaveBeenCalledTimes(1)
+    expect(sendToGC).toHaveBeenCalledOnce()
     // First arg is the spectate-friend-game opcode.
     expect(sendToGC.mock.calls[0][0]).toBe(Dota2.schema.EDOTAGCMsg.k_EMsgGCSpectateFriendGame)
   })

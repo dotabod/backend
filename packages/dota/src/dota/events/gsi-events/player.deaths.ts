@@ -4,17 +4,18 @@ import { redisClient } from '../../../db/redisInstance'
 import type { Item } from '../../../types'
 import type { GSIHandlerType } from '../../GSIHandlerTypes'
 import { findItem } from '../../lib/findItem'
-import handleGetHero, { type HeroNames } from '../../lib/getHero'
+import handleGetHero from '../../lib/getHero';
+import type { HeroNames } from '../../lib/getHero';
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import { say } from '../../say'
 import eventHandler from '../EventHandler'
 
 const passiveItemNames = [
-  { name: 'item_magic_stick', title: 'magic stick', charges: true },
-  { name: 'item_magic_wand', title: 'magic wand', charges: true },
+  { charges: true, name: 'item_magic_stick', title: 'magic stick' },
+  { charges: true, name: 'item_magic_wand', title: 'magic wand' },
   { name: 'item_faerie_fire', title: 'faerie fire' },
   { name: 'item_cheese', title: 'cheese' },
-  { name: 'item_holy_locket', title: 'holy locket', charges: true },
+  { charges: true, name: 'item_holy_locket', title: 'holy locket' },
   { name: 'item_mekansm', title: 'mek' },
   { name: 'item_satanic', title: 'satanic' },
   { name: 'item_guardian_greaves', title: 'greaves' },
@@ -22,12 +23,12 @@ const passiveItemNames = [
 
 eventHandler.registerEvent('player:deaths', {
   handler: async (dotaClient, deaths: number) => {
-    if (!dotaClient.client.stream_online) return
-    if (!isPlayingMatch(dotaClient.client.gsi)) return
-    if (!deaths) return
+    if (!dotaClient.client.stream_online) {return}
+    if (!isPlayingMatch(dotaClient.client.gsi)) {return}
+    if (!deaths) {return}
 
     const playingHero = (await redisClient.client.get(
-      `${dotaClient.getToken()}:playingHero`,
+      `${dotaClient.getToken()}:playingHero`
     )) as HeroNames | null
 
     const heroName =
@@ -49,12 +50,12 @@ async function firstBloodChat(dotaClient: GSIHandlerType, heroName: string) {
     dotaClient.client.gsi?.map?.[`${playingTeam as 'radiant' | 'dire'}_score`] === 0 &&
     dotaClient.client.gsi.map[`${otherTeam}_score`] === 1
 
-  if (!wasFirstBlood) return
+  if (!wasFirstBlood) {return}
 
   say(
     dotaClient.client,
     t('chatters.firstBloodDeath', { emote: 'PepeLaugh', heroName, lng: dotaClient.client.locale }),
-    { chattersKey: 'firstBloodDeath' },
+    { chattersKey: 'firstBloodDeath' }
   )
 }
 
@@ -70,18 +71,18 @@ function cantCastItem(item: Item, dotaClient: GSIHandlerType) {
 
 function passiveDeathChat(dotaClient: GSIHandlerType, heroName: string) {
   const couldHaveLivedWith = findItem({
+    data: dotaClient.client.gsi,
     itemName: passiveItemNames.map((i) => i.name),
     searchStashAlso: false,
-    data: dotaClient.client.gsi,
   })
 
   // None found
-  if (!Array.isArray(couldHaveLivedWith) || !couldHaveLivedWith.length) return
+  if (!Array.isArray(couldHaveLivedWith) || !couldHaveLivedWith.length) {return}
 
   const itemNames = couldHaveLivedWith
     .map((item) => {
       const found = passiveItemNames.find((i) => {
-        if (i.name !== item.name) return false
+        if (i.name !== item.name) {return false}
         if (cantCastItem(item, dotaClient)) {
           return false
         }
@@ -91,17 +92,17 @@ function passiveDeathChat(dotaClient: GSIHandlerType, heroName: string) {
         }
         return true
       })
-      if (found) return found.title
+      if (found) {return found.title}
       return null
     })
     .flatMap((f) => f ?? [])
     .join(', ')
 
-  if (!itemNames) return
+  if (!itemNames) {return}
 
   say(
     dotaClient.client,
     t('chatters.died', { emote: 'ICANT', heroName, itemNames, lng: dotaClient.client.locale }),
-    { chattersKey: 'passiveDeath' },
+    { chattersKey: 'passiveDeath' }
   )
 }

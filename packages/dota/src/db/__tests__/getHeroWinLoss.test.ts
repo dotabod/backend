@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+
 import { dbState, resetDbState } from './dbMocks.ts'
 
 const { getHeroWinLoss } = await import('../getHeroWinLoss')
@@ -15,8 +16,8 @@ describe('getHeroWinLoss', () => {
     }
 
     await expect(
-      getHeroWinLoss({ heroId: 1, isStreamer: true, steam32Id: 99_999, token: 'user-1' }),
-    ).resolves.toEqual({ lose: 1, win: 2 })
+      getHeroWinLoss({ heroId: 1, isStreamer: true, steam32Id: 99_999, token: 'user-1' })
+    ).resolves.toStrictEqual({ lose: 1, win: 2 })
   })
 
   it('requires a tracked Dotabod account for another player', async () => {
@@ -24,8 +25,8 @@ describe('getHeroWinLoss', () => {
     dbState.tableResults.matches = { data: [{ won: true }], error: null }
 
     await expect(
-      getHeroWinLoss({ heroId: 1, isStreamer: false, steam32Id: 88_888, token: 'user-1' }),
-    ).resolves.toEqual({ lose: 0, win: 0 })
+      getHeroWinLoss({ heroId: 1, isStreamer: false, steam32Id: 88_888, token: 'user-1' })
+    ).resolves.toStrictEqual({ lose: 0, win: 0 })
   })
 
   it('uses another tracked player account to count their hero record', async () => {
@@ -36,7 +37,7 @@ describe('getHeroWinLoss', () => {
     }
 
     await expect(
-      getHeroWinLoss({ heroId: 1, isStreamer: false, steam32Id: 88_888, token: 'user-1' }),
-    ).resolves.toEqual({ lose: 2, win: 1 })
+      getHeroWinLoss({ heroId: 1, isStreamer: false, steam32Id: 88_888, token: 'user-1' })
+    ).resolves.toStrictEqual({ lose: 2, win: 1 })
   })
 })

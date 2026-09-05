@@ -1,4 +1,5 @@
 import { logger, supabase } from '@dotabod/shared-utils'
+
 import { onlineEvents } from './events'
 
 export interface TwitchOnlineEvent {
@@ -53,8 +54,8 @@ export function onlineEvent(data: { payload: { event: TwitchOnlineEvent } }) {
         if (updateError) {
           logger.error('Failed to update user online status', {
             error: updateError.message,
-            userId: user.userId,
             twitchId: data?.payload?.event.broadcaster_user_id,
+            userId: user.userId,
           })
           return
         }

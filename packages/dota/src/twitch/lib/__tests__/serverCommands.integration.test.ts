@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vitest'
 import { t } from 'i18next'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { flushAsync } from '../../../__tests__/sharedMocks.ts'
 import { commandHandler, liveGsi, makeMessage, resetState, state } from './setupMocks.ts'
 
@@ -18,7 +19,7 @@ describe('!count', () => {
     expect(state.chatSayCalls).toHaveLength(1)
     // Overlay socket count is 0 (stub fetchSockets returns []) -> the _zero branch.
     expect(state.chatSayCalls[0].message).toContain(
-      t('connections.overlay', { lng: 'en', count: 0 }),
+      t('connections.overlay', { count: 0, lng: 'en' })
     )
   })
 })
@@ -32,7 +33,7 @@ describe('!refresh', () => {
 
   it('blocks viewers (permission below mod)', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!refresh', permission: 0, userName: 'viewer' }),
+      makeMessage({ content: '!refresh', permission: 0, userName: 'viewer' })
     )
     expect(state.chatSayCalls).toHaveLength(0)
   })
@@ -44,11 +45,11 @@ describe('!online / !offline', () => {
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.updateCalls).toHaveLength(0)
     expect(state.socketEmitCalls).toContainEqual({
-      room: 'token-abc',
-      event: 'refresh-settings',
       args: ['mutate'],
+      event: 'refresh-settings',
+      room: 'token-abc',
     })
-    expect(state.streamStatusEffectCalls).toEqual(['socket'])
+    expect(state.streamStatusEffectCalls).toStrictEqual(['socket'])
   })
 
   it('persists stream_online=false when toggling offline from an online stream', async () => {
@@ -59,16 +60,16 @@ describe('!online / !offline', () => {
       stream_start_date: null,
     })
     expect(state.socketEmitCalls).toContainEqual({
-      room: 'token-abc',
-      event: 'refresh-settings',
       args: ['mutate'],
+      event: 'refresh-settings',
+      room: 'token-abc',
     })
-    expect(state.streamStatusEffectCalls).toEqual(['update', 'socket'])
+    expect(state.streamStatusEffectCalls).toStrictEqual(['update', 'socket'])
   })
 
   it('blocks viewers (permission below mod)', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!online', permission: 0, userName: 'viewer' }),
+      makeMessage({ content: '!online', permission: 0, userName: 'viewer' })
     )
     expect(state.chatSayCalls).toHaveLength(0)
   })
@@ -81,14 +82,14 @@ describe('!resetwl', () => {
     await flushAsync()
     expect(state.updateCalls).toHaveLength(0)
     expect(state.upsertCalls).toHaveLength(1)
-    expect(state.upsertCalls[0]).toEqual({
+    expect(state.upsertCalls[0]).toStrictEqual({
+      options: { onConflict: 'userId, key' },
       values: {
         key: 'wlResetAt',
-        userId: 'token-abc',
         updated_at: expect.any(String),
+        userId: 'token-abc',
         value: expect.any(String),
       },
-      options: { onConflict: 'userId, key' },
     })
     expect(message.channel.client.settings).toContainEqual({
       key: 'wlResetAt',
@@ -97,12 +98,12 @@ describe('!resetwl', () => {
     expect(state.emitWLUpdateCalls).toBe(1)
     expect(state.chatSayCalls).toHaveLength(2)
     expect(state.chatSayCalls[0].message).toBe(t('refresh', { lng: 'en' }))
-    expect(state.chatSayCalls[1].message).toBe(t('resetwl', { lng: 'en', channel: '#streamer' }))
+    expect(state.chatSayCalls[1].message).toBe(t('resetwl', { channel: '#streamer', lng: 'en' }))
   })
 
   it('blocks viewers (permission below mod)', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!resetwl', permission: 0, userName: 'viewer' }),
+      makeMessage({ content: '!resetwl', permission: 0, userName: 'viewer' })
     )
     await flushAsync()
     expect(state.updateCalls).toHaveLength(0)
@@ -113,7 +114,7 @@ describe('!resetwl', () => {
 describe('!hero', () => {
   it('blocks via the onlyOnline gate when the stream is offline', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!hero', clientOverrides: { stream_online: false } }),
+      makeMessage({ clientOverrides: { stream_online: false }, content: '!hero' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(t('notLive', { emote: 'PauseChamp', lng: 'en' }))
@@ -127,22 +128,22 @@ describe('!hero', () => {
 
   it('uses tracked match history when no overlay socket is connected', async () => {
     state.recentList = [
-      { matchId: '1', hero_name: 'npc_dota_hero_antimage', won: true },
-      { matchId: '2', hero_name: 'npc_dota_hero_antimage', won: true },
-      { matchId: '3', hero_name: 'npc_dota_hero_antimage', won: false },
+      { hero_name: 'npc_dota_hero_antimage', matchId: '1', won: true },
+      { hero_name: 'npc_dota_hero_antimage', matchId: '2', won: true },
+      { hero_name: 'npc_dota_hero_antimage', matchId: '3', won: false },
     ]
     await commandHandler.handleMessage(
-      makeMessage({ content: '!hero', clientOverrides: { gsi: liveGsi() } }),
+      makeMessage({ clientOverrides: { gsi: liveGsi() }, content: '!hero' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(
       t('herostats.winrateStreamer', {
-        lng: 'en',
-        heroName: 'Anti-Mage',
-        winrate: 67,
-        timeperiod: t('herostats.timeperiod.days', { count: 30, lng: 'en' }),
         count: 3,
-      }),
+        heroName: 'Anti-Mage',
+        lng: 'en',
+        timeperiod: t('herostats.timeperiod.days', { count: 30, lng: 'en' }),
+        winrate: 67,
+      })
     )
   })
 
@@ -150,50 +151,50 @@ describe('!hero', () => {
     [
       'spectating',
       {
+        hero: {
+          team2: { player0: { id: 1, selected_unit: true } },
+          team3: {},
+        },
         map: {
-          matchid: '8980144969',
           game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+          matchid: '8980144969',
           win_team: 'none',
         },
         player: {
           activity: 'watching',
-          team_name: 'spectator',
           team2: { player0: { accountid: 99999 } },
           team3: {},
-        },
-        hero: {
-          team2: { player0: { id: 1, selected_unit: true } },
-          team3: {},
+          team_name: 'spectator',
         },
       },
     ],
     [
       'Hero Demo',
       {
+        hero: { id: 1 },
         map: {
           customgamename: 'hero_demo',
-          matchid: '0',
           game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+          matchid: '0',
           win_team: 'none',
         },
         player: { accountid: 99999, activity: 'playing' },
-        hero: { id: 1 },
       },
     ],
   ])('uses the selected hero history while %s', async (_label, gsi) => {
     state.recentList = [
-      { matchId: '1', hero_name: 'npc_dota_hero_antimage', won: true },
-      { matchId: '2', hero_name: 'npc_dota_hero_antimage', won: false },
+      { hero_name: 'npc_dota_hero_antimage', matchId: '1', won: true },
+      { hero_name: 'npc_dota_hero_antimage', matchId: '2', won: false },
     ]
 
     await commandHandler.handleMessage(
-      makeMessage({ content: '!hero', clientOverrides: { gsi } as any }),
+      makeMessage({ clientOverrides: { gsi } as any, content: '!hero' })
     )
 
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain('Anti-Mage')
     expect(state.chatSayCalls[0].message).not.toBe(
-      t('notPlaying', { emote: 'PauseChamp', lng: 'en' }),
+      t('notPlaying', { emote: 'PauseChamp', lng: 'en' })
     )
   })
 })

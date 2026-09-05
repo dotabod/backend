@@ -1,4 +1,5 @@
 import { fetchConduitId, logger } from '@dotabod/shared-utils'
+
 import { initUserSubscriptions } from './initUserSubscriptions'
 import { subscribeToAuthGrantOrRevoke } from './subscribeChatMessagesForUser'
 import { getAccountIds } from './twitch/lib/getAccountIds'
@@ -33,9 +34,9 @@ export async function subscribeToEvents() {
   const CHUNK_SIZE = 30
 
   logger.info('[TWITCHEVENTS] Starting subscription process', {
-    total: accountIds.length,
     chunks: Math.ceil(accountIds.length / CHUNK_SIZE),
     rateLimit: rateLimiter.rateLimitStatus,
+    total: accountIds.length,
   })
 
   // Track errors for summary reporting
@@ -52,10 +53,10 @@ export async function subscribeToEvents() {
         try {
           await initUserSubscriptions(providerAccountId)
           return true
-        } catch (e) {
+        } catch (error) {
           // Categorize errors for better reporting
-          const errorMessage = e instanceof Error ? e.message : String(e)
-          const errorKey = errorMessage.substring(0, 100) // Truncate long messages
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          const errorKey = errorMessage.slice(0, 100) // Truncate long messages
           errors.set(errorKey, (errors.get(errorKey) || 0) + 1)
 
           // Only log detailed errors for the first few occurrences
@@ -67,11 +68,11 @@ export async function subscribeToEvents() {
           }
           return false
         }
-      }),
+      })
     )
 
     // Count successes
-    successCount += results.filter((r) => r.status === 'fulfilled' && r.value === true).length
+    successCount += results.filter((r) => r.status === 'fulfilled' &&  r.value).length
 
     // Log progress periodically
     const isLogPoint = (i + CHUNK_SIZE) % 200 === 0 || i + CHUNK_SIZE >= accountIds.length
@@ -84,14 +85,14 @@ export async function subscribeToEvents() {
       const remainingSec = Math.max(0, estimatedTotalSec - elapsedSec)
 
       logger.info('[TWITCHEVENTS] Subscription progress', {
-        processed,
-        total: accountIds.length,
-        percent: `${percentComplete}%`,
-        success: successCount,
         errors: errors.size > 0 ? Object.fromEntries(errors) : 'none',
-        rateLimitRemaining: rateLimiter.rateLimitStatus.remaining,
         estimatedTimeRemaining: `${Math.round(remainingSec / 60)} minutes`,
+        percent: `${percentComplete}%`,
+        processed,
         queueLength: rateLimiter.queueLength,
+        rateLimitRemaining: rateLimiter.rateLimitStatus.remaining,
+        success: successCount,
+        total: accountIds.length,
       })
     }
   }
@@ -99,10 +100,10 @@ export async function subscribeToEvents() {
   // Log final summary
   const totalTime = (Date.now() - startTime) / 1000
   logger.info('[TWITCHEVENTS] Subscription process completed', {
-    total: accountIds.length,
-    success: successCount,
     errorCount: accountIds.length - successCount,
     errorSummary: errors.size > 0 ? Object.fromEntries(errors) : 'none',
+    success: successCount,
     timeElapsed: `${Math.round(totalTime / 60)} minutes ${Math.round(totalTime % 60)} seconds`,
+    total: accountIds.length,
   })
 }

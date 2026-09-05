@@ -1,112 +1,112 @@
 // Define the basic command types
 const defaultCommands = {
   commandAPM: true,
+  commandAghs: true,
   commandAvg: true,
+  commandBeta: true,
+  commandBuilds: true,
   commandCommands: true,
+  commandDelay: true,
   commandDisable: false,
+  commandDotabod: true,
   commandDotabuff: true,
+  commandFixparty: true,
   commandGM: true,
   commandGPM: true,
-  commandHero: true,
-  commandLG: true,
-  commandModsonly: true,
-  commandNP: true,
-  commandOpendota: true,
-  commandPleb: true,
-  commandRanked: true,
-  commandSmurfs: true,
-  commandProfile: true,
-  commandLGS: true,
   commandGeo: true,
-  commandSteam: true,
-  commandWL: true,
-  commandXPM: true,
-  commandDelay: true,
-  commandBuilds: true,
-  commandMmr: true,
-  commandRosh: true,
-  commandItems: true,
-  commandSet: true,
-  commandVersion: true,
-  commandOnline: true,
-  commandResetwl: true,
-  commandLocale: true,
-  commandSpectators: true,
+  commandHero: true,
   commandInnate: true,
-  commandShard: true,
-  commandAghs: true,
-  commandWinProbability: true,
-  commandFixparty: true,
-  commandRefresh: true,
-  commandSetmmr: true,
-  commandBeta: true,
-  commandPing: true,
-  commandDotabod: true,
-  commandMute: true,
+  commandItems: true,
+  commandLG: true,
+  commandLGS: true,
   commandLastFm: false,
-  commandOnly: true,
-  commandWon: true,
+  commandLocale: true,
   commandLost: true,
-  commandToday: true,
+  commandMmr: true,
+  commandModsonly: true,
+  commandMute: true,
+  commandNP: true,
+  commandOnline: true,
+  commandOnly: true,
+  commandOpendota: true,
+  commandPing: true,
+  commandPleb: true,
+  commandProfile: true,
+  commandRanked: true,
+  commandRefresh: true,
+  commandResetwl: true,
+  commandRosh: true,
+  commandSet: true,
+  commandSetmmr: true,
+  commandShard: true,
+  commandSmurfs: true,
+  commandSpectators: true,
+  commandSteam: true,
   commandStreamers: true,
   commandSuggestions: true,
+  commandToday: true,
+  commandVersion: true,
+  commandWL: true,
+  commandWinProbability: true,
+  commandWon: true,
+  commandXPM: true,
 } as const
 
 // Define the chatter types
 const defaultChatters = {
-  midas: {
-    enabled: true,
-  },
-  pause: {
-    enabled: true,
-  },
-  smoke: {
-    enabled: true,
-  },
-  passiveDeath: {
-    enabled: true,
-  },
-  roshPickup: {
-    enabled: true,
-  },
-  roshDeny: {
-    enabled: true,
-  },
-  roshanKilled: {
-    enabled: true,
-  },
-  tip: {
-    enabled: true,
-  },
   bounties: {
     enabled: true,
   },
-  powerTreads: {
+  chattingSpamEmote: {
+    enabled: false,
+  },
+  commandsReady: {
     enabled: true,
   },
-  killstreak: {
+  dotapatch: {
     enabled: true,
   },
   firstBloodDeath: {
     enabled: true,
   },
-  noTp: {
+  killstreak: {
     enabled: true,
   },
   matchOutcome: {
     enabled: true,
   },
-  commandsReady: {
+  midas: {
     enabled: true,
   },
   neutralItems: {
     enabled: false,
   },
-  dotapatch: {
+  noTp: {
     enabled: true,
   },
-  chattingSpamEmote: {
-    enabled: false,
+  passiveDeath: {
+    enabled: true,
+  },
+  pause: {
+    enabled: true,
+  },
+  powerTreads: {
+    enabled: true,
+  },
+  roshDeny: {
+    enabled: true,
+  },
+  roshPickup: {
+    enabled: true,
+  },
+  roshanKilled: {
+    enabled: true,
+  },
+  smoke: {
+    enabled: true,
+  },
+  tip: {
+    enabled: true,
   },
 } as const
 
@@ -120,10 +120,10 @@ export const defaultSettingsStructure = {
   aegis: true,
   bets: true,
   betsInfo: {
+    duration: 4 * 60,
+    no: 'No',
     title: 'Will we win with [heroname]?',
     yes: 'Yes',
-    no: 'No',
-    duration: 4 * 60,
   },
   battlepass: false,
   chatter: true,

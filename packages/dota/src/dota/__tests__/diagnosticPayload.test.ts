@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest'
 import { gzipSync } from 'node:zlib'
+
+import { describe, expect, it } from 'vitest'
+
 import { DIAGNOSTIC_PAYLOAD_BYTES, getDiagnosticPayload } from '../diagnosticPayload'
 
 describe('GSI diagnostic payload', () => {

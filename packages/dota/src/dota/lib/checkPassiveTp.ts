@@ -14,9 +14,9 @@ interface PassiveTpData {
 
 // todo: make sure streamer has gold to buy tp?
 export async function checkPassiveTp(client: SocketClient) {
-  if (!isPlayingMatch(client.gsi)) return
-  if (!client.stream_online) return
-  if (Number(client.gsi?.map?.clock_time) <= 30) return
+  if (!isPlayingMatch(client.gsi)) {return}
+  if (!client.stream_online) {return}
+  if (Number(client.gsi?.map?.clock_time) <= 30) {return}
 
   const passiveTpData = (await redisClient.getJson<PassiveTpData>(`${client.token}:passiveTp`)) || {
     firstNoticedPassive: 0,
@@ -29,41 +29,41 @@ export async function checkPassiveTp(client: SocketClient) {
   if (hasTp) {
     // they got a tp within 30s so no scolding
     if (passiveTpData.firstNoticedPassive && !passiveTpData.told) {
-      return resetPassiveTime(client.token)
+      return await resetPassiveTime(client.token)
     }
 
     // they got a tp after 30s so tell how long its been
     if (passiveTpData.told) {
       const seconds = Math.round(
-        (Date.now() - passiveTpData.told + PASSIVE_THRESHOLD_SECONDS) / 1000,
+        (Date.now() - passiveTpData.told + PASSIVE_THRESHOLD_SECONDS) / 1000
       )
 
       if (deadge) {
         say(
           client,
           t('chatters.tpFromDeath', {
-            emote: 'Okayeg 👍',
-            seconds,
             channel: `@${client.name}`,
+            emote: 'Okayeg 👍',
             lng: client.locale,
+            seconds,
           }),
-          { chattersKey: 'noTp' },
+          { chattersKey: 'noTp' }
         )
-        return resetPassiveTime(client.token)
+        return await resetPassiveTime(client.token)
       }
 
       say(
         client,
         t('chatters.tpFound', {
-          emote: 'Okayeg 👍',
-          seconds,
           channel: `@${client.name}`,
+          emote: 'Okayeg 👍',
           lng: client.locale,
+          seconds,
         }),
-        { chattersKey: 'noTp' },
+        { chattersKey: 'noTp' }
       )
 
-      return resetPassiveTime(client.token)
+      return await resetPassiveTime(client.token)
     }
   }
 
@@ -89,10 +89,10 @@ export async function checkPassiveTp(client: SocketClient) {
       client,
       t('chatters.noTp', {
         channel: `@${client.name}`,
-        lng: client.locale,
         emote: 'HECANT',
+        lng: client.locale,
       }),
-      { chattersKey: 'noTp' },
+      { chattersKey: 'noTp' }
     )
     return true
   }

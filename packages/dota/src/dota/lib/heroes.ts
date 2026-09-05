@@ -7,7 +7,7 @@ import { heroes } from './heroList'
 // hero (from clip/vision or own GSI) couldn't be found.
 export const heroColors = 'Blue,Teal,Purple,Yellow,Orange,Pink,Olive,Cyan,Green,Brown'.split(',')
 export function getHeroNameOrColor(id?: number, index?: number) {
-  if (!id && typeof index === 'number') return heroColors[index]
+  if (!id && typeof index === 'number') {return heroColors[index]}
 
   const hero = getHeroById(id)
   const name = hero?.localized_name
@@ -19,7 +19,7 @@ export function getHeroNameOrColor(id?: number, index?: number) {
 }
 
 export function getHeroById(id?: number) {
-  if (!id) return null
+  if (!id) {return null}
 
   for (const [key, hero] of Object.entries(heroes)) {
     if (hero.id === id) {
@@ -38,12 +38,12 @@ const heroPageSlugOverrides: Partial<Record<HeroNames, string>> = {
 
 export function getHeroPageUrl(id?: number): string | null {
   const hero = getHeroById(id)
-  if (!hero) return null
+  if (!hero) {return null}
   // dota2.com routes on the English localized name, lowercased with spaces
   // removed (hyphens/apostrophes kept) — e.g. "Shadow Fiend" -> shadowfiend,
   // "Anti-Mage" -> anti-mage, "Nature's Prophet" -> nature'sprophet.
   const slug =
-    heroPageSlugOverrides[hero.key] ?? hero.localized_name.toLowerCase().replace(/ /g, '')
+    heroPageSlugOverrides[hero.key] ?? hero.localized_name.toLowerCase().replaceAll(' ', '')
   return `dota2.com/hero/${slug}`
 }
 
@@ -53,11 +53,11 @@ export function withHeroLink(text: string, id?: number): string {
 }
 
 export function getHeroByName(name: string, heroIdsInMatch?: (number | undefined)[]) {
-  if (!name) return null
+  if (!name) {return null}
 
   // only keep a-z in name
   const localName = name
-    .replace(/[^a-z]/gi, '')
+    .replaceAll(/[^a-z]/gi, '')
     .toLowerCase()
     .trim()
 
@@ -75,9 +75,9 @@ export function getHeroByName(name: string, heroIdsInMatch?: (number | undefined
     const hasAlias = h.alias.some(
       (alias) =>
         alias
-          .replace(/[^a-z]/gi, '')
+          .replaceAll(/[^a-z]/gi, '')
           .toLowerCase()
-          .trim() === localName,
+          .trim() === localName
     )
 
     return hasAlias
@@ -88,7 +88,7 @@ export function getHeroByName(name: string, heroIdsInMatch?: (number | undefined
     hero = lookInHeroes.find((h) => {
       const inName = h.localized_name
         // replace all spaces with nothing, and only keep a-z
-        .replace(/[^a-z]/gi, '')
+        .replaceAll(/[^a-z]/gi, '')
         .toLowerCase()
         .trim()
 

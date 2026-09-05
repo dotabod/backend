@@ -1,23 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { buildSharedUtilsMock, initTestI18n } from '../../../__tests__/sharedMocks.ts'
 import type { MessageType } from '../../lib/CommandHandler.ts'
 
 const noopLogger = {
-  info: () => undefined,
-  error: () => undefined,
-  warn: () => undefined,
   debug: () => undefined,
+  error: () => undefined,
+  info: () => undefined,
+  warn: () => undefined,
 }
 
-type FakeSocket = {
+interface FakeSocket {
   connected: boolean
   emit: (event: string, ack: (commitHash: string | null) => void) => void
 }
 
 const sockets = {
-  steam: { connected: true, hash: 'aaaaaaa' as string | null },
   chat: { connected: true, hash: 'aaaaaaa' as string | null },
   events: { connected: true, hash: 'aaaaaaa' as string | null },
+  steam: { connected: true, hash: 'aaaaaaa' as string | null },
 }
 
 function makeSocket(target: { connected: boolean; hash: string | null }): FakeSocket {
@@ -34,23 +35,23 @@ function makeSocket(target: { connected: boolean; hash: string | null }): FakeSo
   }
 }
 
-vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ supabase: {}, logger: noopLogger }))
+vi.doMock(import('@dotabod/shared-utils'), () => buildSharedUtilsMock({ logger: noopLogger, supabase: {} }))
 
-vi.doMock('../../../steam/ws', () => ({
+vi.doMock(import('../../../steam/ws'), () => ({
   steamSocket: makeSocket(sockets.steam),
   twitchChat: makeSocket(sockets.chat),
   twitchEvents: makeSocket(sockets.events),
 }))
 
 const sayMock = vi.fn()
-vi.doMock('../../chatClient', () => ({
+vi.doMock(import('../../chatClient'), () => ({
   chatClient: { say: sayMock },
 }))
 
 let registeredHandler:
   | ((m: MessageType, args: string[], used: string) => Promise<void> | void)
   | undefined
-vi.doMock('../../lib/CommandHandler', () => ({
+vi.doMock(import('../../lib/CommandHandler'), () => ({
   default: {
     registerCommand: (_name: string, opts: { handler: typeof registeredHandler }) => {
       registeredHandler = opts.handler
@@ -64,14 +65,14 @@ await initTestI18n()
 await import('../version.ts')
 
 const baseMessage: MessageType = {
-  user: { name: 'tester', messageId: 'msg-1', permission: 0, userId: 'u-1' },
-  content: '!version',
   channel: {
-    name: 'tester',
-    id: 'chan-1',
     client: { locale: 'en' } as MessageType['channel']['client'],
+    id: 'chan-1',
+    name: 'tester',
     settings: {} as MessageType['channel']['settings'],
   },
+  content: '!version',
+  user: { messageId: 'msg-1', name: 'tester', permission: 0, userId: 'u-1' },
 }
 
 describe('!version — multi-service reporting', () => {
@@ -90,7 +91,7 @@ describe('!version — multi-service reporting', () => {
     expect(registeredHandler).toBeDefined()
     await registeredHandler!(baseMessage, [], 'version')
 
-    expect(sayMock).toHaveBeenCalledTimes(1)
+    expect(sayMock).toHaveBeenCalledOnce()
     const [, text] = sayMock.mock.calls[0]
     expect(text).toContain('Server running version aaaaaaa')
     expect(text).toContain('github.com/dotabod/backend/compare/aaaaaaa...master')

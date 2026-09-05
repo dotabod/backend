@@ -8,6 +8,7 @@
 // bundle and clashed with the bundle's top-level await, crashing Node 24
 // with ERR_AMBIGUOUS_MODULE_SYNTAX at startup.
 import { logger } from '@dotabod/shared-utils'
+
 import { runSubscriptionHealthCheck } from '../utils/subscriptionHealthCheck'
 
 runSubscriptionHealthCheck()

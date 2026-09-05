@@ -1,4 +1,5 @@
 import { ApiClient } from '@twurple/api'
+
 import { logger } from '../logger'
 import { getAuthProvider } from './getAuthProvider'
 import { getTwitchTokens } from './getTwitchTokens'
@@ -26,26 +27,26 @@ export const getTwitchAPI = async (twitchId?: string): Promise<ApiClient> => {
       const refreshToken = tokens?.refresh_token
 
       if (!accessToken || !refreshToken) {
-        logger.info('[TWITCH] Missing tokens', { twitchId, lookupTwitchId })
+        logger.info('[TWITCH] Missing tokens', { lookupTwitchId, twitchId })
         throw new Error('Missing Twitch tokens')
       }
 
       // Create token data object
       const tokenData = {
-        scope: tokens.scope?.split(' ') ?? [],
+        accessToken,
         expiresIn: tokens.expires_in ?? 0,
         obtainmentTimestamp: tokens.obtainment_timestamp
           ? new Date(tokens.obtainment_timestamp).getTime()
           : Date.now(),
-        accessToken,
         refreshToken,
+        scope: tokens.scope?.split(' ') ?? [],
       }
 
       // Add user to the auth provider
       authProvider.addUser(lookupTwitchId, tokenData)
     }
-  } catch (e) {
-    logger.error('[TWITCH] Error adding user to auth provider', { twitchId, lookupTwitchId, e })
+  } catch (error) {
+    logger.error('[TWITCH] Error adding user to auth provider', { twitchId, lookupTwitchId, error })
   }
 
   // Create API client if it doesn't exist yet

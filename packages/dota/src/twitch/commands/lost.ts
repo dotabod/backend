@@ -1,16 +1,17 @@
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { redisClient } from '../../db/redisInstance'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { DBSettings } from '../../settings'
 import { steamSocket } from '../../steam/ws'
 import type { MatchMinimalDetailsResponse } from '../../types'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler';
+import type { MessageType } from '../lib/CommandHandler';
 import { resolveByMostRecentMatch, resolveMatchRetroactively } from '../lib/resolveMatch'
 
 commandHandler.registerCommand('lost', {
-  permission: 2, // Mods and broadcaster only
   cooldown: 0,
   dbkey: DBSettings.commandLost,
   handler: async (message: MessageType, args: string[]) => {
@@ -31,7 +32,7 @@ commandHandler.registerCommand('lost', {
             emote: 'PauseChamp',
             lng: client.locale,
           }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -42,7 +43,7 @@ commandHandler.registerCommand('lost', {
         false, // lost
         username,
         channel,
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -50,7 +51,7 @@ commandHandler.registerCommand('lost', {
     try {
       // Check if there's a pending manual resolution
       const pendingResolution = await redisClient.client.get(
-        `${client.token}:pendingManualResolution`,
+        `${client.token}:pendingManualResolution`
       )
 
       if (!pendingResolution) {
@@ -62,7 +63,7 @@ commandHandler.registerCommand('lost', {
           false,
           username,
           channel,
-          message.user.messageId,
+          message.user.messageId
         )
         if (flipped) return
 
@@ -72,7 +73,7 @@ commandHandler.registerCommand('lost', {
             emote: 'PauseChamp',
             lng: client.locale,
           }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -102,7 +103,7 @@ commandHandler.registerCommand('lost', {
             emote: 'PauseChamp',
             lng: client.locale,
           }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -118,7 +119,7 @@ commandHandler.registerCommand('lost', {
             } else {
               resolve(response)
             }
-          },
+          }
         )
       })
 
@@ -150,7 +151,7 @@ commandHandler.registerCommand('lost', {
             emote: 'PauseChamp',
             lng: client.locale,
           }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -167,7 +168,7 @@ commandHandler.registerCommand('lost', {
           username,
           lng: client.locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
     } catch (error) {
       logger.error('[BETS] Error in manual resolution command (lost)', { error, channel })
@@ -177,8 +178,9 @@ commandHandler.registerCommand('lost', {
           emote: 'PauseChamp',
           lng: client.locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
     }
   },
+  permission: 2, // Mods and broadcaster only,
 })

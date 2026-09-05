@@ -8,7 +8,7 @@ export class ResolverChain {
   async resolve(ctx: ResolverContext): Promise<RawRoster | null> {
     for (const r of this.resolvers) {
       const result = await r.resolve(ctx)
-      if (result) return result
+      if (result) {return result}
     }
     return null
   }

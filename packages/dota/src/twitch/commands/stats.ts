@@ -1,5 +1,6 @@
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { isSpectator } from '../../dota/lib/isSpectator'
 import { DBSettings } from '../../settings'
@@ -25,25 +26,25 @@ async function getStats({
 }) {
   const packet = client.gsi
   const { accountIdFromArgs, hero, player, playerIdx } = await profileLink({
-    command,
-    client,
-    locale,
     args: args,
+    client,
+    command,
+    locale,
   })
 
   if (!isSpectator(packet)) {
     const delayedData = await getRealtimeStats({
       client,
-      token,
-      locale,
       forceRefetchAll: true,
+      locale,
+      token,
     }).catch((error) => {
       logger.error('Error getting stats', {
         error,
         match_id: packet?.map?.matchid ?? '',
         token,
       })
-      if (error instanceof CustomError) throw error
+      if (error instanceof CustomError) {throw error}
       throw new CustomError(t('gameNotFound', { lng: locale }))
     })
 
@@ -57,13 +58,13 @@ async function getStats({
     }
 
     return {
+      denies: playerData.denies_count,
+      gold: playerData.gold,
       heroName: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
       kda: `${playerData.kill_count}/${playerData.death_count}/${playerData.assists_count}`,
       lasthits: playerData.lh_count,
-      denies: playerData.denies_count,
-      gold: playerData.gold,
-      net_worth: playerData.net_worth,
       level: playerData.level,
+      net_worth: playerData.net_worth,
     }
   }
 
@@ -75,19 +76,18 @@ async function getStats({
   }
 
   return {
+    denies: playerData?.denies,
+    gold: playerData?.gold,
     heroName: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
     kda: `${playerData?.kills}/${playerData?.deaths}/${playerData?.assists}`,
     lasthits: playerData?.last_hits,
-    denies: playerData?.denies,
-    gold: playerData?.gold,
-    net_worth: playerData?.net_worth,
     level: heroData?.level,
+    net_worth: playerData?.net_worth,
   }
 }
 
 commandHandler.registerCommand('stats', {
   aliases: ['stat', 'kda', 'lh', 'gold', 'networth', 'level'],
-  onlyOnline: true,
   dbkey: DBSettings.commandItems,
   handler: async (message, args, command) => {
     const {
@@ -99,7 +99,7 @@ commandHandler.registerCommand('stats', {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -129,4 +129,5 @@ commandHandler.registerCommand('stats', {
       chatClient.say(client.name, msg, message.user.messageId)
     }
   },
+  onlyOnline: true,
 })

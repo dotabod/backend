@@ -1,7 +1,7 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import i18next from 'i18next'
-import { initTestI18n } from '../../../../__tests__/sharedMocks'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { initTestI18n } from '../../../../__tests__/sharedMocks'
 import {
   formatTranslatedInGameChatMessage,
   formatTranslatedInGameChatMessages,
@@ -53,17 +53,17 @@ describe('translation message formatting', () => {
     expect(formatTranslatedSpeakerLabel('Crystal Maiden', 4, 'en')).toBe('Crystal Maiden')
   })
 
-  describe('resolveTranslatedHeroName', () => {
+  describe(resolveTranslatedHeroName, () => {
     it('uses the resolved name when the slot was found in the roster', () => {
       // even for 8500+, a real roster hit is trustworthy
       expect(
         resolveTranslatedHeroName({
-          heroName: 'Invoker',
-          playerId: 9,
           foundInMatchPlayers: true,
+          heroName: 'Invoker',
           isHighMmr: true,
           locale: 'en',
-        }),
+          playerId: 9,
+        })
       ).toBe('Invoker')
     })
 
@@ -71,43 +71,43 @@ describe('translation message formatting', () => {
       // player_id is reshuffled at 8500+, so the color guess would be wrong
       expect(
         resolveTranslatedHeroName({
-          heroName: 'Brown',
-          playerId: 9,
           foundInMatchPlayers: false,
+          heroName: 'Brown',
           isHighMmr: true,
           locale: 'en',
-        }),
+          playerId: 9,
+        })
       ).toBe('Hero 9')
     })
 
     it('keeps the player-slot color sub-8500 when slot not in roster', () => {
       expect(
         resolveTranslatedHeroName({
-          heroName: 'Green',
-          playerId: 8,
           foundInMatchPlayers: false,
+          heroName: 'Green',
           isHighMmr: false,
           locale: 'en',
-        }),
+          playerId: 8,
+        })
       ).toBe('Green')
     })
 
     it('falls back to the player_id string when no name is known', () => {
       expect(
         resolveTranslatedHeroName({
-          heroName: '',
-          playerId: 3,
           foundInMatchPlayers: false,
+          heroName: '',
           isHighMmr: false,
           locale: 'en',
-        }),
+          playerId: 3,
+        })
       ).toBe('3')
     })
   })
 
   it('adds translated in-game chat prefix and disclaimer', () => {
     expect(formatTranslatedInGameChatMessage('Player 2: where shard', 'en')).toBe(
-      '[In-game chat translation] Player 2: where shard (auto-translated, may be inaccurate)',
+      '[In-game chat translation] Player 2: where shard (auto-translated, may be inaccurate)'
     )
   })
 
@@ -116,7 +116,7 @@ describe('translation message formatting', () => {
     const longMessageB = `Player 2: ${'b'.repeat(220)}`
     const split = formatTranslatedInGameChatMessages(`${longMessageA} | ${longMessageB}`, 'en', 500)
 
-    expect(split.length).toBe(2)
+    expect(split).toHaveLength(2)
     for (const message of split) {
       expect(message.length).toBeLessThanOrEqual(500)
     }
@@ -125,7 +125,7 @@ describe('translation message formatting', () => {
   it('truncates oversized translated segments to stay within twitch length limit', () => {
     const split = formatTranslatedInGameChatMessages(`Player 1: ${'x'.repeat(700)}`, 'en', 500)
 
-    expect(split.length).toBe(1)
+    expect(split).toHaveLength(1)
     expect(split[0].length).toBeLessThanOrEqual(500)
     expect(split[0]).toContain('…')
   })

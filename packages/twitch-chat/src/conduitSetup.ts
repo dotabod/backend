@@ -4,14 +4,15 @@ import {
   logger,
   updateConduitShard as sharedUpdateConduitShard,
 } from '@dotabod/shared-utils'
+
 import type { TwitchEventTypes } from './event-handlers/events'
 import { offlineEvent } from './event-handlers/offlineEvent'
 import { onlineEvent } from './event-handlers/onlineEvent'
 import { transformBetData } from './event-handlers/transformBetData'
 import { transformPollData } from './event-handlers/transformPollData'
 import { updateUserEvent } from './event-handlers/updateUserEvent'
-import { EventsubSocket, isEventsubConnected } from './eventSubSocket'
 import { twitchEvent } from './events'
+import { EventsubSocket, isEventsubConnected } from './eventSubSocket'
 import { handleChatMessage } from './handleChat'
 import { emitEvent, hasDotabodSocket } from './utils/socketManager'
 
@@ -33,17 +34,17 @@ let eventSubInitInFlight = false
 let currentSocket: EventsubSocket | null = null
 
 async function ensureEventSubInitialized(reason: string): Promise<void> {
-  if (eventSubInitInFlight) return
+  if (eventSubInitInFlight) {return}
   // A plain socket.io reconnect while EventSub is already live needs no re-init.
-  if (isEventsubConnected()) return
+  if (isEventsubConnected()) {return}
   eventSubInitInFlight = true
   try {
     logger.info('[TWITCHCHAT] Ensuring EventSub is initialized', { reason })
     await initializeSocket()
   } catch (error) {
     logger.error('[TWITCHCHAT] EventSub initialization failed', {
-      reason,
       error: error instanceof Error ? error.message : String(error),
+      reason,
     })
   } finally {
     eventSubInitInFlight = false
@@ -85,7 +86,7 @@ setInterval(() => {
 
 // Function to fetch conduit ID via socket.io
 async function getConduitId(forceRefresh = false): Promise<string> {
-  return new Promise((resolve, reject) => {
+  return await new Promise((resolve, reject) => {
     // Remove both listeners on any settle so repeated watchdog-driven retries
     // (while twitch-events is down) don't leak handlers / trip MaxListeners.
     const cleanup = () => {
@@ -98,7 +99,7 @@ async function getConduitId(forceRefresh = false): Promise<string> {
       cleanup()
       if (data?.conduitId) {
         logger.info('[TWITCHCHAT] Received conduit ID', {
-          conduitId: `${data.conduitId.substring(0, 8)}...`,
+          conduitId: `${data.conduitId.slice(0, 8)}...`,
         })
         resolve(data.conduitId)
       } else {
@@ -115,7 +116,7 @@ async function getConduitId(forceRefresh = false): Promise<string> {
     const timeout = setTimeout(() => {
       cleanup()
       reject(new Error('Timeout waiting for conduit data'))
-    }, 15000)
+    }, 15_000)
 
     eventsSocket.on('conduitData', onData)
     eventsSocket.on('conduitError', onError)
@@ -134,7 +135,7 @@ async function getConduitId(forceRefresh = false): Promise<string> {
 async function updateConduitShard(
   session_id: string,
   conduitId: string,
-  retryCount = 0,
+  retryCount = 0
 ): Promise<void> {
   try {
     const success = await sharedUpdateConduitShard(session_id, conduitId, retryCount)
@@ -149,25 +150,25 @@ async function updateConduitShard(
     logger.error('[TWITCHCHAT] Error updating conduit shard', { error })
 
     if (retryCount < 5) {
-      const delay = Math.min(1000 * 2 ** retryCount, 30000)
+      const delay = Math.min(1000 * 2 ** retryCount, 30_000)
       logger.info(
-        `[TWITCHCHAT] Retrying shard update after error in ${delay}ms, attempt ${retryCount + 1}`,
+        `[TWITCHCHAT] Retrying shard update after error in ${delay}ms, attempt ${retryCount + 1}`
       )
 
       await new Promise((resolve) => setTimeout(resolve, delay))
-      return updateConduitShard(session_id, conduitId, retryCount + 1)
+      return await updateConduitShard(session_id, conduitId, retryCount + 1)
     }
   }
 }
 
 const legacyEventHandlerNames: Partial<Record<keyof TwitchEventTypes, string>> = {
-  'channel.prediction.begin': 'subscribeToChannelPredictionBeginEvents',
-  'channel.prediction.progress': 'subscribeToChannelPredictionProgressEvents',
-  'channel.prediction.lock': 'subscribeToChannelPredictionLockEvents',
-  'channel.prediction.end': 'subscribeToChannelPredictionEndEvents',
   'channel.poll.begin': 'subscribeToChannelPollBeginEvents',
-  'channel.poll.progress': 'subscribeToChannelPollProgressEvents',
   'channel.poll.end': 'subscribeToChannelPollEndEvents',
+  'channel.poll.progress': 'subscribeToChannelPollProgressEvents',
+  'channel.prediction.begin': 'subscribeToChannelPredictionBeginEvents',
+  'channel.prediction.end': 'subscribeToChannelPredictionEndEvents',
+  'channel.prediction.lock': 'subscribeToChannelPredictionLockEvents',
+  'channel.prediction.progress': 'subscribeToChannelPredictionProgressEvents',
 }
 
 const handleObsEvents = (type: keyof TwitchEventTypes, broadcasterId: string, data: unknown) => {
@@ -178,8 +179,8 @@ const handleObsEvents = (type: keyof TwitchEventTypes, broadcasterId: string, da
 }
 
 // Helper function to extract broadcaster ID and transform event data
-const createEventHandler = <T, R>(type: keyof TwitchEventTypes, transform: (event: T) => R) => {
-  return ({
+const createEventHandler = <T, R>(type: keyof TwitchEventTypes, transform: (event: T) => R) => 
+  ({
     payload: {
       subscription: {
         condition: { broadcaster_user_id },
@@ -197,7 +198,7 @@ const createEventHandler = <T, R>(type: keyof TwitchEventTypes, transform: (even
     const transformed = transform(event)
     handleObsEvents(type, broadcaster_user_id, transformed)
   }
-}
+
 
 function grantEvent(data: {
   payload: {
@@ -232,10 +233,10 @@ function grantEvent(data: {
 
   if (userId) {
     logger.info('Authorization granted for user', {
+      payload: data.payload,
+      twitchId: data.payload?.event?.user_id,
       userId,
       username: data.payload?.event?.user_login,
-      twitchId: data.payload?.event?.user_id,
-      payload: data.payload,
     })
     twitchEvent.emit('grant', userId)
   }
@@ -268,7 +269,7 @@ function revokeEvent(data: {
 }) {
   const userId = data.payload?.event?.user_id
   if (userId) {
-    logger.info('Revocation for user.authorization.revoke', { userId, payload: data.payload })
+    logger.info('Revocation for user.authorization.revoke', { payload: data.payload, userId })
     if (userId === process.env.TWITCH_BOT_PROVIDERID) {
       logger.info('Bot was revoked in user.authorization.revoke!')
       botStatus.isBanned = true
@@ -280,22 +281,22 @@ function revokeEvent(data: {
 // EventSub payloads aren't modeled centrally (TwitchEventTypes only carries versions);
 // handlers stay typed at their definitions, so this registry holds them via `any`.
 const eventHandlers: Partial<Record<keyof TwitchEventTypes, (data: any) => void>> = {
-  'stream.online': onlineEvent,
-  'stream.offline': offlineEvent,
-  'user.update': updateUserEvent,
   'channel.chat.message': handleChatMessage,
+  'channel.poll.begin': createEventHandler('channel.poll.begin', transformPollData),
+  'channel.poll.end': createEventHandler('channel.poll.end', transformPollData),
+  'channel.poll.progress': createEventHandler('channel.poll.progress', transformPollData),
   'channel.prediction.begin': createEventHandler('channel.prediction.begin', transformBetData),
+  'channel.prediction.end': createEventHandler('channel.prediction.end', transformBetData),
+  'channel.prediction.lock': createEventHandler('channel.prediction.lock', transformBetData),
   'channel.prediction.progress': createEventHandler(
     'channel.prediction.progress',
-    transformBetData,
+    transformBetData
   ),
-  'channel.prediction.lock': createEventHandler('channel.prediction.lock', transformBetData),
-  'channel.prediction.end': createEventHandler('channel.prediction.end', transformBetData),
-  'channel.poll.begin': createEventHandler('channel.poll.begin', transformPollData),
-  'channel.poll.progress': createEventHandler('channel.poll.progress', transformPollData),
-  'channel.poll.end': createEventHandler('channel.poll.end', transformPollData),
-  'user.authorization.revoke': revokeEvent,
+  'stream.offline': offlineEvent,
+  'stream.online': onlineEvent,
   'user.authorization.grant': grantEvent,
+  'user.authorization.revoke': revokeEvent,
+  'user.update': updateUserEvent,
 }
 
 // Initialize WebSocket and handle events
@@ -304,7 +305,7 @@ async function initializeSocket() {
     // Get the conduit ID from the twitch-events service
     const conduitId = await getConduitId()
     logger.info('[TWITCHCHAT] Using conduit ID from twitch-events service', {
-      conduitId: `${conduitId.substring(0, 8)}...`,
+      conduitId: `${conduitId.slice(0, 8)}...`,
     })
 
     // Exactly one live EventsubSocket at a time. Every re-init path (startup,
@@ -324,16 +325,16 @@ async function initializeSocket() {
 
     mySocket.on('connected', async (session_id: string) => {
       logger.info('[TWITCHCHAT] Socket connected (initial)', {
-        sessionId: session_id,
         conduitId: `${conduitId.substring(0, 8)}...`,
+        sessionId: session_id,
       })
       await updateConduitShard(session_id, conduitId)
     })
 
     mySocket.on('reconnected', async (session_id: string) => {
       logger.info('[TWITCHCHAT] Socket reconnected', {
-        sessionId: session_id,
         conduitId: `${conduitId.substring(0, 8)}...`,
+        sessionId: session_id,
       })
       await updateConduitShard(session_id, conduitId)
     })
@@ -420,7 +421,7 @@ async function initializeSocket() {
 
         let state = userRevocationState.get(userId)
         if (!state || now - state.windowStart > DEBOUNCE_TIME) {
-          state = { windowStart: now, types: new Set([subscriptionType]), hasEmitted: false }
+          state = { hasEmitted: false, types: new Set([subscriptionType]), windowStart: now }
           userRevocationState.set(userId, state)
         } else {
           state.types.add(subscriptionType)
@@ -432,19 +433,19 @@ async function initializeSocket() {
 
         const isOnlyChatMessage = state.types.size === 1 && state.types.has('channel.chat.message')
 
-        if (!isOnlyChatMessage) {
+        if (isOnlyChatMessage) {
+          botStatus.isBanned = true
+          logger.info('Bot was banned by Twitch! isOnlyChatMessage')
+        } else {
           logger.info('Revocation with multiple types or non-chat type', {
             userId,
             types: Array.from(state.types),
             payload,
           })
           twitchEvent.emit('revoke', userId)
-        } else {
-          botStatus.isBanned = true
-          logger.info('Bot was banned by Twitch! isOnlyChatMessage')
         }
         state.hasEmitted = true
-      },
+      }
     )
 
     Object.entries(eventHandlers).forEach(([event, handler]) => {
