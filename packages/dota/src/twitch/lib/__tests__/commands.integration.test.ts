@@ -224,7 +224,7 @@ describe('!mmr', () => {
     await commandHandler.handleMessage(
       makeMessage({
         clientOverrides: {
-          SteamAccount: [{ mmr: 4000, name: 'other', steam32Id: 11111 }],
+          SteamAccount: [{ mmr: 4000, name: 'other', steam32Id: 11_111 }],
           multiAccount: true,
         } as any,
         content: '!mmr',

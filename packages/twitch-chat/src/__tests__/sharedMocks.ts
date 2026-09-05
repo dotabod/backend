@@ -236,4 +236,6 @@ export const { sendTwitchChatMessage, handleChatMessage, clearDedupeCache } =
 // drive the controllable FakeWebSocket instead of a real connection.
 export const { EventsubSocket, isEventsubConnected } = await import('../eventSubSocket')
 
-export const flushMacrotasks = async () =>{  await new Promise<void>((r) => setTimeout(r, 5)); }
+export const flushMacrotasks = async () => {
+  await new Promise<void>((r) => setTimeout(r, 5))
+}

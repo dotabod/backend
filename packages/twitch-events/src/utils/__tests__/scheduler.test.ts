@@ -21,7 +21,7 @@ describe(scheduleNonOverlapping, () => {
       runs++
       active++
       maxConcurrent = Math.max(maxConcurrent, active)
-       await new Promise<void>((r) => {
+      await new Promise<void>((r) => {
         resolvers.push(() => {
           active--
           r()

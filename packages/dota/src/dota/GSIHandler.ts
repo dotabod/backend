@@ -847,7 +847,9 @@ class GSIHandler implements GSIHandlerType {
 
     this.openTheBetTaskId = delayedQueue.addTask(
       getStreamDelay(client.settings, client.subscription),
-      async () =>{  await this.openTheBet(validatedMatchId, validatedHeroName, validatedMyTeam); }
+      async () => {
+        await this.openTheBet(validatedMatchId, validatedHeroName, validatedMyTeam)
+      }
     )
 
     // .catch((e: any) => {

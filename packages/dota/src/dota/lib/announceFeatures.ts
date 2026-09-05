@@ -152,8 +152,9 @@ export function registerFeatureAnnouncers(): void {
   const triggers = [...new Set(FEATURE_ANNOUNCEMENTS.map((f) => f.trigger))]
   for (const trigger of triggers) {
     eventHandler.registerEvent(trigger, {
-      handler: async (dotaClient, data) =>{ 
-        await dispatchFeatureAnnouncements(dotaClient, trigger, data); },
+      handler: async (dotaClient, data) => {
+        await dispatchFeatureAnnouncements(dotaClient, trigger, data)
+      },
     })
   }
 }

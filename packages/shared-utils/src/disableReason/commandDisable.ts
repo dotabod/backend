@@ -16,7 +16,7 @@ export const commandDisable = {
     reason: DisableReason,
     metadata?: DisableReasonMetadata
   ): Promise<void> {
-     await trackDisableReason(userId, 'commandDisable', reason, metadata, {
+    await trackDisableReason(userId, 'commandDisable', reason, metadata, {
       disabledValue: true,
     })
   },
@@ -34,7 +34,7 @@ export const commandDisable = {
     userId: string,
     opts: { reason?: DisableReason; autoResolved?: boolean } = {}
   ): Promise<void> {
-     await trackResolveReason(userId, 'commandDisable', opts.autoResolved ?? false, {
+    await trackResolveReason(userId, 'commandDisable', opts.autoResolved ?? false, {
       enabledValue: false,
       reason: opts.reason,
     })
@@ -50,6 +50,6 @@ export const commandDisable = {
     reason: DisableReason,
     metadata?: DisableReasonMetadata
   ): Promise<void> {
-     await recordDisableNotification(userId, 'commandDisable', reason, metadata)
+    await recordDisableNotification(userId, 'commandDisable', reason, metadata)
   },
 }

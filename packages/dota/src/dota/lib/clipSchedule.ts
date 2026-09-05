@@ -188,7 +188,9 @@ export async function scheduleClipWith(
     })
   }
 
-  deps.arm(delayMs, async () =>{  await fireClip(deps, member); })
+  deps.arm(delayMs, async () => {
+    await fireClip(deps, member)
+  })
 }
 
 export async function rearmWith(deps: ClipScheduleDeps): Promise<void> {
@@ -224,7 +226,9 @@ export async function rearmWith(deps: ClipScheduleDeps): Promise<void> {
     }
 
     const delayMs = lateBy <= 0 ? parsed.executeAt - now : 0
-    deps.arm(delayMs, async () =>{  await fireClip(deps, member); })
+    deps.arm(delayMs, async () => {
+      await fireClip(deps, member)
+    })
     rearmed++
   }
 
@@ -240,11 +244,11 @@ export async function rearmWith(deps: ClipScheduleDeps): Promise<void> {
 // fire-and-forget this; Redis is the durability backstop, the DelayedQueue is
 // the normal fire path.
 export async function scheduleClip(delayMs: number, payload: ClipTaskPayload): Promise<void> {
-   await scheduleClipWith(realDeps(), delayMs, payload)
+  await scheduleClipWith(realDeps(), delayMs, payload)
 }
 
 // Re-arm clip tasks that outlived a restart. Future tasks keep their original
 // fire time; recently-passed tasks fire ~immediately; stale ones are dropped.
 export async function rearmPersistedClips(): Promise<void> {
-   await rearmWith(realDeps())
+  await rearmWith(realDeps())
 }

@@ -49,7 +49,9 @@ function makeFakeRedis(
   return { calls, client }
 }
 
-const flushMicrotasks = async () =>{  await new Promise<void>((r) => setTimeout(r, 0)); }
+const flushMicrotasks = async () => {
+  await new Promise<void>((r) => setTimeout(r, 0))
+}
 
 beforeEach(() => {
   // dbState reset is required so hydrateInvalidTokensFromDb sees fresh table

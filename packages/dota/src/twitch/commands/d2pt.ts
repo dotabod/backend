@@ -23,7 +23,7 @@ commandHandler.registerCommand('d2pt', {
         t('dota2pt', {
           heroName,
           lng: message.channel.client.locale,
-          url: `dota2protracker.com/hero/${encodeURI(heroName).replaceAll('\'', '%27')}`,
+          url: `dota2protracker.com/hero/${encodeURI(heroName).replaceAll("'", '%27')}`,
         }),
         message.user.messageId
       )

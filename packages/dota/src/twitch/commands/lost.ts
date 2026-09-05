@@ -131,7 +131,7 @@ commandHandler.registerCommand('lost', {
       } catch (error) {
         // If we can't get the data, we'll proceed without it
         logger.info('[BETS] Could not get match details for manual resolution, proceeding anyway', {
-          error: error,
+          error,
           matchId,
         })
       }
