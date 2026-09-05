@@ -101,9 +101,13 @@ interface LeaderRankData {
 }
 
 async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise<LeaderRankData> {
+  const lowestLeaderRank = leaderRanks.at(-1)
+  if (!lowestLeaderRank) {
+    throw new Error('Leader ranks must not be empty')
+  }
   const defaultNotFound: LeaderRankData = {
     mmr,
-    myRank: leaderRanks.at(-1),
+    myRank: lowestLeaderRank,
     standing: null,
   }
 
@@ -147,7 +151,7 @@ async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise
       }
 
       // Find the corresponding leaderboard rank for the given standing
-      const myRank = leaderRanks.find((rank) => standing <= rank.range[1]) || leaderRanks.at(-1)
+      const myRank = leaderRanks.find((rank) => standing <= rank.range[1]) ?? lowestLeaderRank
 
       // Construct the result object
       result = { mmr, myRank, standing }
@@ -170,7 +174,11 @@ export async function getRankDetail(mmr: string | number, steam32Id?: number | n
   }
 
   // At or higher than max mmr? Lets check leaderboards
-  if (mmrNum >= ranks.at(-1).range[1]) {
+  const highestRank = ranks.at(-1)
+  if (!highestRank) {
+    return null
+  }
+  if (mmrNum >= highestRank.range[1]) {
     return await lookupLeaderRank(mmrNum, steam32Id)
   }
 

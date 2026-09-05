@@ -5,6 +5,7 @@
     "target": "ESNext",
     "module": "Preserve",
     "moduleResolution": "Bundler",
+    "noEmit": true,
     "sourceMap": true,
     "strictNullChecks": true,
     "types": ["node"],

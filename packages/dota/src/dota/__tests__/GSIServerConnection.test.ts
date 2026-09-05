@@ -143,7 +143,7 @@ describe('overlay socket connection state', () => {
 
     socketState.middleware?.(socket, next)
     await vi.waitFor(() => {
-      expect(next).toHaveBeenCalledWith()
+      expect(next).toHaveBeenCalledOnce()
     })
 
     expect(getDBUser).toHaveBeenCalledWith({ twitchId: 'channel-1' })
@@ -172,7 +172,7 @@ describe('overlay socket connection state', () => {
 
     await vi.advanceTimersByTimeAsync(100)
 
-    expect(next).toHaveBeenCalledWith()
+    expect(next).toHaveBeenCalledOnce()
     expect(getDBUser).toHaveBeenCalledTimes(2)
   })
 

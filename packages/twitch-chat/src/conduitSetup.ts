@@ -461,4 +461,4 @@ async function initializeSocket() {
   }
 }
 
-export { ensureEventSubInitialized, initializeSocket }
+export { ensureEventSubInitialized }

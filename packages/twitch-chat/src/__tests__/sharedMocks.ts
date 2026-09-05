@@ -102,7 +102,7 @@ function createSupabaseBuilder() {
 }
 const supabaseMock = { from: () => createSupabaseBuilder() }
 
-vi.doMock(import('@dotabod/shared-utils'), () => ({
+vi.doMock('@dotabod/shared-utils', () => ({
   checkBotStatus: async () => state.isBanned,
   getTwitchHeaders: async () => ({ Authorization: 'Bearer test' }),
   logger: {
@@ -116,7 +116,7 @@ vi.doMock(import('@dotabod/shared-utils'), () => ({
   supabase: supabaseMock,
 }))
 
-vi.doMock(import('i18next'), () => ({
+vi.doMock('i18next', () => ({
   t: (key: string) => `t:${key}`,
 }))
 
@@ -145,7 +145,11 @@ export class FakeWebSocket {
     FakeWebSocket.instances = []
   }
   static latest(): FakeWebSocket {
-    return FakeWebSocket.instances.at(-1)
+    const instance = FakeWebSocket.instances.at(-1)
+    if (!instance) {
+      throw new Error('No fake WebSocket instance exists')
+    }
+    return instance
   }
   url: string
   readyState: number = FakeWebSocket.CONNECTING
@@ -207,7 +211,7 @@ export class FakeWebSocket {
   }
 }
 
-vi.doMock(import('ws'), () => ({ default: FakeWebSocket }))
+vi.doMock('ws', () => ({ default: FakeWebSocket }))
 
 // Route fetch through state so each test controls the HTTP response.
 globalThis.fetch = (async (url: string, options: RequestInit | undefined) => {

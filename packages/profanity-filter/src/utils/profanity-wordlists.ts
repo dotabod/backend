@@ -620,43 +620,42 @@ export function detectAgeRestrictions(text: string): boolean {
   }
   variations.push(numberWordsReplaced)
 
-  // Regex patterns to catch variations of "I'm X", "Im X", "I am X", etc.
+  // Normalize whitespace once, then use patterns without ambiguous repeated
+  // whitespace quantifiers. The latter can backtrack quadratically on user input.
   const patterns = [
-    /\bi'?m\s*(\d+)/, // Matches "i'm 12", "im12"
-    /\bi\s*am\s*(\d+)/, // Matches "i am 12", "iam12"
-    /\biam\s*(\d+)/, // Matches "iam12"
-    /\bme\s*(\d+)/, // Matches "me 12"
-    /\bage\s*[:|=]?\s*(\d+)/, // Matches "age: 12", "age=12"
-    /\bi'?m\s*a\s*(\d+)[\s-]*year/, // Matches "i'm a 12-year", "i'm a 12 year"
-    /\bi'?m\s*(\d+)[\s-]*years?\s*old/, // Matches "i'm 12 years old", "i'm12yearsold"
-    /\bi\s*am\s*(\d+)[\s-]*years?\s*old/, // Matches "i am 12 years old", "iam12yearsold"
-    /\bi'?m\s*only\s*(\d+)/, // Matches "i'm only 12", "imonly12"
-    /\bjust\s*turned\s*(\d+)/, // Matches "just turned 12"
-    /\bi'?m\s*underage\s*(\d+)?/, // Matches "i'm underage" or "i'm underage 12"
-    /\bi'?m\s*a\s*minor/, // Matches "i'm a minor"
-    /\bi'?m\s*a\s*kid/, // Matches "i'm a kid"
-    /\bmy\s*age\s*is\s*(\d+)/, // Matches "my age is 12"
+    /\bi'?m(\d+)/, // Matches "i'm 12", "im12"
+    /\biam(\d+)/, // Matches "i am 12", "iam12"
+    /\bme(\d+)/, // Matches "me 12"
+    /\bage[:|=]?(\d+)/, // Matches "age: 12", "age=12"
+    /\bi'?ma(\d+)-?year/, // Matches "i'm a 12-year", "i'm a 12 year"
+    /\bi'?m(\d+)-?years?old/, // Matches "i'm 12 years old", "i'm12yearsold"
+    /\biam(\d+)-?years?old/, // Matches "i am 12 years old", "iam12yearsold"
+    /\bi'?monly(\d+)/, // Matches "i'm only 12", "imonly12"
+    /\bjustturned(\d+)/, // Matches "just turned 12"
+    /\bi'?munderage(\d+)?/, // Matches "i'm underage" or "i'm underage 12"
+    /\bi'?maminor/, // Matches "i'm a minor"
+    /\bi'?makid/, // Matches "i'm a kid"
+    /\bmyageis(\d+)/, // Matches "my age is 12"
   ]
 
   // Check all variations against all patterns
   for (const variant of variations) {
+    const compactVariant = variant.replaceAll(/\s+/g, '')
+    if (
+      /\b(?:under ?age|und[e3]r.?[a@]g[e3]|m[i1]n[o0]r|k[i1]d)\b/.test(variant) ||
+      compactVariant.includes('underage')
+    ) {
+      return true
+    }
+
     for (const pattern of patterns) {
-      const match = variant.match(pattern)
+      const match = compactVariant.match(pattern)
       if (match?.[1]) {
         const age = Number.parseInt(match[1], 10)
         // Flag if age is under 13 (COPPA compliance age)
         if (age < 13 && age > 0) {
           return true
         }
-      }
-
-      // Special check for minor/underage without explicit age
-      // Use an even more flexible pattern to catch heavily obfuscated cases
-      if (
-        /\b(?:under\s*age|und[e3]r.?[a@]g[e3]|m[i1]n[o0]r|k[i1]d)\b/.test(variant) ||
-        /\s*u\s*n\s*d\s*e\s*r\s*a\s*g\s*e\s*/.test(variant)
-      ) {
-        return true
       }
     }
   }

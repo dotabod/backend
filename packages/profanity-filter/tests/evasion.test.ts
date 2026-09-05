@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 
 import { getProfanityDetails, moderateText } from '../src/utils/moderation'
+import { detectAgeRestrictions } from '../src/utils/profanity-wordlists'
 
 // Helper function for testing
 function testBadPhrase(phrase: string, description: string) {
@@ -31,6 +32,15 @@ describe('Enhanced Evasion Detection', () => {
     testBadPhrase('j_u_s_t__t_u_r_n_e_d__1_1', 'underscored age phrase')
     testBadPhrase('im  a    minor', 'spaced out minor statement')
     testBadPhrase("i ' m   u n d e r a g e", 'spaced out underage statement')
+
+    test('reports the original age phrase once', () => {
+      expect(getProfanityDetails('age 12')).toMatchObject({ matches: ['age 12'] })
+    })
+
+    test('does not backtrack on long whitespace-only near matches', () => {
+      expect(detectAgeRestrictions(`age${' '.repeat(50_000)}x`)).toBeFalsy()
+      expect(detectAgeRestrictions(`u${' '.repeat(50_000)}x`)).toBeFalsy()
+    })
   })
 
   describe('Transphobic content detection', () => {

@@ -67,7 +67,7 @@ describe(handleStreamStatusTransition, () => {
     expect(result).toStrictEqual({ cameOnline: true, changed: true, wentOffline: false })
     expect(to).toHaveBeenCalledWith('token-1')
     expect(emit).toHaveBeenCalledWith('refresh-settings', 'mutate')
-    expect(enable).toHaveBeenCalledWith()
+    expect(enable).toHaveBeenCalledOnce()
   })
 
   it('promotes a recently buffered offline GSI packet when the stream comes online', () => {

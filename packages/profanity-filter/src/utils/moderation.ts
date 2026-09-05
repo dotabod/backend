@@ -621,8 +621,12 @@ function getProfanityDetailsSingle(text: string): {
   // Check for age restrictions (underage users)
   if (detectAgeRestrictions(text)) {
     // Extract the actual text for matching purposes rather than using a generic "underage" label
-    const ageMatch = /\b(i'?m\s+\d+|i\s+am\s+\d+|iam\s*\d+|age\s*[:=]?\s*\d+)/i.exec(text)
-    const matchText = ageMatch ? ageMatch[1] : text
+    const agePrefix = /\b(?:i'?m|i\s+am|iam|age)(?=\s|:|=|\d|$)/i.exec(text)
+    const ageSuffix = agePrefix && text.slice(agePrefix.index + agePrefix[0].length)
+    const ageMatch = ageSuffix && /^\D*\d+/.exec(ageSuffix)
+    const matchText = ageMatch
+      ? text.slice(agePrefix.index, agePrefix.index + agePrefix[0].length + ageMatch[0].length)
+      : text
     return { isFlagged: true, matches: [matchText], source: 'age-restriction' }
   }
 

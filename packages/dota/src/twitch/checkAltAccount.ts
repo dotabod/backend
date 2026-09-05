@@ -20,12 +20,7 @@ export async function checkAltAccount(
   messageId: string,
   client: SocketClient
 ) {
-  // If already cached as not an alt account, skip
-  if (!altAccountCache[chattersUsername]) {
-    return
-  }
-
-  // If cached as alt account, check cooldown before sending message
+  // If cached as an alt account, check cooldown before sending a message.
   if (altAccountCache[chattersUsername]) {
     const now = Date.now()
     const lastTime = lastAltAccountMessageTimestamps[chattersUsername] || 0
@@ -46,6 +41,10 @@ export async function checkAltAccount(
       )
     }
     lastAltAccountMessageTimestamps[chattersUsername] = now
+    return
+  }
+
+  if (Object.hasOwn(altAccountCache, chattersUsername)) {
     return
   }
 

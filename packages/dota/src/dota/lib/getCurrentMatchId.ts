@@ -16,18 +16,6 @@ const activeMatchStates = new Set([
   'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
 ])
 
-export function getCurrentMatchId(
-  client: Pick<SocketClient, 'gsi' | 'gsiUpdatedAt'>,
-  now = Date.now()
-): string | undefined {
-  const matchId = getFreshActiveMatchId(client, now)
-  if (!matchId || !isPlayingMatch(client.gsi)) {
-    return undefined
-  }
-
-  return matchId
-}
-
 // Roster commands can read the full team2/team3 payload that Dota exposes while spectating.
 // Keep the same freshness/end-state protections as player commands without rejecting that
 // intentional spectator source before MatchDataService gets a chance to resolve it.

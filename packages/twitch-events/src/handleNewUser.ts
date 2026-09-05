@@ -1,9 +1,11 @@
 import { logger, supabase } from '@dotabod/shared-utils'
+import type { Database } from '@dotabod/shared-utils'
 
 import { initUserSubscriptions } from './initUserSubscriptions'
 import { getBotInstance } from './twitch/lib/BotApiSingleton'
 
 const botApi = getBotInstance()
+type UserUpdate = Database['public']['Tables']['users']['Update']
 
 // Single retry to cover the Supabase Realtime → read-replica race. 1s is
 // generous; replica lag is typically <100ms in production.
@@ -97,15 +99,17 @@ export async function handleNewUser(
       const stream = await botApi.streams.getStreamByUserId(providerAccountId)
       const streamer = await botApi.users.getUserById(providerAccountId)
 
-      const data = {
-        displayName: streamer?.displayName,
-        name: streamer?.name,
-        stream_online: !!stream?.startDate,
-        stream_start_date: stream?.startDate.toISOString() ?? null,
+      const filteredData: UserUpdate = {}
+      if (streamer?.displayName) {
+        filteredData.displayName = streamer.displayName
       }
-      const filteredData = Object.fromEntries(
-        Object.entries(data).filter(([_key, value]) => Boolean(value))
-      )
+      if (streamer?.name) {
+        filteredData.name = streamer.name
+      }
+      if (stream?.startDate) {
+        filteredData.stream_online = true
+        filteredData.stream_start_date = stream.startDate.toISOString()
+      }
 
       if (userId) {
         await supabase.from('users').update(filteredData).eq('id', userId)

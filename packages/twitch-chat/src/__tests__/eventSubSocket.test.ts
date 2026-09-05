@@ -20,6 +20,10 @@ afterEach(() => {
 })
 
 describe('EventsubSocket lifecycle', () => {
+  it('throws when no fake websocket has been created', () => {
+    expect(() => FakeWebSocket.latest()).toThrow('No fake WebSocket instance exists')
+  })
+
   it('connects on construction and reports connected after session_welcome', () => {
     const sock = new EventsubSocket()
     expect(FakeWebSocket.instances).toHaveLength(1)
