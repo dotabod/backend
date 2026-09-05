@@ -113,7 +113,7 @@ const loggerMock = {
 }
 
 function reinstallDbMock() {
-  vi.doMock('@dotabod/shared-utils', () =>
+  vi.doMock(import('@dotabod/shared-utils'), () =>
     buildSharedUtilsMock({ logger: loggerMock, supabase: supabaseMock })
   )
 }

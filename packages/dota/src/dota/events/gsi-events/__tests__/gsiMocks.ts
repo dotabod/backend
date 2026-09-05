@@ -59,7 +59,7 @@ export function resetGsiState() {
 
 // --- Mocks ---
 
-vi.doMock('@dotabod/shared-utils', () =>
+vi.doMock(import('@dotabod/shared-utils'), () =>
   buildSharedUtilsMock({
     logger: { debug: () => {}, error: () => {}, info: () => {}, warn: () => {} },
     supabase: { from: () => ({}), rpc: async () => ({ data: [], error: null }) },
@@ -104,7 +104,7 @@ const fakeRedisInstance = {
   getJson: async (key: string) => await fakeRedisClient.json.get(key),
   setJson: async (key: string, value: unknown) => await fakeRedisClient.json.set(key, '$', value),
 }
-vi.doMock('../../../../db/RedisClient', () => ({
+vi.doMock(import('../../../../db/RedisClient'), () => ({
   default: {
     getInstance: () => fakeRedisInstance,
   },
@@ -121,7 +121,7 @@ vi.doMock('../../../../db/RedisClient', () => ({
 // Event handlers route through `MatchDataService` directly. Mock it so the
 // existing `gsiState.matchPlayers` (legacy shape) feeds resolveRoster() after
 // a slot/heroid field rename — tests don't need to change.
-vi.doMock('../../../lib/matchData', () => {
+vi.doMock(import('../../../lib/matchData'), () => {
   class FakeMatchDataService {
     async resolveRoster() {
       return {
