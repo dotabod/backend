@@ -131,9 +131,13 @@
     "list_other": ""
   },
   "countryPlayerList": "Грає з гравцями з {{- countries}}",
+  "currentMatchIdNotFound": "No current match ID was found.",
   "currentSong": "Зараз відтворюється: {{artist}} - {{title}}{{album}} {{url}}",
+  "customGameNoMatchId": "Hero Demo and custom games do not have a public match ID.",
+  "customGameNoRoster": "Hero Demo and custom games do not have public roster data.",
   "dota2pt": "Ти не знаєш що купити на {{- heroName}}?  Подивись тут {{- url}}",
   "dotabod": "Я бот з відкритим вихідним кодом, створений {{author}}. Dotabod для ваших стрімів: {{- url}}",
+  "dotabodProfileNotFound": "No tracked Dotabod profile found for {{- player}}.",
   "dotapatch": {
     "newPatch": "{{emote}} В Dota 2 вийшов новий патч: {{version}}. Дізнайся найцікавіші оновлення на https://www.dota2.com/patches"
   },
@@ -367,6 +371,18 @@
   "winprobability": {
     "winProbability": "Ймовірність виграшу - {{winRate}}% на момент {{gameTime}}:00 · Наступне оновлення через {{remainingCooldown}} сек",
     "winProbabilityDataNotAvailable": "Ймовірність перемоги ще не доступна · Спробуйте ще раз через {{remainingCooldown}} с"
+  },
+  "wl": {
+    "statsChallenge": "{{elapsed}} of {{count}} days",
+    "statsChallenge_one": "",
+    "statsChallenge_few": "",
+    "statsChallenge_many": "",
+    "statsChallenge_other": "",
+    "statsWindow_one": "Last {{count}} day",
+    "statsWindow_few": "Last {{count}} days",
+    "statsWindow_many": "Last {{count}} days",
+    "statsWindow_other": "Last {{count}} days",
+    "statsWindow_stream": "This stream"
   },
   "xpm": "Поточний XPM для {{- heroName}}: {{num}}"
 }

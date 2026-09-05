@@ -124,9 +124,13 @@
     "list_other": ""
   },
   "countryPlayerList": "Playing with players from {{- countries}}",
+  "currentMatchIdNotFound": "No current match ID was found.",
   "currentSong": "Ahora reproduciendo: {{artist}} - {{title}}{{album}} {{url}}",
+  "customGameNoMatchId": "Hero Demo and custom games do not have a public match ID.",
+  "customGameNoRoster": "Hero Demo and custom games do not have public roster data.",
   "dota2pt": "Necesitas builds para {{- heroName}}? Encuéntralas aquí {{- url}}",
   "dotabod": "I'm an open source bot made by {{author}}. Get Dotabod for your stream: {{- url}}",
+  "dotabodProfileNotFound": "No tracked Dotabod profile found for {{- player}}.",
   "dotapatch": {
     "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
   },
@@ -152,6 +156,7 @@
     "winrateColor_one": "El porcentaje de victorias de {{color}} es {{winrate}}% con {{- heroName}} en {{timeperiod}} con {{count}} partidas jugadas.",
     "winrateColor_other": "El porcentaje de victorias de {{color}} es {{winrate}}% con {{- heroName}} en {{timeperiod}} con {{count}} partidas jugadas.",
     "winrateStreamer_one": "Su porcentaje de victorias es: {{winrate}}% como {{- heroName}} en {{timeperiod}} de {{count}} partidas jugadas.",
+    "winrateStreamer_many": "",
     "winrateStreamer_other": "Su porcentaje de victorias es: {{winrate}}% como {{- heroName}} en {{timeperiod}} de {{count}} partidas jugadas."
   },
   "heroStats": "{{- heroName}}: KDA {{- kda}} · LH {{lasthits}} · DN {{denies}} · G {{gold}} · NW {{net_worth}} · LVL {{level}}",
@@ -339,6 +344,16 @@
   "winprobability": {
     "winProbability": "{{winRate}}% probabilidad de victoria para {{gameTime}}:00 · Siguiente actualización en {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "La probabilidad de victoria no está disponible aún · Intenta nuevamente en {{remainingCooldown}}s"
+  },
+  "wl": {
+    "statsChallenge": "{{elapsed}} of {{count}} days",
+    "statsChallenge_one": "",
+    "statsChallenge_many": "",
+    "statsChallenge_other": "",
+    "statsWindow_one": "Last {{count}} day",
+    "statsWindow_many": "",
+    "statsWindow_other": "Last {{count}} days",
+    "statsWindow_stream": "This stream"
   },
   "xpm": "Actual XPM para {{- heroName}}: {{num}}"
 }
