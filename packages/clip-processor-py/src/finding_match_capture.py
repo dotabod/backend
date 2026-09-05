@@ -34,11 +34,30 @@ QUEUE_TEXT_REGIONS = {
 }
 REFERENCE_SIMILARITY_LIMIT = 0.985
 MINIMUM_MOTION_SCORE = 0.35
-PRISMA_DATABASE_PARAMETERS = {
-    "connection_limit",
-    "pgbouncer",
-    "pool_timeout",
-    "schema",
+LIBPQ_DATABASE_PARAMETERS = {
+    "application_name",
+    "channel_binding",
+    "client_encoding",
+    "connect_timeout",
+    "fallback_application_name",
+    "gssencmode",
+    "keepalives",
+    "keepalives_count",
+    "keepalives_idle",
+    "keepalives_interval",
+    "krbsrvname",
+    "options",
+    "requirepeer",
+    "service",
+    "sslcert",
+    "sslcrl",
+    "sslcrldir",
+    "sslkey",
+    "sslmode",
+    "sslpassword",
+    "sslrootcert",
+    "target_session_attrs",
+    "tcp_user_timeout",
 }
 
 
@@ -257,13 +276,13 @@ def dotabod_logins_from_rows(rows: Iterable[Sequence[Any]]) -> set[str]:
 
 
 def psycopg_database_url(database_url: str) -> str:
-    """Remove Prisma-only query parameters before handing a URL to libpq."""
+    """Keep only libpq-compatible query parameters in a database URL."""
     parsed = urlsplit(database_url)
     query = urlencode(
         [
             (key, value)
             for key, value in parse_qsl(parsed.query, keep_blank_values=True)
-            if key not in PRISMA_DATABASE_PARAMETERS
+            if key in LIBPQ_DATABASE_PARAMETERS
         ]
     )
     return urlunsplit(
