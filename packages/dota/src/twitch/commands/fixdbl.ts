@@ -22,7 +22,6 @@ export function toggleDoubledownMmr({ currentMmr, isParty, didWin, wasDoubledown
 commandHandler.registerCommand('fixdbl', {
   aliases: ['fixdd'],
   cooldown: 0,
-  permission: 2,
   handler: async (message, _args) => {
     const { data } = await supabase
       .from('matches')
@@ -73,4 +72,5 @@ commandHandler.registerCommand('fixdbl', {
       })
       .eq('id', bet.id)
   },
+  permission: 2,
 })
