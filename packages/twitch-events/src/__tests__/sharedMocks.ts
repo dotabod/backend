@@ -275,7 +275,7 @@ const logger = {
     state.logWarn.push({ message, meta: meta ?? {} }),
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () => ({
+vi.doMock('@dotabod/shared-utils', () => ({
   botStatus: { isBanned: false },
   checkBotStatus: async () => state.isBanned,
   commandDisable: {
@@ -303,7 +303,7 @@ vi.doMock(import('@dotabod/shared-utils'), () => ({
   supabase: supabaseMock,
 }))
 
-vi.doMock(import('../twitch/lib/BotApiSingleton'), () => ({
+vi.doMock('../twitch/lib/BotApiSingleton', () => ({
   getBotInstance: () => ({
     streams: {
       getStreamByUserId: async () => {
@@ -322,7 +322,7 @@ vi.doMock(import('../twitch/lib/getAccountIds'), () => ({
   getAllAccountIds: async () => state.accountIds,
 }))
 
-vi.doMock(import('../subscribeChatMessagesForUser'), () => ({
+vi.doMock('../subscribeChatMessagesForUser', () => ({
   genericSubscribe: async (conduitId: string, userId: string, type: keyof TwitchEventTypes) => {
     state.subscribeCalls.push({ conduitId, type, userId })
     return await state.subscribeResult(userId, type)

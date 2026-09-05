@@ -43,10 +43,11 @@ jobs:
           command: pnpm install --frozen-lockfile
       - name: Build workspace deps
         run: pnpm --filter @dotabod/shared-utils --filter @dotabod/profanity-filter run build
-      # `|| true`: commit whatever was auto-fixed even if unfixable lint/type
-      # errors remain — those are still reported by the CI workflow's gate.
+      # Do not apply Oxlint fixes here: a type-aware fixture fix can turn an
+      # intentionally partial Vitest mock into a type error. CI's blocking
+      # ratchet reports lint findings; this workflow owns formatting only.
       - name: Auto-format
-        run: pnpm run check:fix || true
+        run: pnpm run format:fix
       - name: Commit and push fixes
         run: |
           if [ -n "$(git status --porcelain)" ]; then

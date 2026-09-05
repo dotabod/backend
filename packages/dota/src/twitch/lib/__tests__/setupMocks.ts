@@ -388,7 +388,7 @@ const getTwitchAPIMock = async () => ({
 // would otherwise resolve to the real module and get cached by vitest's module
 // loader. Once cached, no later vi.doMock can replace it.
 function reinstallSharedUtilsMock() {
-  vi.doMock(import('@dotabod/shared-utils'), () =>
+  vi.doMock('@dotabod/shared-utils', () =>
     buildSharedUtilsMock({
       checkBotStatus: async () => state.botBanned,
       commandDisable: {
@@ -432,7 +432,7 @@ const realRanks = await import('../../../dota/lib/ranks')
 function reinstallModuleMocks() {
   reinstallSharedUtilsMock()
 
-  vi.doMock(import('../../../dota/lib/updateMmr'), () => ({
+  vi.doMock('../../../dota/lib/updateMmr', () => ({
     tellChatNewMMR: () => {},
     updateMmr: async (args: Record<string, unknown>) => {
       state.updateMmrCalls.push(args)
@@ -452,7 +452,7 @@ function reinstallModuleMocks() {
   // Profanity filter does local + OpenAI checks; mock to keep tests offline and
   // deterministic. Default passthrough; tests that want to assert profanity
   // handling can override `state.moderateTextOverride`.
-  vi.doMock(import('@dotabod/profanity-filter'), () => ({
+  vi.doMock('@dotabod/profanity-filter', () => ({
     moderateText: async (text?: string | string[]) => {
       if (state.moderateTextOverride) {
         return state.moderateTextOverride(text)
@@ -463,7 +463,7 @@ function reinstallModuleMocks() {
 
   // Mongo is only used by a few match-data commands (ranked, spectators, ...).
   // connect() yields a db whose delayedGames.findOne returns state.delayedGame.
-  vi.doMock(import('../../../steam/MongoDBSingleton'), () => ({
+  vi.doMock('../../../steam/MongoDBSingleton', () => ({
     default: {
       close: async () => {},
       connect: async () => ({

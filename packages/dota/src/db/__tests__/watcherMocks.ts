@@ -109,7 +109,7 @@ const loggerMock = {
   warn: () => {},
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () =>
+vi.doMock('@dotabod/shared-utils', () =>
   buildSharedUtilsMock({
     supabase: supabaseMock,
     logger: loggerMock,
@@ -124,7 +124,7 @@ vi.doMock(import('@dotabod/shared-utils'), () =>
 // test focuses on the watcher's invalidTokens management. Side effect mimics
 // the real impl: removes the token from gsiHandlers. Does NOT touch
 // invalidTokens — verified separately in clearCacheForUser.test.ts.
-vi.doMock(import('../../dota/clearCacheForUser'), () => ({
+vi.doMock('../../dota/clearCacheForUser', () => ({
   clearCacheForUser: async (client?: {
     token: string
     name?: string
@@ -166,23 +166,23 @@ vi.doMock(import('../../twitch/toggleDotabod'), () => ({
 
 // twitchChat is an EventEmitter wrapper around the steam socket; the watcher
 // only .emit()s into it on commandDisable changes. Stub to a no-op emitter.
-vi.doMock(import('../../steam/ws'), () => ({
+vi.doMock('../../steam/ws', () => ({
   steamSocket: { emit: () => {} },
   twitchChat: { emit: () => {} },
 }))
 
-vi.doMock(import('../../twitch/chatClient'), () => ({
+vi.doMock('../../twitch/chatClient', () => ({
   chatClient: { say: async () => {} },
 }))
 
 // handleScheduledMessages / handleStreamStatusTransition / getDBUser are only
 // reached by code paths our tests don't drive. Stub them so the import graph
 // resolves without dragging in their transitive dependencies.
-vi.doMock(import('../handleScheduledMessages'), () => ({
+vi.doMock('../handleScheduledMessages', () => ({
   handleUserOnlineMessages: async () => {},
 }))
 
-vi.doMock(import('../handleStreamStatusTransition'), () => ({
+vi.doMock('../handleStreamStatusTransition', () => ({
   handleStreamStatusTransition: ({
     client,
     oldStreamOnline,
@@ -199,11 +199,11 @@ vi.doMock(import('../getDBUser'), () => ({
   default: async () => ({ reason: 'stub', result: null }),
 }))
 
-vi.doMock(import('../../dota/lib/ranks'), () => ({
+vi.doMock('../../dota/lib/ranks', () => ({
   getRankDetail: async () => ({}),
 }))
 
-vi.doMock(import('../../dota/server'), () => ({
+vi.doMock('../../dota/server', () => ({
   server: { io: { to: () => ({ emit: () => {} }) } },
 }))
 
