@@ -1,23 +1,25 @@
 import { moderateText } from '@dotabod/profanity-filter'
 import { t } from 'i18next'
+
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 // Last.fm's JSON API returns track/artist/album names with HTML-encoded entities
 // (e.g. "&#39;" for "'", "&amp;" for "&"). Twitch chat doesn't render HTML, so
 // we decode the common entities before emitting.
 const decodeHtmlEntities = (s: string): string =>
   s
-    .replace(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex: string) =>
-      String.fromCodePoint(Number.parseInt(hex, 16)),
+    .replaceAll(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
+    .replaceAll(/&#x([0-9a-fA-F]+);/g, (_, hex: string) =>
+      String.fromCodePoint(Number.parseInt(hex, 16))
     )
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
+    .replaceAll('&quot;', '"')
+    .replaceAll('&apos;', "'")
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&amp;', '&')
 
 interface LastFmImage {
   size: 'small' | 'medium' | 'large' | 'extralarge'
@@ -62,7 +64,6 @@ interface LastFmResponse {
 
 commandHandler.registerCommand('song', {
   aliases: ['lastfm', 'music', 'nowplaying'],
-  onlyOnline: true,
   dbkey: DBSettings.commandLastFm,
   handler: async (message: MessageType, _args: string[]) => {
     const {
@@ -74,14 +75,14 @@ commandHandler.registerCommand('song', {
       const lastFmUsername = getValueOrDefault(
         DBSettings.lastFmUsername,
         client.settings,
-        client.subscription,
+        client.subscription
       )
 
       if (!lastFmUsername) {
         chatClient.say(
           channel,
           t('lastFmNotConfigured', { lng: client.locale }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -128,18 +129,19 @@ commandHandler.registerCommand('song', {
       chatClient.say(
         channel,
         t('currentSong', {
-          url: '', // dont show the url
-          artist: artist || 'Unknown',
-          title: title || 'Unknown',
           album: albumText ? ` [${albumText}]` : '',
-          lng: client.locale,
+          artist: artist || 'Unknown',
           interpolation: { escapeValue: false },
+          lng: client.locale,
+          title: title || 'Unknown',
+          url: '', // dont show the url,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
     } catch (error) {
       console.error('Error fetching Last.fm data:', error)
       chatClient.say(channel, t('songError', { lng: client.locale }), message.user.messageId)
     }
   },
+  onlyOnline: true,
 })

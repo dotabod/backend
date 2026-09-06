@@ -1,4 +1,5 @@
 import { t } from 'i18next'
+
 import RedisClient from '../db/RedisClient'
 import { MatchDataService } from '../dota/lib/matchData'
 import { ENABLE_SPECTATE_FRIEND_GAME } from '../settings'
@@ -57,7 +58,7 @@ export async function getRealtimeStats({
     throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
   }
 
-  return new Promise<DelayedGames>((resolve, reject) => {
+  return await new Promise<DelayedGames>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale })))
     }, 10_000)
@@ -65,17 +66,20 @@ export async function getRealtimeStats({
     steamSocket.emit(
       'getRealTimeStats',
       {
-        match_id: matchId,
         forceRefetchAll,
+        match_id: matchId,
         refetchCards,
         steam_server_id: steamServerId,
         token,
       },
       (err: unknown, data: DelayedGames) => {
         clearTimeout(timeoutId)
-        if (err) reject(err)
-        else resolve(data)
-      },
+        if (err) {
+          reject(err)
+        } else {
+          resolve(data)
+        }
+      }
     )
   })
 }
@@ -83,16 +87,20 @@ export async function getRealtimeStats({
 export function findRealtimePlayer(
   game: DelayedGames,
   accountId: number | undefined,
-  playerIdx: number | undefined,
+  playerIdx: number | undefined
 ): RealtimePlayer | undefined {
   if (accountId && Number.isFinite(accountId)) {
     const accountPlayer = game.teams
       .flatMap((team) => team.players)
       .find((player) => Number(player.accountid) === accountId)
-    if (accountPlayer) return accountPlayer
+    if (accountPlayer) {
+      return accountPlayer
+    }
   }
 
-  if (playerIdx === undefined) return undefined
+  if (playerIdx === undefined) {
+    return undefined
+  }
   const teamIndex = playerIdx > 4 ? 1 : 0
   return game.teams[teamIndex]?.players[playerIdx % 5]
 }

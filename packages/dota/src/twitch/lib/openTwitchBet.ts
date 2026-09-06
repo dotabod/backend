@@ -2,16 +2,21 @@ import { moderateText } from '@dotabod/profanity-filter'
 import { getTwitchAPI, logger, supabase, trackDisableReason } from '@dotabod/shared-utils'
 import { StreamNotLiveError } from '@twurple/api'
 import { t } from 'i18next'
+
 import { getTokenFromTwitchId } from '../../dota/lib/connectedStreamers'
 import { say } from '../../dota/say'
 import { DBSettings, defaultSettings, getValueOrDefault } from '../../settings'
 import type { SocketClient } from '../../types'
 
 export function isPredictionAlreadyActiveError(error: unknown): boolean {
-  if (typeof error !== 'object' || error === null) return false
+  if (typeof error !== 'object' || error === null) {
+    return false
+  }
 
   const { statusCode, body } = error as { statusCode?: unknown; body?: unknown }
-  if (statusCode !== 400 || typeof body !== 'string') return false
+  if (statusCode !== 400 || typeof body !== 'string') {
+    return false
+  }
 
   try {
     const parsedBody = JSON.parse(body) as { message?: unknown }
@@ -27,26 +32,28 @@ export function isPredictionAlreadyActiveError(error: unknown): boolean {
 // Disable the bet in settings for this user
 async function disableBetsForTwitchId(twitchId: string, errorMessage: string) {
   const token = getTokenFromTwitchId(twitchId)
-  if (!token) return
+  if (!token) {
+    return
+  }
 
   // Track the disable reason before disabling
   await trackDisableReason(token, DBSettings.bets, 'API_ERROR', {
-    api_endpoint: 'Twitch Predictions API',
-    error_type: 'twitch_betting_api_failure',
-    error_message: errorMessage || 'Failed to create betting prediction',
     additional_info: 'Betting disabled due to repeated API failures',
+    api_endpoint: 'Twitch Predictions API',
+    error_message: errorMessage || 'Failed to create betting prediction',
+    error_type: 'twitch_betting_api_failure',
   })
 
   await supabase.from('settings').upsert(
     {
-      userId: token,
       key: DBSettings.bets,
-      value: false,
       updated_at: new Date().toISOString(),
+      userId: token,
+      value: false,
     },
     {
       onConflict: 'userId, key',
-    },
+    }
   )
 }
 
@@ -63,14 +70,14 @@ export const openTwitchBet = async ({
   const api = await getTwitchAPI(twitchId)
   const betsInfo = getValueOrDefault(DBSettings.betsInfo, settings, subscription)
 
-  logger.info('[PREDICT] [BETS] Opening twitch bet', { twitchId, heroName })
+  logger.info('[PREDICT] [BETS] Opening twitch bet', { heroName, twitchId })
 
   const isTitleDefault = betsInfo.title === defaultSettings.betsInfo.title
   const title = isTitleDefault
-    ? t('predictions.title', { lng: locale, heroName })
+    ? t('predictions.title', { heroName, lng: locale })
     : betsInfo.title.replace('[heroname]', heroName ?? '')
   const filteredTitle =
-    (await moderateText(title)) || t('predictions.title', { lng: locale, heroName })
+    (await moderateText(title)) || t('predictions.title', { heroName, lng: locale })
 
   const isYesDefault = betsInfo.yes === defaultSettings.betsInfo.yes
   const yes = isYesDefault ? t('predictions.yes', { lng: locale }) : betsInfo.yes
@@ -86,27 +93,29 @@ export const openTwitchBet = async ({
   try {
     await api.streams.createStreamMarker(
       twitchId,
-      `Predictions opened for ${heroName} on match ${client.gsi?.map?.matchid}`,
+      `Predictions opened for ${heroName} on match ${client.gsi?.map?.matchid}`
     )
-  } catch (e) {
-    if (e instanceof StreamNotLiveError) {
+  } catch (error) {
+    if (error instanceof StreamNotLiveError) {
       logger.info('[PREDICT] [BETS] Skipped stream marker (open) — channel offline', { twitchId })
     } else {
-      logger.error('[PREDICT] [BETS] Failed to create stream marker (open)', { twitchId, e })
+      logger.error('[PREDICT] [BETS] Failed to create stream marker (open)', { error, twitchId })
     }
   }
 
   return await api.predictions
     .createPrediction(twitchId, {
-      title: filteredTitle.substring(0, 45),
-      outcomes: [filteredYes.substring(0, 25), filteredNo.substring(0, 25)],
       autoLockAfter,
+      outcomes: [filteredYes.slice(0, 25), filteredNo.slice(0, 25)],
+      title: filteredTitle.slice(0, 45),
     })
-    .catch(async (e) => {
-      if (isPredictionAlreadyActiveError(e)) throw e
+    .catch(async (error) => {
+      if (isPredictionAlreadyActiveError(error)) {
+        throw error
+      }
 
       try {
-        if (e.stack?.includes('The user context for the user')) {
+        if (error.stack?.includes('The user context for the user')) {
           await supabase
             .from('accounts')
             .update({
@@ -120,25 +129,25 @@ export const openTwitchBet = async ({
           })
           return
         }
-      } catch (_e) {
+      } catch {
         // just means couldn't find the error in the stack
       }
 
       try {
-        if (JSON.parse(e?.body)?.message?.includes('channel points not enabled')) {
+        if (JSON.parse(error?.body)?.message?.includes('channel points not enabled')) {
           await disableBetsForTwitchId(twitchId, 'Channel points not enabled')
           logger.info('[PREDICT] [BETS] Channel points not enabled for', {
             twitchId,
           })
           return
         }
-      } catch (_e) {
+      } catch {
         // just means couldn't json parse the message for the case above
       }
 
       try {
         // "message\": \"Invalid refresh token\"\n}" means they have to logout and login
-        if (JSON.parse(e?.body)?.message?.includes('refresh token')) {
+        if (JSON.parse(error?.body)?.message?.includes('refresh token')) {
           say(
             client,
             t('bets.error', {
@@ -147,7 +156,7 @@ export const openTwitchBet = async ({
             }),
             {
               delay: false,
-            },
+            }
           )
 
           await supabase
@@ -161,12 +170,12 @@ export const openTwitchBet = async ({
 
           return
         }
-      } catch (_e) {
+      } catch {
         // just means couldn't json parse the message for the two cases above
       }
 
-      logger.error('[PREDICT] [BETS] Failed to open twitch bet', { twitchId, heroName, e })
+      logger.error('[PREDICT] [BETS] Failed to open twitch bet', { error, heroName, twitchId })
 
-      throw e
+      throw error
     })
 }

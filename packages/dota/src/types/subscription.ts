@@ -15,9 +15,17 @@ export function isSubscriptionActive(subscription?: SubscriptionRow): boolean {
   // Dotabod creates a subscription for the gift, and the credits are immediately applied
   // But in rare cases, the subscription is not created in time, or they could not have enough
   // credits to activate immediately.
-  if (subscription?.isGift) return false
-  if (!subscription?.status) return false
-  if (subscription.status === 'TRIALING') return true
-  if (subscription.status === 'ACTIVE') return true
+  if (subscription?.isGift) {
+    return false
+  }
+  if (!subscription?.status) {
+    return false
+  }
+  if (subscription.status === 'TRIALING') {
+    return true
+  }
+  if (subscription.status === 'ACTIVE') {
+    return true
+  }
   return false
 }

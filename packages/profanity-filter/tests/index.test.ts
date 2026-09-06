@@ -1,4 +1,5 @@
-import { describe, expect, test } from 'vite-plus/test'
+import { describe, expect, test } from 'vitest'
+
 import { getProfanityDetails, moderateText } from '../src/utils/moderation'
 import {
   detectEvasionTactics,
@@ -19,7 +20,7 @@ describe('Profanity Filter', () => {
         matches?: string[]
         language?: string
       }
-      expect(details.isFlagged).toBe(false)
+      expect(details.isFlagged).toBeFalsy()
       expect(details.source).toBe('none')
     })
 
@@ -34,12 +35,12 @@ describe('Profanity Filter', () => {
         matches?: string[]
         language?: string
       }
-      expect(details.isFlagged).toBe(false)
+      expect(details.isFlagged).toBeFalsy()
       expect(details.source).toBe('none')
 
       // Make sure individual detectors don't flag it either
-      expect(detectMultilingualProfanity(text)).toBe(false)
-      expect(detectEvasionTactics(text)).toBe(false)
+      expect(detectMultilingualProfanity(text)).toBeFalsy()
+      expect(detectEvasionTactics(text)).toBeFalsy()
     })
 
     test('should not flag Dota hero names that contain "nig" / "ass" trigrams', async () => {
@@ -57,11 +58,11 @@ describe('Profanity Filter', () => {
       ]
 
       for (const hero of heroes) {
-        expect(await moderateText(hero)).toBe(hero)
+        await expect(moderateText(hero)).resolves.toBe(hero)
 
         // Also exercise the common bet-title context where heroes are interpolated.
         const title = `Will we win with ${hero}?`
-        expect(await moderateText(title)).toBe(title)
+        await expect(moderateText(title)).resolves.toBe(title)
       }
     })
 
@@ -80,7 +81,7 @@ describe('Profanity Filter', () => {
           matches?: string[]
           language?: string
         }
-        expect(details.isFlagged).toBe(true)
+        expect(details.isFlagged).toBeTruthy()
       }
     })
 
@@ -105,7 +106,7 @@ describe('Profanity Filter', () => {
           matches?: string[]
           language?: string
         }
-        expect(details.isFlagged).toBe(true)
+        expect(details.isFlagged).toBeTruthy()
       }
     })
 
@@ -121,7 +122,7 @@ describe('Profanity Filter', () => {
       ]
 
       for (const text of evasionTexts) {
-        expect(detectEvasionTactics(text)).toBe(true)
+        expect(detectEvasionTactics(text)).toBeTruthy()
 
         const moderated = await moderateText(text)
         expect(moderated).not.toBe(text)
@@ -133,7 +134,7 @@ describe('Profanity Filter', () => {
           matches?: string[]
           language?: string
         }
-        expect(details.isFlagged).toBe(true)
+        expect(details.isFlagged).toBeTruthy()
       }
     })
 
@@ -169,33 +170,35 @@ describe('Profanity Filter', () => {
         expect(moderated).not.toBe(profane)
         expect(moderated).toContain('***')
 
-        expect(details.isFlagged).toBe(true)
+        expect(details.isFlagged).toBeTruthy()
         if (details.matches && details.matches.length > 0) {
           // Check if the word includes the match OR the match includes the word
           // This handles cases like "nig" matching "ni" from obscenity library
-          expect(word.includes(details.matches[0]) || details.matches[0].includes(word)).toBe(true)
+          expect(
+            word.includes(details.matches[0]) || details.matches[0].includes(word)
+          ).toBeTruthy()
         }
       }
 
       // Test array input for getProfanityDetails
       const profaneTexts = badWords.map((word) => `This contains a bad word: ${word}`)
-      const detailsArray = getProfanityDetails(profaneTexts) as Array<{
+      const detailsArray = getProfanityDetails(profaneTexts) as {
         text: string
         isFlagged: boolean
         source: string
         matches?: string[]
         language?: string
-      }>
+      }[]
 
-      expect(Array.isArray(detailsArray)).toBe(true)
-      expect(detailsArray.length).toBe(badWords.length)
+      expect(Array.isArray(detailsArray)).toBeTruthy()
+      expect(detailsArray).toHaveLength(badWords.length)
       detailsArray.forEach((detail, index) => {
-        expect(detail.isFlagged).toBe(true)
+        expect(detail.isFlagged).toBeTruthy()
         if (detail.matches) {
           expect(
             detail.matches?.includes(badWords[index]) ||
-              badWords[index].includes(detail.matches?.[0] ?? ''),
-          ).toBe(true)
+              badWords[index].includes(detail.matches?.[0] ?? '')
+          ).toBeTruthy()
         }
       })
     })
@@ -212,7 +215,7 @@ describe('Profanity Filter', () => {
         matches?: string[]
         language?: string
       }
-      expect(details.isFlagged).toBe(true)
+      expect(details.isFlagged).toBeTruthy()
     })
   })
 
@@ -229,7 +232,7 @@ describe('Profanity Filter', () => {
         matches?: string[]
         language?: string
       }
-      expect(details.isFlagged).toBe(true)
+      expect(details.isFlagged).toBeTruthy()
     })
 
     test('should detect starred profanity', async () => {
@@ -244,7 +247,7 @@ describe('Profanity Filter', () => {
         matches?: string[]
         language?: string
       }
-      expect(details.isFlagged).toBe(true)
+      expect(details.isFlagged).toBeTruthy()
     })
 
     test('should detect stretched characters', async () => {
@@ -259,7 +262,7 @@ describe('Profanity Filter', () => {
         matches?: string[]
         language?: string
       }
-      expect(details.isFlagged).toBe(true)
+      expect(details.isFlagged).toBeTruthy()
     })
 
     test('should detect punctuated profanity', async () => {
@@ -274,7 +277,7 @@ describe('Profanity Filter', () => {
         matches?: string[]
         language?: string
       }
-      expect(details.isFlagged).toBe(true)
+      expect(details.isFlagged).toBeTruthy()
     })
 
     test('should detect leet speak', async () => {
@@ -289,7 +292,7 @@ describe('Profanity Filter', () => {
         matches?: string[]
         language?: string
       }
-      expect(details.isFlagged).toBe(true)
+      expect(details.isFlagged).toBeTruthy()
     })
   })
 
@@ -306,9 +309,9 @@ describe('Profanity Filter', () => {
         matches?: string[]
         language?: string
       }
-      expect(details.isFlagged).toBe(true)
+      expect(details.isFlagged).toBeTruthy()
 
-      expect(detectRussianProfanity(russian)).toBe(true)
+      expect(detectRussianProfanity(russian)).toBeTruthy()
     })
 
     test('should detect Spanish profanity', async () => {
@@ -323,7 +326,7 @@ describe('Profanity Filter', () => {
         matches?: string[]
         language?: string
       }
-      expect(details.isFlagged).toBe(true)
+      expect(details.isFlagged).toBeTruthy()
     })
 
     test('should detect German profanity', async () => {
@@ -338,7 +341,7 @@ describe('Profanity Filter', () => {
         matches?: string[]
         language?: string
       }
-      expect(details.isFlagged).toBe(true)
+      expect(details.isFlagged).toBeTruthy()
     })
   })
 
@@ -355,7 +358,7 @@ describe('Profanity Filter', () => {
         matches?: string[]
         language?: string
       }
-      expect(details.isFlagged).toBe(true)
+      expect(details.isFlagged).toBeTruthy()
     })
 
     test('should detect embedded profanity', async () => {
@@ -370,7 +373,7 @@ describe('Profanity Filter', () => {
         matches?: string[]
         language?: string
       }
-      expect(details.isFlagged).toBe(true)
+      expect(details.isFlagged).toBeTruthy()
     })
 
     test('should detect mixed language slurs', async () => {
@@ -385,7 +388,7 @@ describe('Profanity Filter', () => {
         matches?: string[]
         language?: string
       }
-      expect(details.isFlagged).toBe(true)
+      expect(details.isFlagged).toBeTruthy()
     })
 
     test('should detect obfuscated transliterated slurs', async () => {
@@ -400,25 +403,25 @@ describe('Profanity Filter', () => {
         matches?: string[]
         language?: string
       }
-      expect(details.isFlagged).toBe(true)
+      expect(details.isFlagged).toBeTruthy()
     })
   })
 
   describe('Transphobic content detection', () => {
     test('should detect transphobic hate speech phrases', async () => {
       const transphobicPhrases = [
-        { phrase: 'trans is a mental illness', match: 'trans' },
-        { phrase: 'transgender people are mentally ill', match: 'transgender' },
-        { phrase: 'transgenderism is a delusion', match: 'transgender' },
-        { phrase: 'transsexuals are delusional', match: 'transsexual' },
-        { phrase: "trans people aren't real women", match: 'trans' },
-        { phrase: 'trans ideology is dangerous', match: 'trans' },
-        { phrase: 'trans agenda in schools', match: 'trans' },
-        { phrase: 'only two genders exist', match: null },
-        { phrase: 'gender is determined by biology', match: null },
-        { phrase: 'trans is against nature', match: 'trans' },
-        { phrase: 'trannies are sick', match: 'tranny' },
-        { phrase: 'trans people are groomers', match: 'trans' },
+        { match: 'trans', phrase: 'trans is a mental illness' },
+        { match: 'transgender', phrase: 'transgender people are mentally ill' },
+        { match: 'transgender', phrase: 'transgenderism is a delusion' },
+        { match: 'transsexual', phrase: 'transsexuals are delusional' },
+        { match: 'trans', phrase: "trans people aren't real women" },
+        { match: 'trans', phrase: 'trans ideology is dangerous' },
+        { match: 'trans', phrase: 'trans agenda in schools' },
+        { match: null, phrase: 'only two genders exist' },
+        { match: null, phrase: 'gender is determined by biology' },
+        { match: 'trans', phrase: 'trans is against nature' },
+        { match: 'tranny', phrase: 'trannies are sick' },
+        { match: 'trans', phrase: 'trans people are groomers' },
       ]
 
       for (const { phrase, match } of transphobicPhrases) {
@@ -434,7 +437,7 @@ describe('Profanity Filter', () => {
         }
 
         // console.log({ phrase, details, match }, 'testing')
-        expect(details.isFlagged).toBe(true)
+        expect(details.isFlagged).toBeTruthy()
         expect(details.source).toBe('hate-speech')
 
         if (match && details.matches && details.matches.length > 0) {
@@ -478,7 +481,7 @@ describe('Profanity Filter', () => {
         }
         // console.log({ word, moderated, details }, 'Checking word for false positive')
         expect(moderated).toBe(word)
-        expect(details.isFlagged).toBe(false)
+        expect(details.isFlagged).toBeFalsy()
       }
     })
 
@@ -504,7 +507,7 @@ describe('Profanity Filter', () => {
           matches?: string[]
           language?: string
         }
-        expect(details.isFlagged).toBe(false)
+        expect(details.isFlagged).toBeFalsy()
       }
     })
   })

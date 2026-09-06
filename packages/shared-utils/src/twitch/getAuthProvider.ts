@@ -1,4 +1,5 @@
 import { RefreshingAuthProvider } from '@twurple/auth'
+
 import { getSupabaseClient } from '../db/supabase'
 import { logger } from '../logger'
 import { hasTokens } from './hasTokens'
@@ -12,10 +13,14 @@ let authProvider: RefreshingAuthProvider | null = null
  */
 export const getAuthProvider = () => {
   // Ensure Twitch credentials are available
-  if (!hasTokens) throw new Error('Missing Twitch tokens')
+  if (!hasTokens) {
+    throw new Error('Missing Twitch tokens')
+  }
 
   // Return existing instance if available
-  if (authProvider) return authProvider
+  if (authProvider) {
+    return authProvider
+  }
 
   // Create new auth provider instance
   authProvider = new RefreshingAuthProvider({
@@ -46,17 +51,17 @@ export const getAuthProvider = () => {
     await supabase
       .from('accounts')
       .update({
-        requires_refresh: false,
-        scope: newTokenData.scope.join(' '),
         access_token: newTokenData.accessToken,
-        refresh_token: newTokenData.refreshToken!,
         expires_at: Math.floor(
           new Date(newTokenData.obtainmentTimestamp).getTime() / 1000 +
-            (newTokenData.expiresIn ?? 0),
+            (newTokenData.expiresIn ?? 0)
         ),
         expires_in: newTokenData.expiresIn ?? 0,
-        updated_at: new Date().toISOString(),
         obtainment_timestamp: new Date(newTokenData.obtainmentTimestamp).toISOString(),
+        refresh_token: newTokenData.refreshToken!,
+        requires_refresh: false,
+        scope: newTokenData.scope.join(' '),
+        updated_at: new Date().toISOString(),
       })
       .eq('providerAccountId', twitchId)
       .eq('provider', 'twitch')

@@ -1,13 +1,14 @@
 import { checkBotStatus, getTwitchAPI } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { modMode } from '../../dota/lib/consts'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('modsonly', {
   aliases: ['modsonlyoff', 'modsonlyon'],
-  permission: 2,
   cooldown: 0,
   dbkey: DBSettings.commandModsonly,
   handler: async (message: MessageType, _args: string[]) => {
@@ -19,7 +20,7 @@ commandHandler.registerCommand('modsonly', {
       chatClient.say(
         channel,
         t('modsOnly', { context: 'off', lng: client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       if (!(await checkBotStatus())) {
         const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID!)
@@ -46,8 +47,9 @@ commandHandler.registerCommand('modsonly', {
     }
     chatClient.say(
       channel,
-      t('modsOnly', { emote: 'BASED Clap', context: 'on', lng: client.locale }),
-      message.user.messageId,
+      t('modsOnly', { context: 'on', emote: 'BASED Clap', lng: client.locale }),
+      message.user.messageId
     )
   },
+  permission: 2,
 })

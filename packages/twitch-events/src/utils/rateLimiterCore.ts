@@ -7,12 +7,12 @@ interface RateLimitInfo {
 }
 
 export class RateLimiter {
-  private queue: Array<() => Promise<unknown>> = []
+  private readonly queue: (() => Promise<unknown>)[] = []
   private processing = false
-  private rateLimitInfo: RateLimitInfo = {
+  private readonly rateLimitInfo: RateLimitInfo = {
     limit: 800, // Default limit
     remaining: 800,
-    reset: Date.now() + 60000, // Default 1 minute reset
+    reset: Date.now() + 60_000, // Default 1 minute reset
   }
 
   get queueLength() {
@@ -31,9 +31,15 @@ export class RateLimiter {
     const remaining = headers.get('Ratelimit-Remaining')
     const reset = headers.get('Ratelimit-Reset')
 
-    if (limit) this.rateLimitInfo.limit = Number.parseInt(limit, 10)
-    if (remaining) this.rateLimitInfo.remaining = Number.parseInt(remaining, 10)
-    if (reset) this.rateLimitInfo.reset = Number.parseInt(reset, 10) * 1000 // Convert to milliseconds
+    if (limit) {
+      this.rateLimitInfo.limit = Number.parseInt(limit, 10)
+    }
+    if (remaining) {
+      this.rateLimitInfo.remaining = Number.parseInt(remaining, 10)
+    }
+    if (reset) {
+      this.rateLimitInfo.reset = Number.parseInt(reset, 10) * 1000
+    } // Convert to milliseconds
 
     // Log rate limit status when it changes
     logger.debug('[RateLimiter] Status', this.rateLimitStatus)
@@ -44,7 +50,9 @@ export class RateLimiter {
   }
 
   private async processQueue() {
-    if (this.processing) return
+    if (this.processing) {
+      return
+    }
     this.processing = true
 
     while (this.queue.length > 0) {
@@ -61,7 +69,7 @@ export class RateLimiter {
         } else {
           // Reset has passed, reset the remaining count
           this.rateLimitInfo.remaining = this.rateLimitInfo.limit
-          this.rateLimitInfo.reset = now + 60000 // Default to 1 minute if we don't have a new reset time
+          this.rateLimitInfo.reset = now + 60_000 // Default to 1 minute if we don't have a new reset time
         }
       }
 
@@ -78,8 +86,8 @@ export class RateLimiter {
       // Log queue status every 100 tasks
       if (this.queue.length % 100 === 0 && this.queue.length > 0) {
         logger.info('[RateLimiter] Queue status', {
-          remaining: this.queue.length,
           rateLimit: this.rateLimitInfo.remaining,
+          remaining: this.queue.length,
         })
       }
     }
@@ -88,7 +96,7 @@ export class RateLimiter {
   }
 
   async schedule<T>(task: () => Promise<T>): Promise<T> {
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       this.queue.push(async () => {
         try {
           const result = await task()

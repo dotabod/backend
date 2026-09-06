@@ -1,10 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+
 import { RateLimiter, resetState } from '../../__tests__/sharedMocks.ts'
 
 const makeHeaders = (h: Record<string, string>) => new Headers(h)
 const realSetTimeout = globalThis.setTimeout
 
-describe('RateLimiter', () => {
+describe(RateLimiter, () => {
   beforeEach(() => {
     resetState()
   })
@@ -22,7 +23,7 @@ describe('RateLimiter', () => {
           'Ratelimit-Limit': '500',
           'Ratelimit-Remaining': '123',
           'Ratelimit-Reset': String(resetSeconds),
-        }),
+        })
       )
 
       expect(rl.rateLimitStatus.limit).toBe(500)
@@ -49,7 +50,7 @@ describe('RateLimiter', () => {
       await expect(
         rl.schedule(async () => {
           throw new Error('boom')
-        }),
+        })
       ).rejects.toThrow('boom')
     })
 
@@ -61,14 +62,14 @@ describe('RateLimiter', () => {
         rl.schedule(async () => order.push(2)),
         rl.schedule(async () => order.push(3)),
       ])
-      expect(order).toEqual([1, 2, 3])
+      expect(order).toStrictEqual([1, 2, 3])
     })
 
     it('decrements remaining as tasks run', async () => {
       const rl = new RateLimiter()
       rl.updateLimits(makeHeaders({ 'Ratelimit-Remaining': '10' }))
-      await rl.schedule(async () => undefined)
-      await rl.schedule(async () => undefined)
+      await rl.schedule(async () => {})
+      await rl.schedule(async () => {})
       expect(rl.rateLimitStatus.remaining).toBe(8)
     })
 
@@ -87,7 +88,7 @@ describe('RateLimiter', () => {
           'Ratelimit-Limit': '50',
           'Ratelimit-Remaining': '0',
           'Ratelimit-Reset': String(Math.ceil((Date.now() + 60_000) / 1000)),
-        }),
+        })
       )
 
       const result = await rl.schedule(async () => 'done')
@@ -103,10 +104,10 @@ describe('RateLimiter', () => {
           'Ratelimit-Limit': '30',
           'Ratelimit-Remaining': '0',
           'Ratelimit-Reset': String(Math.floor((Date.now() - 5000) / 1000)),
-        }),
+        })
       )
 
-      await rl.schedule(async () => undefined)
+      await rl.schedule(async () => {})
       expect(rl.rateLimitStatus.remaining).toBe(29)
     })
   })

@@ -7,9 +7,9 @@ import type { RosterPlayer } from '../dota/lib/matchData'
 export async function smurfs(
   locale: string,
   currentMatchId?: string,
-  players?: RosterPlayer[],
+  players?: RosterPlayer[]
 ): Promise<string> {
-  const { matchPlayers, cards } = await getPlayers({ locale, currentMatchId, players })
+  const { matchPlayers, cards } = await getPlayers({ currentMatchId, locale, players })
 
   const result: { heroName: string; lifetime_games?: number }[] = []
   matchPlayers.forEach((player, i: number) => {
@@ -23,7 +23,7 @@ export async function smurfs(
     .map((m) =>
       typeof m.lifetime_games === 'number' && m.lifetime_games > 0
         ? `${m.heroName}: ${m.lifetime_games.toLocaleString()}`
-        : undefined,
+        : undefined
     )
     .filter(Boolean)
     .join(' · ')

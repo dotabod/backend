@@ -1,10 +1,15 @@
 // Test harness for GSI event handlers. Drives `events.emit(...)` directly
 // and asserts on captured chat output / redis writes / socket emits.
 // Filename intentionally not `.test.ts` so bun's runner ignores it.
-import { vi } from 'vite-plus/test'
+import { vi } from 'vitest'
+
 import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../../__tests__/sharedMocks'
 
-export type MatchPlayer = { heroid: number; accountid: number; playerid: number | null }
+export interface MatchPlayer {
+  heroid: number
+  accountid: number
+  playerid: number | null
+}
 
 export const gsiState: {
   // Per-key redis reads. Both RedisClient.getInstance().client.get and
@@ -13,29 +18,29 @@ export const gsiState: {
   redisGet: Record<string, string | null>
   redisJson: Record<string, unknown>
   // Tracks writes for assertion.
-  redisJsonSetCalls: Array<{ key: string; path: string; value: unknown }>
+  redisJsonSetCalls: { key: string; path: string; value: unknown }[]
   redisJsonDelCalls: string[]
   redisJsonDelError: Error | null
   // Roster surfaced via the mocked MatchDataService. Most tests don't care, default empty.
   matchPlayers: MatchPlayer[]
   // Captured chatClient.say calls.
-  chatSayCalls: Array<{ channel: string; message: string }>
+  chatSayCalls: { channel: string; message: string }[]
   // Captured server.io.to(token).emit(event, payload).
-  ioEmitCalls: Array<{ token: string; event: string; payload: unknown }>
+  ioEmitCalls: { token: string; event: string; payload: unknown }[]
   // Captured delayedQueue.addTask payloads (after the callback fires).
-  delayedQueueAddCalls: Array<{ delayMs: number }>
+  delayedQueueAddCalls: { delayMs: number }[]
   delayedQueueRemovedIds: string[]
 } = {
-  redisGet: {},
-  redisJson: {},
-  redisJsonSetCalls: [],
-  redisJsonDelCalls: [],
-  redisJsonDelError: null,
-  matchPlayers: [],
   chatSayCalls: [],
-  ioEmitCalls: [],
   delayedQueueAddCalls: [],
   delayedQueueRemovedIds: [],
+  ioEmitCalls: [],
+  matchPlayers: [],
+  redisGet: {},
+  redisJson: {},
+  redisJsonDelCalls: [],
+  redisJsonDelError: null,
+  redisJsonSetCalls: [],
 }
 
 export function resetGsiState() {
@@ -56,9 +61,9 @@ export function resetGsiState() {
 
 vi.doMock('@dotabod/shared-utils', () =>
   buildSharedUtilsMock({
+    logger: { debug: () => {}, error: () => {}, info: () => {}, warn: () => {} },
     supabase: { from: () => ({}), rpc: async () => ({ data: [], error: null }) },
-    logger: { info: () => {}, error: () => {}, warn: () => {}, debug: () => {} },
-  }),
+  })
 )
 
 // RedisClient is a class with a getInstance() static method. The handlers call
@@ -73,6 +78,14 @@ const fakeRedisClient = {
   zRem: async () => 0,
   zRangeByScore: async () => [] as string[],
   json: {
+    del: async (key: string) => {
+      gsiState.redisJsonDelCalls.push(key)
+      if (gsiState.redisJsonDelError) {
+        throw gsiState.redisJsonDelError
+      }
+      delete gsiState.redisJson[key]
+      return 1
+    },
     get: async (key: string) => gsiState.redisJson[key] ?? null,
     set: async (key: string, path: string, value: unknown) => {
       // Clone at write time. Handlers commonly mutate `res` after json.set
@@ -84,18 +97,12 @@ const fakeRedisClient = {
       gsiState.redisJson[key] = snapshot
       return 'OK'
     },
-    del: async (key: string) => {
-      gsiState.redisJsonDelCalls.push(key)
-      if (gsiState.redisJsonDelError) throw gsiState.redisJsonDelError
-      delete gsiState.redisJson[key]
-      return 1
-    },
   },
 }
 const fakeRedisInstance = {
   client: fakeRedisClient,
-  getJson: async (key: string) => fakeRedisClient.json.get(key),
-  setJson: (key: string, value: unknown) => fakeRedisClient.json.set(key, '$', value),
+  getJson: async (key: string) => await fakeRedisClient.json.get(key),
+  setJson: async (key: string, value: unknown) => await fakeRedisClient.json.set(key, '$', value),
 }
 vi.doMock('../../../../db/RedisClient', () => ({
   default: {
@@ -118,26 +125,26 @@ vi.doMock('../../../lib/matchData', () => {
   class FakeMatchDataService {
     async resolveRoster() {
       return {
-        players: gsiState.matchPlayers.map((p) => ({
-          slot: p.playerid,
-          accountId: p.accountid || null,
-          heroId: p.heroid || null,
-          team: null,
-          playerName: null,
-          rank: null,
-          selected: null,
-        })),
-        source: 'sourcetv' as const,
-        stage: 'in-progress' as const,
         completeness: {
           accountIds: 'all' as const,
           heroIds: 'all' as const,
-          teamAssignment: 'none' as const,
           playerNames: 'none' as const,
           ranks: 'none' as const,
+          teamAssignment: 'none' as const,
         },
         hasAllAccountIds: false,
         hasAllHeroes: false,
+        players: gsiState.matchPlayers.map((p) => ({
+          accountId: p.accountid || null,
+          heroId: p.heroid || null,
+          playerName: null,
+          rank: null,
+          selected: null,
+          slot: p.playerid,
+          team: null,
+        })),
+        source: 'sourcetv' as const,
+        stage: 'in-progress' as const,
       }
     }
     async getAccountIds() {
@@ -146,7 +153,7 @@ vi.doMock('../../../lib/matchData', () => {
         .filter((id): id is number => !!id && id > 0)
     }
     async getHeroesStatus() {
-      return undefined
+      return
     }
     async getStreamersInMatchCount() {
       return 0
@@ -176,7 +183,7 @@ function installDelayedQueueMock() {
   ;(realDelayedQueue as any).addTask = (
     delayMs: number,
     callback: (payload: unknown) => void | Promise<void>,
-    payload: unknown = null,
+    payload: unknown = null
   ) => {
     gsiState.delayedQueueAddCalls.push({ delayMs })
     taskIdCounter += 1
@@ -206,9 +213,9 @@ const { redisClient } = await import('../../../../db/redisInstance')
 // loads last wins. Calling this in `beforeEach` from gsi tests guarantees
 // the gsi patches are active for the test about to run.
 export function installGsiMocks() {
-  chatClient.say = (async (channel: string, message: string) => {
+  chatClient.say = async (channel: string, message: string) => {
     gsiState.chatSayCalls.push({ channel, message })
-  }) as any
+  }
 
   ;(redisClient as any).client = fakeRedisClient
 
@@ -216,7 +223,7 @@ export function installGsiMocks() {
     io: {
       to: (token: string) => ({
         emit: (event: string, payload: unknown) => {
-          gsiState.ioEmitCalls.push({ token, event, payload })
+          gsiState.ioEmitCalls.push({ event, payload, token })
         },
       }),
     },
@@ -245,7 +252,7 @@ await import('../player.kill_list')
 
 export { events, gsiHandlers }
 
-export type GsiHandlerLike = {
+export interface GsiHandlerLike {
   client: any
   disabled: boolean
   getToken: () => string
@@ -254,13 +261,15 @@ export type GsiHandlerLike = {
   bountyTaskId?: string
   killstreakTaskId?: string
   closeBets: (winningTeam?: string) => Promise<void>
-  closeBetsCalls: Array<string | undefined>
+  closeBetsCalls: (string | undefined)[]
 }
 
 export function makeGsiHandler(overrides: Partial<GsiHandlerLike> = {}): GsiHandlerLike {
   const token = 'token-gsi-1'
-  const closeBetsCalls: Array<string | undefined> = []
+  const closeBetsCalls: (string | undefined)[] = []
   return {
+    addSecondsToNow: (s: number) => new Date(Date.now() + s * 1000),
+    bountyHeroNames: [],
     client: {
       name: 'streamer',
       token,
@@ -271,19 +280,17 @@ export function makeGsiHandler(overrides: Partial<GsiHandlerLike> = {}): GsiHand
       subscription: PRO_SUB,
       // Default gsi: a playable match. Individual tests can override.
       gsi: {
-        player: { activity: 'playing', team_name: 'radiant' },
-        map: { matchid: '7777777777', clock_time: 600, game_time: 600 },
         hero: { name: 'npc_dota_hero_lina' },
+        map: { clock_time: 600, game_time: 600, matchid: '7777777777' },
+        player: { activity: 'playing', team_name: 'radiant' },
       },
     },
-    disabled: false,
-    getToken: () => token,
-    addSecondsToNow: (s: number) => new Date(Date.now() + s * 1000),
-    bountyHeroNames: [],
     closeBets: async (winningTeam) => {
       closeBetsCalls.push(winningTeam)
     },
     closeBetsCalls,
+    disabled: false,
+    getToken: () => token,
     ...overrides,
   }
 }

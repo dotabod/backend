@@ -1,17 +1,21 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../__tests__/sharedMocks.ts'
 import type { MessageType } from '../CommandHandler'
 
 const noopLogger = {
-  info: () => undefined,
-  error: () => undefined,
-  warn: () => undefined,
-  debug: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 
-vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ supabase: {}, logger: noopLogger }))
+vi.doMock(import('@dotabod/shared-utils'), () =>
+  buildSharedUtilsMock({ logger: noopLogger, supabase: {} })
+)
 
 // Stub the CommandHandler singleton with just the `.commands` map the
 // dispatcher needs for per-candidate dbkey lookup. Avoids dragging in the
@@ -21,7 +25,7 @@ const fakeCommands = new Map<string, { dbkey?: string }>([
   ['lgs', { dbkey: 'commandLGS' }],
   ['wl', { dbkey: 'commandWL' }],
 ])
-vi.doMock('../CommandHandler.ts', () => ({
+vi.doMock(import('../CommandHandler.ts'), () => ({
   default: { commands: fakeCommands },
 }))
 
@@ -32,24 +36,26 @@ const { commandClusters, prepareSuggestionSuffix, suggestionContext, _resetSugge
 
 function makeMessage(over: { settings?: { key: string; value: unknown }[] } = {}): MessageType {
   return {
-    user: { name: 'viewer', messageId: 'm-1', permission: 0, userId: 'u-1' },
-    content: '!today',
     channel: {
-      name: '#streamer',
-      id: 'channel-1',
-      settings: over.settings ?? [],
       client: {
         locale: 'en',
         subscription: PRO_SUB,
       },
+      id: 'channel-1',
+      name: '#streamer',
+      settings: over.settings ?? [],
     },
+    content: '!today',
+    user: { messageId: 'm-1', name: 'viewer', permission: 0, userId: 'u-1' },
   } as unknown as MessageType
 }
 
 // Run prepareSuggestionSuffix `count` times and return the last call's result.
 function runUntilSuggestion(cmd: string, msg: MessageType, count = 4) {
   let last: string | null = null
-  for (let i = 0; i < count; i++) last = prepareSuggestionSuffix(cmd, msg)
+  for (let i = 0; i < count; i++) {
+    last = prepareSuggestionSuffix(cmd, msg)
+  }
   return last
 }
 
@@ -69,7 +75,9 @@ describe('prepareSuggestionSuffix', () => {
 
   it('emits a suffix on the throttle boundary and not before', () => {
     const msg = makeMessage()
-    for (let i = 0; i < 3; i++) expect(prepareSuggestionSuffix('today', msg)).toBeNull()
+    for (let i = 0; i < 3; i++) {
+      expect(prepareSuggestionSuffix('today', msg)).toBeNull()
+    }
     const suffix = prepareSuggestionSuffix('today', msg)
     expect(suffix).toBeTruthy()
     expect(suffix).toMatch(/!(lgs|wl)/)
@@ -105,21 +113,29 @@ describe('commandClusters', () => {
     const commandsDir = join(import.meta.dirname, '..', '..', 'commands')
     const modCommands = new Set<string>()
     for (const file of readdirSync(commandsDir)) {
-      if (!file.endsWith('.ts') || file.endsWith('.test.ts')) continue
-      const source = readFileSync(join(commandsDir, file), 'utf8')
-      if (!/permission:\s*2\b/.test(source)) continue
-      const match = source.match(/registerCommand\(\s*['"]([^'"]+)['"]/)
-      if (match) modCommands.add(match[1])
+      if (!file.endsWith('.ts') || file.endsWith('.test.ts')) {
+        continue
+      }
+      const source = readFileSync(join(commandsDir, file), 'utf-8')
+      if (!/permission:\s*2\b/.test(source)) {
+        continue
+      }
+      const match = /registerCommand\(\s*['"]([^'"]+)['"]/.exec(source)
+      if (match) {
+        modCommands.add(match[1])
+      }
     }
     expect(modCommands.size).toBeGreaterThan(0) // sanity: scanner picked something up
 
     const offenders: string[] = []
     for (const cluster of commandClusters) {
       for (const cmd of cluster) {
-        if (modCommands.has(cmd)) offenders.push(cmd)
+        if (modCommands.has(cmd)) {
+          offenders.push(cmd)
+        }
       }
     }
-    expect(offenders).toEqual([])
+    expect(offenders).toStrictEqual([])
   })
 })
 
@@ -146,7 +162,7 @@ describe('suggestionContext', () => {
       await Promise.resolve()
       return suggestionContext.getStore()?.suffix
     })
-    expect(await a).toBe('A')
-    expect(await b).toBe('B')
+    await expect(a).resolves.toBe('A')
+    await expect(b).resolves.toBe('B')
   })
 })

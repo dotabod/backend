@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import {
   dbState,
   gsiHandlers,
@@ -62,8 +63,8 @@ describe('getDBUser', () => {
     const res = await getDBUser({ token: 'tok-3' })
 
     expect(res.result).toBeNull()
-    expect(invalidTokens.has('tok-3')).toBe(true)
-    expect(lookingupToken.has('tok-3')).toBe(false)
+    expect(invalidTokens.has('tok-3')).toBeTruthy()
+    expect(lookingupToken.has('tok-3')).toBeFalsy()
   })
 
   it('treats a missing token AND twitchId as an invalidTokens hit (empty string is pre-seeded)', async () => {
@@ -79,18 +80,18 @@ describe('getDBUser', () => {
     dbState.tableResults.accounts = { data: { userId: 'user-9' }, error: null }
     dbState.tableResults.users = {
       data: {
+        Account: { providerAccountId: 'tw-9', requires_refresh: false },
+        SteamAccount: [],
+        beta_tester: false,
         id: 'user-9',
-        name: 'FromTwitchId',
+        locale: 'en',
         mmr: 3000,
+        name: 'FromTwitchId',
+        settings: [],
         steam32Id: 1,
         stream_online: false,
         stream_start_date: null,
-        beta_tester: false,
-        locale: 'en',
         subscriptions: [],
-        Account: { providerAccountId: 'tw-9', requires_refresh: false },
-        SteamAccount: [],
-        settings: [],
       },
       error: null,
     }
@@ -103,10 +104,10 @@ describe('getDBUser', () => {
     const res = await getDBUser({ twitchId: 'tw-x' })
     expect(res.result).toBeNull()
     expect(res.reason).toContain('accounts down')
-    expect(invalidTokens.has('tw-x')).toBe(true)
+    expect(invalidTokens.has('tw-x')).toBeTruthy()
     expect(
-      dbState.loggerErrorCalls.some((c) => c.message === '[USER] accounts lookup failed'),
-    ).toBe(true)
+      dbState.loggerErrorCalls.some((c) => c.message === '[USER] accounts lookup failed')
+    ).toBeTruthy()
   })
 
   it('does not log an error when the accounts lookup returns 0 rows (PGRST116)', async () => {
@@ -116,10 +117,10 @@ describe('getDBUser', () => {
     }
     const res = await getDBUser({ twitchId: 'tw-stale' })
     expect(res.result).toBeNull()
-    expect(invalidTokens.has('tw-stale')).toBe(true)
+    expect(invalidTokens.has('tw-stale')).toBeTruthy()
     expect(
-      dbState.loggerErrorCalls.some((c) => c.message === '[USER] accounts lookup failed'),
-    ).toBe(false)
+      dbState.loggerErrorCalls.some((c) => c.message === '[USER] accounts lookup failed')
+    ).toBeFalsy()
   })
 
   it('does not log an error when the users lookup returns 0 rows (PGRST116)', async () => {
@@ -129,10 +130,10 @@ describe('getDBUser', () => {
     }
     const res = await getDBUser({ token: 'tok-stale' })
     expect(res.result).toBeNull()
-    expect(invalidTokens.has('tok-stale')).toBe(true)
-    expect(dbState.loggerErrorCalls.some((c) => c.message === '[USER] users lookup failed')).toBe(
-      false,
-    )
+    expect(invalidTokens.has('tok-stale')).toBeTruthy()
+    expect(
+      dbState.loggerErrorCalls.some((c) => c.message === '[USER] users lookup failed')
+    ).toBeFalsy()
   })
 
   it('marks transient (non-PGRST116) accounts errors in the cache but routes through addEphemeral so they do NOT persist across deploys', async () => {
@@ -144,11 +145,11 @@ describe('getDBUser', () => {
     const res = await getDBUser({ twitchId: 'tw-blip' })
     expect(res.result).toBeNull()
     // In-memory entry exists so we bound the log noise within the process.
-    expect(invalidTokens.has('tw-blip')).toBe(true)
+    expect(invalidTokens.has('tw-blip')).toBeTruthy()
     // Real DB error is still alerted on.
     expect(
-      dbState.loggerErrorCalls.some((c) => c.message === '[USER] accounts lookup failed'),
-    ).toBe(true)
+      dbState.loggerErrorCalls.some((c) => c.message === '[USER] accounts lookup failed')
+    ).toBeTruthy()
   })
 
   it('marks transient (non-PGRST116) users errors in the cache but routes through addEphemeral', async () => {
@@ -158,10 +159,10 @@ describe('getDBUser', () => {
     }
     const res = await getDBUser({ token: 'tok-blip' })
     expect(res.result).toBeNull()
-    expect(invalidTokens.has('tok-blip')).toBe(true)
-    expect(dbState.loggerErrorCalls.some((c) => c.message === '[USER] users lookup failed')).toBe(
-      true,
-    )
+    expect(invalidTokens.has('tok-blip')).toBeTruthy()
+    expect(
+      dbState.loggerErrorCalls.some((c) => c.message === '[USER] users lookup failed')
+    ).toBeTruthy()
   })
 
   it('returns "no userId" when the accounts row has no userId', async () => {
@@ -181,42 +182,42 @@ describe('getDBUser', () => {
   it('returns "No Account found" without throwing or wedging the lookup token when the users row has no Account', async () => {
     dbState.tableResults.users = {
       data: {
+        Account: [],
+        SteamAccount: [],
+        beta_tester: false,
         id: 'user-noacct',
-        name: 'NoAccount',
+        locale: 'en',
         mmr: 1,
+        name: 'NoAccount',
+        settings: [],
         steam32Id: 1,
         stream_online: false,
         stream_start_date: null,
-        beta_tester: false,
-        locale: 'en',
         subscriptions: [],
-        Account: [],
-        SteamAccount: [],
-        settings: [],
       },
       error: null,
     }
     const res = await getDBUser({ token: 'tok-noacct' })
     expect(res.result).toBeUndefined()
     expect(res.reason).toContain('No Account found')
-    expect(lookingupToken.has('tok-noacct')).toBe(false)
+    expect(lookingupToken.has('tok-noacct')).toBeFalsy()
   })
 
   it('does not cache an account that requires a token refresh', async () => {
     dbState.tableResults.users = {
       data: {
+        Account: { providerAccountId: 'tw-r', requires_refresh: true },
+        SteamAccount: [],
+        beta_tester: false,
         id: 'user-r',
-        name: 'NeedsRefresh',
+        locale: 'en',
         mmr: 1,
+        name: 'NeedsRefresh',
+        settings: [],
         steam32Id: 1,
         stream_online: false,
         stream_start_date: null,
-        beta_tester: false,
-        locale: 'en',
         subscriptions: [],
-        Account: { providerAccountId: 'tw-r', requires_refresh: true },
-        SteamAccount: [],
-        settings: [],
       },
       error: null,
     }
@@ -228,77 +229,77 @@ describe('getDBUser', () => {
   it('attaches the active subscription to the built client', async () => {
     dbState.tableResults.users = {
       data: {
+        Account: { providerAccountId: 'tw-sub', requires_refresh: false },
+        SteamAccount: [],
+        beta_tester: false,
         id: 'user-sub',
-        name: 'Subbed',
+        locale: 'en',
         mmr: 4000,
+        name: 'Subbed',
+        settings: [],
         steam32Id: 5,
         stream_online: false,
         stream_start_date: '2026-05-20T00:00:00.000Z',
-        beta_tester: false,
-        locale: 'en',
-        subscriptions: [{ id: 'sub-1', tier: 'PRO', status: 'ACTIVE', isGift: false }],
-        Account: { providerAccountId: 'tw-sub', requires_refresh: false },
-        SteamAccount: [],
-        settings: [],
+        subscriptions: [{ id: 'sub-1', isGift: false, status: 'ACTIVE', tier: 'PRO' }],
       },
       error: null,
     }
     const res = await getDBUser({ token: 'tok-sub' })
-    expect(res.result?.subscription).toMatchObject({ tier: 'PRO', status: 'ACTIVE' })
+    expect(res.result?.subscription).toMatchObject({ status: 'ACTIVE', tier: 'PRO' })
     expect(res.result?.stream_start_date).toBeInstanceOf(Date)
   })
 
   it('rejects a banned user, adds the token to invalidTokens, and surfaces the "banned" reason', async () => {
     dbState.tableResults.users = {
       data: {
+        Account: { providerAccountId: 'tw-banned', requires_refresh: false },
+        SteamAccount: [],
+        banned_at: '2026-05-24T00:00:00.000Z',
+        beta_tester: false,
         id: 'user-banned',
-        name: 'BannedUser',
+        locale: 'en',
         mmr: 1,
+        name: 'BannedUser',
+        settings: [],
         steam32Id: 1,
         stream_online: false,
         stream_start_date: null,
-        beta_tester: false,
-        locale: 'en',
-        banned_at: '2026-05-24T00:00:00.000Z',
         subscriptions: [],
-        Account: { providerAccountId: 'tw-banned', requires_refresh: false },
-        SteamAccount: [],
-        settings: [],
       },
       error: null,
     }
     const res = await getDBUser({ token: 'tok-banned' })
     expect(res.result).toBeNull()
     expect(res.reason).toContain('banned')
-    expect(invalidTokens.has('tok-banned')).toBe(true)
+    expect(invalidTokens.has('tok-banned')).toBeTruthy()
     // gsiHandler must NOT be created for a banned user.
-    expect(gsiHandlers.has('user-banned')).toBe(false)
+    expect(gsiHandlers.has('user-banned')).toBeFalsy()
   })
 
   it('builds and caches a SocketClient on a successful users lookup', async () => {
     dbState.tableResults.users = {
       data: {
-        id: 'user-1',
-        name: 'TheStreamer',
-        mmr: 5000,
-        steam32Id: 99999,
-        stream_online: true,
-        stream_start_date: null,
-        beta_tester: false,
-        locale: 'en',
-        subscriptions: [],
         Account: {
-          providerAccountId: 'twitch-1',
-          refresh_token: 'r',
-          scope: null,
+          access_token: 'a',
           expires_at: null,
-          requires_refresh: false,
           expires_in: null,
           obtainment_timestamp: null,
-          access_token: 'a',
+          providerAccountId: 'twitch-1',
+          refresh_token: 'r',
+          requires_refresh: false,
+          scope: null,
         },
-        SteamAccount: [{ mmr: 5000, steam32Id: 99999, name: 'main', leaderboard_rank: 0 }],
+        SteamAccount: [{ leaderboard_rank: 0, mmr: 5000, name: 'main', steam32Id: 99_999 }],
+        beta_tester: false,
+        id: 'user-1',
+        locale: 'en',
+        mmr: 5000,
+        name: 'TheStreamer',
         settings: [],
+        steam32Id: 99_999,
+        stream_online: true,
+        stream_start_date: null,
+        subscriptions: [],
       },
       error: null,
     }
@@ -308,7 +309,7 @@ describe('getDBUser', () => {
     expect(res.result).not.toBeNull()
     expect(res.result?.name).toBe('TheStreamer')
     expect(res.reason).toContain('successfully retrieved')
-    expect(gsiHandlers.has('user-1')).toBe(true)
+    expect(gsiHandlers.has('user-1')).toBeTruthy()
     expect(twitchIdToToken.get('twitch-1')).toBe('user-1')
     expect(twitchNameToToken.get('thestreamer')).toBe('user-1')
   })

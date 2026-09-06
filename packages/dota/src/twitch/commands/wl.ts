@@ -1,12 +1,14 @@
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { getWL, LOBBY_TYPE_RANKED } from '../../db/getWL'
 import { isArcade } from '../../dota/lib/isArcade'
 import { isSpectator } from '../../dota/lib/isSpectator'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { getRedisNumberValue } from '../../utils/index'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('wl', {
   aliases: ['score', 'winrate', 'wr'],
@@ -25,7 +27,7 @@ commandHandler.registerCommand('wl', {
               url: 'dotabod.com/dashboard/features',
             })
           : t('unknownSteam', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -33,7 +35,7 @@ commandHandler.registerCommand('wl', {
     const mmrEnabled = getValueOrDefault(
       DBSettings['mmr-tracker'],
       client.settings,
-      client.subscription,
+      client.subscription
     )
 
     // Check if user is currently in a game to determine which game type to show
@@ -54,21 +56,21 @@ commandHandler.registerCommand('wl', {
 
     try {
       const res = await getWL({
+        channelId,
+        currentGameIsRanked,
         lng: client.locale,
-        channelId: channelId,
-        mmrEnabled: mmrEnabled,
+        mmrEnabled,
         settings: client.settings,
-        subscription: client.subscription,
         streamStartDate: client.stream_start_date,
-        currentGameIsRanked: currentGameIsRanked,
+        subscription: client.subscription,
         userId: client.token,
       })
 
       if (res?.msg) {
         chatClient.say(channel, res.msg, message.user.messageId)
       }
-    } catch (e) {
-      logger.error('[WL] Error getting WL', { error: e, channelId, name: client.name })
+    } catch (error) {
+      logger.error('[WL] Error getting WL', { channelId, error, name: client.name })
     }
   },
 })

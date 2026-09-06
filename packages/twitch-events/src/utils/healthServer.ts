@@ -1,5 +1,6 @@
 import { logger } from '@dotabod/shared-utils'
 import express from 'express'
+
 import { eventsIOConnected } from './socketUtils'
 
 // Preserve the module-load env guard that lived in the deleted webhookUtils.ts.
@@ -23,8 +24,8 @@ export const setupHealthServer = (): void => {
 
   app.get('/webhook', (_req, res) => {
     res.status(200).json({
-      status: 'ok',
       eventsConnected: eventsIOConnected,
+      status: 'ok',
     })
   })
 

@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import {
   baseMatchRow,
-  type Client,
   commandHandler,
   findMostRecentResolvedMatch,
   makeClient,
@@ -9,8 +9,9 @@ import {
   resolveMatchRetroactively,
   state,
 } from './setupMocks.ts'
+import type { Client } from './setupMocks.ts'
 
-describe('resolveMatchRetroactively', () => {
+describe(resolveMatchRetroactively, () => {
   beforeEach(() => {
     resetState()
   })
@@ -27,10 +28,10 @@ describe('resolveMatchRetroactively', () => {
         true,
         'modUser',
         '#streamer',
-        'msg-1',
+        'msg-1'
       )
 
-      expect(result).toEqual({ success: false, errorKey: 'currentMatch' })
+      expect(result).toStrictEqual({ errorKey: 'currentMatch', success: false })
       expect(state.chatSayCalls).toHaveLength(1)
       expect(state.chatSayCalls[0].message).toContain('Cannot resolve the current ongoing match')
       expect(state.updateCalls).toHaveLength(0)
@@ -48,10 +49,10 @@ describe('resolveMatchRetroactively', () => {
         true,
         'modUser',
         '#streamer',
-        'msg-1',
+        'msg-1'
       )
 
-      expect(result.success).toBe(true)
+      expect(result.success).toBeTruthy()
       expect(state.updateCalls).toHaveLength(1)
     })
   })
@@ -66,12 +67,12 @@ describe('resolveMatchRetroactively', () => {
         true,
         'modUser',
         '#streamer',
-        'msg-1',
+        'msg-1'
       )
 
-      expect(result).toEqual({ success: false, errorKey: 'notFound' })
+      expect(result).toStrictEqual({ errorKey: 'notFound', success: false })
       expect(state.chatSayCalls[0].message).toContain(
-        'Match 7777777777 not found in current stream',
+        'Match 7777777777 not found in current stream'
       )
       expect(state.updateCalls).toHaveLength(0)
     })
@@ -86,10 +87,10 @@ describe('resolveMatchRetroactively', () => {
         false,
         'modUser',
         '#streamer',
-        'msg-1',
+        'msg-1'
       )
 
-      expect(result).toEqual({ success: false, errorKey: 'expired' })
+      expect(result).toStrictEqual({ errorKey: 'expired', success: false })
       expect(state.chatSayCalls[0].message).toContain('Match 7777777777 is too old to resolve')
       expect(state.updateCalls).toHaveLength(0)
       expect(state.updateMmrCalls).toHaveLength(0)
@@ -105,27 +106,27 @@ describe('resolveMatchRetroactively', () => {
         true,
         'modUser',
         '#streamer',
-        'msg-1',
+        'msg-1'
       )
 
-      expect(result.success).toBe(true)
+      expect(result.success).toBeTruthy()
     })
   })
 
   describe('fresh resolution (won was null)', () => {
     it('records a win, applies +mmrSize for ranked solo, and writes the success message', async () => {
-      state.sessionMatch = baseMatchRow({ won: null, is_party: false, lobby_type: 7 })
+      state.sessionMatch = baseMatchRow({ is_party: false, lobby_type: 7, won: null })
       state.steamSocketResponse = {
-        matches: [{ lobby_type: 7, game_mode: 22, radiant_score: 50, dire_score: 30 }],
+        matches: [{ dire_score: 30, game_mode: 22, lobby_type: 7, radiant_score: 50 }],
       }
       state.predictions = [
         {
           id: 'pred-1',
-          status: 'ACTIVE',
           outcomes: [
-            { id: 'won-outcome', users: 10, title: 'Yes' },
-            { id: 'lost-outcome', users: 5, title: 'No' },
+            { id: 'won-outcome', title: 'Yes', users: 10 },
+            { id: 'lost-outcome', title: 'No', users: 5 },
           ],
+          status: 'ACTIVE',
         },
       ]
       state.channelId = 'twitch-channel-1'
@@ -138,18 +139,18 @@ describe('resolveMatchRetroactively', () => {
         true,
         'modUser',
         '#streamer',
-        'msg-1',
+        'msg-1'
       )
 
-      expect(result).toEqual({ success: true })
+      expect(result).toStrictEqual({ success: true })
 
       expect(state.updateCalls).toHaveLength(1)
       expect(state.updateCalls[0].values).toMatchObject({
-        won: true,
-        lobby_type: 7,
-        game_mode: 22,
-        radiant_score: 50,
         dire_score: 30,
+        game_mode: 22,
+        lobby_type: 7,
+        radiant_score: 50,
+        won: true,
       })
       expect(state.updateCalls[0].whereId).toBe('row-uuid-1')
 
@@ -157,16 +158,16 @@ describe('resolveMatchRetroactively', () => {
       expect(state.updateMmrCalls[0]).toMatchObject({
         currentMmr: 5000,
         newMmr: 5025,
-        steam32Id: 99999,
+        steam32Id: 99_999,
       })
 
-      expect(state.resolvePredictionCalls).toEqual([
-        { twitchId: 'twitch-channel-1', predictionId: 'pred-1', outcomeId: 'won-outcome' },
+      expect(state.resolvePredictionCalls).toStrictEqual([
+        { outcomeId: 'won-outcome', predictionId: 'pred-1', twitchId: 'twitch-channel-1' },
       ])
 
       expect(state.emitWLUpdateCalls).toBe(1)
 
-      const finalSay = state.chatSayCalls[state.chatSayCalls.length - 1]
+      const finalSay = state.chatSayCalls.at(-1)
       expect(finalSay.message).toBe('Match 7777777777 manually marked as WON by @modUser')
     })
 
@@ -175,11 +176,11 @@ describe('resolveMatchRetroactively', () => {
       state.predictions = [
         {
           id: 'pred-1',
-          status: 'LOCKED',
           outcomes: [
-            { id: 'won-outcome', users: 10, title: 'Yes' },
-            { id: 'lost-outcome', users: 3, title: 'No' },
+            { id: 'won-outcome', title: 'Yes', users: 10 },
+            { id: 'lost-outcome', title: 'No', users: 3 },
           ],
+          status: 'LOCKED',
         },
       ]
       state.channelId = 'twitch-channel-1'
@@ -190,13 +191,13 @@ describe('resolveMatchRetroactively', () => {
 
       expect(state.updateCalls[0].values).toMatchObject({ won: false })
       expect(state.updateMmrCalls[0]).toMatchObject({ currentMmr: 5000, newMmr: 4975 })
-      expect(state.resolvePredictionCalls).toEqual([
-        { twitchId: 'twitch-channel-1', predictionId: 'pred-1', outcomeId: 'lost-outcome' },
+      expect(state.resolvePredictionCalls).toStrictEqual([
+        { outcomeId: 'lost-outcome', predictionId: 'pred-1', twitchId: 'twitch-channel-1' },
       ])
     })
 
     it('uses MULTIPLIER_PARTY (20) instead of solo when the match was a party', async () => {
-      state.sessionMatch = baseMatchRow({ won: null, is_party: true })
+      state.sessionMatch = baseMatchRow({ is_party: true, won: null })
       const client = makeClient({ mmr: 5000 })
 
       await resolveMatchRetroactively(client, '7777777777', true, 'modUser', '#streamer', 'msg-1')
@@ -205,18 +206,18 @@ describe('resolveMatchRetroactively', () => {
     })
 
     it('skips MMR update for non-ranked lobbies', async () => {
-      state.sessionMatch = baseMatchRow({ won: null, lobby_type: 0 })
-      state.steamSocketResponse = { matches: [{ lobby_type: 0, game_mode: 22 }] }
+      state.sessionMatch = baseMatchRow({ lobby_type: 0, won: null })
+      state.steamSocketResponse = { matches: [{ game_mode: 22, lobby_type: 0 }] }
       const client = makeClient()
 
       await resolveMatchRetroactively(client, '7777777777', true, 'modUser', '#streamer', 'msg-1')
 
       expect(state.updateMmrCalls).toHaveLength(0)
-      expect(state.updateCalls[0].values).toMatchObject({ won: true, lobby_type: 0 })
+      expect(state.updateCalls[0].values).toMatchObject({ lobby_type: 0, won: true })
     })
 
     it('skips MMR update when steam32Id is missing', async () => {
-      state.sessionMatch = baseMatchRow({ won: null, steam32Id: null })
+      state.sessionMatch = baseMatchRow({ steam32Id: null, won: null })
       const client = makeClient()
 
       await resolveMatchRetroactively(client, '7777777777', true, 'modUser', '#streamer', 'msg-1')
@@ -225,7 +226,7 @@ describe('resolveMatchRetroactively', () => {
     })
 
     it('uses the row lobby_type when Steam returns no match data', async () => {
-      state.sessionMatch = baseMatchRow({ won: null, lobby_type: 7 })
+      state.sessionMatch = baseMatchRow({ lobby_type: 7, won: null })
       state.steamSocketResponse = { matches: [] }
       const client = makeClient({ mmr: 4000 })
 
@@ -233,14 +234,14 @@ describe('resolveMatchRetroactively', () => {
 
       expect(state.updateMmrCalls[0]).toMatchObject({ newMmr: 4025 })
       expect(state.updateCalls[0].values).toMatchObject({
+        dire_score: null,
         lobby_type: 7,
         radiant_score: null,
-        dire_score: null,
       })
     })
 
     it('defaults to LOBBY_TYPE_RANKED when both Steam and the row lack lobby_type', async () => {
-      state.sessionMatch = baseMatchRow({ won: null, lobby_type: null })
+      state.sessionMatch = baseMatchRow({ lobby_type: null, won: null })
       state.steamSocketResponse = { matches: [] }
       const client = makeClient({ mmr: 4000 })
 
@@ -250,7 +251,7 @@ describe('resolveMatchRetroactively', () => {
     })
 
     it('handles a missing prediction without aborting the resolution', async () => {
-      state.sessionMatch = baseMatchRow({ won: null, predictionId: null })
+      state.sessionMatch = baseMatchRow({ predictionId: null, won: null })
       const client = makeClient()
 
       const result = await resolveMatchRetroactively(
@@ -259,10 +260,10 @@ describe('resolveMatchRetroactively', () => {
         true,
         'modUser',
         '#streamer',
-        'msg-1',
+        'msg-1'
       )
 
-      expect(result.success).toBe(true)
+      expect(result.success).toBeTruthy()
       expect(state.resolvePredictionCalls).toHaveLength(0)
       expect(state.updateCalls).toHaveLength(1)
       expect(state.updateMmrCalls).toHaveLength(1)
@@ -273,11 +274,11 @@ describe('resolveMatchRetroactively', () => {
       state.predictions = [
         {
           id: 'pred-1',
-          status: 'RESOLVED',
           outcomes: [
-            { id: 'won-outcome', users: 10, title: 'Yes' },
-            { id: 'lost-outcome', users: 5, title: 'No' },
+            { id: 'won-outcome', title: 'Yes', users: 10 },
+            { id: 'lost-outcome', title: 'No', users: 5 },
           ],
+          status: 'RESOLVED',
         },
       ]
       state.channelId = 'twitch-channel-1'
@@ -289,10 +290,10 @@ describe('resolveMatchRetroactively', () => {
         true,
         'modUser',
         '#streamer',
-        'msg-1',
+        'msg-1'
       )
 
-      expect(result.success).toBe(true)
+      expect(result.success).toBeTruthy()
       expect(state.resolvePredictionCalls).toHaveLength(0)
     })
   })
@@ -308,10 +309,10 @@ describe('resolveMatchRetroactively', () => {
         true,
         'modUser',
         '#streamer',
-        'msg-1',
+        'msg-1'
       )
 
-      expect(result).toEqual({ success: true })
+      expect(result).toStrictEqual({ success: true })
       expect(state.updateCalls).toHaveLength(0)
       expect(state.updateMmrCalls).toHaveLength(0)
       expect(state.resolvePredictionCalls).toHaveLength(0)
@@ -330,10 +331,10 @@ describe('resolveMatchRetroactively', () => {
         false,
         'modUser',
         '#streamer',
-        'msg-1',
+        'msg-1'
       )
 
-      expect(result).toEqual({ success: true })
+      expect(result).toStrictEqual({ success: true })
       expect(state.updateCalls).toHaveLength(0)
       expect(state.chatSayCalls[0].message).toContain('Match 7777777777 is already marked as LOST')
     })
@@ -341,15 +342,15 @@ describe('resolveMatchRetroactively', () => {
 
   describe('flip / correction (requested opposite of current value)', () => {
     it('flips loss to win, doubles the solo MMR delta to +50, and skips the prediction call', async () => {
-      state.sessionMatch = baseMatchRow({ won: false, is_party: false, lobby_type: 7 })
+      state.sessionMatch = baseMatchRow({ is_party: false, lobby_type: 7, won: false })
       state.predictions = [
         {
           id: 'pred-1',
-          status: 'ACTIVE',
           outcomes: [
-            { id: 'won-outcome', users: 10, title: 'Yes' },
-            { id: 'lost-outcome', users: 5, title: 'No' },
+            { id: 'won-outcome', title: 'Yes', users: 10 },
+            { id: 'lost-outcome', title: 'No', users: 5 },
           ],
+          status: 'ACTIVE',
         },
       ]
       state.channelId = 'twitch-channel-1'
@@ -361,10 +362,10 @@ describe('resolveMatchRetroactively', () => {
         true,
         'modUser',
         '#streamer',
-        'msg-1',
+        'msg-1'
       )
 
-      expect(result).toEqual({ success: true })
+      expect(result).toStrictEqual({ success: true })
       expect(state.updateCalls).toHaveLength(1)
       expect(state.updateCalls[0].values).toMatchObject({ won: true })
 
@@ -375,12 +376,12 @@ describe('resolveMatchRetroactively', () => {
 
       expect(state.emitWLUpdateCalls).toBe(1)
 
-      const finalSay = state.chatSayCalls[state.chatSayCalls.length - 1]
+      const finalSay = state.chatSayCalls.at(-1)
       expect(finalSay.message).toBe('Match 7777777777 corrected from LOST to WON by @modUser')
     })
 
     it('flips win to loss with -50 MMR delta for ranked solo', async () => {
-      state.sessionMatch = baseMatchRow({ won: true, is_party: false, lobby_type: 7 })
+      state.sessionMatch = baseMatchRow({ is_party: false, lobby_type: 7, won: true })
       const client = makeClient({ mmr: 5000 })
 
       await resolveMatchRetroactively(client, '7777777777', false, 'modUser', '#streamer', 'msg-1')
@@ -388,12 +389,12 @@ describe('resolveMatchRetroactively', () => {
       expect(state.updateCalls[0].values).toMatchObject({ won: false })
       expect(state.updateMmrCalls[0]).toMatchObject({ newMmr: 4950 })
 
-      const finalSay = state.chatSayCalls[state.chatSayCalls.length - 1]
+      const finalSay = state.chatSayCalls.at(-1)
       expect(finalSay.message).toBe('Match 7777777777 corrected from WON to LOST by @modUser')
     })
 
     it('uses 2 * MULTIPLIER_PARTY (40) when correcting a party match', async () => {
-      state.sessionMatch = baseMatchRow({ won: false, is_party: true })
+      state.sessionMatch = baseMatchRow({ is_party: true, won: false })
       const client = makeClient({ mmr: 5000 })
 
       await resolveMatchRetroactively(client, '7777777777', true, 'modUser', '#streamer', 'msg-1')
@@ -402,8 +403,8 @@ describe('resolveMatchRetroactively', () => {
     })
 
     it('skips MMR adjustment when correcting a non-ranked match', async () => {
-      state.sessionMatch = baseMatchRow({ won: false, lobby_type: 0 })
-      state.steamSocketResponse = { matches: [{ lobby_type: 0, game_mode: 22 }] }
+      state.sessionMatch = baseMatchRow({ lobby_type: 0, won: false })
+      state.steamSocketResponse = { matches: [{ game_mode: 22, lobby_type: 0 }] }
       const client = makeClient()
 
       await resolveMatchRetroactively(client, '7777777777', true, 'modUser', '#streamer', 'msg-1')
@@ -414,10 +415,10 @@ describe('resolveMatchRetroactively', () => {
 
     it('writes a minimal update on a flip (won + updated_at only, no Steam-sourced fields)', async () => {
       state.sessionMatch = baseMatchRow({
-        won: false,
-        radiant_score: 42,
         dire_score: 30,
         lobby_type: 7,
+        radiant_score: 42,
+        won: false,
       } as any)
       // Steam no longer has this match — simulates the older-match case.
       state.steamSocketResponse = { matches: [] }
@@ -426,10 +427,10 @@ describe('resolveMatchRetroactively', () => {
       await resolveMatchRetroactively(client, '7777777777', true, 'modUser', '#streamer', 'msg-1')
 
       expect(state.updateCalls).toHaveLength(1)
-      const values = state.updateCalls[0].values
-      expect(values).toEqual({
-        won: true,
+      const { values } = state.updateCalls[0]
+      expect(values).toStrictEqual({
         updated_at: expect.any(String),
+        won: true,
       })
       // No score / lobby_type / game_mode fields, which would otherwise clobber
       // the row with null when Steam returns nothing.
@@ -444,11 +445,11 @@ describe('resolveMatchRetroactively', () => {
       state.predictions = [
         {
           id: 'pred-1',
-          status: 'ACTIVE',
           outcomes: [
-            { id: 'won-outcome', users: 10, title: 'Yes' },
-            { id: 'lost-outcome', users: 5, title: 'No' },
+            { id: 'won-outcome', title: 'Yes', users: 10 },
+            { id: 'lost-outcome', title: 'No', users: 5 },
           ],
+          status: 'ACTIVE',
         },
       ]
       state.channelId = 'twitch-channel-1'
@@ -468,12 +469,12 @@ describe('resolveMatchRetroactively', () => {
       await resolveMatchRetroactively(client, '7777777777', true, 'modUser', '#streamer', 'msg-1')
 
       const requestLog = state.loggerInfoCalls.find(
-        (c) => c.message === '[BETS] Retroactive resolution requested',
+        (c) => c.message === '[BETS] Retroactive resolution requested'
       )
       expect(requestLog?.meta).toMatchObject({ previousWon: null, won: true })
 
       const completedLog = state.loggerInfoCalls.find(
-        (c) => c.message === '[BETS] Retroactive resolution completed successfully',
+        (c) => c.message === '[BETS] Retroactive resolution completed successfully'
       )
       expect(completedLog?.meta).toMatchObject({ isCorrection: false })
     })
@@ -485,12 +486,12 @@ describe('resolveMatchRetroactively', () => {
       await resolveMatchRetroactively(client, '7777777777', true, 'modUser', '#streamer', 'msg-1')
 
       const requestLog = state.loggerInfoCalls.find(
-        (c) => c.message === '[BETS] Retroactive resolution requested',
+        (c) => c.message === '[BETS] Retroactive resolution requested'
       )
       expect(requestLog?.meta).toMatchObject({ previousWon: false, won: true })
 
       const completedLog = state.loggerInfoCalls.find(
-        (c) => c.message === '[BETS] Retroactive resolution completed successfully',
+        (c) => c.message === '[BETS] Retroactive resolution completed successfully'
       )
       expect(completedLog?.meta).toMatchObject({ isCorrection: true, previousWon: false })
     })
@@ -507,10 +508,10 @@ describe('resolveMatchRetroactively', () => {
         true,
         'modUser',
         '#streamer',
-        'reply-target-1',
+        'reply-target-1'
       )
 
-      const finalSay = state.chatSayCalls[state.chatSayCalls.length - 1]
+      const finalSay = state.chatSayCalls.at(-1)
       expect(finalSay.messageId).toBe('reply-target-1')
     })
 
@@ -524,7 +525,7 @@ describe('resolveMatchRetroactively', () => {
         true,
         'modUser',
         '#streamer',
-        'reply-target-2',
+        'reply-target-2'
       )
 
       expect(state.chatSayCalls[0].messageId).toBe('reply-target-2')
@@ -532,17 +533,17 @@ describe('resolveMatchRetroactively', () => {
   })
 })
 
-describe('findMostRecentResolvedMatch', () => {
+describe(findMostRecentResolvedMatch, () => {
   beforeEach(() => {
     resetState()
   })
 
   it('returns the most recently resolved match in the session', async () => {
-    state.recentList = [{ matchId: '9999999999', hero_name: null, won: true }]
+    state.recentList = [{ hero_name: null, matchId: '9999999999', won: true }]
 
     const result = await findMostRecentResolvedMatch('token-abc', new Date('2026-05-19T08:00:00Z'))
 
-    expect(result).toEqual({ matchId: '9999999999' })
+    expect(result).toStrictEqual({ matchId: '9999999999' })
   })
 
   it('returns null when no resolved matches exist in the session window', async () => {
@@ -554,11 +555,11 @@ describe('findMostRecentResolvedMatch', () => {
   })
 
   it('falls back to the 12-hour window when stream_start_date is null', async () => {
-    state.recentList = [{ matchId: '9999999999', hero_name: null, won: true }]
+    state.recentList = [{ hero_name: null, matchId: '9999999999', won: true }]
 
     const result = await findMostRecentResolvedMatch('token-abc', null)
 
-    expect(result).toEqual({ matchId: '9999999999' })
+    expect(result).toStrictEqual({ matchId: '9999999999' })
   })
 
   it('excludes the in-progress match when given an excludeMatchId', async () => {
@@ -570,45 +571,45 @@ describe('findMostRecentResolvedMatch', () => {
     const result = await findMostRecentResolvedMatch(
       'token-abc',
       new Date('2026-05-19T08:00:00Z'),
-      '7777777777',
+      '7777777777'
     )
 
     expect(result).toBeNull()
   })
 })
 
-type RegisteredCommand = {
+interface RegisteredCommand {
   handler: (
     message: { user: any; content: string; channel: any },
     args: string[],
-    commandUsed: string,
+    commandUsed: string
   ) => Promise<void> | void
 }
 
 function buildMessage(args: string[], clientOverrides: Partial<Client> = {}) {
   const client = makeClient(clientOverrides)
   return {
-    user: { name: 'modUser', messageId: 'msg-1', permission: 2, userId: 'user-1' },
-    content: `!cmd ${args.join(' ')}`.trim(),
     channel: {
-      name: '#streamer',
-      id: 'channel-1',
       client,
+      id: 'channel-1',
+      name: '#streamer',
       settings: client.settings,
     },
+    content: `!cmd ${args.join(' ')}`.trim(),
+    user: { messageId: 'msg-1', name: 'modUser', permission: 2, userId: 'user-1' },
   }
 }
 
 describe('command registration', () => {
   it('registers !recent with its aliases', () => {
-    expect(commandHandler.commands.has('recent')).toBe(true)
+    expect(commandHandler.commands.has('recent')).toBeTruthy()
     expect(commandHandler.aliases.get('history')).toBe('recent')
     expect(commandHandler.aliases.get('matches')).toBe('recent')
   })
 
   it('registers !won and !lost', () => {
-    expect(commandHandler.commands.has('won')).toBe(true)
-    expect(commandHandler.commands.has('lost')).toBe(true)
+    expect(commandHandler.commands.has('won')).toBeTruthy()
+    expect(commandHandler.commands.has('lost')).toBeTruthy()
   })
 })
 
@@ -627,7 +628,7 @@ describe('!recent command handler', () => {
   })
 
   it('formats a single resolved match with W and hero name', async () => {
-    state.recentList = [{ matchId: '7777777777', hero_name: 'npc_dota_hero_lina', won: true }]
+    state.recentList = [{ hero_name: 'npc_dota_hero_lina', matchId: '7777777777', won: true }]
     const cmd = commandHandler.commands.get('recent') as RegisteredCommand
     await cmd.handler(buildMessage([]), [], 'recent')
 
@@ -638,7 +639,7 @@ describe('!recent command handler', () => {
   })
 
   it('marks losses with L', async () => {
-    state.recentList = [{ matchId: '8888888888', hero_name: 'npc_dota_hero_pudge', won: false }]
+    state.recentList = [{ hero_name: 'npc_dota_hero_pudge', matchId: '8888888888', won: false }]
     const cmd = commandHandler.commands.get('recent') as RegisteredCommand
     await cmd.handler(buildMessage([]), [], 'recent')
 
@@ -648,8 +649,8 @@ describe('!recent command handler', () => {
 
   it('lists multiple matches comma-separated', async () => {
     state.recentList = [
-      { matchId: '7777777777', hero_name: 'npc_dota_hero_lina', won: true },
-      { matchId: '8888888888', hero_name: 'npc_dota_hero_pudge', won: false },
+      { hero_name: 'npc_dota_hero_lina', matchId: '7777777777', won: true },
+      { hero_name: 'npc_dota_hero_pudge', matchId: '8888888888', won: false },
     ]
     const cmd = commandHandler.commands.get('recent') as RegisteredCommand
     await cmd.handler(buildMessage([]), [], 'recent')
@@ -661,7 +662,7 @@ describe('!recent command handler', () => {
   })
 
   it('falls back to "Unknown" when hero_name is null', async () => {
-    state.recentList = [{ matchId: '7777777777', hero_name: null, won: true }]
+    state.recentList = [{ hero_name: null, matchId: '7777777777', won: true }]
     const cmd = commandHandler.commands.get('recent') as RegisteredCommand
     await cmd.handler(buildMessage([]), [], 'recent')
 
@@ -677,7 +678,7 @@ describe('!won / !lost fallback to most-recent resolved', () => {
   })
 
   it('!won with no arg and no pending resolution flips the most recent resolved match', async () => {
-    state.recentList = [{ matchId: '7777777777', hero_name: null, won: false }]
+    state.recentList = [{ hero_name: null, matchId: '7777777777', won: false }]
     state.sessionMatch = baseMatchRow({ matchId: '7777777777', won: false })
 
     const cmd = commandHandler.commands.get('won') as RegisteredCommand
@@ -686,12 +687,12 @@ describe('!won / !lost fallback to most-recent resolved', () => {
     expect(state.updateCalls).toHaveLength(1)
     expect(state.updateCalls[0].values).toMatchObject({ won: true })
 
-    const finalSay = state.chatSayCalls[state.chatSayCalls.length - 1]
+    const finalSay = state.chatSayCalls.at(-1)
     expect(finalSay.message).toContain('corrected from LOST to WON')
   })
 
   it('!lost with no arg and no pending resolution flips the most recent resolved match', async () => {
-    state.recentList = [{ matchId: '7777777777', hero_name: null, won: true }]
+    state.recentList = [{ hero_name: null, matchId: '7777777777', won: true }]
     state.sessionMatch = baseMatchRow({ matchId: '7777777777', won: true })
 
     const cmd = commandHandler.commands.get('lost') as RegisteredCommand
@@ -700,7 +701,7 @@ describe('!won / !lost fallback to most-recent resolved', () => {
     expect(state.updateCalls).toHaveLength(1)
     expect(state.updateCalls[0].values).toMatchObject({ won: false })
 
-    const finalSay = state.chatSayCalls[state.chatSayCalls.length - 1]
+    const finalSay = state.chatSayCalls.at(-1)
     expect(finalSay.message).toContain('corrected from WON to LOST')
   })
 
@@ -715,7 +716,7 @@ describe('!won / !lost fallback to most-recent resolved', () => {
   })
 
   it('!won no-ops when the most recent resolved match is already marked as won', async () => {
-    state.recentList = [{ matchId: '7777777777', hero_name: null, won: true }]
+    state.recentList = [{ hero_name: null, matchId: '7777777777', won: true }]
     state.sessionMatch = baseMatchRow({ matchId: '7777777777', won: true })
 
     const cmd = commandHandler.commands.get('won') as RegisteredCommand

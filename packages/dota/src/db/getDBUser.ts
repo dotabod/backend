@@ -1,4 +1,5 @@
 import { logger, supabase } from '@dotabod/shared-utils'
+
 import { createGSIHandler } from '../dota/GSIHandlerFactory'
 import findUser, { findUserByTwitchId } from '../dota/lib/connectedStreamers'
 import {
@@ -9,7 +10,8 @@ import {
   twitchNameToToken,
 } from '../dota/lib/consts'
 import type { SocketClient } from '../types'
-import { isSubscriptionActive, type SubscriptionRow } from '../types/subscription'
+import { isSubscriptionActive } from '../types/subscription'
+import type { SubscriptionRow } from '../types/subscription'
 
 export default async function getDBUser({
   token,
@@ -65,7 +67,7 @@ export default async function getDBUser({
       } else {
         // Transient DB error — log for observability but only cache in-memory
         // so recovery on next deploy doesn't require waiting out the 24h TTL.
-        logger.error('[USER] accounts lookup failed', { lookupToken, providerAccountId, error })
+        logger.error('[USER] accounts lookup failed', { error, lookupToken, providerAccountId })
         invalidTokens.addEphemeral(lookupToken)
       }
       lookingupToken.delete(lookupToken)
@@ -123,7 +125,7 @@ export default async function getDBUser({
       key,
       value
     )
-  `,
+  `
     )
     .eq('id', userId)
     .single()
@@ -136,7 +138,7 @@ export default async function getDBUser({
       invalidTokens.add(lookupToken)
     } else {
       // Transient DB error — log for observability but only cache in-memory.
-      logger.error('[USER] users lookup failed', { lookupToken, error: userError })
+      logger.error('[USER] users lookup failed', { error: userError, lookupToken })
       invalidTokens.addEphemeral(lookupToken)
     }
     lookingupToken.delete(lookupToken)
@@ -192,18 +194,18 @@ export default async function getDBUser({
 
   const userInfo = {
     ...user,
-    mmr: user.mmr || user.SteamAccount[0]?.mmr || 0,
-    steam32Id: user.steam32Id || user.SteamAccount[0]?.steam32Id || 0,
-    token: user.id,
-    stream_start_date: user.stream_start_date ? new Date(user.stream_start_date) : null,
-    subscription,
     Account: {
       ...Account,
-      requires_refresh: Account.requires_refresh ?? false,
       obtainment_timestamp: Account.obtainment_timestamp
         ? new Date(Account.obtainment_timestamp)
         : null,
+      requires_refresh: Account.requires_refresh ?? false,
     },
+    mmr: user.mmr || user.SteamAccount[0]?.mmr || 0,
+    steam32Id: user.steam32Id || user.SteamAccount[0]?.steam32Id || 0,
+    stream_start_date: user.stream_start_date ? new Date(user.stream_start_date) : null,
+    subscription,
+    token: user.id,
   }
 
   const gsiHandler = gsiHandlers.get(userInfo.id) || createGSIHandler(userInfo)

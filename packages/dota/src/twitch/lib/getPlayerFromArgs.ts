@@ -1,7 +1,8 @@
 import { t } from 'i18next'
 
 import { getHeroById, getHeroByName, heroColors } from '../../dota/lib/heroes'
-import { MatchDataService, type RosterPlayer } from '../../dota/lib/matchData'
+import { MatchDataService } from '../../dota/lib/matchData'
+import type { RosterPlayer } from '../../dota/lib/matchData'
 import type { SocketClient } from '../../types'
 import CustomError from '../../utils/customError'
 
@@ -32,7 +33,7 @@ export async function getPlayerFromArgs({
     }
 
     throw new CustomError(
-      t('invalidColorNew', { command, colorList: heroColors.join(' · '), lng: locale }),
+      t('invalidColorNew', { colorList: heroColors.join(' · '), command, lng: locale })
     )
   }
 
@@ -48,15 +49,15 @@ export async function getPlayerFromArgs({
   const slotRequest = Number(firstArg)
   if (slotRequest && slotRequest >= 1 && slotRequest <= 10) {
     playerIdx = slotRequest - 1
-  } else if (heroColorIndex !== -1) {
-    // color input
-    playerIdx = heroColorIndex
-  } else {
+  } else if (heroColorIndex === -1) {
     if (packet?.hero?.id === hero?.id) {
       playerIdx = players.findIndex((player) => player.heroId === hero?.id)
     } else {
       playerIdx = hero ? players.findIndex((player) => player.heroId === hero.id) : -1
     }
+  } else {
+    // color input
+    playerIdx = heroColorIndex
   }
 
   // Translate the matched RosterPlayer back to the GSI-style snake_case shape the 15+ callers
@@ -66,26 +67,26 @@ export async function getPlayerFromArgs({
   const matched = players[playerIdx ?? -1]
   const matchedLegacy = matched
     ? {
-        heroid: matched.heroId ?? undefined,
         accountid: matched.accountId ?? 0,
+        heroid: matched.heroId ?? undefined,
         playerid: matched.slot,
-        ...(matched.rank !== null ? { rank: matched.rank } : {}),
-        ...(matched.playerName !== null ? { player_name: matched.playerName } : {}),
+        ...(matched.rank === null ? {} : { rank: matched.rank }),
+        ...(matched.playerName === null ? {} : { player_name: matched.playerName }),
       }
     : undefined
   const defaultPlayer = {
-    heroid: hero?.id,
     accountid: Number(packet?.player?.accountid),
+    heroid: hero?.id,
     playerid: null,
   }
   const hasMoreDataForCurrentHero = packet?.hero?.id === hero?.id
   const moreData = hasMoreDataForCurrentHero ? { ...packet?.player, ...packet?.hero } : {}
   return {
-    playerIdx,
     player: {
       ...moreData,
       ...defaultPlayer,
       ...matchedLegacy,
     },
+    playerIdx,
   }
 }

@@ -1,5 +1,6 @@
 import { logger } from '@dotabod/shared-utils'
 import type { NextFunction, Request, Response } from 'express'
+
 import getDBUser from '../db/getDBUser'
 import { invalidTokens, lookingupToken, pendingCheckAuth } from './lib/consts'
 import { recordGsiActivity } from './setupSignals'
@@ -7,7 +8,7 @@ import { recordGsiActivity } from './setupSignals'
 export async function validateToken(
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> {
   const forwardedIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress
 
@@ -41,7 +42,7 @@ export async function validateToken(
 
   pendingCheckAuth.set(token, true)
   try {
-    const { result: client } = await getDBUser({ token, ip: forwardedIp })
+    const { result: client } = await getDBUser({ ip: forwardedIp, token })
     if (client?.token) {
       // Record first-seen for the setup wizard's Step 2 verify-state, regardless of
       // stream state. This is the signal that the cfg file is installed and Dota 2 is
@@ -69,8 +70,8 @@ export async function validateToken(
 
     invalidTokens.add(token)
     res.status(200).json({ error: 'Invalid token, skipping auth check' })
-  } catch (e) {
-    logger.info('[GSI] io.use Error checking auth 48', { token, e })
+  } catch (error) {
+    logger.info('[GSI] io.use Error checking auth 48', { error, token })
     invalidTokens.add(token)
     res.status(200).json({
       error: 'Invalid token, skipping auth check',

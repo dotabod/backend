@@ -272,15 +272,15 @@ export const evasionPatterns = [
  */
 function normalizeRussianText(text: string): string {
   // Remove separators (spaces, *, -, ., etc.) for Russian text
-  const noSeparators = text.replace(/[\s.*_-]/g, '')
+  const noSeparators = text.replaceAll(/[\s.*_-]/g, '')
 
   // Special handling for Russian character substitutions
   return noSeparators
-    .replace(/0/g, 'о') // Replace 0 with о
-    .replace(/3/g, 'з') // Replace 3 with з
-    .replace(/4/g, 'ч') // Replace 4 with ч
-    .replace(/6/g, 'б') // Replace 6 with б
-    .replace(/y/g, 'у') // Replace y with у
+    .replaceAll('0', 'о') // Replace 0 with о
+    .replaceAll('3', 'з') // Replace 3 with з
+    .replaceAll('4', 'ч') // Replace 4 with ч
+    .replaceAll('6', 'б') // Replace 6 with б
+    .replaceAll('y', 'у') // Replace y with у
     .toLowerCase()
 }
 
@@ -294,33 +294,33 @@ function createRussianLatinVariations(text: string): string[] {
   // Common Latin-to-Cyrillic character mappings (and vice versa)
   const latinToCyrillic: Record<string, string> = {
     a: 'а', // Latin a to Cyrillic а
+    b: 'в', // Latin b to Cyrillic в
+    c: 'с', // Latin c to Cyrillic с
+    d: 'д', // Latin d to Cyrillic д
     e: 'е', // Latin e to Cyrillic е
+    h: 'н', // Latin h to Cyrillic н
+    i: 'и', // Latin i to Cyrillic и
+    k: 'к', // Latin k to Cyrillic к
+    m: 'м', // Latin m to Cyrillic м
     o: 'о', // Latin o to Cyrillic о
     p: 'р', // Latin p to Cyrillic р
-    x: 'х', // Latin x to Cyrillic х
-    c: 'с', // Latin c to Cyrillic с
-    y: 'у', // Latin y to Cyrillic у
-    h: 'н', // Latin h to Cyrillic н
-    k: 'к', // Latin k to Cyrillic к
-    b: 'в', // Latin b to Cyrillic в
-    m: 'м', // Latin m to Cyrillic м
-    t: 'т', // Latin t to Cyrillic т
-    d: 'д', // Latin d to Cyrillic д
-    i: 'и', // Latin i to Cyrillic и
     r: 'р', // Latin r to Cyrillic р (alternative to p)
+    t: 'т', // Latin t to Cyrillic т
+    x: 'х', // Latin x to Cyrillic х
+    y: 'у', // Latin y to Cyrillic у
   }
 
   // Create a version where Latin characters are replaced with Cyrillic
   let cyrillicVersion = text.toLowerCase()
   for (const [latin, cyrillic] of Object.entries(latinToCyrillic)) {
-    cyrillicVersion = cyrillicVersion.replace(new RegExp(latin, 'g'), cyrillic)
+    cyrillicVersion = cyrillicVersion.replaceAll(new RegExp(latin, 'g'), cyrillic)
   }
   variations.push(cyrillicVersion)
 
   // Create a version where Cyrillic characters are replaced with Latin
   let latinVersion = text.toLowerCase()
   for (const [latin, cyrillic] of Object.entries(latinToCyrillic)) {
-    latinVersion = latinVersion.replace(new RegExp(cyrillic, 'g'), latin)
+    latinVersion = latinVersion.replaceAll(new RegExp(cyrillic, 'g'), latin)
   }
   variations.push(latinVersion)
 
@@ -347,16 +347,16 @@ export function detectRussianProfanity(text: string): boolean {
 
   // Generic substitutions for both Latin and Cyrillic characters
   const commonSubstitutions: Record<string, string[]> = {
-    о: ['o', '0', 'о', 'ο', 'օ'], // Cyrillic о, Latin o, zero, Greek omicron, Armenian o
     а: ['a', '@', '4', 'а', 'α'], // Cyrillic а, Latin a, at sign, Greek alpha
+    в: ['b', 'в', 'v'], // Cyrillic в, Latin b/v
     е: ['e', '3', 'е', 'ε', 'ё'], // Cyrillic е, Latin e, Greek epsilon
     и: ['u', 'и', 'i', '1', 'í'], // Cyrillic и, Latin i/u, number 1
-    х: ['x', 'х', '×'], // Cyrillic х, Latin x, multiplication sign
-    с: ['c', 'с', '('], // Cyrillic с, Latin c
-    в: ['b', 'в', 'v'], // Cyrillic в, Latin b/v
     н: ['h', 'н', 'n'], // Cyrillic н, Latin h/n
+    о: ['o', '0', 'о', 'ο', 'օ'], // Cyrillic о, Latin o, zero, Greek omicron, Armenian o
     р: ['p', 'р', 'r'], // Cyrillic р, Latin p/r
+    с: ['c', 'с', '('], // Cyrillic с, Latin c
     у: ['y', 'у'], // Cyrillic у, Latin y
+    х: ['x', 'х', '×'], // Cyrillic х, Latin x, multiplication sign
   }
 
   // Check each variation against the Russian profanity list
@@ -379,7 +379,7 @@ export function detectRussianProfanity(text: string): boolean {
         for (const variant of substitutionVariants) {
           if (variant.includes(char)) {
             for (const replacement of replacements) {
-              newVariants.push(variant.replace(new RegExp(char, 'g'), replacement))
+              newVariants.push(variant.replaceAll(new RegExp(char, 'g'), replacement))
             }
           } else {
             newVariants.push(variant)
@@ -426,7 +426,7 @@ export function detectEvasionTactics(text: string): boolean {
     stripNonAlphanumeric(text), // Remove special characters
     normalizeRepeatedChars(text.toLowerCase()), // Handle repeated characters
     removeSeparators(text.toLowerCase()), // Remove separators
-    text.toLowerCase().replace(/\s+/g, ''), // Remove all spaces
+    text.toLowerCase().replaceAll(/\s+/g, ''), // Remove all spaces
     applyAggressiveLeetSpeak(text), // Convert to aggressive leetspeak
   ]
 
@@ -491,7 +491,7 @@ function generateLeetSpeakVariations(word: string): string[] {
     for (const replacement of replacements) {
       if (replacement !== char) {
         // Skip the original character
-        leetVersion = leetVersion.replace(new RegExp(char, 'g'), replacement)
+        leetVersion = leetVersion.replaceAll(new RegExp(char, 'g'), replacement)
       }
     }
   }
@@ -511,15 +511,15 @@ function applyAggressiveLeetSpeak(text: string): string {
 
   // Apply all possible substitutions
   leetText = leetText
-    .replace(/a/g, '4')
-    .replace(/b/g, '8')
-    .replace(/e/g, '3')
-    .replace(/i/g, '1')
-    .replace(/l/g, '1')
-    .replace(/o/g, '0')
-    .replace(/s/g, '5')
-    .replace(/t/g, '7')
-    .replace(/z/g, '2')
+    .replaceAll('a', '4')
+    .replaceAll('b', '8')
+    .replaceAll('e', '3')
+    .replaceAll('i', '1')
+    .replaceAll('l', '1')
+    .replaceAll('o', '0')
+    .replaceAll('s', '5')
+    .replaceAll('t', '7')
+    .replaceAll('z', '2')
 
   return leetText
 }
@@ -589,7 +589,7 @@ export function detectEuropeanProfanity(text: string): boolean {
 export function detectAgeRestrictions(text: string): boolean {
   // Generate multiple text variations to detect evasion tactics
   const variations = [
-    text.toLowerCase().replace(/\s+/g, ' ').trim(), // Basic normalization
+    text.toLowerCase().replaceAll(/\s+/g, ' ').trim(), // Basic normalization
     normalizeText(text), // Handle character substitutions (like i = 1, a = 4, etc.)
     prepareText(text), // More aggressive normalization
     stripNonAlphanumeric(text).toLowerCase().trim(), // Remove special characters
@@ -599,64 +599,63 @@ export function detectAgeRestrictions(text: string): boolean {
 
   // Number substitutions that might be used to evade detection
   const numberSubstitutions: Record<string, string> = {
-    one: '1',
-    two: '2',
-    three: '3',
-    four: '4',
-    five: '5',
-    six: '6',
-    seven: '7',
     eight: '8',
-    nine: '9',
-    ten: '10',
     eleven: '11',
+    five: '5',
+    four: '4',
+    nine: '9',
+    one: '1',
+    seven: '7',
+    six: '6',
+    ten: '10',
+    three: '3',
     twelve: '12',
+    two: '2',
   }
 
   // Add a variation with number words replaced by digits
   let numberWordsReplaced = text.toLowerCase()
   for (const [word, digit] of Object.entries(numberSubstitutions)) {
-    numberWordsReplaced = numberWordsReplaced.replace(new RegExp(`\\b${word}\\b`, 'gi'), digit)
+    numberWordsReplaced = numberWordsReplaced.replaceAll(new RegExp(`\\b${word}\\b`, 'gi'), digit)
   }
   variations.push(numberWordsReplaced)
 
-  // Regex patterns to catch variations of "I'm X", "Im X", "I am X", etc.
+  // Normalize whitespace once, then use patterns without ambiguous repeated
+  // whitespace quantifiers. The latter can backtrack quadratically on user input.
   const patterns = [
-    /\bi'?m\s*(\d+)/, // Matches "i'm 12", "im12"
-    /\bi\s*am\s*(\d+)/, // Matches "i am 12", "iam12"
-    /\biam\s*(\d+)/, // Matches "iam12"
-    /\bme\s*(\d+)/, // Matches "me 12"
-    /\bage\s*[:|=]?\s*(\d+)/, // Matches "age: 12", "age=12"
-    /\bi'?m\s*a\s*(\d+)[\s-]*year/, // Matches "i'm a 12-year", "i'm a 12 year"
-    /\bi'?m\s*(\d+)[\s-]*years?\s*old/, // Matches "i'm 12 years old", "i'm12yearsold"
-    /\bi\s*am\s*(\d+)[\s-]*years?\s*old/, // Matches "i am 12 years old", "iam12yearsold"
-    /\bi'?m\s*only\s*(\d+)/, // Matches "i'm only 12", "imonly12"
-    /\bjust\s*turned\s*(\d+)/, // Matches "just turned 12"
-    /\bi'?m\s*underage\s*(\d+)?/, // Matches "i'm underage" or "i'm underage 12"
-    /\bi'?m\s*a\s*minor/, // Matches "i'm a minor"
-    /\bi'?m\s*a\s*kid/, // Matches "i'm a kid"
-    /\bmy\s*age\s*is\s*(\d+)/, // Matches "my age is 12"
+    /\bi'?m(\d+)/, // Matches "i'm 12", "im12"
+    /\biam(\d+)/, // Matches "i am 12", "iam12"
+    /\bme(\d+)/, // Matches "me 12"
+    /\bage[:|=]?(\d+)/, // Matches "age: 12", "age=12"
+    /\bi'?ma(\d+)-?year/, // Matches "i'm a 12-year", "i'm a 12 year"
+    /\bi'?m(\d+)-?years?old/, // Matches "i'm 12 years old", "i'm12yearsold"
+    /\biam(\d+)-?years?old/, // Matches "i am 12 years old", "iam12yearsold"
+    /\bi'?monly(\d+)/, // Matches "i'm only 12", "imonly12"
+    /\bjustturned(\d+)/, // Matches "just turned 12"
+    /\bi'?munderage(\d+)?/, // Matches "i'm underage" or "i'm underage 12"
+    /\bi'?maminor/, // Matches "i'm a minor"
+    /\bi'?makid/, // Matches "i'm a kid"
+    /\bmyageis(\d+)/, // Matches "my age is 12"
   ]
 
   // Check all variations against all patterns
   for (const variant of variations) {
+    const compactVariant = variant.replaceAll(/\s+/g, '')
+    if (
+      /\b(?:under ?age|und[e3]r.?[a@]g[e3]|m[i1]n[o0]r|k[i1]d)\b/.test(variant) ||
+      compactVariant.includes('underage')
+    ) {
+      return true
+    }
+
     for (const pattern of patterns) {
-      const match = variant.match(pattern)
+      const match = compactVariant.match(pattern)
       if (match?.[1]) {
         const age = Number.parseInt(match[1], 10)
         // Flag if age is under 13 (COPPA compliance age)
         if (age < 13 && age > 0) {
           return true
         }
-      }
-
-      // Special check for minor/underage without explicit age
-      // Use an even more flexible pattern to catch heavily obfuscated cases
-      if (
-        /\b(?:under\s*age|und[e3]r.?[a@]g[e3]|m[i1]n[o0]r|k[i1]d)\b/.test(variant) ||
-        /\s*u\s*n\s*d\s*e\s*r\s*a\s*g\s*e\s*/.test(variant)
-      ) {
-        return true
       }
     }
   }
@@ -670,7 +669,7 @@ export function detectAgeRestrictions(text: string): boolean {
 export function detectTransphobicContent(text: string): boolean {
   // Generate multiple text variations to detect evasion tactics
   const variations = [
-    text.toLowerCase().replace(/\s+/g, ' ').trim(), // Basic normalization
+    text.toLowerCase().replaceAll(/\s+/g, ' ').trim(), // Basic normalization
     normalizeText(text), // Handle character substitutions (like i = 1, a = 4, etc.)
     prepareText(text), // More aggressive normalization
     stripNonAlphanumeric(text).toLowerCase().trim(), // Remove special characters

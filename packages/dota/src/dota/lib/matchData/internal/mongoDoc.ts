@@ -18,15 +18,19 @@ export async function fetchDelayedGameDoc(matchId: string): Promise<DelayedGames
 //   - flat `players[]` (SourceTV writer) → up to 10 entries
 // Returns [] if neither shape applies.
 export function extractPlayersFromMongoDoc(doc: DelayedGames | null): Players {
-  if (!doc) return []
+  if (!doc) {
+    return []
+  }
   const hasTwoTeams = Array.isArray(doc.teams) && doc.teams.length === 2
 
   if (!hasTwoTeams && Array.isArray(doc.teams)) {
     const out: Players = []
     for (const team of doc.teams) {
-      if (!Array.isArray(team?.players)) continue
+      if (!Array.isArray(team?.players)) {
+        continue
+      }
       for (const p of team.players) {
-        out.push({ heroid: p.heroid, accountid: Number(p.accountid), playerid: null })
+        out.push({ accountid: Number(p.accountid), heroid: p.heroid, playerid: null })
       }
     }
     return out
@@ -37,10 +41,10 @@ export function extractPlayersFromMongoDoc(doc: DelayedGames | null): Players {
     for (const team of doc.teams) {
       for (const a of team.players) {
         flat.push({
+          accountid: Number(a.accountid),
           heroid:
             a.heroid ||
             doc.players?.find((p) => Number(p.accountid) === Number(a.accountid))?.heroid,
-          accountid: Number(a.accountid),
           playerid: a.playerid,
         })
       }
@@ -50,10 +54,10 @@ export function extractPlayersFromMongoDoc(doc: DelayedGames | null): Players {
 
   if (Array.isArray(doc.players) && doc.players.length > 0) {
     return doc.players.map((a) => ({
-      heroid: a.heroid,
       accountid: Number(a.accountid),
-      playerid: null,
+      heroid: a.heroid,
       player_name: a.player_name,
+      playerid: null,
     }))
   }
 

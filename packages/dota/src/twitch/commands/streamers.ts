@@ -1,4 +1,5 @@
 import { t } from 'i18next'
+
 import { isPlayingMatch } from '../../dota/lib/isPlayingMatch'
 import { getStreamersInMatch } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
@@ -16,7 +17,7 @@ commandHandler.registerCommand('streamers', {
       chatClient.say(
         channel,
         t('notLive', { emote: 'PauseChamp', lng: client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -25,7 +26,7 @@ commandHandler.registerCommand('streamers', {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -35,7 +36,7 @@ commandHandler.registerCommand('streamers', {
     chatClient.say(
       channel,
       t('streamersInMatch', { count, emote: 'Okayge', lng: client.locale }),
-      message.user.messageId,
+      message.user.messageId
     )
   },
 })

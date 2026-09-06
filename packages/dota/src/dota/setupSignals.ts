@@ -1,5 +1,7 @@
 import { logger, supabase } from '@dotabod/shared-utils'
-import { SETUP_SIGNAL_KEYS, type SetupSignalKey } from './setupSignalKeys'
+
+import { SETUP_SIGNAL_KEYS } from './setupSignalKeys'
+import type { SetupSignalKey } from './setupSignalKeys'
 
 // Bounded LRU-ish dedupe. Capped per-process so a long uptime with many users
 // can't grow these unboundedly. On eviction the next packet pays one redundant
@@ -8,14 +10,16 @@ const CACHE_MAX = 10_000
 const LAST_SEEN_WRITE_INTERVAL_MS = 60_000
 
 class BoundedSet {
-  private set = new Set<string>()
+  private readonly set = new Set<string>()
   has(key: string) {
     return this.set.has(key)
   }
   add(key: string) {
     if (this.set.size >= CACHE_MAX) {
       const oldest = this.set.values().next().value
-      if (oldest !== undefined) this.set.delete(oldest)
+      if (oldest !== undefined) {
+        this.set.delete(oldest)
+      }
     }
     this.set.add(key)
   }
@@ -30,10 +34,12 @@ async function recordFirstSeen(userId: string, key: SetupSignalKey) {
   const { error } = await supabase
     .from('settings')
     .upsert(
-      { userId, key, value: true, updated_at: now },
-      { onConflict: 'userId, key', ignoreDuplicates: true },
+      { key, updated_at: now, userId, value: true },
+      { ignoreDuplicates: true, onConflict: 'userId, key' }
     )
-  if (error) logger.info('[setup-signals] upsert failed', { userId, key, error })
+  if (error) {
+    logger.info('[setup-signals] upsert failed', { error, key, userId })
+  }
 }
 
 async function recordLastSeen(userId: string, key: SetupSignalKey) {
@@ -41,30 +47,40 @@ async function recordLastSeen(userId: string, key: SetupSignalKey) {
   const { error } = await supabase
     .from('settings')
     .upsert(
-      { userId, key, value: true, updated_at: now },
-      { onConflict: 'userId, key', ignoreDuplicates: false },
+      { key, updated_at: now, userId, value: true },
+      { ignoreDuplicates: false, onConflict: 'userId, key' }
     )
-  if (error) logger.info('[setup-signals] last-seen upsert failed', { userId, key, error })
+  if (error) {
+    logger.info('[setup-signals] last-seen upsert failed', { error, key, userId })
+  }
 }
 
 // Cache populates before the upsert resolves: on the GSI hot path (5/sec/user) we'd
 // rather accept one missed signal on transient failure than let duplicate writes pile up.
 function recordOnce(userId: string, cache: BoundedSet, key: SetupSignalKey) {
-  if (!userId || cache.has(userId)) return
+  if (!userId || cache.has(userId)) {
+    return
+  }
   cache.add(userId)
   recordFirstSeen(userId, key).catch(() => {})
 }
 
 function recordThrottled(userId: string, key: SetupSignalKey) {
-  if (!userId) return
+  if (!userId) {
+    return
+  }
   const cacheKey = `${key}:${userId}`
   const now = Date.now()
   const previous = lastSeenWrites.get(cacheKey)
-  if (previous !== undefined && now - previous < LAST_SEEN_WRITE_INTERVAL_MS) return
+  if (previous !== undefined && now - previous < LAST_SEEN_WRITE_INTERVAL_MS) {
+    return
+  }
 
   if (lastSeenWrites.size >= CACHE_MAX * 2) {
     const oldest = lastSeenWrites.keys().next().value
-    if (oldest !== undefined) lastSeenWrites.delete(oldest)
+    if (oldest !== undefined) {
+      lastSeenWrites.delete(oldest)
+    }
   }
   lastSeenWrites.set(cacheKey, now)
   recordLastSeen(userId, key).catch(() => {})

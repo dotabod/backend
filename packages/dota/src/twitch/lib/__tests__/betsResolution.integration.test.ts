@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
 import { t } from 'i18next'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { flushAsync } from '../../../__tests__/sharedMocks.ts'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
@@ -20,10 +21,10 @@ for (const cmd of ['won', 'lost']) {
       expect(state.chatSayCalls).toHaveLength(1)
       expect(state.chatSayCalls[0].message).toBe(
         t('bets.retroactiveMatchNotFound', {
-          matchId: 'notamatch',
           emote: 'PauseChamp',
           lng: 'en',
-        }),
+          matchId: 'notamatch',
+        })
       )
     })
 
@@ -32,13 +33,13 @@ for (const cmd of ['won', 'lost']) {
       await flushAsync()
       expect(state.chatSayCalls).toHaveLength(1)
       expect(state.chatSayCalls[0].message).toBe(
-        t('bets.noPendingResolution', { emote: 'PauseChamp', lng: 'en' }),
+        t('bets.noPendingResolution', { emote: 'PauseChamp', lng: 'en' })
       )
     })
 
     it('blocks viewers (permission below mod)', async () => {
       await commandHandler.handleMessage(
-        makeMessage({ content: `!${cmd}`, permission: 0, userName: 'viewer' }),
+        makeMessage({ content: `!${cmd}`, permission: 0, userName: 'viewer' })
       )
       await flushAsync()
       expect(state.chatSayCalls).toHaveLength(0)

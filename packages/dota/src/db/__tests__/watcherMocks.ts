@@ -4,7 +4,8 @@
 // The watcher registers postgres_changes handlers via supabase.channel().on().
 // This harness captures those handlers by event+table so tests can fire them
 // directly, mirroring the twitch-events sharedMocks pattern.
-import { vi } from 'vite-plus/test'
+import { vi } from 'vitest'
+
 import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks'
 
 type ChannelHandler = (payload: {
@@ -15,28 +16,28 @@ type ChannelHandler = (payload: {
 
 export const watcherState: {
   channelHandlers: Map<string, ChannelHandler>
-  channelSubscribeCallbacks: Array<(status: string, err?: Error) => void>
+  channelSubscribeCallbacks: ((status: string, err?: Error) => void)[]
   channelCreationCount: number
   // Captured calls to the mocked clearCacheForUser. Side effect: removes the
   // client's token from gsiHandlers (mimicking the real implementation), but
   // does NOT touch invalidTokens (that's the watcher's job — see watcher.ts
   // comments and clearCacheForUser.ts).
-  clearCacheCalls: Array<{ token: string; accountId?: string }>
+  clearCacheCalls: { token: string; accountId?: string }[]
   // Captured toggleDotabod calls (commandDisable setting handler).
-  toggleDotabodCalls: Array<{ userId: string; enable: boolean; name?: string; locale?: string }>
+  toggleDotabodCalls: { userId: string; enable: boolean; name?: string; locale?: string }[]
   // Captured findUser results, indexed by token. Tests seed gsiHandlers
   // directly with fake handlers — findUser reads from that map, so seeding
   // gsiHandlers is enough; this state is just for assertion convenience.
-  loggerInfoCalls: Array<{ message: string; meta: Record<string, unknown> }>
-  loggerErrorCalls: Array<{ message: string; meta: Record<string, unknown> }>
+  loggerInfoCalls: { message: string; meta: Record<string, unknown> }[]
+  loggerErrorCalls: { message: string; meta: Record<string, unknown> }[]
 } = {
+  channelCreationCount: 0,
   channelHandlers: new Map(),
   channelSubscribeCallbacks: [],
-  channelCreationCount: 0,
   clearCacheCalls: [],
-  toggleDotabodCalls: [],
-  loggerInfoCalls: [],
   loggerErrorCalls: [],
+  loggerInfoCalls: [],
+  toggleDotabodCalls: [],
 }
 
 export function resetWatcherState() {
@@ -54,21 +55,21 @@ export function resetWatcherState() {
 // real data; other tables resolve to empty.
 function sbBuilder(_table: string) {
   const b: any = {
-    select: () => b,
-    update: () => b,
-    upsert: () => Promise.resolve({ data: null, error: null }),
-    insert: () => Promise.resolve({ data: null, error: null }),
     eq: () => b,
-    neq: () => b,
     in: () => b,
-    order: () => b,
-    limit: () => b,
+    insert: async () => ({ data: null, error: null }),
     is: () => b,
-    not: () => b,
-    single: async () => ({ data: null, error: null }),
+    limit: () => b,
     maybeSingle: async () => ({ data: null, error: null }),
-    then: (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) =>
-      Promise.resolve({ data: null, error: null }).then(onFulfilled),
+    neq: () => b,
+    not: () => b,
+    order: () => b,
+    select: () => b,
+    single: async () => ({ data: null, error: null }),
+    then: async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) =>
+      await Promise.resolve({ data: null, error: null }).then(onFulfilled),
+    update: () => b,
+    upsert: async () => ({ data: null, error: null }),
   }
   return b
 }
@@ -91,21 +92,21 @@ function realtimeChannel() {
 }
 
 const supabaseMock = {
-  from: (table: string) => sbBuilder(table),
   channel: () => {
     watcherState.channelCreationCount++
     return realtimeChannel()
   },
+  from: (table: string) => sbBuilder(table),
   removeChannel: () => 'ok' as const,
 }
 
 const loggerMock = {
-  info: (message: string, meta?: Record<string, unknown>) =>
-    watcherState.loggerInfoCalls.push({ message, meta: meta ?? {} }),
-  warn: () => undefined,
+  debug: () => {},
   error: (message: string, meta?: Record<string, unknown>) =>
     watcherState.loggerErrorCalls.push({ message, meta: meta ?? {} }),
-  debug: () => undefined,
+  info: (message: string, meta?: Record<string, unknown>) =>
+    watcherState.loggerInfoCalls.push({ message, meta: meta ?? {} }),
+  warn: () => {},
 }
 
 vi.doMock('@dotabod/shared-utils', () =>
@@ -114,9 +115,9 @@ vi.doMock('@dotabod/shared-utils', () =>
     logger: loggerMock,
     // Twurple auth provider — watcher's UPDATE:accounts handler calls
     // removeUser when the token is refreshed.
-    getAuthProvider: () => ({ removeUser: () => undefined }),
+    getAuthProvider: () => ({ removeUser: () => {} }),
     getTwitchAPI: async () => ({}),
-  }),
+  })
 )
 
 // Mock clearCacheForUser so we can assert it was called AND so the watcher
@@ -130,20 +131,26 @@ vi.doMock('../../dota/clearCacheForUser', () => ({
     multiAccount?: number
     Account?: { providerAccountId?: string }
   }) => {
-    if (!client) return
+    if (!client) {
+      return
+    }
     watcherState.clearCacheCalls.push({
-      token: client.token,
       accountId: client.Account?.providerAccountId,
+      token: client.token,
     })
     client.multiAccount = undefined
     const { gsiHandlers, twitchIdToToken, twitchNameToToken } =
       await import('../../dota/lib/consts')
     const handler = gsiHandlers.get(client.token)
-    if (handler) handler.multiAccountRevalidatedAt = undefined
+    if (handler) {
+      handler.multiAccountRevalidatedAt = undefined
+    }
     if (client.Account?.providerAccountId) {
       twitchIdToToken.delete(client.Account.providerAccountId)
     }
-    if (client.name) twitchNameToToken.delete(client.name)
+    if (client.name) {
+      twitchNameToToken.delete(client.name)
+    }
     gsiHandlers.delete(client.token)
     return true
   },
@@ -151,28 +158,28 @@ vi.doMock('../../dota/clearCacheForUser', () => ({
 
 // toggleDotabod fires on settings.commandDisable updates. Watcher unit tests
 // don't exercise that path, but the import has to resolve.
-vi.doMock('../../twitch/toggleDotabod', () => ({
+vi.doMock(import('../../twitch/toggleDotabod'), () => ({
   toggleDotabod: (userId: string, enable: boolean, name?: string, locale?: string) => {
-    watcherState.toggleDotabodCalls.push({ userId, enable, name, locale })
+    watcherState.toggleDotabodCalls.push({ enable, locale, name, userId })
   },
 }))
 
 // twitchChat is an EventEmitter wrapper around the steam socket; the watcher
 // only .emit()s into it on commandDisable changes. Stub to a no-op emitter.
 vi.doMock('../../steam/ws', () => ({
-  twitchChat: { emit: () => undefined },
-  steamSocket: { emit: () => undefined },
+  steamSocket: { emit: () => {} },
+  twitchChat: { emit: () => {} },
 }))
 
 vi.doMock('../../twitch/chatClient', () => ({
-  chatClient: { say: () => Promise.resolve() },
+  chatClient: { say: async () => {} },
 }))
 
 // handleScheduledMessages / handleStreamStatusTransition / getDBUser are only
 // reached by code paths our tests don't drive. Stub them so the import graph
 // resolves without dragging in their transitive dependencies.
 vi.doMock('../handleScheduledMessages', () => ({
-  handleUserOnlineMessages: async () => undefined,
+  handleUserOnlineMessages: async () => {},
 }))
 
 vi.doMock('../handleStreamStatusTransition', () => ({
@@ -188,7 +195,7 @@ vi.doMock('../handleStreamStatusTransition', () => ({
   }),
 }))
 
-vi.doMock('../getDBUser', () => ({
+vi.doMock(import('../getDBUser'), () => ({
   default: async () => ({ reason: 'stub', result: null }),
 }))
 
@@ -197,7 +204,7 @@ vi.doMock('../../dota/lib/ranks', () => ({
 }))
 
 vi.doMock('../../dota/server', () => ({
-  server: { io: { to: () => ({ emit: () => undefined }) } },
+  server: { io: { to: () => ({ emit: () => {} }) } },
 }))
 
 await initTestI18n()
@@ -233,10 +240,12 @@ export async function fire(
     | 'win_loss_adjustments'
     | 'steam_accounts'
     | 'gift_subscriptions',
-  payload: { new?: Record<string, unknown>; old?: Record<string, unknown>; eventType?: string },
+  payload: { new?: Record<string, unknown>; old?: Record<string, unknown>; eventType?: string }
 ) {
   const handler = watcherState.channelHandlers.get(`${event}:${table}`)
-  if (!handler) throw new Error(`no handler for ${event}:${table}`)
+  if (!handler) {
+    throw new Error(`no handler for ${event}:${table}`)
+  }
   await handler(payload)
 }
 
@@ -248,35 +257,39 @@ export function seedClient(opts: {
   providerAccountId?: string
   multiAccount?: number
   multiAccountRevalidatedAt?: number
-  steamAccounts?: Array<{
+  steamAccounts?: {
     mmr: number
     leaderboard_rank: number | null
     name: string | null
     steam32Id: number
-  }>
+  }[]
 }) {
   const token = opts.token ?? opts.userId
   const client: any = {
-    token,
-    name: opts.name ?? `user-${opts.userId}`,
     Account: opts.providerAccountId ? { providerAccountId: opts.providerAccountId } : undefined,
     SteamAccount: opts.steamAccounts ?? [],
+    multiAccount: opts.multiAccount,
+    name: opts.name ?? `user-${opts.userId}`,
     settings: [],
     stream_online: false,
     stream_start_date: null,
-    multiAccount: opts.multiAccount,
+    token,
   }
   const handler: any = {
     client,
-    token,
-    disable: () => undefined,
-    getChannelId: () => null,
+    disable: () => {},
     emitWLUpdate: vi.fn(),
+    getChannelId: () => null,
     multiAccountRevalidatedAt: opts.multiAccountRevalidatedAt,
+    token,
   }
   gsiHandlers.set(token, handler)
-  if (opts.providerAccountId) twitchIdToToken.set(opts.providerAccountId, token)
-  if (client.name) twitchNameToToken.set(client.name, token)
+  if (opts.providerAccountId) {
+    twitchIdToToken.set(opts.providerAccountId, token)
+  }
+  if (client.name) {
+    twitchNameToToken.set(client.name, token)
+  }
   return { client, handler }
 }
 

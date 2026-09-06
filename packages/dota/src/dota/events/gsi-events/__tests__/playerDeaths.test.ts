@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
 import { t } from 'i18next'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { flushAsync } from '../../../../__tests__/sharedMocks.ts'
 import {
   events,
@@ -13,7 +14,7 @@ import {
 
 // Builds a 17-slot inventory (findItem requires exactly 17) with the given
 // names in the first backpack slots.
-const inventory = (firstSlots: Array<Record<string, unknown>>) => {
+const inventory = (firstSlots: Record<string, unknown>[]) => {
   const items: Record<string, unknown> = {}
   for (let i = 0; i < 17; i++) {
     items[`slot${i}`] = firstSlots[i] ?? { name: 'empty' }
@@ -48,11 +49,11 @@ describe('player:deaths', () => {
   it('chats the first-blood-death message when the player died for first blood', async () => {
     const handler = makeGsiHandler()
     handler.client.gsi.map = {
-      matchid: '7777777777',
       clock_time: 600,
-      game_time: 600,
-      radiant_score: 0,
       dire_score: 1,
+      game_time: 600,
+      matchid: '7777777777',
+      radiant_score: 0,
     } as any
     handler.client.gsi.player.team_name = 'radiant'
     registerHandler(handler)
@@ -62,21 +63,21 @@ describe('player:deaths', () => {
 
     expect(gsiState.chatSayCalls).toHaveLength(1)
     expect(gsiState.chatSayCalls[0].message).toBe(
-      t('chatters.firstBloodDeath', { emote: 'PepeLaugh', heroName: 'Lina', lng: 'en' }),
+      t('chatters.firstBloodDeath', { emote: 'PepeLaugh', heroName: 'Lina', lng: 'en' })
     )
   })
 
   it('chats the passive-death message when a castable lifesaving item was held', async () => {
     const handler = makeGsiHandler()
     handler.client.gsi.map = {
-      matchid: '7777777777',
       clock_time: 600,
-      game_time: 600,
-      radiant_score: 3,
       dire_score: 3,
+      game_time: 600,
+      matchid: '7777777777',
+      radiant_score: 3,
     } as any
     handler.client.gsi.items = inventory([
-      { name: 'item_faerie_fire', can_cast: true, cooldown: 0 },
+      { can_cast: true, cooldown: 0, name: 'item_faerie_fire' },
     ]) as any
     registerHandler(handler)
 
@@ -90,7 +91,7 @@ describe('player:deaths', () => {
         heroName: 'Lina',
         itemNames: 'faerie fire',
         lng: 'en',
-      }),
+      })
     )
   })
 })

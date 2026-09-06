@@ -9,9 +9,7 @@ import { getDotabodProfileUrl } from '../lib/getDotabodProfile'
 import { profileLink } from './profileLink'
 
 commandHandler.registerCommand('profile', {
-  onlyOnline: true,
   dbkey: DBSettings.commandProfile,
-
   handler: async (message, args, command) => {
     const {
       channel: { client },
@@ -26,16 +24,16 @@ commandHandler.registerCommand('profile', {
             lng: message.channel.client.locale,
             url: dotabodProfileUrl(message.channel.client.name),
           }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
 
       const { hero, playerIdx, player } = await profileLink({
-        command,
+        args,
         client,
+        command,
         locale: client.locale,
-        args: args,
       })
 
       const url = player?.accountid
@@ -48,27 +46,28 @@ commandHandler.registerCommand('profile', {
             lng: client.locale,
             player: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
           }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
 
       const desc = t('profileUrl', {
-        lng: client.locale,
         channel:
           Number(player?.accountid) === client.steam32Id
             ? client.name
             : getHeroNameOrColor(hero?.id ?? 0, playerIdx),
+        lng: client.locale,
         url,
       })
 
       chatClient.say(message.channel.name, desc, message.user.messageId)
-    } catch (e) {
+    } catch (error) {
       chatClient.say(
         message.channel.name,
-        (e as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        (error as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        message.user.messageId
       )
     }
   },
+  onlyOnline: true,
 })

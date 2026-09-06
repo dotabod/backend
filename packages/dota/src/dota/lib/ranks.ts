@@ -1,5 +1,6 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { MULTIPLIER_SOLO } from '../../db/getWL'
 import RedisClient from '../../db/RedisClient'
 import { steamSocket } from '../../steam/ws'
@@ -21,7 +22,7 @@ export function rankTierToMmr(rankTier: string | number) {
   // Floor to 5
   const stars = intRankTier % 10 > 5 ? 5 : intRankTier % 10
   const rank = ranks.find((rank) =>
-    rank.image.startsWith(`${Math.floor(Number(intRankTier / 10))}${stars}`),
+    rank.image.startsWith(`${Math.floor(Number(intRankTier / 10))}${stars}`)
   )
 
   // Middle of range
@@ -34,12 +35,16 @@ export function rankTierToMmr(rankTier: string | number) {
  * @returns The rank tier value (e.g. 71 for Legend 1, 80 for Immortal)
  */
 export function mmrToRankTier(mmr: number): number {
-  if (mmr <= 0) return 0 // Uncalibrated
+  if (mmr <= 0) {
+    return 0
+  } // Uncalibrated
 
   // Immortal rank (rank tier 80)
   // Get the highest MMR from the ranks array
-  const highestRankMMR = ranks[ranks.length - 1]?.range[1] || 5619
-  if (mmr >= highestRankMMR) return 80
+  const highestRankMMR = ranks.at(-1)?.range[1] || 5619
+  if (mmr >= highestRankMMR) {
+    return 80
+  }
 
   // Find the rank based on MMR
   for (let i = 0; i < ranks.length; i++) {
@@ -79,7 +84,7 @@ export function getRankTitle(rankTier: string | number): string {
   // For example: rank tier 53 means Legend 3, where 5 is the medal and 3 is the stars
   const stars = intRankTier % 10 > 5 ? 5 : intRankTier % 10
   const rank = ranks.find((rank) =>
-    rank.image.startsWith(`${Math.floor(Number(intRankTier / 10))}${stars}`),
+    rank.image.startsWith(`${Math.floor(Number(intRankTier / 10))}${stars}`)
   )
 
   return rank?.title ?? 'Unknown'
@@ -96,9 +101,13 @@ interface LeaderRankData {
 }
 
 async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise<LeaderRankData> {
+  const lowestLeaderRank = leaderRanks.at(-1)
+  if (!lowestLeaderRank) {
+    throw new Error('Leader ranks must not be empty')
+  }
   const defaultNotFound: LeaderRankData = {
-    myRank: leaderRanks[leaderRanks.length - 1],
     mmr,
+    myRank: lowestLeaderRank,
     standing: null,
   }
 
@@ -120,7 +129,7 @@ async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise
       const getCardPromise = new Promise<Cards>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
           reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: 'en' })))
-        }, 10000) // 5 second timeout
+        }, 10_000) // 5 second timeout
 
         steamSocket.emit('getCard', steam32Id, (err: unknown, card: Cards) => {
           clearTimeout(timeoutId)
@@ -142,15 +151,14 @@ async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise
       }
 
       // Find the corresponding leaderboard rank for the given standing
-      const myRank =
-        leaderRanks.find((rank) => standing <= rank.range[1]) || leaderRanks[leaderRanks.length - 1]
+      const myRank = leaderRanks.find((rank) => standing <= rank.range[1]) ?? lowestLeaderRank
 
       // Construct the result object
-      result = { myRank, mmr, standing }
+      result = { mmr, myRank, standing }
 
       // Cache the result
       await redisClient.setJson(cacheKey, result)
-    } catch (_e) {
+    } catch {
       return defaultNotFound
     }
   }
@@ -161,11 +169,17 @@ async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise
 export async function getRankDetail(mmr: string | number, steam32Id?: number | null) {
   const mmrNum = Number(mmr)
 
-  if (!mmrNum || mmrNum < 0) return null
+  if (!mmrNum || mmrNum < 0) {
+    return null
+  }
 
   // At or higher than max mmr? Lets check leaderboards
-  if (mmrNum >= ranks[ranks.length - 1].range[1]) {
-    return lookupLeaderRank(mmrNum, steam32Id)
+  const highestRank = ranks.at(-1)
+  if (!highestRank) {
+    return null
+  }
+  if (mmrNum >= highestRank.range[1]) {
+    return await lookupLeaderRank(mmrNum, steam32Id)
   }
 
   const [myRank, nextRank] = ranks.filter((rank) => mmrNum <= rank.range[1])
@@ -177,10 +191,10 @@ export async function getRankDetail(mmr: string | number, steam32Id?: number | n
 
   return {
     mmr: mmrNum,
-    myRank,
-    nextRank,
-    nextMMR,
     mmrToNextRank,
+    myRank,
+    nextMMR,
+    nextRank,
     winsToNextRank,
   }
 }
@@ -201,16 +215,22 @@ export async function getRankDescription({
 }: RankDescription) {
   const rankResponse = await getRankDetail(mmr, steam32Id)
 
-  if (!rankResponse) return null
+  if (!rankResponse) {
+    return null
+  }
 
   if ('standing' in rankResponse) {
     const rankTitle = 'Immortal'
     const standing = rankResponse.standing && `#${rankResponse.standing}`
     const msgs: string[] = []
 
-    if (showRankMmr) msgs.push(`${mmr} MMR`)
+    if (showRankMmr) {
+      msgs.push(`${mmr} MMR`)
+    }
     msgs.push(rankTitle)
-    if (standing) msgs.push(standing)
+    if (standing) {
+      msgs.push(standing)
+    }
 
     return msgs.join(' · ')
   }
@@ -224,16 +244,16 @@ export async function getRankDescription({
   const count = mmrToNextRank <= MULTIPLIER_SOLO ? 1 : winsToNextRank
   const nextAt = t('rank.nextRankAt', { lng: locale })
   const nextIn = t('rank.nextRankIn', {
-    emote: 'peepoClap',
     count,
+    emote: 'peepoClap',
     lng: locale,
   })
 
   const msgs: string[] = []
-  msgs.push(String(mmr))
-  msgs.push(myRank.title)
-  msgs.push(`${nextAt} ${nextMMR}${count !== 1 ? ` ${nextIn}` : ''}`)
-  if (count === 1) msgs.push(nextIn)
+  msgs.push(String(mmr), myRank.title, `${nextAt} ${nextMMR}${count === 1 ? '' : ` ${nextIn}`}`)
+  if (count === 1) {
+    msgs.push(nextIn)
+  }
 
   return msgs.join(' · ')
 }
@@ -251,31 +271,33 @@ type Region =
 
 export function estimateMMR(leaderboard_rank: number, region: Region): number {
   // Max leaderboard rank is 5000
-  if (leaderboard_rank <= 0 || leaderboard_rank > 5000) return 8500
+  if (leaderboard_rank <= 0 || leaderboard_rank > 5000) {
+    return 8500
+  }
 
   let baseMMR: number
   const x = leaderboard_rank
 
   if (region === 'EUROPE') {
-    baseMMR = 15300 - 8.2 * Math.log(x) * x ** 0.6
+    baseMMR = 15_300 - 8.2 * Math.log(x) * x ** 0.6
   } else if (region === 'US EAST') {
-    baseMMR = 14900 - 7.8 * Math.log(x) * x ** 0.6
+    baseMMR = 14_900 - 7.8 * Math.log(x) * x ** 0.6
   } else if (region === 'SINGAPORE') {
-    baseMMR = 14750 - 7.6 * Math.log(x) * x ** 0.58
+    baseMMR = 14_750 - 7.6 * Math.log(x) * x ** 0.58
   } else if (region === 'ARGENTINA') {
-    baseMMR = 14500 - 7.9 * Math.log(x) * x ** 0.6
+    baseMMR = 14_500 - 7.9 * Math.log(x) * x ** 0.6
   } else if (region === 'STOCKHOLM') {
-    baseMMR = 14650 - 7.5 * Math.log(x) * x ** 0.59
+    baseMMR = 14_650 - 7.5 * Math.log(x) * x ** 0.59
   } else if (region === 'AUSTRIA') {
-    baseMMR = 14400 - 7.7 * Math.log(x) * x ** 0.61
+    baseMMR = 14_400 - 7.7 * Math.log(x) * x ** 0.61
   } else if (region === 'DUBAI') {
-    baseMMR = 14200 - 7.3 * Math.log(x) * x ** 0.6
+    baseMMR = 14_200 - 7.3 * Math.log(x) * x ** 0.6
   } else if (region === 'PERU') {
-    baseMMR = 14300 - 7.6 * Math.log(x) * x ** 0.58
+    baseMMR = 14_300 - 7.6 * Math.log(x) * x ** 0.58
   } else if (region === 'BRAZIL') {
-    baseMMR = 14150 - 7.4 * Math.log(x) * x ** 0.57
+    baseMMR = 14_150 - 7.4 * Math.log(x) * x ** 0.57
   } else {
-    baseMMR = 14000 - 7.0 * Math.log(x) * x ** 0.6
+    baseMMR = 14_000 - 7 * Math.log(x) * x ** 0.6
   }
 
   return Math.round(baseMMR)
@@ -355,8 +377,8 @@ export async function getDotabodRankProfile(twitchUsername: string): Promise<{
 
     // Return rank information
     const result = {
-      rank_tier: mmrToRankTier(steamAccount.mmr),
       leaderboard_rank: steamAccount.leaderboard_rank ?? 0,
+      rank_tier: mmrToRankTier(steamAccount.mmr),
     }
 
     // Cache the result (longer for users with rank, shorter for those without)

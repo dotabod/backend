@@ -1,36 +1,37 @@
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it } from 'vitest'
+
 import { VisionResolver } from '../../resolvers/VisionResolver'
 
 const ctx = (matchId: string | undefined) => ({ gsi: undefined, matchId })
 
-describe('VisionResolver', () => {
+describe(VisionResolver, () => {
   it('defers when matchId is undefined', async () => {
     let calls = 0
     const r = new VisionResolver(async () => {
       calls++
       return null
     })
-    expect(await r.resolve(ctx(undefined))).toBeNull()
+    await expect(r.resolve(ctx())).resolves.toBeNull()
     expect(calls).toBe(0)
   })
 
   it('defers when fetcher returns null', async () => {
     const r = new VisionResolver(async () => null)
-    expect(await r.resolve(ctx('12345'))).toBeNull()
+    await expect(r.resolve(ctx('12345'))).resolves.toBeNull()
   })
 
   it('self-tags as vision-heroes when payload has heroes', async () => {
     const r = new VisionResolver(async () => ({
-      match_id: '12345',
       heroes: Array.from({ length: 10 }, (_, i) => ({
         hero_id: i + 1,
-        hero_name: `h${i}`,
         hero_localized_name: `Hero ${i}`,
+        hero_name: `h${i}`,
         match_score: 0,
         position: i,
         team: i < 5 ? 'radiant' : 'dire',
         variant: '',
       })),
+      match_id: '12345',
     }))
     const out = await r.resolve(ctx('12345'))
     expect(out?.source).toBe('vision-heroes')
@@ -39,10 +40,10 @@ describe('VisionResolver', () => {
 
   it('self-tags as vision-draft when payload has only draft_player_order', async () => {
     const r = new VisionResolver(async () => ({
-      match_id: '12345',
+      draft_player_order: ['A', 'B', 'C', 'D', 'E'],
       heroes: [],
       heroes_status: 'waiting',
-      draft_player_order: ['A', 'B', 'C', 'D', 'E'],
+      match_id: '12345',
     }))
     const out = await r.resolve(ctx('12345'))
     expect(out?.source).toBe('vision-draft')
@@ -52,10 +53,10 @@ describe('VisionResolver', () => {
 
   it("preserves heroes_status: 'failed' for vision-draft", async () => {
     const r = new VisionResolver(async () => ({
-      match_id: '12345',
+      draft_player_order: ['A', 'B'],
       heroes: [],
       heroes_status: 'failed',
-      draft_player_order: ['A', 'B'],
+      match_id: '12345',
     }))
     const out = await r.resolve(ctx('12345'))
     expect(out?.heroesStatus).toBe('failed')
@@ -64,18 +65,18 @@ describe('VisionResolver', () => {
   it('passes heroes_status through on the vision-heroes path (pick-screen roster)', async () => {
     // Pick-screen fallback payload: sentinel hero_ids, real names/ranks, heroes waiting.
     const r = new VisionResolver(async () => ({
-      match_id: '12345',
       heroes: Array.from({ length: 10 }, (_, i) => ({
         hero_id: 0,
-        hero_name: '',
         hero_localized_name: '',
+        hero_name: '',
         match_score: 0,
-        position: i % 5,
         player_name: `p${i}`,
+        position: i % 5,
         team: i < 5 ? 'radiant' : 'dire',
         variant: '',
       })),
       heroes_status: 'waiting',
+      match_id: '12345',
     }))
     const out = await r.resolve(ctx('12345'))
     expect(out?.source).toBe('vision-heroes')
@@ -84,16 +85,16 @@ describe('VisionResolver', () => {
 
   it('leaves heroesStatus undefined for a normal vision-heroes roster', async () => {
     const r = new VisionResolver(async () => ({
-      match_id: '12345',
       heroes: Array.from({ length: 10 }, (_, i) => ({
         hero_id: i + 1,
-        hero_name: `h${i}`,
         hero_localized_name: `Hero ${i}`,
+        hero_name: `h${i}`,
         match_score: 0,
         position: i,
         team: i < 5 ? 'radiant' : 'dire',
         variant: '',
       })),
+      match_id: '12345',
     }))
     const out = await r.resolve(ctx('12345'))
     expect(out?.heroesStatus).toBeUndefined()
@@ -101,11 +102,11 @@ describe('VisionResolver', () => {
 
   it('defers when neither heroes nor draft names are present', async () => {
     const r = new VisionResolver(async () => ({
-      match_id: '12345',
-      heroes: [],
       draft_player_order: [],
+      heroes: [],
+      match_id: '12345',
     }))
-    expect(await r.resolve(ctx('12345'))).toBeNull()
+    await expect(r.resolve(ctx('12345'))).resolves.toBeNull()
   })
 
   describe('GSI self-hero correction', () => {
@@ -113,8 +114,8 @@ describe('VisionResolver', () => {
     const roster = (ids: number[], scores: number[]) =>
       ids.map((id, i) => ({
         hero_id: id,
-        hero_name: `h${id}`,
         hero_localized_name: `Hero ${id}`,
+        hero_name: `h${id}`,
         match_score: scores[i],
         position: i % 5,
         team: i < 5 ? 'Radiant' : 'Dire',
@@ -122,21 +123,21 @@ describe('VisionResolver', () => {
       }))
 
     const gsiWithHero = (heroId: number) => ({
-      gsi: { hero: { id: heroId }, player: { name: 'streamer', accountid: '1', id: 5 } } as never,
+      gsi: { hero: { id: heroId }, player: { accountid: '1', id: 5, name: 'streamer' } } as never,
       matchId: '12345',
     })
 
     it("rewrites the weakest slot when the roster is missing the streamer's hero", async () => {
       // Slot 5 (0.416) is the weakest — the misread one. GSI says the streamer is on hero 111.
       const r = new VisionResolver(async () => ({
-        match_id: '12345',
         heroes: roster(
           [33, 57, 3, 6, 13, 39, 100, 38, 138, 11],
-          [0.81, 0.78, 0.59, 0.69, 0.63, 0.416, 0.77, 0.55, 0.56, 0.68],
+          [0.81, 0.78, 0.59, 0.69, 0.63, 0.416, 0.77, 0.55, 0.56, 0.68]
         ),
+        match_id: '12345',
       }))
       const out = await r.resolve(gsiWithHero(111))
-      expect(out?.matchPlayers.map((p) => p.heroid)).toEqual([
+      expect(out?.matchPlayers.map((p) => p.heroid)).toStrictEqual([
         33, 57, 3, 6, 13, 111, 100, 38, 138, 11,
       ])
     })
@@ -144,31 +145,31 @@ describe('VisionResolver', () => {
     it('leaves the roster untouched when it already contains the GSI hero', async () => {
       const ids = [33, 57, 3, 6, 13, 39, 100, 38, 138, 11]
       const r = new VisionResolver(async () => ({
-        match_id: '12345',
         heroes: roster(ids, [0.81, 0.78, 0.59, 0.69, 0.63, 0.416, 0.77, 0.55, 0.56, 0.68]),
+        match_id: '12345',
       }))
       const out = await r.resolve(gsiWithHero(39))
-      expect(out?.matchPlayers.map((p) => p.heroid)).toEqual(ids)
+      expect(out?.matchPlayers.map((p) => p.heroid)).toStrictEqual(ids)
     })
 
     it('leaves the roster untouched when GSI has no hero yet', async () => {
       const ids = [33, 57, 3, 6, 13, 39, 100, 38, 138, 11]
       const r = new VisionResolver(async () => ({
-        match_id: '12345',
         heroes: roster(ids, [0.81, 0.78, 0.59, 0.69, 0.63, 0.416, 0.77, 0.55, 0.56, 0.68]),
+        match_id: '12345',
       }))
       // hero.id === -1 is GSI's "no hero selected" sentinel.
       const out = await r.resolve({ gsi: { hero: { id: -1 } } as never, matchId: '12345' })
-      expect(out?.matchPlayers.map((p) => p.heroid)).toEqual(ids)
+      expect(out?.matchPlayers.map((p) => p.heroid)).toStrictEqual(ids)
     })
 
     it('attaches the streamer identity to the corrected slot', async () => {
       const r = new VisionResolver(async () => ({
-        match_id: '12345',
         heroes: roster(
           [33, 57, 3, 6, 13, 39, 100, 38, 138, 11],
-          [0.81, 0.78, 0.59, 0.69, 0.63, 0.416, 0.77, 0.55, 0.56, 0.68],
+          [0.81, 0.78, 0.59, 0.69, 0.63, 0.416, 0.77, 0.55, 0.56, 0.68]
         ),
+        match_id: '12345',
       }))
       const out = await r.resolve(gsiWithHero(111))
       const self = out?.matchPlayers.find((p) => p.heroid === 111)

@@ -14,7 +14,9 @@
 import { readFileSync } from 'node:fs'
 
 const service = process.env.SERVICE_CONTEXT ?? ''
-if (!service.endsWith('steam')) process.exit(0)
+if (!service.endsWith('steam')) {
+  process.exit(0)
+}
 
 // Matches steam.ts: VOLUME_DIR/gc-health.json, resolved against the /app WORKDIR.
 const HEALTH_PATH = './src/steam/volumes/gc-health.json'
@@ -22,7 +24,7 @@ const HEALTH_PATH = './src/steam/volumes/gc-health.json'
 const STALE_MS = 90_000
 
 try {
-  const snap = JSON.parse(readFileSync(HEALTH_PATH, 'utf8'))
+  const snap = JSON.parse(readFileSync(HEALTH_PATH, 'utf-8'))
   const age = Date.now() - (snap.updatedAt ?? 0)
   if (age > STALE_MS) {
     console.error(`gc-health stale by ${Math.round(age / 1000)}s`)
@@ -33,7 +35,7 @@ try {
     process.exit(1)
   }
   process.exit(0)
-} catch (e) {
-  console.error(`gc-health unreadable: ${e?.message ?? e}`)
+} catch (error) {
+  console.error(`gc-health unreadable: ${error?.message ?? error}`)
   process.exit(1)
 }

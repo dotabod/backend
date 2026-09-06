@@ -1,7 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { DelayedQueue } from '../DelayedQueue'
 
-describe('DelayedQueue', () => {
+describe(DelayedQueue, () => {
   let queue: DelayedQueue
 
   beforeEach(() => {
@@ -17,12 +18,12 @@ describe('DelayedQueue', () => {
     const taskId = queue.addTask(1000, callback, 'test payload')
     const secondId = queue.addTask(1000, callback, 'test payload')
 
-    expect(typeof taskId).toBe('string')
+    expect(taskId).toBeTypeOf('string')
     expect(taskId.length).toBeGreaterThan(0)
     expect(secondId).not.toBe(taskId)
     expect(queue.getQueueSize()).toBe(2)
     // The returned id identifies the task it created.
-    expect(queue.removeTask(taskId)).toBe(true)
+    expect(queue.removeTask(taskId)).toBeTruthy()
     expect(queue.getQueueSize()).toBe(1)
   })
 
@@ -56,7 +57,7 @@ describe('DelayedQueue', () => {
     // Wait for queue's 1-second check interval to process all tasks
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
-    expect(results).toEqual([1, 2, 3])
+    expect(results).toStrictEqual([1, 2, 3])
   })
 
   // Flaky under CI load: relies on wall-clock ordering of same-delay tasks, so a
@@ -73,7 +74,7 @@ describe('DelayedQueue', () => {
         results.push(1)
       },
       null,
-      1,
+      1
     ) // Highest priority
     queue.addTask(
       delay,
@@ -81,7 +82,7 @@ describe('DelayedQueue', () => {
         results.push(3)
       },
       null,
-      3,
+      3
     ) // Lowest priority
     queue.addTask(
       delay,
@@ -89,13 +90,13 @@ describe('DelayedQueue', () => {
         results.push(2)
       },
       null,
-      2,
+      2
     ) // Medium priority
 
     // Wait for queue's 1-second check interval to process all tasks
     await new Promise((resolve) => setTimeout(resolve, 1200))
 
-    expect(results).toEqual([1, 2, 3]) // Lower priority number executes first
+    expect(results).toStrictEqual([1, 2, 3]) // Lower priority number executes first
   })
 
   it('should remove tasks from queue', () => {
@@ -105,7 +106,7 @@ describe('DelayedQueue', () => {
     expect(queue.getQueueSize()).toBe(1)
 
     const removed = queue.removeTask(taskId)
-    expect(removed).toBe(true)
+    expect(removed).toBeTruthy()
     expect(queue.getQueueSize()).toBe(0)
   })
 
@@ -121,8 +122,8 @@ describe('DelayedQueue', () => {
     // Wait for queue's 1-second check interval to process all tasks
     await new Promise((resolve) => setTimeout(resolve, 1200))
 
-    expect(badCallback).toHaveBeenCalled()
-    expect(goodCallback).toHaveBeenCalled()
+    expect(badCallback).toHaveBeenCalledOnce()
+    expect(goodCallback).toHaveBeenCalledOnce()
   })
 
   it('should clamp delays to maximum allowed', () => {

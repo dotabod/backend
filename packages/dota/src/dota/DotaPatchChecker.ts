@@ -1,6 +1,7 @@
 import { logger } from '@dotabod/shared-utils'
 import axios from 'axios'
 import { t } from 'i18next'
+
 import { gsiHandlers } from './lib/consts'
 import { say } from './say'
 
@@ -26,8 +27,8 @@ async function checkForNewDotaPatch(): Promise<{ isNewPatch: boolean; version: s
     }
 
     // Get the latest patch from the sorted list (patches are sorted with oldest first, newest last)
-    const patches = response.data.patches
-    const latestPatch = patches[patches.length - 1]
+    const { patches } = response.data
+    const latestPatch = patches.at(-1)
     const currentVersion = latestPatch.patch_name
     const currentTimestamp = latestPatch.patch_timestamp
 
@@ -37,9 +38,9 @@ async function checkForNewDotaPatch(): Promise<{ isNewPatch: boolean; version: s
     // If this is the first time checking or after a reboot
     if (latestPatchInfo === null) {
       logger.info(
-        `[DotaPatchChecker] Initial patch version: ${currentVersion} (timestamp: ${currentTimestamp})`,
+        `[DotaPatchChecker] Initial patch version: ${currentVersion} (timestamp: ${currentTimestamp})`
       )
-      latestPatchInfo = { version: currentVersion, timestamp: currentTimestamp }
+      latestPatchInfo = { timestamp: currentTimestamp, version: currentVersion }
       lastCheckTimestamp = now
       return { isNewPatch: false, version: currentVersion }
     }
@@ -56,9 +57,9 @@ async function checkForNewDotaPatch(): Promise<{ isNewPatch: boolean; version: s
 
     if (isNew) {
       logger.info(
-        `[DotaPatchChecker] New patch detected: ${currentVersion} (timestamp: ${currentTimestamp}, previous: ${latestPatchInfo.version})`,
+        `[DotaPatchChecker] New patch detected: ${currentVersion} (timestamp: ${currentTimestamp}, previous: ${latestPatchInfo.version})`
       )
-      latestPatchInfo = { version: currentVersion, timestamp: currentTimestamp }
+      latestPatchInfo = { timestamp: currentTimestamp, version: currentVersion }
       return { isNewPatch: true, version: currentVersion }
     }
 
@@ -80,12 +81,12 @@ function notifyClientsAboutNewPatch(version: string): void {
         handler.client,
         t('dotapatch.newPatch', {
           emote: 'PogChamp',
-          version,
           lng: handler.client.locale,
+          version,
         }),
         {
           chattersKey: 'dotapatch',
-        },
+        }
       )
     }
   }

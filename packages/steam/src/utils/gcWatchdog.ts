@@ -102,45 +102,57 @@ export class GcWatchdog {
     const t = this.now()
 
     switch (event.type) {
-      case 'gcReady':
+      case 'gcReady': {
         this.ready = true
         this.notReadySince = undefined
         this.lastRelaunchAt = undefined
         return { type: 'noop' }
+      }
 
-      case 'loggedOn':
+      case 'loggedOn': {
         // CM is up but GC isn't ready yet; ensure the not-ready clock is running
         // so a logon that never reaches GC-ready still escalates.
-        if (!this.ready && this.notReadySince === undefined) this.notReadySince = t
+        if (!this.ready && this.notReadySince === undefined) {
+          this.notReadySince = t
+        }
         return { type: 'noop' }
+      }
 
       case 'gcUnready':
       case 'disconnected':
-      case 'helloTimeout':
+      case 'helloTimeout': {
         // These all mean the GC is not usable: flip out of ready and start (or
         // keep) the not-ready clock, then evaluate the ladder.
         this.ready = false
-        if (this.notReadySince === undefined) this.notReadySince = t
+        if (this.notReadySince === undefined) {
+          this.notReadySince = t
+        }
         return this.evaluateNotReady(t)
+      }
 
-      case 'tick':
+      case 'tick': {
         // Neutral heartbeat: only escalates an already-not-ready state, never
         // manufactures one while healthy.
-        if (this.ready) return { type: 'noop' }
+        if (this.ready) {
+          return { type: 'noop' }
+        }
         return this.evaluateNotReady(t)
+      }
     }
   }
 
   private evaluateNotReady(t: number): GcAction {
-    if (this.notReadySince === undefined) this.notReadySince = t
+    if (this.notReadySince === undefined) {
+      this.notReadySince = t
+    }
 
     const deadFor = t - this.notReadySince
     if (deadFor >= this.deadExitMs) {
       return {
-        type: 'exit',
         reason: `GC not ready for ${Math.round(deadFor / 1000)}s (>= ${Math.round(
-          this.deadExitMs / 1000,
+          this.deadExitMs / 1000
         )}s ceiling); exiting for a clean restart`,
+        type: 'exit',
       }
     }
 
@@ -149,7 +161,7 @@ export class GcWatchdog {
       this.lastRelaunchAt === undefined ? Number.POSITIVE_INFINITY : t - this.lastRelaunchAt
     if (sinceRelaunch >= this.relaunchIntervalMs) {
       this.lastRelaunchAt = t
-      return { type: 'relaunch', reason: `GC not ready for ${Math.round(deadFor / 1000)}s` }
+      return { reason: `GC not ready for ${Math.round(deadFor / 1000)}s`, type: 'relaunch' }
     }
 
     return { type: 'noop' }

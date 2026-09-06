@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
 import { t } from 'i18next'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { flushAsync } from '../../../__tests__/sharedMocks.ts'
 import { DBSettings } from '../../../settings.ts'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
@@ -23,7 +24,7 @@ describe('!beta', () => {
 
   it('blocks viewers (permission below mod)', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!beta', permission: 0, userName: 'viewer' }),
+      makeMessage({ content: '!beta', permission: 0, userName: 'viewer' })
     )
     await flushAsync()
     expect(state.updateCalls).toHaveLength(0)
@@ -38,17 +39,17 @@ describe('!toggle', () => {
     expect(state.commandDisableCalls).toHaveLength(1)
     expect(state.commandDisableCalls[0]).toMatchObject({
       kind: 'disable',
+      metadata: { command: '!toggle', disabled_by: 'modUser' },
       reason: 'MANUAL_DISABLE',
-      metadata: { disabled_by: 'modUser', command: '!toggle' },
     })
   })
 
   it('routes to commandDisable.enable when currently disabled', async () => {
     await commandHandler.handleMessage(
       makeMessage({
+        clientOverrides: { settings: [{ key: DBSettings.commandDisable, value: true }] },
         content: '!toggle',
-        clientOverrides: { settings: [{ key: DBSettings.commandDisable, value: true }] } as any,
-      }),
+      })
     )
     expect(state.upsertCalls).toHaveLength(0)
     expect(state.chatSayCalls).toHaveLength(0)
@@ -59,7 +60,7 @@ describe('!toggle', () => {
 
   it('blocks viewers (permission below mod)', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!toggle', permission: 0, userName: 'viewer' }),
+      makeMessage({ content: '!toggle', permission: 0, userName: 'viewer' })
     )
     expect(state.upsertCalls).toHaveLength(0)
     expect(state.commandDisableCalls).toHaveLength(0)
@@ -69,7 +70,7 @@ describe('!toggle', () => {
 describe('!today', () => {
   it('reports unknownSteam when there is no steam id', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!today', clientOverrides: { steam32Id: null } }),
+      makeMessage({ clientOverrides: { steam32Id: null }, content: '!today' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(t('unknownSteam', { lng: 'en' }))
@@ -78,13 +79,13 @@ describe('!today', () => {
   it('reports the multiAccount message when no steam id and multiAccount is set', async () => {
     await commandHandler.handleMessage(
       makeMessage({
+        clientOverrides: { multiAccount: true, steam32Id: null } as any,
         content: '!today',
-        clientOverrides: { steam32Id: null, multiAccount: true } as any,
-      }),
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(
-      t('multiAccount', { lng: 'en', url: 'dotabod.com/dashboard/features' }),
+      t('multiAccount', { lng: 'en', url: 'dotabod.com/dashboard/features' })
     )
   })
 

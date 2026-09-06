@@ -7,7 +7,6 @@ import commandHandler from '../lib/CommandHandler'
 import { findAccountFromCmd } from '../lib/findGSIByAccountId'
 
 commandHandler.registerCommand('gpm', {
-  onlyOnline: true,
   dbkey: DBSettings.commandGPM,
   handler: async (message, args, command) => {
     const {
@@ -18,7 +17,7 @@ commandHandler.registerCommand('gpm', {
         client,
         args,
         client.locale,
-        command,
+        command
       )
       const heroName =
         player && 'gpm' in player
@@ -30,8 +29,8 @@ commandHandler.registerCommand('gpm', {
       if (!gpm) {
         chatClient.say(
           channel,
-          t('gpm_zero', { heroName, num: 0, lng: message.channel.client.locale }),
-          message.user.messageId,
+          t('gpm_zero', { heroName, lng: message.channel.client.locale, num: 0 }),
+          message.user.messageId
         )
         return
       }
@@ -48,20 +47,21 @@ commandHandler.registerCommand('gpm', {
       chatClient.say(
         channel,
         t('gpm_other', {
-          heroName,
-          num: gpm,
-          lng: message.channel.client.locale,
-          heroKills: gold_from_hero_kills ?? 0,
           creepKills: gold_from_creep_kills ?? 0,
+          heroKills: gold_from_hero_kills ?? 0,
+          heroName,
+          lng: message.channel.client.locale,
+          num: gpm,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
-    } catch (e) {
+    } catch (error) {
       chatClient.say(
         message.channel.name,
-        (e as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        (error as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        message.user.messageId
       )
     }
   },
+  onlyOnline: true,
 })

@@ -1,4 +1,5 @@
 import { checkBotStatus, fetchConduitId, logger } from '@dotabod/shared-utils'
+
 import { eventSubMap } from './chatSubIds'
 import { ensureBotIsModerator } from './ensureBotIsModerator'
 import { genericSubscribe } from './subscribeChatMessagesForUser'
@@ -6,7 +7,7 @@ import type { TwitchEventTypes } from './TwitchEventTypes'
 
 // Get existing conduit ID and subscriptions
 const conduitId = await fetchConduitId()
-logger.info('Conduit ID', { conduitId: conduitId ? `${conduitId.substring(0, 8)}...` : 'null' })
+logger.info('Conduit ID', { conduitId: conduitId ? `${conduitId.slice(0, 8)}...` : 'null' })
 
 // For migrating users from old eventsub to new conduit
 // We should check if the user has the chat message sub
@@ -44,7 +45,7 @@ const CRITICAL_SUBSCRIPTION_TYPES: (keyof TwitchEventTypes)[] = [
 async function subscribeWithRetry(
   type: keyof TwitchEventTypes,
   providerAccountId: string,
-  isCritical: boolean,
+  isCritical: boolean
 ): Promise<boolean> {
   const maxRetries = isCritical ? 3 : 1
   let lastError: Error | null = null
@@ -69,18 +70,18 @@ async function subscribeWithRetry(
       if (success) {
         if (attempt > 1) {
           logger.info('[TWITCHEVENTS] Subscription succeeded after retry', {
-            type,
-            providerAccountId,
             attempt,
+            providerAccountId,
+            type,
           })
         }
         return true
       }
 
       logger.warn('[TWITCHEVENTS] genericSubscribe returned false', {
-        type,
-        providerAccountId,
         attempt,
+        providerAccountId,
+        type,
       })
     } catch (error) {
       lastError = error as Error
@@ -89,15 +90,17 @@ async function subscribeWithRetry(
       const errorMessage = error instanceof Error ? error.message : String(error)
 
       logger.debug('[TWITCHEVENTS] Subscription attempt failed', {
-        type,
-        providerAccountId,
         attempt,
         error: errorMessage,
         errorObject: JSON.stringify(error, Object.getOwnPropertyNames(error)),
+        providerAccountId,
+        type,
       })
 
       // No need to retry if not a critical subscription
-      if (!isCritical) break
+      if (!isCritical) {
+        break
+      }
 
       // Only retry for specific error types (e.g., rate limiting, network issues)
       if (
@@ -116,18 +119,18 @@ async function subscribeWithRetry(
   // Log only if all retries failed, with better error information
   if (isCritical) {
     logger.error('[TWITCHEVENTS] Failed to create critical subscription after retries', {
-      type,
-      providerAccountId,
       error: lastError ? lastError.message : 'Unknown error',
       errorDetails: lastError ? JSON.stringify(lastError) : undefined,
       errorStack: lastError?.stack,
+      providerAccountId,
+      type,
     })
   } else {
     // Log non-critical failures too
     logger.warn('[TWITCHEVENTS] Failed to create non-critical subscription', {
-      type,
-      providerAccountId,
       error: lastError ? lastError.message : 'Unknown error',
+      providerAccountId,
+      type,
     })
   }
 
@@ -148,18 +151,18 @@ export const initUserSubscriptions = async (providerAccountId: string) => {
 
     // Track success rate for metrics
     const results = {
-      total: 0,
-      success: 0,
-      failed: 0,
-      criticalSuccess: 0,
       criticalFailed: 0,
+      criticalSuccess: 0,
+      failed: 0,
+      success: 0,
+      total: 0,
     }
 
     // Only log detailed info for accounts with issues
     if (existingTypes.length > 0) {
       // Check for missing required subscriptions
       const missingTypes = REQUIRED_SUBSCRIPTION_TYPES.filter(
-        (type) => !existingTypes.includes(type) && !(type === 'channel.chat.message' && isBanned),
+        (type) => !existingTypes.includes(type) && !(type === 'channel.chat.message' && isBanned)
       )
 
       if (missingTypes.length === 0) {
@@ -169,11 +172,11 @@ export const initUserSubscriptions = async (providerAccountId: string) => {
 
       // Process critical subscriptions first to ensure core functionality
       const missingCritical = missingTypes.filter((type) =>
-        CRITICAL_SUBSCRIPTION_TYPES.includes(type),
+        CRITICAL_SUBSCRIPTION_TYPES.includes(type)
       )
 
       const missingSecondary = missingTypes.filter(
-        (type) => !CRITICAL_SUBSCRIPTION_TYPES.includes(type),
+        (type) => !CRITICAL_SUBSCRIPTION_TYPES.includes(type)
       )
 
       // Subscribe to missing critical types first
@@ -203,26 +206,26 @@ export const initUserSubscriptions = async (providerAccountId: string) => {
       // Log summary if we had to fix anything
       if (results.total > 0) {
         logger.info('[TWITCHEVENTS] Fixed missing subscriptions', {
-          providerAccountId,
-          fixed: results.success,
-          failed: results.failed,
-          criticalFixed: results.criticalSuccess,
           criticalFailed: results.criticalFailed,
+          criticalFixed: results.criticalSuccess,
+          failed: results.failed,
+          fixed: results.success,
+          providerAccountId,
         })
       }
     } else {
       // For new users or users with no subscriptions, subscribe to all required types at once
       const subscriptionTypes = REQUIRED_SUBSCRIPTION_TYPES.filter(
-        (type) => !(type === 'channel.chat.message' && isBanned),
+        (type) => !(type === 'channel.chat.message' && isBanned)
       )
 
       // Process critical subscriptions first
       const criticalTypes = subscriptionTypes.filter((type) =>
-        CRITICAL_SUBSCRIPTION_TYPES.includes(type),
+        CRITICAL_SUBSCRIPTION_TYPES.includes(type)
       )
 
       const secondaryTypes = subscriptionTypes.filter(
-        (type) => !CRITICAL_SUBSCRIPTION_TYPES.includes(type),
+        (type) => !CRITICAL_SUBSCRIPTION_TYPES.includes(type)
       )
 
       // Subscribe to critical types with retry logic
@@ -251,12 +254,12 @@ export const initUserSubscriptions = async (providerAccountId: string) => {
 
       // Log overall subscription results
       logger.info('[TWITCHEVENTS] Initial subscription setup', {
-        providerAccountId,
-        total: results.total,
-        success: results.success,
-        failed: results.failed,
-        criticalSuccess: results.criticalSuccess,
         criticalFailed: results.criticalFailed,
+        criticalSuccess: results.criticalSuccess,
+        failed: results.failed,
+        providerAccountId,
+        success: results.success,
+        total: results.total,
       })
 
       // Only try to set moderator status if not banned (this is an expensive operation)
@@ -264,8 +267,8 @@ export const initUserSubscriptions = async (providerAccountId: string) => {
         await ensureBotIsModerator(providerAccountId).catch((error) => {
           // Just log the error but don't crash the process
           logger.debug('[TWITCHEVENTS] Failed to set moderator status', {
-            providerAccountId,
             error: error instanceof Error ? error.message : String(error),
+            providerAccountId,
           })
         })
       }

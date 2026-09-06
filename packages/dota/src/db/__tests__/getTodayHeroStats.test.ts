@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { dbState, resetDbState } from './dbMocks.ts'
 
 const { getTodayHeroStats } = await import('../getTodayHeroStats')
@@ -14,19 +15,19 @@ describe('getTodayHeroStats', () => {
 
   it('returns an empty array when no token is provided', async () => {
     const res = await getTodayHeroStats({ token: '' })
-    expect(res).toEqual([])
+    expect(res).toStrictEqual([])
   })
 
   it('returns an empty array when supabase returns no matches', async () => {
     dbState.tableResults.matches = { data: [], error: null }
     const res = await getTodayHeroStats({ token: 'tok-1' })
-    expect(res).toEqual([])
+    expect(res).toStrictEqual([])
   })
 
   it('returns an empty array on supabase error', async () => {
     dbState.tableResults.matches = { data: null, error: { message: 'boom' } }
     const res = await getTodayHeroStats({ token: 'tok-1' })
-    expect(res).toEqual([])
+    expect(res).toStrictEqual([])
   })
 
   it('groups wins/losses by hero and preserves first-appearance order', async () => {
@@ -59,8 +60,8 @@ describe('getTodayHeroStats', () => {
     await getTodayHeroStats({ token: 'tok-1' })
 
     expect(dbState.gteCalls).toContainEqual({
-      table: 'matches',
       column: 'created_at',
+      table: 'matches',
       value: '2026-09-04T00:00:00.000Z',
     })
   })

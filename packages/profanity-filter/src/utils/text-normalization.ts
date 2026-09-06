@@ -10,7 +10,7 @@
  * e.g., "fuuuuck" becomes "fuck"
  */
 function compressRepeatedCharacters(text: string): string {
-  return text.replace(/(.)\1+/g, '$1')
+  return text.replaceAll(/(.)\1+/g, '$1')
 }
 
 /**
@@ -73,14 +73,16 @@ export function normalizeText(text: string): string {
   for (const [char, substitutions] of Object.entries(CHAR_SUBSTITUTIONS)) {
     for (const substitute of substitutions) {
       // Skip the standard form itself
-      if (substitute === char) continue
+      if (substitute === char) {
+        continue
+      }
 
       // Special characters need to be escaped in regular expressions
-      const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const escapeRegExp = (str: string) => str.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&')
       const safeSubstitute = escapeRegExp(substitute)
 
       // Replace all occurrences of the substitute with the standard char
-      normalized = normalized.replace(new RegExp(safeSubstitute, 'g'), char)
+      normalized = normalized.replaceAll(new RegExp(safeSubstitute, 'g'), char)
     }
   }
 
@@ -96,7 +98,7 @@ export function normalizeText(text: string): string {
  */
 export function normalizeRepeatedChars(text: string): string {
   // Replace 3 or more repetitions with just 1
-  return text.replace(/(.)\1{2,}/g, '$1')
+  return text.replaceAll(/(.)\1{2,}/g, '$1')
 }
 
 /**
@@ -108,7 +110,7 @@ export function normalizeRepeatedChars(text: string): string {
  */
 export function removeSeparators(text: string): string {
   // Common separators: spaces, dots, asterisks, underscores, hyphens
-  return text.replace(/[\s.*_-]/g, '')
+  return text.replaceAll(/[\s.*_-]/g, '')
 }
 
 /**
@@ -118,7 +120,7 @@ export function removeSeparators(text: string): string {
  * @returns Text with only alphanumeric characters
  */
 export function stripNonAlphanumeric(text: string): string {
-  return text.replace(/[^a-zA-Z0-9\s]/g, '')
+  return text.replaceAll(/[^a-zA-Z0-9\s]/g, '')
 }
 
 /**

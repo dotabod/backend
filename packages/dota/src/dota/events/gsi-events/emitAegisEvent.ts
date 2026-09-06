@@ -6,13 +6,19 @@ import type { AegisRes } from './AegisRes'
 import { getNewAegisTime } from './getNewAegisTime'
 
 export function emitAegisEvent(res: AegisRes, token: string, client: SocketClient) {
-  if (!res?.expireDate) return
+  if (!res?.expireDate) {
+    return
+  }
 
   res = getNewAegisTime(res)
-  if (res.expireS <= 0) return
+  if (res.expireS <= 0) {
+    return
+  }
 
   const tellChatAegis = getValueOrDefault(DBSettings.aegis, client.settings, client.subscription)
-  if (!tellChatAegis) return
+  if (!tellChatAegis) {
+    return
+  }
 
   const {
     eventPlayerId: _eventPlayerId,

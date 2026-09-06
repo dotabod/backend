@@ -123,7 +123,7 @@ gentypes() {
     # Check if the temp file has content before proceeding
     if [ -s "$TEMP_FILE" ]; then
         echo "Successfully generated types from database schema."
-        pnpm exec vp fmt "$TEMP_FILE"
+        pnpm exec oxfmt --config oxfmt.config.ts "$TEMP_FILE"
 
         # If empty after formatting, exit
         if [ ! -s "$TEMP_FILE" ]; then

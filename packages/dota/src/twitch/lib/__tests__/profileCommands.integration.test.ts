@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
 import { t } from 'i18next'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { commandHandler, liveGsi, makeMessage, resetState, state } from './setupMocks.ts'
 
 // Profile-link family (opendota, profile) plus the broadcaster-only !friends.
@@ -21,7 +22,7 @@ describe('!opendota', () => {
 
   it('still links the Dotabod profile when no steam account is connected', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!opendota', clientOverrides: { steam32Id: null } }),
+      makeMessage({ clientOverrides: { steam32Id: null }, content: '!opendota' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain('dotabod.com/streamer')
@@ -29,7 +30,7 @@ describe('!opendota', () => {
 
   it('links the broadcaster Dotabod profile from a live match when args are given', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!opendota me', clientOverrides: { gsi: liveGsi() } }),
+      makeMessage({ clientOverrides: { gsi: liveGsi() }, content: '!opendota me' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain('dotabod.com/streamer')
@@ -47,7 +48,7 @@ describe('!profile', () => {
 
   it('blocks when the stream is offline', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!profile', clientOverrides: { stream_online: false } }),
+      makeMessage({ clientOverrides: { stream_online: false }, content: '!profile' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(notLive)
@@ -64,10 +65,10 @@ describe('!friends', () => {
   it('reports notPlaying when a hero exists but there is no live match', async () => {
     await commandHandler.handleMessage(
       makeMessage({
+        clientOverrides: { gsi: { hero: { name: 'npc_dota_hero_antimage' } } as any },
         content: '!friends',
         permission: 4,
-        clientOverrides: { gsi: { hero: { name: 'npc_dota_hero_antimage' } } as any },
-      }),
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(notPlaying)
@@ -75,7 +76,7 @@ describe('!friends', () => {
 
   it('blocks non-broadcaster permission levels', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!friends', permission: 2, userName: 'modUser' }),
+      makeMessage({ content: '!friends', permission: 2, userName: 'modUser' })
     )
     expect(state.chatSayCalls).toHaveLength(0)
   })

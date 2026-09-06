@@ -9,7 +9,8 @@
 // Before these tests existed, neither path had ANY test coverage and a
 // subtle ordering bug (invalidTokens.add → clearCacheForUser → invalidTokens
 // silently re-deleted) shipped to prod. See watcher.ts and clearCacheForUser.ts.
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import {
   fire,
   gsiHandlers,
@@ -31,29 +32,29 @@ beforeEach(() => {
 
 describe('dota watcher: UPDATE:users banned_at null→set (ban)', () => {
   it('adds BOTH userId and providerAccountId to invalidTokens', async () => {
-    seedClient({ userId: 'u-1', providerAccountId: 'tw-1', name: 'banner' })
+    seedClient({ name: 'banner', providerAccountId: 'tw-1', userId: 'u-1' })
 
     await fire('UPDATE', 'users', {
-      new: { id: 'u-1', banned_at: '2026-05-24T00:00:00.000Z' },
-      old: { id: 'u-1', banned_at: null },
+      new: { banned_at: '2026-05-24T00:00:00.000Z', id: 'u-1' },
+      old: { banned_at: null, id: 'u-1' },
     })
 
-    expect(invalidTokens.has('u-1')).toBe(true)
-    expect(invalidTokens.has('tw-1')).toBe(true)
+    expect(invalidTokens.has('u-1')).toBeTruthy()
+    expect(invalidTokens.has('tw-1')).toBeTruthy()
   })
 
   it('clears the in-memory GSIHandler so the next GSI POST cannot bypass the ban', async () => {
-    seedClient({ userId: 'u-2', providerAccountId: 'tw-2', name: 'banner2' })
-    expect(gsiHandlers.has('u-2')).toBe(true)
+    seedClient({ name: 'banner2', providerAccountId: 'tw-2', userId: 'u-2' })
+    expect(gsiHandlers.has('u-2')).toBeTruthy()
 
     await fire('UPDATE', 'users', {
-      new: { id: 'u-2', banned_at: '2026-05-24T00:00:00.000Z' },
-      old: { id: 'u-2', banned_at: null },
+      new: { banned_at: '2026-05-24T00:00:00.000Z', id: 'u-2' },
+      old: { banned_at: null, id: 'u-2' },
     })
 
-    expect(gsiHandlers.has('u-2')).toBe(false)
+    expect(gsiHandlers.has('u-2')).toBeFalsy()
     // Sanity: clearCacheForUser actually ran (not just removed by a side path).
-    expect(watcherState.clearCacheCalls.some((c) => c.token === 'u-2')).toBe(true)
+    expect(watcherState.clearCacheCalls.some((c) => c.token === 'u-2')).toBeTruthy()
   })
 
   it('still adds userId even when there is no live client (no Account known)', async () => {
@@ -62,29 +63,29 @@ describe('dota watcher: UPDATE:users banned_at null→set (ban)', () => {
     // providerAccountId is unknown but that's fine, getDBUser will resolve it
     // and add it on the next chat-side query.
     await fire('UPDATE', 'users', {
-      new: { id: 'u-cold', banned_at: '2026-05-24T00:00:00.000Z' },
-      old: { id: 'u-cold', banned_at: null },
+      new: { banned_at: '2026-05-24T00:00:00.000Z', id: 'u-cold' },
+      old: { banned_at: null, id: 'u-cold' },
     })
 
-    expect(invalidTokens.has('u-cold')).toBe(true)
+    expect(invalidTokens.has('u-cold')).toBeTruthy()
     // No clearCacheForUser call because there's no client to clear.
-    expect(watcherState.clearCacheCalls.some((c) => c.token === 'u-cold')).toBe(false)
+    expect(watcherState.clearCacheCalls.some((c) => c.token === 'u-cold')).toBeFalsy()
   })
 
   it('is idempotent when fired twice for the same transition (Realtime retry)', async () => {
-    seedClient({ userId: 'u-3', providerAccountId: 'tw-3', name: 'idem' })
+    seedClient({ name: 'idem', providerAccountId: 'tw-3', userId: 'u-3' })
 
     const payload = {
-      new: { id: 'u-3', banned_at: '2026-05-24T00:00:00.000Z' },
-      old: { id: 'u-3', banned_at: null },
+      new: { banned_at: '2026-05-24T00:00:00.000Z', id: 'u-3' },
+      old: { banned_at: null, id: 'u-3' },
     }
     await fire('UPDATE', 'users', payload)
     await fire('UPDATE', 'users', payload)
 
     // Token set is a Set (no dupes by definition) but the second fire should
     // also be a no-op for clearCacheForUser (gsiHandlers entry is already gone).
-    expect(invalidTokens.has('u-3')).toBe(true)
-    expect(invalidTokens.has('tw-3')).toBe(true)
+    expect(invalidTokens.has('u-3')).toBeTruthy()
+    expect(invalidTokens.has('tw-3')).toBeTruthy()
     expect(watcherState.clearCacheCalls).toHaveLength(1)
   })
 })
@@ -96,40 +97,40 @@ describe('dota watcher: UPDATE:users banned_at set→null (unban)', () => {
     invalidTokens.add('u-banned')
     invalidTokens.add('tw-banned')
     // Re-seed a client so the unban handler can look up providerAccountId.
-    seedClient({ userId: 'u-banned', providerAccountId: 'tw-banned', name: 'returning' })
+    seedClient({ name: 'returning', providerAccountId: 'tw-banned', userId: 'u-banned' })
 
     await fire('UPDATE', 'users', {
-      new: { id: 'u-banned', banned_at: null },
-      old: { id: 'u-banned', banned_at: '2026-05-24T00:00:00.000Z' },
+      new: { banned_at: null, id: 'u-banned' },
+      old: { banned_at: '2026-05-24T00:00:00.000Z', id: 'u-banned' },
     })
 
-    expect(invalidTokens.has('u-banned')).toBe(false)
-    expect(invalidTokens.has('tw-banned')).toBe(false)
+    expect(invalidTokens.has('u-banned')).toBeFalsy()
+    expect(invalidTokens.has('tw-banned')).toBeFalsy()
   })
 
   it('still removes userId even when there is no live client to resolve providerAccountId', async () => {
     invalidTokens.add('u-cold-unban')
 
     await fire('UPDATE', 'users', {
-      new: { id: 'u-cold-unban', banned_at: null },
-      old: { id: 'u-cold-unban', banned_at: '2026-05-24T00:00:00.000Z' },
+      new: { banned_at: null, id: 'u-cold-unban' },
+      old: { banned_at: '2026-05-24T00:00:00.000Z', id: 'u-cold-unban' },
     })
 
-    expect(invalidTokens.has('u-cold-unban')).toBe(false)
+    expect(invalidTokens.has('u-cold-unban')).toBeFalsy()
   })
 })
 
 describe('dota watcher: UPDATE:users banned_at unchanged', () => {
   it('does not touch invalidTokens', async () => {
-    seedClient({ userId: 'u-stable', providerAccountId: 'tw-stable', name: 'stable' })
+    seedClient({ name: 'stable', providerAccountId: 'tw-stable', userId: 'u-stable' })
 
     await fire('UPDATE', 'users', {
-      new: { id: 'u-stable', banned_at: null, name: 'stable', locale: 'en', mmr: 5000 },
-      old: { id: 'u-stable', banned_at: null, name: 'stable', locale: 'en', mmr: 5000 },
+      new: { banned_at: null, id: 'u-stable', locale: 'en', mmr: 5000, name: 'stable' },
+      old: { banned_at: null, id: 'u-stable', locale: 'en', mmr: 5000, name: 'stable' },
     })
 
-    expect(invalidTokens.has('u-stable')).toBe(false)
-    expect(invalidTokens.has('tw-stable')).toBe(false)
+    expect(invalidTokens.has('u-stable')).toBeFalsy()
+    expect(invalidTokens.has('tw-stable')).toBeFalsy()
   })
 
   it('recomputes WL from the new stream start when the streamer comes online', async () => {
@@ -137,9 +138,9 @@ describe('dota watcher: UPDATE:users banned_at unchanged', () => {
 
     await fire('UPDATE', 'users', {
       new: {
-        id: 'u-live',
         banned_at: null,
         beta_tester: false,
+        id: 'u-live',
         locale: 'en',
         mmr: 5000,
         name: 'live',
@@ -147,9 +148,9 @@ describe('dota watcher: UPDATE:users banned_at unchanged', () => {
         stream_start_date: '2026-09-04T12:00:00.000Z',
       },
       old: {
-        id: 'u-live',
         banned_at: null,
         beta_tester: false,
+        id: 'u-live',
         locale: 'en',
         mmr: 5000,
         name: 'live',
@@ -158,69 +159,69 @@ describe('dota watcher: UPDATE:users banned_at unchanged', () => {
       },
     })
 
-    expect(client.stream_start_date).toEqual(new Date('2026-09-04T12:00:00.000Z'))
+    expect(client.stream_start_date).toStrictEqual(new Date('2026-09-04T12:00:00.000Z'))
     expect(handler.emitWLUpdate).toHaveBeenCalledOnce()
   })
 })
 
 describe('dota watcher: UPDATE:accounts requires_refresh', () => {
   it('false→true: adds BOTH userId and providerAccountId to invalidTokens (after clearCacheForUser)', async () => {
-    seedClient({ userId: 'u-r', providerAccountId: 'tw-r', name: 'refreshing' })
+    seedClient({ name: 'refreshing', providerAccountId: 'tw-r', userId: 'u-r' })
 
     await fire('UPDATE', 'accounts', {
       new: {
-        userId: 'u-r',
+        access_token: 'a',
         providerAccountId: 'tw-r',
         requires_refresh: true,
         scope: 's',
-        access_token: 'a',
+        userId: 'u-r',
       },
       old: {
-        userId: 'u-r',
+        access_token: 'a',
         providerAccountId: 'tw-r',
         requires_refresh: false,
         scope: 's',
-        access_token: 'a',
+        userId: 'u-r',
       },
     })
 
-    expect(invalidTokens.has('u-r')).toBe(true)
-    expect(invalidTokens.has('tw-r')).toBe(true)
+    expect(invalidTokens.has('u-r')).toBeTruthy()
+    expect(invalidTokens.has('tw-r')).toBeTruthy()
     // The bug we fixed: clearCacheForUser used to delete these. Verify it ran
     // AND that the tokens still stuck.
-    expect(watcherState.clearCacheCalls.some((c) => c.token === 'u-r')).toBe(true)
+    expect(watcherState.clearCacheCalls.some((c) => c.token === 'u-r')).toBeTruthy()
   })
 
   it('true→false: removes BOTH userId and providerAccountId from invalidTokens', async () => {
     invalidTokens.add('u-back')
     invalidTokens.add('tw-back')
-    seedClient({ userId: 'u-back', providerAccountId: 'tw-back', name: 'back' })
+    seedClient({ name: 'back', providerAccountId: 'tw-back', userId: 'u-back' })
 
     await fire('UPDATE', 'accounts', {
       new: {
-        userId: 'u-back',
+        access_token: 'a-new',
         providerAccountId: 'tw-back',
         requires_refresh: false,
         scope: 's',
-        access_token: 'a-new',
+        userId: 'u-back',
       },
       old: {
-        userId: 'u-back',
+        access_token: 'a-old',
         providerAccountId: 'tw-back',
         requires_refresh: true,
         scope: 's',
-        access_token: 'a-old',
+        userId: 'u-back',
       },
     })
 
-    expect(invalidTokens.has('u-back')).toBe(false)
-    expect(invalidTokens.has('tw-back')).toBe(false)
+    expect(invalidTokens.has('u-back')).toBeFalsy()
+    expect(invalidTokens.has('tw-back')).toBeFalsy()
   })
 })
 
 describe('dota watcher: DELETE:users', () => {
   it('removes BOTH userId and providerAccountId from invalidTokens (allows re-onboard)', async () => {
-    seedClient({ userId: 'u-del', providerAccountId: 'tw-del', name: 'deleted' })
+    seedClient({ name: 'deleted', providerAccountId: 'tw-del', userId: 'u-del' })
     invalidTokens.add('u-del')
     invalidTokens.add('tw-del')
 
@@ -228,9 +229,9 @@ describe('dota watcher: DELETE:users', () => {
       old: { id: 'u-del' },
     })
 
-    expect(invalidTokens.has('u-del')).toBe(false)
-    expect(invalidTokens.has('tw-del')).toBe(false)
-    expect(gsiHandlers.has('u-del')).toBe(false)
+    expect(invalidTokens.has('u-del')).toBeFalsy()
+    expect(invalidTokens.has('tw-del')).toBeFalsy()
+    expect(gsiHandlers.has('u-del')).toBeFalsy()
   })
 })
 
@@ -243,7 +244,7 @@ describe('dota watcher: settings', () => {
     })
 
     expect(client.settings).toContainEqual({ key: 'wlStatsDays', value: 30 })
-    expect(handler.emitWLUpdate).toHaveBeenCalledTimes(1)
+    expect(handler.emitWLUpdate).toHaveBeenCalledOnce()
   })
 
   it('recomputes the overlay when the WL challenge start date changes', async () => {
@@ -254,7 +255,7 @@ describe('dota watcher: settings', () => {
     })
 
     expect(client.settings).toContainEqual({ key: 'wlStatsStartDate', value: '2026-08-21' })
-    expect(handler.emitWLUpdate).toHaveBeenCalledTimes(1)
+    expect(handler.emitWLUpdate).toHaveBeenCalledOnce()
   })
 })
 
@@ -273,42 +274,42 @@ describe('dota watcher: win/loss adjustments', () => {
 describe('dota watcher: steam account relationship invalidation', () => {
   it('DELETE clears a cached connected claimant even when the row owner is absent', async () => {
     const { client, handler } = seedClient({
-      userId: 'claimant',
-      providerAccountId: 'tw-claimant',
-      name: 'claimant-name',
-      multiAccount: 440614454,
+      multiAccount: 440_614_454,
       multiAccountRevalidatedAt: 123,
+      name: 'claimant-name',
+      providerAccountId: 'tw-claimant',
+      userId: 'claimant',
     })
     invalidTokens.add('claimant')
     invalidTokens.add('tw-claimant')
 
     await fire('*', 'steam_accounts', {
       eventType: 'DELETE',
-      old: {
-        id: 'steam-row',
-        userId: 'missing-owner',
-        steam32Id: 440614454,
-        connectedUserIds: ['claimant'],
-      },
       new: {},
+      old: {
+        connectedUserIds: ['claimant'],
+        id: 'steam-row',
+        steam32Id: 440_614_454,
+        userId: 'missing-owner',
+      },
     })
 
-    expect(gsiHandlers.has('claimant')).toBe(false)
+    expect(gsiHandlers.has('claimant')).toBeFalsy()
     expect(client.multiAccount).toBeUndefined()
     expect(handler.multiAccountRevalidatedAt).toBeUndefined()
-    expect(invalidTokens.has('claimant')).toBe(false)
-    expect(invalidTokens.has('tw-claimant')).toBe(false)
-    expect(twitchIdToToken.has('tw-claimant')).toBe(false)
-    expect(twitchNameToToken.has('claimant-name')).toBe(false)
-    expect(watcherState.clearCacheCalls.map((call) => call.token)).toEqual(['claimant'])
+    expect(invalidTokens.has('claimant')).toBeFalsy()
+    expect(invalidTokens.has('tw-claimant')).toBeFalsy()
+    expect(twitchIdToToken.has('tw-claimant')).toBeFalsy()
+    expect(twitchNameToToken.has('claimant-name')).toBeFalsy()
+    expect(watcherState.clearCacheCalls.map((call) => call.token)).toStrictEqual(['claimant'])
   })
 
   it('DELETE clears the owner and connected claimants independently and is idempotent', async () => {
-    seedClient({ userId: 'owner', providerAccountId: 'tw-owner' })
+    seedClient({ providerAccountId: 'tw-owner', userId: 'owner' })
     seedClient({
-      userId: 'claimant',
+      multiAccount: 12_345,
       providerAccountId: 'tw-claimant',
-      multiAccount: 12345,
+      userId: 'claimant',
     })
     for (const token of ['owner', 'tw-owner', 'claimant', 'tw-claimant']) {
       invalidTokens.add(token)
@@ -316,62 +317,62 @@ describe('dota watcher: steam account relationship invalidation', () => {
 
     const payload = {
       eventType: 'DELETE',
-      old: {
-        id: 'steam-row',
-        userId: 'owner',
-        steam32Id: 12345,
-        connectedUserIds: ['claimant'],
-      },
       new: {},
+      old: {
+        connectedUserIds: ['claimant'],
+        id: 'steam-row',
+        steam32Id: 12_345,
+        userId: 'owner',
+      },
     }
     await fire('*', 'steam_accounts', payload)
     await fire('*', 'steam_accounts', payload)
 
-    expect(gsiHandlers.has('owner')).toBe(false)
-    expect(gsiHandlers.has('claimant')).toBe(false)
-    expect(watcherState.clearCacheCalls.map((call) => call.token).sort()).toEqual([
+    expect(gsiHandlers.has('owner')).toBeFalsy()
+    expect(gsiHandlers.has('claimant')).toBeFalsy()
+    expect(watcherState.clearCacheCalls.map((call) => call.token).sort()).toStrictEqual([
       'claimant',
       'owner',
     ])
     for (const token of ['owner', 'tw-owner', 'claimant', 'tw-claimant']) {
-      expect(invalidTokens.has(token)).toBe(false)
+      expect(invalidTokens.has(token)).toBeFalsy()
     }
   })
 
   it('ownership-transfer UPDATE clears the previous owner and promoted claimant', async () => {
-    seedClient({ userId: 'old-owner', providerAccountId: 'tw-old-owner' })
+    seedClient({ providerAccountId: 'tw-old-owner', userId: 'old-owner' })
     seedClient({
-      userId: 'new-owner',
-      providerAccountId: 'tw-new-owner',
       multiAccount: 777,
       multiAccountRevalidatedAt: 123,
+      providerAccountId: 'tw-new-owner',
+      userId: 'new-owner',
     })
 
     await fire('*', 'steam_accounts', {
       eventType: 'UPDATE',
-      old: {
-        id: 'steam-row',
-        userId: 'old-owner',
-        steam32Id: 777,
-        connectedUserIds: ['new-owner'],
-        mmr: 5000,
-        name: 'account',
-        leaderboard_rank: null,
-      },
       new: {
-        id: 'steam-row',
-        userId: 'new-owner',
-        steam32Id: 777,
         connectedUserIds: [],
+        id: 'steam-row',
+        leaderboard_rank: null,
         mmr: 5000,
         name: 'account',
+        steam32Id: 777,
+        userId: 'new-owner',
+      },
+      old: {
+        connectedUserIds: ['new-owner'],
+        id: 'steam-row',
         leaderboard_rank: null,
+        mmr: 5000,
+        name: 'account',
+        steam32Id: 777,
+        userId: 'old-owner',
       },
     })
 
-    expect(gsiHandlers.has('old-owner')).toBe(false)
-    expect(gsiHandlers.has('new-owner')).toBe(false)
-    expect(watcherState.clearCacheCalls.map((call) => call.token).sort()).toEqual([
+    expect(gsiHandlers.has('old-owner')).toBeFalsy()
+    expect(gsiHandlers.has('new-owner')).toBeFalsy()
+    expect(watcherState.clearCacheCalls.map((call) => call.token).sort()).toStrictEqual([
       'new-owner',
       'old-owner',
     ])
@@ -379,72 +380,72 @@ describe('dota watcher: steam account relationship invalidation', () => {
 
   it('connectedUserIds removal clears only the removed claimant', async () => {
     seedClient({
+      steamAccounts: [{ leaderboard_rank: null, mmr: 5000, name: 'account', steam32Id: 777 }],
       userId: 'owner',
-      steamAccounts: [{ steam32Id: 777, mmr: 5000, name: 'account', leaderboard_rank: null }],
     })
-    seedClient({ userId: 'removed', multiAccount: 777 })
-    seedClient({ userId: 'remaining', multiAccount: 777 })
+    seedClient({ multiAccount: 777, userId: 'removed' })
+    seedClient({ multiAccount: 777, userId: 'remaining' })
 
     await fire('*', 'steam_accounts', {
       eventType: 'UPDATE',
-      old: {
-        id: 'steam-row',
-        userId: 'owner',
-        steam32Id: 777,
-        connectedUserIds: ['removed', 'remaining'],
-        mmr: 5000,
-        name: 'account',
-        leaderboard_rank: null,
-      },
       new: {
-        id: 'steam-row',
-        userId: 'owner',
-        steam32Id: 777,
         connectedUserIds: ['remaining'],
+        id: 'steam-row',
+        leaderboard_rank: null,
         mmr: 5000,
         name: 'account',
+        steam32Id: 777,
+        userId: 'owner',
+      },
+      old: {
+        connectedUserIds: ['removed', 'remaining'],
+        id: 'steam-row',
         leaderboard_rank: null,
+        mmr: 5000,
+        name: 'account',
+        steam32Id: 777,
+        userId: 'owner',
       },
     })
 
-    expect(gsiHandlers.has('owner')).toBe(true)
-    expect(gsiHandlers.has('removed')).toBe(false)
-    expect(gsiHandlers.has('remaining')).toBe(true)
-    expect(watcherState.clearCacheCalls.map((call) => call.token)).toEqual(['removed'])
+    expect(gsiHandlers.has('owner')).toBeTruthy()
+    expect(gsiHandlers.has('removed')).toBeFalsy()
+    expect(gsiHandlers.has('remaining')).toBeTruthy()
+    expect(watcherState.clearCacheCalls.map((call) => call.token)).toStrictEqual(['removed'])
   })
 
   it('ordinary MMR/profile UPDATE refreshes local data without evicting clients', async () => {
     const { client } = seedClient({
+      steamAccounts: [{ leaderboard_rank: null, mmr: 5000, name: 'old', steam32Id: 777 }],
       userId: 'owner',
-      steamAccounts: [{ steam32Id: 777, mmr: 5000, name: 'old', leaderboard_rank: null }],
     })
-    seedClient({ userId: 'claimant', multiAccount: 777 })
+    seedClient({ multiAccount: 777, userId: 'claimant' })
 
     await fire('*', 'steam_accounts', {
       eventType: 'UPDATE',
-      old: {
-        id: 'steam-row',
-        userId: 'owner',
-        steam32Id: 777,
-        connectedUserIds: ['claimant'],
-        mmr: 5000,
-        name: 'old',
-        leaderboard_rank: null,
-      },
       new: {
-        id: 'steam-row',
-        userId: 'owner',
-        steam32Id: 777,
         connectedUserIds: ['claimant'],
+        id: 'steam-row',
+        leaderboard_rank: 123,
         mmr: 5100,
         name: 'new',
-        leaderboard_rank: 123,
+        steam32Id: 777,
+        userId: 'owner',
+      },
+      old: {
+        connectedUserIds: ['claimant'],
+        id: 'steam-row',
+        leaderboard_rank: null,
+        mmr: 5000,
+        name: 'old',
+        steam32Id: 777,
+        userId: 'owner',
       },
     })
 
-    expect(gsiHandlers.has('owner')).toBe(true)
-    expect(gsiHandlers.has('claimant')).toBe(true)
+    expect(gsiHandlers.has('owner')).toBeTruthy()
+    expect(gsiHandlers.has('claimant')).toBeTruthy()
     expect(watcherState.clearCacheCalls).toHaveLength(0)
-    expect(client.SteamAccount[0]).toMatchObject({ mmr: 5100, name: 'new', leaderboard_rank: 123 })
+    expect(client.SteamAccount[0]).toMatchObject({ leaderboard_rank: 123, mmr: 5100, name: 'new' })
   })
 })

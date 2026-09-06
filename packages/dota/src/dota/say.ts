@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 
-import { DBSettings, type defaultSettings, getValueOrDefault, type SettingKeys } from '../settings'
+import { DBSettings, getValueOrDefault } from '../settings'
+import type { defaultSettings, SettingKeys } from '../settings'
 import { chatClient } from '../twitch/chatClient'
 import type { SocketClient } from '../types'
 import { getStreamDelay } from './getStreamDelay'
@@ -21,30 +22,38 @@ export function say(
     delay?: boolean
     beta?: boolean
     bypassDisableCheck?: boolean
-  } = {},
+  } = {}
 ) {
-  if (beta && !client.beta_tester) return
+  if (beta && !client.beta_tester) {
+    return
+  }
 
   // Check if account is disabled - prevent all chat messages if disabled (unless bypassed)
   if (!bypassDisableCheck) {
     const isDisabled = getValueOrDefault(
       DBSettings.commandDisable,
       client.settings,
-      client.subscription,
+      client.subscription
     )
-    if (isDisabled) return
+    if (isDisabled) {
+      return
+    }
   }
 
   // Check global chatter access
   const chattersEnabled = getValueOrDefault(
     DBSettings.chatter,
     client.settings,
-    client.subscription,
+    client.subscription
   )
-  if (!chattersEnabled) return
+  if (!chattersEnabled) {
+    return
+  }
 
   // Check specific feature access
-  if (key && !getValueOrDefault(key, client.settings, client.subscription)) return
+  if (key && !getValueOrDefault(key, client.settings, client.subscription)) {
+    return
+  }
 
   // Check specific chatter access
   if (chattersKey) {
@@ -52,9 +61,11 @@ export function say(
       DBSettings.chatters,
       client.settings,
       client.subscription,
-      chattersKey,
+      chattersKey
     ) as (typeof defaultSettings)['chatters']
-    if (!chatterSpecific[chattersKey].enabled) return
+    if (!chatterSpecific[chattersKey].enabled) {
+      return
+    }
   }
 
   const msg = beta ? `${message} ${t('betaFeature', { lng: client.locale })}` : message
@@ -66,8 +77,10 @@ export function say(
   delayedQueue.addTask(
     getStreamDelay(client.settings, client.subscription),
     (payload) => {
-      if (payload.clientName) chatClient.say(payload.clientName, payload.message)
+      if (payload.clientName) {
+        chatClient.say(payload.clientName, payload.message)
+      }
     },
-    { clientName: client.name, message: msg },
+    { clientName: client.name, message: msg }
   )
 }

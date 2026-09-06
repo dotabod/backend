@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+
 import {
   flushMacrotasks,
   offlineEvent,
@@ -19,14 +20,14 @@ beforeEach(() => {
   onlineEvents.clear()
 })
 
-describe('onlineEvent', () => {
+describe(onlineEvent, () => {
   const evt = (id = 'b1', started_at = '2026-05-20T00:00:00.000Z') => ({
     payload: { event: { broadcaster_user_id: id, started_at } as TwitchOnlineEvent },
   })
 
   it('records the online timestamp and marks the user online', async () => {
     onlineEvent(evt('b1'))
-    expect(onlineEvents.has('b1')).toBe(true)
+    expect(onlineEvents.has('b1')).toBeTruthy()
 
     await flushMacrotasks()
     expect(state.userUpdates).toHaveLength(1)
@@ -44,7 +45,7 @@ describe('onlineEvent', () => {
   })
 })
 
-describe('offlineEvent', () => {
+describe(offlineEvent, () => {
   const evt = (id = 'b1') => ({
     payload: { event: { broadcaster_user_id: id } as TwitchOfflineEvent },
   })
@@ -61,7 +62,9 @@ describe('offlineEvent', () => {
   })
 
   // Drain the async handler's microtasks via the real timer.
-  const drain = () => new Promise<void>((r) => realSetTimeout(r, 5))
+  const drain = async () => {
+    await new Promise<void>((r) => realSetTimeout(r, 5))
+  }
 
   it('marks the user offline when there was no recent online event', async () => {
     offlineEvent(evt('b1'))
@@ -72,7 +75,7 @@ describe('offlineEvent', () => {
       message: 'updated offline event',
       meta: { twitchId: 'b1' },
     })
-    expect(state.logInfo.some((entry) => entry.message === 'updated online event')).toBe(false)
+    expect(state.logInfo.some((entry) => entry.message === 'updated online event')).toBeFalsy()
   })
 
   it('ignores a false-positive offline shortly after going online', async () => {
@@ -83,7 +86,7 @@ describe('offlineEvent', () => {
   })
 })
 
-describe('updateUserEvent', () => {
+describe(updateUserEvent, () => {
   it('updates name/displayName, filtering out falsy fields', async () => {
     updateUserEvent({
       payload: {
@@ -96,7 +99,7 @@ describe('updateUserEvent', () => {
     })
     await flushMacrotasks()
     expect(state.userUpdates).toHaveLength(1)
-    expect(state.userUpdates[0].values).toEqual({ name: 'newname', displayName: 'NewName' })
+    expect(state.userUpdates[0].values).toStrictEqual({ displayName: 'NewName', name: 'newname' })
   })
 
   it('does not update when the account is not found', async () => {

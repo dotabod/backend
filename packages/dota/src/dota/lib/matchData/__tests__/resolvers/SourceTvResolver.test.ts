@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it } from 'vitest'
+
 import type { DelayedGames } from '../../../../../types'
 import { SourceTvResolver } from '../../resolvers/SourceTvResolver'
 
@@ -8,28 +9,28 @@ function withDoc(doc: DelayedGames | null) {
   return new SourceTvResolver(async () => doc)
 }
 
-describe('SourceTvResolver', () => {
+describe(SourceTvResolver, () => {
   it('defers when matchId is undefined (no fetch)', async () => {
     let calls = 0
     const r = new SourceTvResolver(async () => {
       calls++
       return null
     })
-    const out = await r.resolve(ctx(undefined))
+    const out = await r.resolve(ctx())
     expect(out).toBeNull()
     expect(calls).toBe(0)
   })
 
   it('defers when fetcher returns null doc', async () => {
-    expect(await withDoc(null).resolve(ctx('12345'))).toBeNull()
+    await expect(withDoc(null).resolve(ctx('12345'))).resolves.toBeNull()
   })
 
   it('claims a flat-players[] SourceTV doc', async () => {
     const doc = {
       match: { match_id: '12345' },
       players: [
-        { heroid: 1, accountid: 1001 },
-        { heroid: 2, accountid: 1002 },
+        { accountid: 1001, heroid: 1 },
+        { accountid: 1002, heroid: 2 },
       ],
     } as unknown as DelayedGames
     const out = await withDoc(doc).resolve(ctx('12345'))
@@ -44,15 +45,15 @@ describe('SourceTvResolver', () => {
       teams: [
         {
           players: Array.from({ length: 5 }, (_, i) => ({
-            heroid: i + 1,
             accountid: 1000 + i,
+            heroid: i + 1,
             playerid: i,
           })),
         },
         {
           players: Array.from({ length: 5 }, (_, i) => ({
-            heroid: 100 + i,
             accountid: 2000 + i,
+            heroid: 100 + i,
             playerid: i + 5,
           })),
         },
@@ -65,6 +66,6 @@ describe('SourceTvResolver', () => {
 
   it('defers on an empty doc (no teams, no players)', async () => {
     const doc = { match: { match_id: '12345' } } as unknown as DelayedGames
-    expect(await withDoc(doc).resolve(ctx('12345'))).toBeNull()
+    await expect(withDoc(doc).resolve(ctx('12345'))).resolves.toBeNull()
   })
 })

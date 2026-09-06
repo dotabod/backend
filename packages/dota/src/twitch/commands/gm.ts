@@ -1,16 +1,15 @@
 import { t } from 'i18next'
 
-import { MatchDataService } from '../../dota/lib/matchData'
 import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/getCurrentMatchId'
+import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import { gameMedals } from '../../steam/medals'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
 import { clippingDisabledNote } from '../lib/clippingNote'
+import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('gm', {
   aliases: ['medals', 'ranks'],
-  onlyOnline: true,
   dbkey: DBSettings.commandGM,
   handler: async (message) => {
     const {
@@ -25,7 +24,7 @@ commandHandler.registerCommand('gm', {
               url: 'dotabod.com/dashboard/features',
             })
           : t('unknownSteam', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -36,7 +35,7 @@ commandHandler.registerCommand('gm', {
         t(isCurrentCustomGame(client) ? 'customGameNoRoster' : 'gameNotFound', {
           lng: client.locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -54,12 +53,13 @@ commandHandler.registerCommand('gm', {
       .then((desc) => {
         chatClient.say(message.channel.name, desc, message.user.messageId)
       })
-      .catch((e) => {
+      .catch((error) => {
         chatClient.say(
           message.channel.name,
-          e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-          message.user.messageId,
+          error?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+          message.user.messageId
         )
       })
   },
+  onlyOnline: true,
 })

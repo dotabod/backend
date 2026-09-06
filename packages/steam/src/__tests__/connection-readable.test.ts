@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vite-plus/test'
 import net from 'node:net'
+
+import { describe, expect, it } from 'vitest'
 
 // The node-steam Connection class extends net.Socket via util.inherits and uses
 // the 'readable' event + this.read(n) to parse Steam's framed packets
@@ -32,26 +33,32 @@ describe('node-steam Connection readable-stream parsing under bun', () => {
       sock.write(frame(body))
     })
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
-    const port = (server.address() as net.AddressInfo).port
+    const { port } = server.address() as net.AddressInfo
 
     try {
       const conn = new Connection()
       const got = await new Promise<Buffer>((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('no packet event')), 5000)
+        const timer = setTimeout(() => {
+          reject(new Error('no packet event'))
+        }, 5000)
         conn.on('packet', (packet: Buffer) => {
           clearTimeout(timer)
           resolve(packet)
         })
         conn.on('error', (err: unknown) => {
           clearTimeout(timer)
-          reject(err as Error)
+          reject(err)
         })
         conn.connect(port, '127.0.0.1')
       })
       expect(got.toString()).toBe(body.toString())
       conn.end()
     } finally {
-      await new Promise<void>((resolve) => server.close(() => resolve()))
+      await new Promise<void>((resolve) =>
+        server.close(() => {
+          resolve()
+        })
+      )
     }
   })
 
@@ -62,12 +69,14 @@ describe('node-steam Connection readable-stream parsing under bun', () => {
       sock.write(Buffer.concat([frame(a), frame(b)]))
     })
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
-    const port = (server.address() as net.AddressInfo).port
+    const { port } = server.address() as net.AddressInfo
 
     try {
       const conn = new Connection()
       const got = await new Promise<Buffer[]>((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('did not get both packets')), 5000)
+        const timer = setTimeout(() => {
+          reject(new Error('did not get both packets'))
+        }, 5000)
         const received: Buffer[] = []
         conn.on('packet', (packet: Buffer) => {
           received.push(packet)
@@ -78,7 +87,7 @@ describe('node-steam Connection readable-stream parsing under bun', () => {
         })
         conn.on('error', (err: unknown) => {
           clearTimeout(timer)
-          reject(err as Error)
+          reject(err)
         })
         conn.connect(port, '127.0.0.1')
       })
@@ -86,7 +95,11 @@ describe('node-steam Connection readable-stream parsing under bun', () => {
       expect(got[1].toString()).toBe(b.toString())
       conn.end()
     } finally {
-      await new Promise<void>((resolve) => server.close(() => resolve()))
+      await new Promise<void>((resolve) =>
+        server.close(() => {
+          resolve()
+        })
+      )
     }
   })
 
@@ -100,26 +113,32 @@ describe('node-steam Connection readable-stream parsing under bun', () => {
       setTimeout(() => sock.write(framed.subarray(8)), 20)
     })
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
-    const port = (server.address() as net.AddressInfo).port
+    const { port } = server.address() as net.AddressInfo
 
     try {
       const conn = new Connection()
       const got = await new Promise<Buffer>((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('no packet event after split write')), 5000)
+        const timer = setTimeout(() => {
+          reject(new Error('no packet event after split write'))
+        }, 5000)
         conn.on('packet', (packet: Buffer) => {
           clearTimeout(timer)
           resolve(packet)
         })
         conn.on('error', (err: unknown) => {
           clearTimeout(timer)
-          reject(err as Error)
+          reject(err)
         })
         conn.connect(port, '127.0.0.1')
       })
       expect(got.toString()).toBe(body.toString())
       conn.end()
     } finally {
-      await new Promise<void>((resolve) => server.close(() => resolve()))
+      await new Promise<void>((resolve) =>
+        server.close(() => {
+          resolve()
+        })
+      )
     }
   })
 })

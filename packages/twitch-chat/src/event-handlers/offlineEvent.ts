@@ -1,4 +1,5 @@
 import { logger, supabase } from '@dotabod/shared-utils'
+
 import { onlineEvents } from './events'
 
 export interface TwitchOfflineEvent {
@@ -17,7 +18,7 @@ export function offlineEvent({ payload: { event } }: { payload: { event: TwitchO
       const onlineEventDate = onlineEvents.get(event.broadcaster_user_id)
       const now = new Date()
       const diff = now.getTime() - (onlineEventDate?.getTime() ?? now.getTime())
-      if (diff < 10000) {
+      if (diff < 10_000) {
         logger.info('ignoring offline event for', { twitchId: event.broadcaster_user_id })
         return
       }
@@ -53,5 +54,5 @@ export function offlineEvent({ payload: { event } }: { payload: { event: TwitchO
     }
 
     void handler()
-  }, 10000)
+  }, 10_000)
 }

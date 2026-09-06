@@ -1,12 +1,13 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { dbState, resetDbState } from './dbMocks.ts'
 
 const { getDotabodProfileUrl } = await import('../../twitch/lib/getDotabodProfile')
 
 const client = {
+  SteamAccount: [{ steam32Id: 99_999 }],
   name: '#Streamer',
   steam32Id: 99_999,
-  SteamAccount: [{ steam32Id: 99_999 }],
 } as any
 
 describe('getDotabodProfileUrl', () => {

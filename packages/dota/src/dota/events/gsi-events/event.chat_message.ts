@@ -5,12 +5,13 @@ import { franc } from 'franc'
 
 import { DBSettings, getValueOrDefault } from '../../../settings'
 import { chatClient } from '../../../twitch/chatClient'
-import { type ChatMessageEvent, DotaEventTypes } from '../../../types'
+import { DotaEventTypes } from '../../../types'
+import type { ChatMessageEvent } from '../../../types'
 import { is8500Plus } from '../../../utils/index'
 import type { GSIHandlerType } from '../../GSIHandlerTypes'
-import { MatchDataService } from '../../lib/matchData'
 import { getHeroNameOrColor } from '../../lib/heroes'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { MatchDataService } from '../../lib/matchData'
 import { server } from '../../server'
 import eventHandler from '../EventHandler'
 import {
@@ -75,7 +76,7 @@ function getDeepLLanguage(appLanguage: string): string | null {
 const CHATTING_WORD_THRESHOLD = 10 // Minimum words to consider as "chatting"
 const CHATTING_MESSAGE_THRESHOLD = 3 // Minimum messages within time window
 const CHATTING_TIME_WINDOW = 5000 // 5 seconds in milliseconds
-const CHATTING_COOLDOWN = 30000 // 30 seconds cooldown between "Chatting" messages
+const CHATTING_COOLDOWN = 30_000 // 30 seconds cooldown between "Chatting" messages
 const disableChatterMessage = true // Disable chatting detection for now
 
 // Track messages per player for chatting detection
@@ -126,8 +127,8 @@ function isLikelyEnglish(message: string): boolean {
 
 function normalizeText(text: string): string {
   return text
-    .replace(/[^\w\s]/g, '') // Remove punctuation
-    .replace(/\s+/g, ' ') // Normalize spaces
+    .replaceAll(/[^\w\s]/g, '') // Remove punctuation
+    .replaceAll(/\s+/g, ' ') // Normalize spaces
     .toLowerCase()
     .trim()
 }
@@ -135,7 +136,7 @@ function normalizeText(text: string): string {
 function shouldTriggerChattingAlert(
   clientName: string,
   playerId: number,
-  wordCount: number,
+  wordCount: number
 ): number {
   const compositeKey = `${clientName}-${playerId}`
   const now = Date.now()
@@ -183,9 +184,11 @@ async function processTranslationBuffer(
   dotaClient: GSIHandlerType,
   translateInChat: boolean,
   translateOnOverlay: boolean,
-  typedLanguage: deepl.TargetLanguageCode,
+  typedLanguage: deepl.TargetLanguageCode
 ) {
-  if (buffer.length === 0) return
+  if (buffer.length === 0) {
+    return
+  }
 
   // Translate all messages in parallel
   const translationPromises = buffer.map(async (item) => {
@@ -219,7 +222,9 @@ async function processTranslationBuffer(
   const translations = await Promise.all(translationPromises)
   const validTranslations = translations.filter((t) => t !== null)
 
-  if (validTranslations.length === 0) return
+  if (validTranslations.length === 0) {
+    return
+  }
 
   // Group translations by hero and merge messages from same hero
   const heroMessages = new Map<string, string[]>()
@@ -255,7 +260,7 @@ async function processTranslationBuffer(
   if (translateInChat) {
     const translatedChatMessages = formatTranslatedInGameChatMessages(
       mergedMessage,
-      dotaClient.client.locale,
+      dotaClient.client.locale
     )
     for (const translatedChatMessage of translatedChatMessages) {
       chatClient.say(dotaClient.client.name, translatedChatMessage)
@@ -265,8 +270,12 @@ async function processTranslationBuffer(
 
 eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
   handler: async (dotaClient, event: ChatMessageEvent) => {
-    if (!dotaClient.client.stream_online) return
-    if (!isPlayingMatch(dotaClient.client.gsi)) return
+    if (!dotaClient.client.stream_online) {
+      return
+    }
+    if (!isPlayingMatch(dotaClient.client.gsi)) {
+      return
+    }
 
     const message = await moderateText(event.message?.trim())
     if (!message || typeof message !== 'string' || message === '***') {
@@ -280,7 +289,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
         DBSettings.chatters,
         dotaClient.client.settings,
         dotaClient.client.subscription,
-        'chattingSpamEmote',
+        'chattingSpamEmote'
       )
 
       if (chattingEmoteEnabled) {
@@ -288,7 +297,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
         const chattingSeverity = shouldTriggerChattingAlert(
           dotaClient.client.name,
           event.player_id,
-          wordCount,
+          wordCount
         )
         if (chattingSeverity > 0) {
           sendChattingAlert(dotaClient, event.player_id, chattingSeverity)
@@ -304,22 +313,24 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
     const translateInChat = getValueOrDefault(
       DBSettings.autoTranslate,
       dotaClient.client.settings,
-      dotaClient.client.subscription,
+      dotaClient.client.subscription
     )
 
     const translateOnOverlay = getValueOrDefault(
       DBSettings.translateOnOverlay,
       dotaClient.client.settings,
-      dotaClient.client.subscription,
+      dotaClient.client.subscription
     )
 
-    if (!translateInChat && !translateOnOverlay) return
+    if (!translateInChat && !translateOnOverlay) {
+      return
+    }
 
     // Check global chatter access
     const toLanguage = getValueOrDefault(
       DBSettings.translationLanguage,
       dotaClient.client.settings,
-      dotaClient.client.subscription,
+      dotaClient.client.subscription
     )
 
     // Validate and convert language code to DeepL-supported format
@@ -339,7 +350,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
 
     // Get hero name
     const roster = await new MatchDataService(dotaClient.client).resolveRoster()
-    const players = roster.players
+    const { players } = roster
     let playerIdIndex = players.findIndex((p) => p.slot === event.player_id)
     const foundInMatchPlayers = playerIdIndex !== -1
     if (!foundInMatchPlayers) {
@@ -347,16 +358,16 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
     }
     const heroName = getHeroNameOrColor(players[playerIdIndex]?.heroId ?? 0, playerIdIndex)
     const displayHeroName = resolveTranslatedHeroName({
-      heroName,
-      playerId: event.player_id,
       foundInMatchPlayers,
+      heroName,
       isHighMmr: is8500Plus(dotaClient.client),
       locale: dotaClient.client.locale,
+      playerId: event.player_id,
     })
     const speakerLabel = formatTranslatedSpeakerLabel(
       displayHeroName,
       event.player_id,
-      dotaClient.client.locale,
+      dotaClient.client.locale
     )
 
     // Add to buffer
@@ -377,7 +388,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
             dotaClient,
             translateInChat,
             translateOnOverlay,
-            typedLanguage,
+            typedLanguage
           )
           translationBuffers.delete(clientKey)
         }

@@ -27,20 +27,20 @@ export const getTwitchTokens = async (lookupTwitchId?: string): Promise<TwitchTo
     const { data, error } = await supabase
       .from('accounts')
       .select(
-        'access_token, refresh_token, expires_in, scope, obtainment_timestamp, requires_refresh',
+        'access_token, refresh_token, expires_in, scope, obtainment_timestamp, requires_refresh'
       )
       .eq('providerAccountId', twitchId)
       .eq('provider', 'twitch')
       .single()
 
     if (error) {
-      logger.error('[TWITCH] Error fetching tokens', { twitchId, error })
+      logger.error('[TWITCH] Error fetching tokens', { error, twitchId })
       return null
     }
 
     return data as TwitchTokens
   } catch (error) {
-    logger.error('[TWITCH] Error fetching tokens', { twitchId, error })
+    logger.error('[TWITCH] Error fetching tokens', { error, twitchId })
     return null
   }
 }

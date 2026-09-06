@@ -1,21 +1,27 @@
 import RedisClient from '../../../db/RedisClient'
-import { DotaEventTypes, type RoshanKilledEvent } from '../../../types'
+import { DotaEventTypes } from '../../../types'
+import type { RoshanKilledEvent } from '../../../types'
 import { fmtMSS, getRedisNumberValue } from '../../../utils/index'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import { say } from '../../say'
 import eventHandler from '../EventHandler'
-import { emitRoshEvent, generateRoshanMessage, type RoshRes } from './RoshRes'
+import { emitRoshEvent, generateRoshanMessage } from './RoshRes'
+import type { RoshRes } from './RoshRes'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
   handler: async (dotaClient, event: RoshanKilledEvent) => {
-    if (!isPlayingMatch(dotaClient.client.gsi)) return
-    if (!dotaClient.client.stream_online) return
+    if (!isPlayingMatch(dotaClient.client.gsi)) {
+      return
+    }
+    if (!dotaClient.client.stream_online) {
+      return
+    }
 
     const redisClient = RedisClient.getInstance()
     const matchId = await redisClient.client.get(`${dotaClient.getToken()}:matchId`)
 
     const playingGameMode = await getRedisNumberValue(
-      `${matchId}:${dotaClient.getToken()}:gameMode`,
+      `${matchId}:${dotaClient.getToken()}:gameMode`
     )
 
     // doing map gametime - event gametime in case the user reconnects to a match,
@@ -45,13 +51,13 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
     const redisJson = await redisClient.getJson<RoshRes>(`${dotaClient.getToken()}:roshan`)
     const count = redisJson ? Number(redisJson.count) : 0
     const res = {
-      minS,
+      count: count + 1,
+      maxDate,
       maxS,
-      minTime: fmtMSS(minTime),
       maxTime: fmtMSS(maxTime),
       minDate,
-      maxDate,
-      count: count + 1,
+      minS,
+      minTime: fmtMSS(minTime),
     }
 
     await redisClient.setJson(`${dotaClient.getToken()}:roshan`, res)

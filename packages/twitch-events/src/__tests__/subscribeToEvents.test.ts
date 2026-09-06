@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { clearSubscriptions, resetState, state, subscribeToEvents } from './sharedMocks.ts'
 
 beforeEach(() => {
@@ -6,7 +7,7 @@ beforeEach(() => {
   clearSubscriptions()
 })
 
-describe('subscribeToEvents', () => {
+describe(subscribeToEvents, () => {
   it('bails out when no conduit ID is available', async () => {
     state.conduitId = ''
     state.accountIds = ['111']
@@ -26,6 +27,6 @@ describe('subscribeToEvents', () => {
     // 11 required types per account, no existing subs.
     expect(state.subscribeCalls).toHaveLength(22)
     const accounts = new Set(state.subscribeCalls.map((c) => c.userId))
-    expect(accounts).toEqual(new Set(['111', '222']))
+    expect(accounts).toStrictEqual(new Set(['111', '222']))
   })
 })

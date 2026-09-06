@@ -1,9 +1,10 @@
 import { checkBotStatus, fetchConduitId, getTwitchHeaders, logger } from '@dotabod/shared-utils'
+
 import { eventSubMap } from '../chatSubIds'
 import type { EventSubStatus } from '../interfaces'
 import { genericSubscribe } from '../subscribeChatMessagesForUser'
-import type { TwitchEventTypes } from '../TwitchEventTypes'
 import { getAccountIds } from '../twitch/lib/getAccountIds'
+import type { TwitchEventTypes } from '../TwitchEventTypes'
 import { rateLimiter } from './rateLimiterCore'
 
 // The periodic sweep only scans these. Secondary types (predictions, polls)
@@ -51,7 +52,7 @@ export async function runSubscriptionHealthCheck(): Promise<HealthCheckResult> {
   const isBanned = await checkBotStatus()
   if (isBanned) {
     logger.warn(
-      '[TWITCHEVENTS] Bot is currently banned, will skip channel.chat.message subscriptions',
+      '[TWITCHEVENTS] Bot is currently banned, will skip channel.chat.message subscriptions'
     )
   }
 
@@ -74,12 +75,12 @@ export async function runSubscriptionHealthCheck(): Promise<HealthCheckResult> {
 
   // Track results
   const result: HealthCheckResult = {
-    totalUsers: accountIds.length,
-    usersWithIssues: 0,
-    fixedSubscriptions: 0,
     criticalFixCount: 0,
     errorCount: 0,
+    fixedSubscriptions: 0,
+    totalUsers: accountIds.length,
     userErrors: {},
+    usersWithIssues: 0,
   }
 
   // Process in chunks for efficiency and rate limit management
@@ -103,10 +104,12 @@ export async function runSubscriptionHealthCheck(): Promise<HealthCheckResult> {
           // Check for missing critical subscriptions
           const missingCritical = CRITICAL_SUBSCRIPTION_TYPES.filter(
             (type) =>
-              !existingTypes.includes(type) && !(type === 'channel.chat.message' && isBanned),
+              !existingTypes.includes(type) && !(type === 'channel.chat.message' && isBanned)
           )
 
-          if (missingCritical.length === 0) return
+          if (missingCritical.length === 0) {
+            return
+          }
 
           usersWithMissingCritical.set(userId, missingCritical)
           result.usersWithIssues++
@@ -127,14 +130,14 @@ export async function runSubscriptionHealthCheck(): Promise<HealthCheckResult> {
                 result.fixedSubscriptions++
                 result.criticalFixCount++
                 logger.warn('[TWITCHEVENTS] Fixed critical missing subscription', {
-                  userId,
                   type,
+                  userId,
                 })
               } else {
                 result.errorCount++
                 logger.error('[TWITCHEVENTS] Subscription returned false but did not throw', {
-                  userId,
                   type,
+                  userId,
                 })
               }
             } catch (error) {
@@ -143,9 +146,9 @@ export async function runSubscriptionHealthCheck(): Promise<HealthCheckResult> {
               result.userErrors[errorMsg] = (result.userErrors[errorMsg] || 0) + 1
 
               logger.error('[TWITCHEVENTS] Failed to fix critical subscription', {
-                userId,
-                type,
                 error: errorMsg,
+                type,
+                userId,
               })
             }
           }
@@ -155,11 +158,11 @@ export async function runSubscriptionHealthCheck(): Promise<HealthCheckResult> {
           result.userErrors[errorMsg] = (result.userErrors[errorMsg] || 0) + 1
 
           logger.error('[TWITCHEVENTS] Error checking user subscriptions', {
-            userId,
             error: errorMsg,
+            userId,
           })
         }
-      }),
+      })
     )
 
     // Update progress counter
@@ -173,12 +176,12 @@ export async function runSubscriptionHealthCheck(): Promise<HealthCheckResult> {
       const elapsedSec = (now - startTime) / 1000
 
       logger.info('[TWITCHEVENTS] Health check progress', {
-        processed: processedCount,
-        total: accountIds.length,
-        percent: `${percentComplete}%`,
-        usersWithIssues: result.usersWithIssues,
         criticalFixed: result.criticalFixCount,
+        percent: `${percentComplete}%`,
+        processed: processedCount,
         timeElapsed: `${Math.round(elapsedSec / 60)}m ${Math.round(elapsedSec % 60)}s`,
+        total: accountIds.length,
+        usersWithIssues: result.usersWithIssues,
       })
     }
   }
@@ -192,25 +195,25 @@ export async function runSubscriptionHealthCheck(): Promise<HealthCheckResult> {
   if (usersWithMissingCritical.size > 0) {
     logger.warn('[TWITCHEVENTS] Users with missing critical subscriptions', {
       count: usersWithMissingCritical.size,
-      firstTen: Array.from(usersWithMissingCritical.entries())
+      firstTen: [...usersWithMissingCritical.entries()]
         .slice(0, 10)
-        .map(([userId, types]) => ({ userId, missingTypes: types })),
+        .map(([userId, types]) => ({ missingTypes: types, userId })),
     })
   }
 
   // Log final summary
   logger.info('[TWITCHEVENTS] Health check completed', {
+    errorSummary: Object.keys(result.userErrors).length > 0 ? result.userErrors : 'No errors',
     results: {
+      criticalIssuesFixed: result.criticalFixCount,
+      errorCount: result.errorCount,
+      totalFixed: result.fixedSubscriptions,
       totalUsers: result.totalUsers,
       usersWithIssues: result.usersWithIssues,
-      criticalIssuesFixed: result.criticalFixCount,
-      totalFixed: result.fixedSubscriptions,
-      errorCount: result.errorCount,
     },
-    errorSummary: Object.keys(result.userErrors).length > 0 ? result.userErrors : 'No errors',
     timing: {
-      totalTime: `${minutes}m ${seconds}s`,
       averageTimePerUser: `${(totalTimeSec / accountIds.length).toFixed(3)}s`,
+      totalTime: `${minutes}m ${seconds}s`,
     },
   })
 
@@ -230,11 +233,13 @@ async function fetchSubscriptionsForHealthCheck(): Promise<void> {
   do {
     await rateLimiter.schedule(async () => {
       const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
-      if (cursor) url.searchParams.append('after', cursor)
+      if (cursor) {
+        url.searchParams.append('after', cursor)
+      }
 
       const response = await fetch(url.toString(), {
-        method: 'GET',
         headers,
+        method: 'GET',
       })
 
       if (response.status !== 200) {
@@ -264,7 +269,9 @@ async function fetchSubscriptionsForHealthCheck(): Promise<void> {
       // Process subscriptions
       data.forEach((sub) => {
         const broadcasterId = sub.condition?.broadcaster_user_id || sub.condition?.user_id
-        if (!broadcasterId) return
+        if (!broadcasterId) {
+          return
+        }
 
         // Initialize broadcaster entry if it doesn't exist
         eventSubMap[broadcasterId] ??= {} as (typeof eventSubMap)[number]

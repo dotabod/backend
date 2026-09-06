@@ -1,11 +1,6 @@
 pre-commit:
-  piped: true
   commands:
-    staged:
-      run: pnpm exec vp staged
     check:
-      run: pnpm exec vp check
-    typecheck:
-      run: pnpm -r run typecheck
+      run: pnpm run quality
     test:
-      run: pnpm exec vp test
+      run: pnpm exec vitest run

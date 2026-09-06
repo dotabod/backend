@@ -1,4 +1,5 @@
 import { t } from 'i18next'
+
 import { isSpectator } from '../../dota/lib/isSpectator'
 import { DBSettings } from '../../settings'
 import MongoDBSingleton from '../../steam/MongoDBSingleton'
@@ -8,7 +9,6 @@ import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('spectators', {
   aliases: ['specs'],
-  onlyOnline: true,
   dbkey: DBSettings.commandSpectators,
   handler: async (message, _args) => {
     const {
@@ -21,7 +21,7 @@ commandHandler.registerCommand('spectators', {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -38,7 +38,7 @@ commandHandler.registerCommand('spectators', {
         chatClient.say(
           channel,
           t('missingMatchData', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -49,10 +49,11 @@ commandHandler.registerCommand('spectators', {
           count: response.spectators || 0,
           lng: message.channel.client.locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
     } finally {
       await mongo.close()
     }
   },
+  onlyOnline: true,
 })

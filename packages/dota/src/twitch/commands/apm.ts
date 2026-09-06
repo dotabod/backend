@@ -7,7 +7,6 @@ import commandHandler from '../lib/CommandHandler'
 import { profileLink } from './profileLink'
 
 commandHandler.registerCommand('apm', {
-  onlyOnline: true,
   dbkey: DBSettings.commandAPM,
   handler: async (message, args, command) => {
     const {
@@ -16,10 +15,10 @@ commandHandler.registerCommand('apm', {
 
     try {
       const { player, hero, playerIdx } = await profileLink({
-        command,
+        args,
         client,
+        command,
         locale: client.locale,
-        args: args,
       })
 
       const commandsIssued =
@@ -37,19 +36,20 @@ commandHandler.registerCommand('apm', {
       chatClient.say(
         channel,
         t('apm', {
-          heroName,
-          emote: 'Chatting',
-          lng: message.channel.client.locale,
           count: apm,
+          emote: 'Chatting',
+          heroName,
+          lng: message.channel.client.locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
-    } catch (e) {
+    } catch (error) {
       chatClient.say(
         message.channel.name,
-        (e as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        (error as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        message.user.messageId
       )
     }
   },
+  onlyOnline: true,
 })

@@ -8,11 +8,4 @@
 export { getStreamersInMatch } from './getStreamersInMatch'
 export { lookupRosterByMatchId } from './lookupRosterByMatchId'
 export { MatchDataService } from './MatchDataService'
-export type {
-  Coverage,
-  MatchStage,
-  ResolvedRoster,
-  RosterCompleteness,
-  RosterPlayer,
-  RosterSource,
-} from './types'
+export type { RosterPlayer, RosterSource } from './types'

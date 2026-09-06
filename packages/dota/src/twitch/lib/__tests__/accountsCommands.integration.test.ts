@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
 import { t } from 'i18next'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { commandHandler, liveGsi, makeMessage, resetState, state } from './setupMocks.ts'
 
 // gm/np/smurfs/lg call MatchDataService (owned by setupMocks) only after an
@@ -18,7 +19,7 @@ for (const cmd of ['gm', 'np', 'smurfs', 'lg']) {
   describe(`!${cmd}`, () => {
     it('reports unknownSteam when there is no steam id', async () => {
       await commandHandler.handleMessage(
-        makeMessage({ content: `!${cmd}`, clientOverrides: { steam32Id: null } }),
+        makeMessage({ clientOverrides: { steam32Id: null }, content: `!${cmd}` })
       )
       expect(state.chatSayCalls).toHaveLength(1)
       expect(state.chatSayCalls[0].message).toBe(t('unknownSteam', { lng: 'en' }))
@@ -27,9 +28,9 @@ for (const cmd of ['gm', 'np', 'smurfs', 'lg']) {
     it('reports the multiAccount message when no steam id and multiAccount is set', async () => {
       await commandHandler.handleMessage(
         makeMessage({
+          clientOverrides: { multiAccount: true, steam32Id: null } as any,
           content: `!${cmd}`,
-          clientOverrides: { steam32Id: null, multiAccount: true } as any,
-        }),
+        })
       )
       expect(state.chatSayCalls).toHaveLength(1)
       expect(state.chatSayCalls[0].message).toBe(multiAccount)
@@ -53,12 +54,12 @@ describe('!geo', () => {
       ],
     }
     state.steamPlayerSummaries = [
-      { account_id: 100, persona_name: 'One', country_code: 'SE' },
-      { account_id: 200, persona_name: 'Two', country_code: 'US' },
+      { account_id: 100, country_code: 'SE', persona_name: 'One' },
+      { account_id: 200, country_code: 'US', persona_name: 'Two' },
     ]
 
     await commandHandler.handleMessage(
-      makeMessage({ content: '!geo', clientOverrides: { gsi: liveGsi() } }),
+      makeMessage({ clientOverrides: { gsi: liveGsi() }, content: '!geo' })
     )
     await new Promise<void>((resolve) => setTimeout(resolve, 0))
 
@@ -68,7 +69,7 @@ describe('!geo', () => {
 
   it('blocks viewers (permission below mod)', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!geo', permission: 0, userName: 'viewer' }),
+      makeMessage({ content: '!geo', permission: 0, userName: 'viewer' })
     )
     expect(state.chatSayCalls).toHaveLength(0)
   })

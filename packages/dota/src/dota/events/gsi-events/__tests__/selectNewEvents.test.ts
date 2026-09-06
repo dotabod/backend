@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vite-plus/test'
-import { type DotaEvent, DotaEventTypes } from '../../../../types'
+import { describe, expect, it } from 'vitest'
+
+import { DotaEventTypes } from '../../../../types'
+import type { DotaEvent } from '../../../../types'
 import { selectNewEvents } from '../selectNewEvents'
 
 // Characterizes the events[] sliding-window dedup that handleNewEvents (newdata.ts)
@@ -8,26 +10,25 @@ import { selectNewEvents } from '../selectNewEvents'
 // flow through here, and each distinct (game_time,event_type) emits exactly once.
 
 // Minimal DotaEvent — selectNewEvents only reads game_time + event_type.
-const ev = (game_time: number, event_type: DotaEventTypes): DotaEvent =>
-  ({ game_time, event_type }) as DotaEvent
+const ev = (game_time: number, event_type: DotaEventTypes): DotaEvent => ({ event_type, game_time })
 
 describe('selectNewEvents — basic selection', () => {
   it('returns all incoming events when nothing has been seen', () => {
     const incoming = [ev(60, DotaEventTypes.BountyPickup), ev(61, DotaEventTypes.RoshanKilled)]
-    expect(selectNewEvents([], incoming)).toEqual(incoming)
+    expect(selectNewEvents([], incoming)).toStrictEqual(incoming)
   })
 
   it('preserves input order', () => {
     const a = ev(10, DotaEventTypes.Tip)
     const b = ev(20, DotaEventTypes.AegisPickedUp)
     const c = ev(30, DotaEventTypes.RoshanKilled)
-    expect(selectNewEvents([], [a, b, c])).toEqual([a, b, c])
+    expect(selectNewEvents([], [a, b, c])).toStrictEqual([a, b, c])
   })
 
   it('returns [] for empty or undefined incoming', () => {
-    expect(selectNewEvents([], [])).toEqual([])
-    expect(selectNewEvents([], undefined)).toEqual([])
-    expect(selectNewEvents([ev(1, DotaEventTypes.Tip)], undefined)).toEqual([])
+    expect(selectNewEvents([], [])).toStrictEqual([])
+    expect(selectNewEvents([])).toStrictEqual([])
+    expect(selectNewEvents([ev(1, DotaEventTypes.Tip)])).toStrictEqual([])
   })
 })
 
@@ -36,19 +37,19 @@ describe('selectNewEvents — dedup across ticks (the sliding window)', () => {
     const seen = [ev(60, DotaEventTypes.BountyPickup)]
     const incoming = [ev(60, DotaEventTypes.BountyPickup), ev(75, DotaEventTypes.RoshanKilled)]
     // The duplicate bounty (same game_time+type) is filtered; only roshan is new.
-    expect(selectNewEvents(seen, incoming)).toEqual([ev(75, DotaEventTypes.RoshanKilled)])
+    expect(selectNewEvents(seen, incoming)).toStrictEqual([ev(75, DotaEventTypes.RoshanKilled)])
   })
 
   it('treats same event_type at a different game_time as distinct', () => {
     const seen = [ev(60, DotaEventTypes.BountyPickup)]
     const incoming = [ev(180, DotaEventTypes.BountyPickup)]
-    expect(selectNewEvents(seen, incoming)).toEqual([ev(180, DotaEventTypes.BountyPickup)])
+    expect(selectNewEvents(seen, incoming)).toStrictEqual([ev(180, DotaEventTypes.BountyPickup)])
   })
 
   it('treats same game_time with a different event_type as distinct', () => {
     const seen = [ev(60, DotaEventTypes.BountyPickup)]
     const incoming = [ev(60, DotaEventTypes.AegisPickedUp)]
-    expect(selectNewEvents(seen, incoming)).toEqual([ev(60, DotaEventTypes.AegisPickedUp)])
+    expect(selectNewEvents(seen, incoming)).toStrictEqual([ev(60, DotaEventTypes.AegisPickedUp)])
   })
 
   it('simulates a normal multi-tick stream: each event emits exactly once', () => {
@@ -57,7 +58,9 @@ describe('selectNewEvents — dedup across ticks (the sliding window)', () => {
     const processTick = (incoming: DotaEvent[]) => {
       const fresh = selectNewEvents(seen, incoming)
       seen = [...seen, ...fresh]
-      for (const e of fresh) emitted.push(`${e.game_time}-${e.event_type}`)
+      for (const e of fresh) {
+        emitted.push(`${e.game_time}-${e.event_type}`)
+      }
     }
 
     const bounty = ev(60, DotaEventTypes.BountyPickup)
@@ -68,7 +71,7 @@ describe('selectNewEvents — dedup across ticks (the sliding window)', () => {
     processTick([bounty, rosh]) // tick 2 (bounty repeated, rosh new)
     processTick([rosh]) // tick 3 (rosh repeated)
 
-    expect(emitted).toEqual(['60-bounty_rune_pickup', '75-roshan_killed'])
+    expect(emitted).toStrictEqual(['60-bounty_rune_pickup', '75-roshan_killed'])
   })
 })
 
@@ -82,7 +85,9 @@ describe('selectNewEvents — SAFETY CONTRACT: dropping a tick loses one-shot ev
     const processTick = (incoming: DotaEvent[]) => {
       const fresh = selectNewEvents(seen, incoming)
       seen = [...seen, ...fresh]
-      for (const e of fresh) emitted.push(`${e.game_time}-${e.event_type}`)
+      for (const e of fresh) {
+        emitted.push(`${e.game_time}-${e.event_type}`)
+      }
     }
 
     const bountyOnlyInTick2 = ev(60, DotaEventTypes.BountyPickup)
@@ -92,7 +97,7 @@ describe('selectNewEvents — SAFETY CONTRACT: dropping a tick loses one-shot ev
 
     // The bounty is permanently lost — proving every tick's events[] must be processed.
     expect(emitted).not.toContain('60-bounty_rune_pickup')
-    expect(emitted).toEqual(['120-roshan_killed'])
+    expect(emitted).toStrictEqual(['120-roshan_killed'])
 
     // Contrast: had tick 2 been processed, the bounty would have emitted.
     let seen2: DotaEvent[] = []
@@ -100,11 +105,13 @@ describe('selectNewEvents — SAFETY CONTRACT: dropping a tick loses one-shot ev
     const processTick2 = (incoming: DotaEvent[]) => {
       const fresh = selectNewEvents(seen2, incoming)
       seen2 = [...seen2, ...fresh]
-      for (const e of fresh) emitted2.push(`${e.game_time}-${e.event_type}`)
+      for (const e of fresh) {
+        emitted2.push(`${e.game_time}-${e.event_type}`)
+      }
     }
     processTick2([])
     processTick2([bountyOnlyInTick2]) // tick 2 NOT skipped
     processTick2([ev(120, DotaEventTypes.RoshanKilled)])
-    expect(emitted2).toEqual(['60-bounty_rune_pickup', '120-roshan_killed'])
+    expect(emitted2).toStrictEqual(['60-bounty_rune_pickup', '120-roshan_killed'])
   })
 })

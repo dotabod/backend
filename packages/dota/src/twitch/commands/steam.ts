@@ -2,13 +2,12 @@ import { t } from 'i18next'
 
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('steam', {
   aliases: ['steamid', 'account'],
-  permission: 2,
   dbkey: DBSettings.commandSteam,
-
   handler: (message: MessageType, _args: string[]) => {
     const {
       channel: { name: channel, client },
@@ -27,7 +26,8 @@ commandHandler.registerCommand('steam', {
             url: 'dotabod.com/dashboard/features',
           })
         : t('unknownSteam', { lng: message.channel.client.locale }),
-      message.user.messageId,
+      message.user.messageId
     )
   },
+  permission: 2,
 })

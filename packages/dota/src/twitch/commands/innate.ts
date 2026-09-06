@@ -1,6 +1,7 @@
 import DOTA_ABILITIES from 'dotaconstants/build/abilities.json' with { type: 'json' }
 import DOTA_HERO_ABILITIES from 'dotaconstants/build/hero_abilities.json' with { type: 'json' }
 import { t } from 'i18next'
+
 import type { GSIHandlerType } from '../../dota/GSIHandlerTypes'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { hasCurrentGameContext } from '../../dota/lib/getCurrentMatchId'
@@ -11,7 +12,6 @@ import commandHandler from '../lib/CommandHandler'
 import { findAccountFromCmd } from '../lib/findGSIByAccountId'
 
 commandHandler.registerCommand('innate', {
-  onlyOnline: true,
   dbkey: DBSettings.commandInnate,
   handler: async (message, args, command) => {
     const {
@@ -24,7 +24,7 @@ commandHandler.registerCommand('innate', {
       chatClient.say(
         channelName,
         t('notPlaying', { emote: 'PauseChamp', lng: channelClient.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -34,13 +34,13 @@ commandHandler.registerCommand('innate', {
         channelClient,
         args,
         channelClient.locale,
-        command,
+        command
       )
       if (!isValidHero(hero) || !hero) {
         chatClient.say(
           channelName,
           t('gameNotFound', { lng: channelClient.locale }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -52,7 +52,7 @@ commandHandler.registerCommand('innate', {
         chatClient.say(
           channelName,
           t('missingMatchData', { emote: 'PauseChamp', lng: channelClient.locale }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -61,38 +61,36 @@ commandHandler.registerCommand('innate', {
         channelName,
         withHeroLink(
           t('innate', {
-            lng: channelClient.locale,
-            heroName: getHeroNameOrColor(hero.id, playerIdx),
-            title: heroInnate.title,
             description: heroInnate.description,
+            heroName: getHeroNameOrColor(hero.id, playerIdx),
+            lng: channelClient.locale,
+            title: heroInnate.title,
           }),
-          hero.id,
+          hero.id
         ),
-        message.user.messageId,
+        message.user.messageId
       )
     } catch (error) {
       chatClient.say(
         channelName,
         (error as Error).message ?? t('gameNotFound', { lng: channelClient.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
     }
   },
+  onlyOnline: true,
 })
 
 const isValidGSIHandler = (
   gsiHandler: GSIHandlerType | undefined,
-  hasCurrentGame: boolean,
-): boolean => {
-  return !!gsiHandler && hasCurrentGame
-}
+  hasCurrentGame: boolean
+): boolean => !!gsiHandler && hasCurrentGame
 
-const isValidHero = (hero: { id?: number } | null | undefined): boolean => {
-  return typeof hero?.id === 'number' && !!getHeroById(hero.id)
-}
+const isValidHero = (hero: { id?: number } | null | undefined): boolean =>
+  typeof hero?.id === 'number' && !!getHeroById(hero.id)
 
 const getHeroInnate = (
-  heroData: ReturnType<typeof getHeroById>,
+  heroData: ReturnType<typeof getHeroById>
 ): { title: string; description: string } | undefined => {
   const abilities =
     DOTA_HERO_ABILITIES?.[heroData?.key as keyof typeof DOTA_HERO_ABILITIES]?.abilities
@@ -102,11 +100,11 @@ const getHeroInnate = (
       'is_innate' in abilityData &&
       'dname' in abilityData &&
       'desc' in abilityData &&
-      abilityData.is_innate === true
+      abilityData.is_innate
     ) {
       return {
-        title: abilityData.dname,
         description: abilityData.desc,
+        title: abilityData.dname,
       }
     }
   }

@@ -1,7 +1,9 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { getHeroNameOrColor } from '../dota/lib/heroes'
-import { lookupRosterByMatchId, type RosterPlayer } from '../dota/lib/matchData'
+import { lookupRosterByMatchId } from '../dota/lib/matchData'
+import type { RosterPlayer } from '../dota/lib/matchData'
 import type { DelayedGames, SocketClient } from '../types'
 import CustomError from '../utils/customError'
 import { dotabodMatchHistoryUrl } from '../utils/index'
@@ -13,7 +15,7 @@ const generateMessage = (
     old: RosterPlayer
     current: RosterPlayer
     currentIdx: number
-  }[],
+  }[]
 ) => {
   if (!playersFromLastGame.length) {
     return t('lastgame.none', { lng: locale })
@@ -22,10 +24,10 @@ const generateMessage = (
   return playersFromLastGame
     .map((player, oldIdx) =>
       t('lastgame.player', {
-        lng: locale,
         currentMatchHero: getHeroNameOrColor(player.current.heroId ?? 0, player.currentIdx),
         lastMatchHero: getHeroNameOrColor(player.old.heroId ?? 0, oldIdx),
-      }),
+        lng: locale,
+      })
     )
     .join(' · ')
 }
@@ -52,7 +54,7 @@ async function getLatestFinishedMatchId(steam32Id: number): Promise<string | nul
     .limit(1)
     .single()
 
-  return data?.matchId != null ? String(data.matchId) : null
+  return data?.matchId == null ? null : String(data.matchId)
 }
 
 export default async function lastgame({
@@ -75,14 +77,14 @@ export default async function lastgame({
             { 'teams.players.accountid': Number(steam32Id) },
           ],
         },
-        { sort: { createdAt: -1 }, limit: 2 },
+        { limit: 2, sort: { createdAt: -1 } }
       )
       .toArray()
 
     if (!Number(currentMatchId)) {
-      const msg = !currentMatchId
-        ? t('notPlaying', { emote: 'PauseChamp', lng: locale })
-        : t('gameNotFound', { lng: locale })
+      const msg = currentMatchId
+        ? t('gameNotFound', { lng: locale })
+        : t('notPlaying', { emote: 'PauseChamp', lng: locale })
       const lastMatchId =
         (await getLatestFinishedMatchId(steam32Id)) ?? gameHistory[0]?.match?.match_id ?? null
       const url = lastMatchId ? dotabodMatchHistoryUrl(client) : ''
@@ -105,7 +107,7 @@ export default async function lastgame({
 
       // The delayed API didn't save their match, but we have it in supabase
       // Must mean they're a 8500+ player
-      return t('matchData8500Alt', { lng: locale, command: '!lgs' })
+      return t('matchData8500Alt', { command: '!lgs', lng: locale })
     }
 
     const [gameOne, gameTwo] = gameHistory
@@ -129,14 +131,16 @@ export default async function lastgame({
         }
 
         const old = oldMatchPlayers.find(
-          (player) => player.accountId === currentGamePlayer.accountId,
+          (player) => player.accountId === currentGamePlayer.accountId
         )
-        if (!old) return null
+        if (!old) {
+          return null
+        }
 
         return {
-          old,
           current: currentGamePlayer,
           currentIdx: i,
+          old,
         }
       })
       .flatMap((f) => f ?? [])
@@ -145,8 +149,8 @@ export default async function lastgame({
     const totalPlayers =
       playersFromLastGame.length > 1
         ? t('lastgame.total', {
-            lng: locale,
             count: playersFromLastGame.length,
+            lng: locale,
           })
         : ''
     const url = dotabodMatchHistoryUrl(client)

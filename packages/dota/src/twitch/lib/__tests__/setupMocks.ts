@@ -1,3 +1,4 @@
+import type { Database } from '@dotabod/shared-utils'
 // Shared test harness for the `__tests__` folder. Filename is intentionally
 // NOT `.test.ts` so bun's runner doesn't try to execute it.
 //
@@ -5,8 +6,8 @@
 // this module so they share a single `vi.doMock()` factory and a single
 // state closure. Defining the harness once avoids races where two test files
 // register competing factories for the same module spec.
-import { vi } from 'vite-plus/test'
-import type { Database } from '@dotabod/shared-utils'
+import { vi } from 'vitest'
+
 import {
   buildSharedUtilsMock,
   initTestI18n,
@@ -15,7 +16,7 @@ import {
 
 export const PRO_SUB = SHARED_PRO_SUB
 
-export type SessionMatchRow = {
+export interface SessionMatchRow {
   id: string
   matchId: string
   myTeam: string
@@ -26,13 +27,16 @@ export type SessionMatchRow = {
   won: boolean | null
 }
 
-export type Prediction = {
+export interface Prediction {
   id: string
   status: 'ACTIVE' | 'LOCKED' | 'RESOLVED' | 'CANCELED'
   outcomes: { id: string; users: number; title: string }[]
 }
 
-export type PredictionsCall = { twitchId: string; opts: { limit: number } }
+export interface PredictionsCall {
+  twitchId: string
+  opts: { limit: number }
+}
 
 export type DotabodRankProfile = {
   rank_tier: number
@@ -44,29 +48,29 @@ export type GroupedBet = Database['public']['Functions']['get_grouped_bets']['Re
 export const state: {
   sessionMatch: SessionMatchRow | null
   olderMatch: { id: string } | null
-  recentList: Array<{ matchId: string; hero_name: string | null; won: boolean }>
+  recentList: { matchId: string; hero_name: string | null; won: boolean }[]
   redisGet: Record<string, string | null>
   redisDelCalls: string[]
-  updateCalls: Array<{ values: Record<string, unknown>; whereId: string | null }>
-  upsertCalls: Array<{ values: Record<string, unknown>; options?: unknown }>
-  updateMmrCalls: Array<Record<string, unknown>>
-  chatSayCalls: Array<{ channel: string; message: string; messageId?: string }>
-  socketEmitCalls: Array<{ room: string; event: string; args: unknown[] }>
-  streamStatusEffectCalls: Array<'socket' | 'update'>
+  updateCalls: { values: Record<string, unknown>; whereId: string | null }[]
+  upsertCalls: { values: Record<string, unknown>; options?: unknown }[]
+  updateMmrCalls: Record<string, unknown>[]
+  chatSayCalls: { channel: string; message: string; messageId?: string }[]
+  socketEmitCalls: { room: string; event: string; args: unknown[] }[]
+  streamStatusEffectCalls: ('socket' | 'update')[]
   steamSocketResponse: unknown
   steamSocketError: unknown
-  steamPlayerSummaries: Array<{
+  steamPlayerSummaries: {
     account_id: number
     persona_name: string | null
     country_code: string | null
-  }>
+  }[]
   predictions: Prediction[]
-  resolvePredictionCalls: Array<{ twitchId: string; predictionId: string; outcomeId: string }>
-  cancelPredictionCalls: Array<{ twitchId: string; predictionId: string }>
-  createPredictionCalls: Array<{
+  resolvePredictionCalls: { twitchId: string; predictionId: string; outcomeId: string }[]
+  cancelPredictionCalls: { twitchId: string; predictionId: string }[]
+  createPredictionCalls: {
     twitchId: string
     opts: { title: string; outcomes: string[]; autoLockAfter: number }
-  }>
+  }[]
   // When set, the mocked createPrediction throws this instead of succeeding —
   // simulates a Twitch API failure (e.g. an HttpStatusCodeError with a JSON `.body`).
   createPredictionError: unknown
@@ -76,51 +80,51 @@ export const state: {
   // ERR_STREAM_PREMATURE_CLOSE before one finally succeeds — exercises the
   // retryTransient wrapper around the Twitch predictions API.
   getPredictionsTransientFailures: number
-  loggerErrorCalls: Array<{ message: string; meta: Record<string, unknown> }>
+  loggerErrorCalls: { message: string; meta: Record<string, unknown> }[]
   emitWLUpdateCalls: number
   channelId: string | null
-  loggerInfoCalls: Array<{ message: string; meta: Record<string, unknown> }>
+  loggerInfoCalls: { message: string; meta: Record<string, unknown> }[]
   groupedBets: GroupedBet[]
   groupedBetsError: unknown
-  rpcCalls: Array<{ name: string; args: Record<string, unknown> }>
-  gteCalls: Array<{ column: string; value: unknown }>
+  rpcCalls: { name: string; args: Record<string, unknown> }[]
+  gteCalls: { column: string; value: unknown }[]
   dotabodRankProfile: DotabodRankProfile
   rankTitle: string
   rankDescription: string | null
   botBanned: boolean
   subscriberOnlyMode: boolean
-  chatSettingsUpdates: Array<{ channelId: string; settings: Record<string, unknown> }>
+  chatSettingsUpdates: { channelId: string; settings: Record<string, unknown> }[]
   // Result returned by the mocked MongoDB `delayedGames` findOne (ranked, spectators, ...).
   delayedGame: Record<string, unknown> | null
-  notablePlayers: Array<{ account_id: number; name: string; country_code: string }>
+  notablePlayers: { account_id: number; name: string; country_code: string }[]
   // Optional override for the mocked `moderateText` — return a custom redacted
   // string. Default passthrough returns the input as-is.
   moderateTextOverride: ((text?: string | string[]) => string | string[] | undefined) | null
-  trackDisableReasonCalls: Array<{
+  trackDisableReasonCalls: {
     userId: string
     settingKey: string
     reason: string
     metadata?: Record<string, unknown>
     opts?: { disabledValue?: boolean }
-  }>
-  trackResolveReasonCalls: Array<{
+  }[]
+  trackResolveReasonCalls: {
     userId: string
     settingKey: string
     autoResolved?: boolean
     opts?: { reason?: string; enabledValue?: boolean }
-  }>
-  recordDisableNotificationCalls: Array<{
+  }[]
+  recordDisableNotificationCalls: {
     userId: string
     settingKey: string
     reason: string
     metadata?: Record<string, unknown>
-  }>
-  resolveDisableNotificationCalls: Array<{
+  }[]
+  resolveDisableNotificationCalls: {
     userId: string
     settingKey: string
     opts?: { reason?: string; autoResolved?: boolean }
-  }>
-  commandDisableCalls: Array<
+  }[]
+  commandDisableCalls: (
     | { kind: 'disable'; userId: string; reason: string; metadata?: Record<string, unknown> }
     | { kind: 'enable'; userId: string; opts?: { reason?: string; autoResolved?: boolean } }
     | {
@@ -129,52 +133,52 @@ export const state: {
         reason: string
         metadata?: Record<string, unknown>
       }
-  >
+  )[]
 } = {
-  sessionMatch: null,
-  olderMatch: null,
-  recentList: [],
-  redisGet: {},
-  redisDelCalls: [],
-  updateCalls: [],
-  upsertCalls: [],
-  updateMmrCalls: [],
-  chatSayCalls: [],
-  socketEmitCalls: [],
-  streamStatusEffectCalls: [],
-  steamSocketResponse: null,
-  steamSocketError: null,
-  steamPlayerSummaries: [],
-  predictions: [],
-  resolvePredictionCalls: [],
+  botBanned: false,
   cancelPredictionCalls: [],
+  channelId: null,
+  chatSayCalls: [],
+  chatSettingsUpdates: [],
+  commandDisableCalls: [],
   createPredictionCalls: [],
   createPredictionError: null,
+  delayedGame: null,
+  dotabodRankProfile: null,
+  emitWLUpdateCalls: 0,
   getPredictionsCalls: [],
   getPredictionsError: null,
   getPredictionsTransientFailures: 0,
-  loggerErrorCalls: [],
-  emitWLUpdateCalls: 0,
-  channelId: null,
-  loggerInfoCalls: [],
   groupedBets: [],
   groupedBetsError: null,
-  rpcCalls: [],
   gteCalls: [],
-  dotabodRankProfile: null,
-  rankTitle: 'Immortal',
-  rankDescription: null,
-  botBanned: false,
-  subscriberOnlyMode: false,
-  chatSettingsUpdates: [],
-  delayedGame: null,
-  notablePlayers: [],
+  loggerErrorCalls: [],
+  loggerInfoCalls: [],
   moderateTextOverride: null,
+  notablePlayers: [],
+  olderMatch: null,
+  predictions: [],
+  rankDescription: null,
+  rankTitle: 'Immortal',
+  recentList: [],
+  recordDisableNotificationCalls: [],
+  redisDelCalls: [],
+  redisGet: {},
+  resolveDisableNotificationCalls: [],
+  resolvePredictionCalls: [],
+  rpcCalls: [],
+  sessionMatch: null,
+  socketEmitCalls: [],
+  steamPlayerSummaries: [],
+  steamSocketError: null,
+  steamSocketResponse: null,
+  streamStatusEffectCalls: [],
+  subscriberOnlyMode: false,
   trackDisableReasonCalls: [],
   trackResolveReasonCalls: [],
-  recordDisableNotificationCalls: [],
-  resolveDisableNotificationCalls: [],
-  commandDisableCalls: [],
+  updateCalls: [],
+  updateMmrCalls: [],
+  upsertCalls: [],
 }
 
 export function resetState() {
@@ -251,9 +255,9 @@ function createSupabaseFromBuilder() {
       updateValues = values
       return builder
     },
-    upsert: (values: Record<string, unknown>, options?: unknown) => {
-      state.upsertCalls.push({ values, options })
-      return Promise.resolve({ data: null, error: null })
+    upsert: async (values: Record<string, unknown>, options?: unknown) => {
+      state.upsertCalls.push({ options, values })
+      return { data: null, error: null }
     },
     eq: (col: string, val: string) => {
       if (mode === 'update' && col === 'id') {
@@ -277,8 +281,8 @@ function createSupabaseFromBuilder() {
     // `.limit()` is the terminal call for list queries (e.g. !recent, the
     // won/lost fallback). The result is awaited directly.
     limit: () => ({
-      then: (onFulfilled: (value: { data: unknown; error: unknown }) => unknown) =>
-        Promise.resolve({ data: state.recentList, error: null }).then(onFulfilled),
+      then: async (onFulfilled: (value: { data: unknown; error: unknown }) => unknown) =>
+        await Promise.resolve({ data: state.recentList, error: null }).then(onFulfilled),
     }),
     single: async () => {
       if (hasGte) {
@@ -292,8 +296,8 @@ function createSupabaseFromBuilder() {
     },
     // Terminal for chains awaited directly without .limit()/.single() (e.g.
     // getTodayHeroStats ends in .order()). Resolves the list result.
-    then: (onFulfilled: (value: { data: unknown; error: unknown }) => unknown) =>
-      Promise.resolve({ data: state.recentList, error: null }).then(onFulfilled),
+    then: async (onFulfilled: (value: { data: unknown; error: unknown }) => unknown) =>
+      await Promise.resolve({ data: state.recentList, error: null }).then(onFulfilled),
   }
 
   return builder
@@ -302,7 +306,7 @@ function createSupabaseFromBuilder() {
 const supabaseMock = {
   from: () => createSupabaseFromBuilder(),
   rpc: async (name: string, args: Record<string, unknown>) => {
-    state.rpcCalls.push({ name, args })
+    state.rpcCalls.push({ args, name })
     if (state.groupedBetsError) {
       return { data: null, error: state.groupedBetsError }
     }
@@ -311,51 +315,17 @@ const supabaseMock = {
 }
 
 const loggerMock = {
-  info: (message: string, meta?: Record<string, unknown>) => {
-    state.loggerInfoCalls.push({ message, meta: meta ?? {} })
-  },
+  debug: () => {},
   error: (message: string, meta?: Record<string, unknown>) => {
     state.loggerErrorCalls.push({ message, meta: meta ?? {} })
   },
-  warn: () => undefined,
-  debug: () => undefined,
+  info: (message: string, meta?: Record<string, unknown>) => {
+    state.loggerInfoCalls.push({ message, meta: meta ?? {} })
+  },
+  warn: () => {},
 }
 
 const getTwitchAPIMock = async () => ({
-  streams: {
-    createStreamMarker: async () => ({}),
-  },
-  predictions: {
-    getPredictions: async (twitchId: string, opts: { limit: number }) => {
-      state.getPredictionsCalls.push({ twitchId, opts })
-      if (state.getPredictionsTransientFailures > 0) {
-        state.getPredictionsTransientFailures -= 1
-        const err = new Error(
-          'Invalid response body while trying to fetch https://api.twitch.tv/helix/predictions: Premature close',
-        ) as Error & { code: string }
-        err.code = 'ERR_STREAM_PREMATURE_CLOSE'
-        throw err
-      }
-      if (state.getPredictionsError) throw state.getPredictionsError
-      return { data: state.predictions }
-    },
-    resolvePrediction: async (twitchId: string, predictionId: string, outcomeId: string) => {
-      state.resolvePredictionCalls.push({ twitchId, predictionId, outcomeId })
-      return {}
-    },
-    cancelPrediction: async (twitchId: string, predictionId: string) => {
-      state.cancelPredictionCalls.push({ twitchId, predictionId })
-      return {}
-    },
-    createPrediction: async (
-      twitchId: string,
-      opts: { title: string; outcomes: string[]; autoLockAfter: number },
-    ) => {
-      state.createPredictionCalls.push({ twitchId, opts })
-      if (state.createPredictionError) throw state.createPredictionError
-      return { id: 'new-prediction-id' }
-    },
-  },
   asUser: async (
     _twitchId: string,
     cb: (ctx: {
@@ -363,7 +333,7 @@ const getTwitchAPIMock = async () => ({
         getSettings: (channelId: string) => Promise<{ subscriberOnlyModeEnabled: boolean }>
         updateSettings: (channelId: string, settings: Record<string, unknown>) => Promise<void>
       }
-    }) => unknown,
+    }) => unknown
   ) =>
     cb({
       chat: {
@@ -373,6 +343,44 @@ const getTwitchAPIMock = async () => ({
         },
       },
     }),
+  predictions: {
+    cancelPrediction: async (twitchId: string, predictionId: string) => {
+      state.cancelPredictionCalls.push({ predictionId, twitchId })
+      return {}
+    },
+    createPrediction: async (
+      twitchId: string,
+      opts: { title: string; outcomes: string[]; autoLockAfter: number }
+    ) => {
+      state.createPredictionCalls.push({ opts, twitchId })
+      if (state.createPredictionError) {
+        throw state.createPredictionError
+      }
+      return { id: 'new-prediction-id' }
+    },
+    getPredictions: async (twitchId: string, opts: { limit: number }) => {
+      state.getPredictionsCalls.push({ opts, twitchId })
+      if (state.getPredictionsTransientFailures > 0) {
+        state.getPredictionsTransientFailures -= 1
+        const err = new Error(
+          'Invalid response body while trying to fetch https://api.twitch.tv/helix/predictions: Premature close'
+        ) as Error & { code: string }
+        err.code = 'ERR_STREAM_PREMATURE_CLOSE'
+        throw err
+      }
+      if (state.getPredictionsError) {
+        throw state.getPredictionsError
+      }
+      return { data: state.predictions }
+    },
+    resolvePrediction: async (twitchId: string, predictionId: string, outcomeId: string) => {
+      state.resolvePredictionCalls.push({ outcomeId, predictionId, twitchId })
+      return {}
+    },
+  },
+  streams: {
+    createStreamMarker: async () => ({}),
+  },
 })
 
 // Register the @dotabod/shared-utils mock BEFORE any dynamic import that
@@ -382,39 +390,39 @@ const getTwitchAPIMock = async () => ({
 function reinstallSharedUtilsMock() {
   vi.doMock('@dotabod/shared-utils', () =>
     buildSharedUtilsMock({
-      supabase: supabaseMock,
-      logger: loggerMock,
-      getTwitchAPI: getTwitchAPIMock,
       checkBotStatus: async () => state.botBanned,
-      trackDisableReason: async (userId, settingKey, reason, metadata, opts) => {
-        state.trackDisableReasonCalls.push({ userId, settingKey, reason, metadata, opts })
-      },
-      trackResolveReason: async (userId, settingKey, autoResolved, opts) => {
-        state.trackResolveReasonCalls.push({ userId, settingKey, autoResolved, opts })
-      },
-      recordDisableNotification: async (userId, settingKey, reason, metadata) => {
-        state.recordDisableNotificationCalls.push({ userId, settingKey, reason, metadata })
-      },
-      resolveDisableNotifications: async (userId, settingKey, opts) => {
-        state.resolveDisableNotificationCalls.push({ userId, settingKey, opts })
-      },
       commandDisable: {
         disable: async (userId, reason, metadata) => {
-          state.commandDisableCalls.push({ kind: 'disable', userId, reason, metadata })
+          state.commandDisableCalls.push({ kind: 'disable', metadata, reason, userId })
         },
         enable: async (userId, opts) => {
-          state.commandDisableCalls.push({ kind: 'enable', userId, opts })
+          state.commandDisableCalls.push({ kind: 'enable', opts, userId })
         },
         recordNotification: async (userId, reason, metadata) => {
           state.commandDisableCalls.push({
             kind: 'recordNotification',
-            userId,
-            reason,
             metadata,
+            reason,
+            userId,
           })
         },
       },
-    }),
+      getTwitchAPI: getTwitchAPIMock,
+      logger: loggerMock,
+      recordDisableNotification: async (userId, settingKey, reason, metadata) => {
+        state.recordDisableNotificationCalls.push({ metadata, reason, settingKey, userId })
+      },
+      resolveDisableNotifications: async (userId, settingKey, opts) => {
+        state.resolveDisableNotificationCalls.push({ opts, settingKey, userId })
+      },
+      supabase: supabaseMock,
+      trackDisableReason: async (userId, settingKey, reason, metadata, opts) => {
+        state.trackDisableReasonCalls.push({ metadata, opts, reason, settingKey, userId })
+      },
+      trackResolveReason: async (userId, settingKey, autoResolved, opts) => {
+        state.trackResolveReasonCalls.push({ autoResolved, opts, settingKey, userId })
+      },
+    })
   )
 }
 reinstallSharedUtilsMock()
@@ -425,20 +433,20 @@ function reinstallModuleMocks() {
   reinstallSharedUtilsMock()
 
   vi.doMock('../../../dota/lib/updateMmr', () => ({
+    tellChatNewMMR: () => {},
     updateMmr: async (args: Record<string, unknown>) => {
       state.updateMmrCalls.push(args)
     },
-    tellChatNewMMR: () => undefined,
   }))
 
   // Mock only the network-touching functions in ranks.js. The rest
   // (rankTierToMmr, mmrToRankTier, etc.) are pure helpers used elsewhere in
   // the dota source, so we re-export them as-is from the real module.
-  vi.doMock('../../../dota/lib/ranks', () => ({
+  vi.doMock(import('../../../dota/lib/ranks'), () => ({
     ...realRanks,
     getDotabodRankProfile: async () => state.dotabodRankProfile,
-    getRankTitle: () => state.rankTitle,
     getRankDescription: async () => state.rankDescription,
+    getRankTitle: () => state.rankTitle,
   }))
 
   // Profanity filter does local + OpenAI checks; mock to keep tests offline and
@@ -446,7 +454,9 @@ function reinstallModuleMocks() {
   // handling can override `state.moderateTextOverride`.
   vi.doMock('@dotabod/profanity-filter', () => ({
     moderateText: async (text?: string | string[]) => {
-      if (state.moderateTextOverride) return state.moderateTextOverride(text)
+      if (state.moderateTextOverride) {
+        return state.moderateTextOverride(text)
+      }
       return text
     },
   }))
@@ -455,15 +465,15 @@ function reinstallModuleMocks() {
   // connect() yields a db whose delayedGames.findOne returns state.delayedGame.
   vi.doMock('../../../steam/MongoDBSingleton', () => ({
     default: {
+      close: async () => {},
       connect: async () => ({
         collection: (name: string) => ({
-          findOne: async () => state.delayedGame,
           find: () => ({
             toArray: async () => (name === 'notablePlayers' ? state.notablePlayers : []),
           }),
+          findOne: async () => state.delayedGame,
         }),
       }),
-      close: async () => undefined,
     },
   }))
 }
@@ -474,8 +484,8 @@ await initTestI18n()
 
 // Import after all module mocks are registered.
 const resolveMatchModule = await import('../resolveMatch')
-export const resolveMatchRetroactively = resolveMatchModule.resolveMatchRetroactively
-export const findMostRecentResolvedMatch = resolveMatchModule.findMostRecentResolvedMatch
+export const { resolveMatchRetroactively } = resolveMatchModule
+export const { findMostRecentResolvedMatch } = resolveMatchModule
 export const { closeTwitchBet } = await import('../closeTwitchBet')
 export const { refundTwitchBet } = await import('../refundTwitchBets')
 export const { isPredictionAlreadyActiveError, openTwitchBet } = await import('../openTwitchBet')
@@ -546,7 +556,7 @@ await import('../../commands/unresolved')
 steamSocket.emit = ((
   event: string,
   _args: unknown,
-  cb: (err: unknown, response: unknown) => void,
+  cb: (err: unknown, response: unknown) => void
 ) => {
   if (state.steamSocketError) {
     cb(state.steamSocketError, null)
@@ -560,10 +570,10 @@ steamSocket.emit = ((
 }) as any
 
 const fakeGsiHandler = {
-  getChannelId: () => state.channelId,
   emitWLUpdate: () => {
     state.emitWLUpdateCalls += 1
   },
+  getChannelId: () => state.channelId,
 } as any
 gsiHandlers.set('token-abc', fakeGsiHandler)
 
@@ -574,24 +584,24 @@ const { server } = await import('../../../dota/server')
 // harness loaded last wins. Calling this in resetState() (which every twitch
 // test calls in beforeEach) guarantees the twitch patches are active.
 function installTwitchMocks() {
-  chatClient.say = (async (channel: string, message: string, messageId?: string) => {
+  chatClient.say = async (channel: string, message: string, messageId?: string) => {
     state.chatSayCalls.push({ channel, message, messageId })
-  }) as any
+  }
 
   ;(redisClient as any).client = {
-    get: async (key: string) => state.redisGet[key] ?? null,
-    set: async () => 'OK',
     del: async (key: string) => {
       state.redisDelCalls.push(key)
       return 1
     },
-    zAdd: async () => 0,
-    zRem: async () => 0,
-    zRangeByScore: async () => [] as string[],
+    get: async (key: string) => state.redisGet[key] ?? null,
     json: {
       get: async () => null,
       set: async () => 'OK',
     },
+    set: async () => 'OK',
+    zAdd: async () => 0,
+    zRangeByScore: async () => [] as string[],
+    zRem: async () => 0,
   }
 
   // Inject a stub socket.io server so commands that talk to the overlay
@@ -599,14 +609,16 @@ function installTwitchMocks() {
   // fetchSockets returns [] so overlay-dependent paths take their empty branch.
   server.setServer({
     io: {
+      fetchSockets: async () => [],
+      in: () => ({ fetchSockets: async () => [] }),
       to: (room: string) => ({
         emit: (event: string, ...args: unknown[]) => {
-          state.socketEmitCalls.push({ room, event, args })
-          if (event === 'refresh-settings') state.streamStatusEffectCalls.push('socket')
+          state.socketEmitCalls.push({ args, event, room })
+          if (event === 'refresh-settings') {
+            state.streamStatusEffectCalls.push('socket')
+          }
         },
       }),
-      in: () => ({ fetchSockets: async () => [] }),
-      fetchSockets: async () => [],
     },
   } as any)
 
@@ -622,27 +634,27 @@ export type Client = Parameters<typeof resolveMatchRetroactively>[0]
 
 export function makeClient(overrides: Partial<Client> = {}): Client {
   const client = {
-    name: 'streamer',
-    token: 'token-abc',
-    stream_online: true,
-    stream_start_date: new Date('2026-05-19T08:00:00Z'),
-    beta_tester: false,
-    locale: 'en',
-    steam32Id: 99999,
-    mmr: 5000,
     Account: {
-      requires_refresh: false,
-      refresh_token: '',
       access_token: '',
       expires_at: null,
-      scope: null,
-      obtainment_timestamp: null,
       expires_in: null,
+      obtainment_timestamp: null,
       providerAccountId: 'twitch-channel-1',
+      refresh_token: '',
+      requires_refresh: false,
+      scope: null,
     },
     SteamAccount: [],
-    settings: [],
+    beta_tester: false,
     gsi: undefined,
+    locale: 'en',
+    mmr: 5000,
+    name: 'streamer',
+    settings: [],
+    steam32Id: 99_999,
+    stream_online: true,
+    stream_start_date: new Date('2026-05-19T08:00:00Z'),
+    token: 'token-abc',
     ...overrides,
   } as Client
 
@@ -655,12 +667,12 @@ export function makeClient(overrides: Partial<Client> = {}): Client {
 
 export const baseMatchRow = (overrides: Partial<SessionMatchRow> = {}): SessionMatchRow => ({
   id: 'row-uuid-1',
+  is_party: false,
+  lobby_type: 7,
   matchId: '7777777777',
   myTeam: 'radiant',
   predictionId: 'pred-1',
-  steam32Id: 99999,
-  lobby_type: 7,
-  is_party: false,
+  steam32Id: 99_999,
   won: null,
   ...overrides,
 })
@@ -669,13 +681,13 @@ export const baseMatchRow = (overrides: Partial<SessionMatchRow> = {}): SessionM
 // merges so callers can override player/hero (e.g. set player.xpm).
 export const liveGsi = (extra: Record<string, unknown> = {}) =>
   ({
+    hero: { id: 1 },
     map: {
-      matchid: '7777777777',
       game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+      matchid: '7777777777',
       win_team: 'none',
     },
-    player: { accountid: 99999, activity: 'playing' },
-    hero: { id: 1 },
+    player: { accountid: 99_999, activity: 'playing' },
     ...extra,
   }) as any
 
@@ -694,8 +706,8 @@ export function makeMessage({
 }) {
   const client = makeClient({ subscription: PRO_SUB, ...clientOverrides })
   return {
-    user: { name: userName, messageId: 'msg-1', permission, userId: 'user-1' },
+    channel: { client, id: channelId, name: '#streamer', settings: client.settings },
     content,
-    channel: { name: '#streamer', id: channelId, client, settings: client.settings },
+    user: { messageId: 'msg-1', name: userName, permission, userId: 'user-1' },
   }
 }

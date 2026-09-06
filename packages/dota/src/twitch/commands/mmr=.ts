@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 
-import { type UpdateMmrParams, updateMmr } from '../../dota/lib/updateMmr'
+import { updateMmr } from '../../dota/lib/updateMmr'
+import type { UpdateMmrParams } from '../../dota/lib/updateMmr'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
@@ -11,20 +12,18 @@ const sendMessage = (
   locale: string,
   key: string,
   messageId: string,
-  options = {},
+  options = {}
 ) => {
   chatClient.say(channel, t(key, { lng: locale, ...options }), messageId)
 }
 
 const performMmrUpdate = async (params: UpdateMmrParams) => {
-  return await updateMmr({ ...params, force: true, tellChat: true })
+  await updateMmr({ ...params, force: true, tellChat: true })
 }
 
 commandHandler.registerCommand('setmmr', {
   aliases: ['mmr=', 'mmrset'],
-  permission: 2,
   cooldown: 0,
-  onlyOnline: false,
   handler: async (message, args) => {
     const {
       channel: { name: channel, client },
@@ -42,31 +41,31 @@ commandHandler.registerCommand('setmmr', {
       if (!accounts.length || accounts.length === 1) {
         const steam32Id = accounts.length ? accounts[0].steam32Id : client.steam32Id
         await performMmrUpdate({
+          channel,
           currentMmr: client.mmr,
           newMmr: mmrFromArg,
           steam32Id,
-          channel,
           token: client.token,
         })
         return
       }
 
-      const key = !Number(client.steam32Id)
-        ? client.multiAccount
+      const key = Number(client.steam32Id)
+        ? 'updateMmrMulti'
+        : client.multiAccount
           ? 'multiAccount'
           : 'unknownSteam'
-        : 'updateMmrMulti'
       sendMessage(channel, locale, key, message.user.messageId, {
-        url: 'dotabod.com/dashboard/features',
         steamId: Number(client.steam32Id),
+        url: 'dotabod.com/dashboard/features',
       })
 
       if (Number(client.steam32Id)) {
         await performMmrUpdate({
+          channel,
           currentMmr: client.mmr,
           newMmr: mmrFromArg,
           steam32Id: client.steam32Id,
-          channel,
           token: client.token,
         })
       }
@@ -83,11 +82,13 @@ commandHandler.registerCommand('setmmr', {
     }
 
     await performMmrUpdate({
+      channel,
       currentMmr: accountFromArg.mmr,
       newMmr: mmrFromArg,
       steam32Id: accountFromArg.steam32Id,
-      channel,
       token: client.token,
     })
   },
+  onlyOnline: false,
+  permission: 2,
 })

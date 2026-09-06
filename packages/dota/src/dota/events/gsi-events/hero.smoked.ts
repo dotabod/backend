@@ -1,19 +1,24 @@
 import { t } from 'i18next'
 
 import { redisClient } from '../../../db/redisInstance'
-import getHero, { type HeroNames } from '../../lib/getHero'
+import getHero from '../../lib/getHero'
+import type { HeroNames } from '../../lib/getHero'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import { say } from '../../say'
 import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent('hero:smoked', {
   handler: async (dotaClient, isSmoked: boolean) => {
-    if (!dotaClient.client.stream_online) return
-    if (!isPlayingMatch(dotaClient.client.gsi)) return
+    if (!dotaClient.client.stream_online) {
+      return
+    }
+    if (!isPlayingMatch(dotaClient.client.gsi)) {
+      return
+    }
 
     if (isSmoked) {
       const playingHero = (await redisClient.client.get(
-        `${dotaClient.getToken()}:playingHero`,
+        `${dotaClient.getToken()}:playingHero`
       )) as HeroNames | null
 
       const heroName =
@@ -22,7 +27,7 @@ eventHandler.registerEvent('hero:smoked', {
       say(
         dotaClient.client,
         t('chatters.smoked', { emote: 'Shush', heroName, lng: dotaClient.client.locale }),
-        { chattersKey: 'smoke' },
+        { chattersKey: 'smoke' }
       )
     }
   },

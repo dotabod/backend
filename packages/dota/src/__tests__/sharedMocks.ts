@@ -12,7 +12,7 @@ type SupabaseLike = unknown
 // Loose function signature so callers can supply any of the typical logger
 // shapes (message + optional meta, variadic args, etc.) without TS contravariance
 // rejecting them. Tests just care that the methods exist and capture calls.
-type LoggerLike = {
+interface LoggerLike {
   info: (...args: any[]) => void
   error: (...args: any[]) => void
   warn: (...args: any[]) => void
@@ -30,24 +30,24 @@ export function buildSharedUtilsMock(opts: {
     settingKey: string,
     reason: string,
     metadata?: Record<string, unknown>,
-    opts?: { disabledValue?: boolean },
+    opts?: { disabledValue?: boolean }
   ) => Promise<void>
   trackResolveReason?: (
     userId: string,
     settingKey: string,
     autoResolved?: boolean,
-    opts?: { reason?: string; enabledValue?: boolean },
+    opts?: { reason?: string; enabledValue?: boolean }
   ) => Promise<void>
   recordDisableNotification?: (
     userId: string,
     settingKey: string,
     reason: string,
-    metadata?: Record<string, unknown>,
+    metadata?: Record<string, unknown>
   ) => Promise<void>
   resolveDisableNotifications?: (
     userId: string,
     settingKey: string,
-    opts?: { reason?: string; autoResolved?: boolean },
+    opts?: { reason?: string; autoResolved?: boolean }
   ) => Promise<void>
   commandDisable?: {
     disable: (userId: string, reason: string, metadata?: Record<string, unknown>) => Promise<void>
@@ -55,33 +55,33 @@ export function buildSharedUtilsMock(opts: {
     recordNotification: (
       userId: string,
       reason: string,
-      metadata?: Record<string, unknown>,
+      metadata?: Record<string, unknown>
     ) => Promise<void>
   }
 }) {
   return {
-    supabase: opts.supabase,
+    botStatus: { isBanned: false },
+    checkBotStatus: opts.checkBotStatus ?? (async () => false),
+    commandDisable: opts.commandDisable ?? {
+      disable: async () => {},
+      enable: async () => {},
+      recordNotification: async () => {},
+    },
     default: opts.supabase,
-    getSupabaseClient: () => opts.supabase,
-    logger: opts.logger,
-    getTwitchAPI: opts.getTwitchAPI ?? (async () => ({})),
+    fetchConduitId: async () => '',
     getAuthProvider: opts.getAuthProvider ?? (() => ({})),
+    getSupabaseClient: () => opts.supabase,
+    getTwitchAPI: opts.getTwitchAPI ?? (async () => ({})),
     getTwitchHeaders: () => ({}),
     getTwitchTokens: async () => ({ access_token: '', refresh_token: '' }),
     hasTokens: () => true,
-    botStatus: { isBanned: false },
-    checkBotStatus: opts.checkBotStatus ?? (async () => false),
-    fetchConduitId: async () => '',
-    updateConduitShard: async () => undefined,
-    trackDisableReason: opts.trackDisableReason ?? (async () => undefined),
-    trackResolveReason: opts.trackResolveReason ?? (async () => undefined),
-    recordDisableNotification: opts.recordDisableNotification ?? (async () => undefined),
-    resolveDisableNotifications: opts.resolveDisableNotifications ?? (async () => undefined),
-    commandDisable: opts.commandDisable ?? {
-      disable: async () => undefined,
-      enable: async () => undefined,
-      recordNotification: async () => undefined,
-    },
+    logger: opts.logger,
+    recordDisableNotification: opts.recordDisableNotification ?? (async () => {}),
+    resolveDisableNotifications: opts.resolveDisableNotifications ?? (async () => {}),
+    supabase: opts.supabase,
+    trackDisableReason: opts.trackDisableReason ?? (async () => {}),
+    trackResolveReason: opts.trackResolveReason ?? (async () => {}),
+    updateConduitShard: async () => {},
   }
 }
 
@@ -124,9 +124,11 @@ export async function initTestI18n() {
 // A Pro subscription bypasses `canAccessFeature` gates everywhere settings/
 // chatters are checked. Tests that want to focus on dispatch/handler logic
 // (not billing) attach this to `client.subscription`.
-export const PRO_SUB = { id: 'sub-1', tier: 'PRO', status: 'ACTIVE', isGift: false } as any
+export const PRO_SUB = { id: 'sub-1', isGift: false, status: 'ACTIVE', tier: 'PRO' } as any
 
 // Drain microtasks queued by fire-and-forget async handlers. `events.emit`
 // is synchronous, but handlers (and the `.then()` chains they spawn) run on
 // the microtask/macrotask queue — one macrotask boundary is enough.
-export const flushAsync = () => new Promise<void>((r) => setTimeout(r, 0))
+export const flushAsync = async () => {
+  await new Promise<void>((r) => setTimeout(r, 0))
+}

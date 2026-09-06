@@ -137,12 +137,16 @@ function extractImports(filePath: string): string[] {
 
 // Function to process a file and extract its dependencies
 function processFile(filePath: string): void {
-  if (processedFiles.has(filePath)) return
+  if (processedFiles.has(filePath)) {
+    return
+  }
   processedFiles.add(filePath)
 
   // Skip non-source files
   const ext = extname(filePath)
-  if (!extensions.has(ext)) return
+  if (!extensions.has(ext)) {
+    return
+  }
 
   const imports = extractImports(filePath)
   const fileDeps = new Set<string>()
@@ -151,10 +155,14 @@ function processFile(filePath: string): void {
   for (const importPath of imports) {
     if (!isInternalModule(importPath)) {
       // Skip external modules
-      if (externalModules.has(importPath)) continue
+      if (externalModules.has(importPath)) {
+        continue
+      }
 
       // Skip node built-ins and other external packages
-      if (!importPath.startsWith('@dotabod/')) continue
+      if (!importPath.startsWith('@dotabod/')) {
+        continue
+      }
     }
 
     const resolvedImport = resolveImport(importPath, filePath)
@@ -214,7 +222,9 @@ function findCycles(): Map<string, string[]> {
       return
     }
 
-    if (visited.has(node)) return
+    if (visited.has(node)) {
+      return
+    }
 
     visited.add(node)
     stack.add(node)
@@ -258,7 +268,7 @@ async function main() {
   scanDirectory(packagesDir)
 
   console.log(
-    `Scanned ${processedFiles.size} files and found ${dependencies.size} with dependencies.`,
+    `Scanned ${processedFiles.size} files and found ${dependencies.size} with dependencies.`
   )
 
   // Find cycles
@@ -271,7 +281,7 @@ async function main() {
     console.log('-'.repeat(80))
 
     const sortedCycles = [...cycles.entries()].sort((a, b) =>
-      formatPath(a[0]).localeCompare(formatPath(b[0])),
+      formatPath(a[0]).localeCompare(formatPath(b[0]))
     )
 
     sortedCycles.forEach(([file, cycle], index) => {
@@ -283,7 +293,7 @@ async function main() {
     // Group cycles by package
     const cyclesByPackage = new Map<string, number>()
     for (const [file] of sortedCycles) {
-      const packageMatch = formatPath(file).match(/^packages\/([^/]+)/)
+      const packageMatch = /^packages\/([^/]+)/.exec(formatPath(file))
       if (packageMatch) {
         const packageName = packageMatch[1]
         cyclesByPackage.set(packageName, (cyclesByPackage.get(packageName) || 0) + 1)

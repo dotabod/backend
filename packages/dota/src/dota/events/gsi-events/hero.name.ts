@@ -1,12 +1,14 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import RedisClient from '../../../db/RedisClient'
 import { DBSettings, getValueOrDefault } from '../../../settings'
 import { openTwitchBet } from '../../../twitch/lib/openTwitchBet'
 import { refundTwitchBet } from '../../../twitch/lib/refundTwitchBets'
 import { getStreamDelay } from '../../getStreamDelay'
 import { delayedQueue } from '../../lib/DelayedQueue'
-import getHero, { type HeroNames } from '../../lib/getHero'
+import getHero from '../../lib/getHero'
+import type { HeroNames } from '../../lib/getHero'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import { say } from '../../say'
 import eventHandler from '../EventHandler'
@@ -15,17 +17,21 @@ const redisClient = RedisClient.getInstance()
 
 eventHandler.registerEvent('hero:name', {
   handler: async (dotaClient, name: HeroNames) => {
-    if (!isPlayingMatch(dotaClient.client.gsi)) return
+    if (!isPlayingMatch(dotaClient.client.gsi)) {
+      return
+    }
 
     const betsEnabled = getValueOrDefault(
       DBSettings.bets,
       dotaClient.client.settings,
-      dotaClient.client.subscription,
+      dotaClient.client.subscription
     )
-    if (!betsEnabled) return
+    if (!betsEnabled) {
+      return
+    }
 
     const playingHero = (await redisClient.client.get(
-      `${dotaClient.getToken()}:playingHero`,
+      `${dotaClient.getToken()}:playingHero`
     )) as HeroNames | null
 
     if (playingHero && playingHero !== name) {
@@ -44,8 +50,8 @@ eventHandler.registerEvent('hero:name', {
         // This is a new game, not a hero swap within the same game
         // Don't refund/reopen bets - let openBets() handle the new game
         logger.info('[BETS] Ignoring hero change - different match detected', {
-          redisMatchId: matchId,
           gsiMatchId,
+          redisMatchId: matchId,
           token: dotaClient.getToken(),
         })
         return
@@ -89,8 +95,8 @@ eventHandler.registerEvent('hero:name', {
             await supabase
               .from('matches')
               .update({
-                predictionId: bet.id,
                 hero_name: name,
+                predictionId: bet.id,
                 updated_at: new Date().toISOString(),
               })
               .eq('predictionId', betData.predictionId)
@@ -98,8 +104,8 @@ eventHandler.registerEvent('hero:name', {
             await supabase
               .from('matches')
               .update({
-                predictionId: null,
                 hero_name: name,
+                predictionId: null,
                 updated_at: new Date().toISOString(),
               })
               .eq('predictionId', betData.predictionId)
@@ -109,29 +115,29 @@ eventHandler.registerEvent('hero:name', {
           const tellChatBets = getValueOrDefault(
             DBSettings.tellChatBets,
             dotaClient.client.settings,
-            dotaClient.client.subscription,
+            dotaClient.client.subscription
           )
           if (tellChatBets) {
             say(
               dotaClient.client,
               t('bets.remade', {
-                lng: dotaClient.client.locale,
                 emote: 'Okayeg 👍',
                 emote2: 'peepoGamble',
-                oldHeroName,
+                lng: dotaClient.client.locale,
                 newHeroName,
-              }),
+                oldHeroName,
+              })
             )
           }
 
           logger.info('[BETS] remade bets', {
             event: 'open_bets',
-            oldHeroName,
             newHeroName,
-            user: dotaClient.getToken(),
+            oldHeroName,
             player_team: dotaClient.client.gsi?.player?.team_name,
+            user: dotaClient.getToken(),
           })
-        },
+        }
       )
     }
 

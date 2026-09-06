@@ -1,6 +1,7 @@
 import type { Tables } from '@dotabod/shared-utils'
 import { getAuthProvider, getTwitchAPI, logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { clearCacheForUser } from '../dota/clearCacheForUser'
 import findUser from '../dota/lib/connectedStreamers'
 import { gsiHandlers, invalidTokens, twitchIdToToken, twitchNameToToken } from '../dota/lib/consts'
@@ -32,23 +33,33 @@ class SetupSupabase {
 
   toggleHandler = async (userId: string, enable: boolean) => {
     const { result: client } = await getDBUser({ token: userId })
-    if (!client) return
+    if (!client) {
+      return
+    }
 
     toggleDotabod(userId, enable, client.name, client.locale)
   }
 
   clearSteamUsers = async (userIds: Iterable<string>) => {
     for (const userId of new Set(userIds)) {
-      if (!userId) continue
+      if (!userId) {
+        continue
+      }
 
       const client = findUser(userId)
       const accountIds = new Set<string>()
-      if (client?.Account?.providerAccountId) accountIds.add(client.Account.providerAccountId)
+      if (client?.Account?.providerAccountId) {
+        accountIds.add(client.Account.providerAccountId)
+      }
       for (const [accountId, token] of twitchIdToToken) {
-        if (token === userId) accountIds.add(accountId)
+        if (token === userId) {
+          accountIds.add(accountId)
+        }
       }
 
-      if (client) await clearCacheForUser(client)
+      if (client) {
+        await clearCacheForUser(client)
+      }
 
       invalidTokens.delete(userId)
       for (const accountId of accountIds) {
@@ -56,7 +67,9 @@ class SetupSupabase {
         invalidTokens.delete(accountId)
       }
       for (const [name, token] of twitchNameToToken) {
-        if (token === userId) twitchNameToToken.delete(name)
+        if (token === userId) {
+          twitchNameToToken.delete(name)
+        }
       }
     }
   }
@@ -78,10 +91,12 @@ class SetupSupabase {
             // User row is gone — allow a future re-onboarding under the same
             // id to bypass the negative cache.
             invalidTokens.delete(client.token)
-            if (accountId) invalidTokens.delete(accountId)
+            if (accountId) {
+              invalidTokens.delete(accountId)
+            }
             return
           }
-        },
+        }
       )
       .on(
         'postgres_changes',
@@ -90,17 +105,19 @@ class SetupSupabase {
           const newObj = payload.new
           const client = findUser(newObj.userId)
 
-          if (!client) return
+          if (!client) {
+            return
+          }
 
           if (isSubscriptionActive(newObj)) {
             client.subscription = {
               id: newObj.id,
-              tier: newObj.tier,
-              status: newObj.status,
               isGift: newObj.isGift,
+              status: newObj.status,
+              tier: newObj.tier,
             }
           }
-        },
+        }
       )
       .on(
         'postgres_changes',
@@ -109,16 +126,18 @@ class SetupSupabase {
           const newObj = payload.new
           const client = findUser(newObj.userId)
 
-          if (!client) return
+          if (!client) {
+            return
+          }
 
           const isNewActive = isSubscriptionActive(newObj)
           if (isNewActive) {
             // Update with new details
             client.subscription = {
               id: newObj.id,
-              tier: newObj.tier,
-              status: newObj.status,
               isGift: newObj.isGift,
+              status: newObj.status,
+              tier: newObj.tier,
             }
             return
           }
@@ -146,9 +165,9 @@ class SetupSupabase {
               // Set the other active subscription
               client.subscription = {
                 id: activeSubscription.data.id,
-                tier: activeSubscription.data.tier,
-                status: activeSubscription.data.status,
                 isGift: activeSubscription.data.isGift,
+                status: activeSubscription.data.status,
+                tier: activeSubscription.data.tier,
               }
             } else {
               // No other active subscriptions found
@@ -156,7 +175,7 @@ class SetupSupabase {
             }
             return
           }
-        },
+        }
       )
       // Needs `ALTER TABLE subscriptions REPLICA IDENTITY FULL;` to receive full object on DELETE
       .on(
@@ -166,7 +185,9 @@ class SetupSupabase {
           const oldObj = payload.old
           const client = findUser(oldObj.userId)
 
-          if (!client) return
+          if (!client) {
+            return
+          }
 
           if (client.subscription?.id === oldObj.id) {
             // Check if user has any other active subscriptions
@@ -185,16 +206,16 @@ class SetupSupabase {
               // Set the other active subscription
               client.subscription = {
                 id: activeSubscription.data.id,
-                tier: activeSubscription.data.tier,
-                status: activeSubscription.data.status,
                 isGift: activeSubscription.data.isGift,
+                status: activeSubscription.data.status,
+                tier: activeSubscription.data.tier,
               }
             } else {
               // No other active subscriptions found
               client.subscription = undefined
             }
           }
-        },
+        }
       )
       .on(
         'postgres_changes',
@@ -214,7 +235,9 @@ class SetupSupabase {
             // (GSI path) or the providerAccountId (Twitch chat / tooltips path).
             // Add AFTER clearCacheForUser — see ban branch for rationale.
             invalidTokens.add(newObj.userId)
-            if (newObj.providerAccountId) invalidTokens.add(newObj.providerAccountId)
+            if (newObj.providerAccountId) {
+              invalidTokens.add(newObj.providerAccountId)
+            }
             return
           }
 
@@ -234,10 +257,10 @@ class SetupSupabase {
               const twitchId = newObj.providerAccountId
               const authProvider = getAuthProvider()
               authProvider.removeUser(twitchId)
-              getTwitchAPI(twitchId).catch((e) => {
+              getTwitchAPI(twitchId).catch((error) => {
                 logger.error('[TWITCHAPI] Error updating twurple token', {
+                  error,
                   twitchId,
-                  e,
                 })
               })
             }
@@ -247,7 +270,9 @@ class SetupSupabase {
           // Which allows us to update the authProvider object
           if (newObj.requires_refresh === false && oldObj.requires_refresh === true) {
             invalidTokens.delete(newObj.userId)
-            if (newObj.providerAccountId) invalidTokens.delete(newObj.providerAccountId)
+            if (newObj.providerAccountId) {
+              invalidTokens.delete(newObj.providerAccountId)
+            }
             logger.info('[WATCHER ACCOUNT] Refreshing account', {
               twitchId: newObj.providerAccountId,
             })
@@ -257,7 +282,7 @@ class SetupSupabase {
               await clearCacheForUser(client)
             }
           }
-        },
+        }
       )
       .on(
         'postgres_changes',
@@ -281,7 +306,9 @@ class SetupSupabase {
             // cache. (Until clearCacheForUser stopped touching invalidTokens
             // these adds were silently undone.)
             invalidTokens.add(newObj.id)
-            if (accountId) invalidTokens.add(accountId)
+            if (accountId) {
+              invalidTokens.add(accountId)
+            }
             return
           }
 
@@ -295,13 +322,17 @@ class SetupSupabase {
             // the providerAccountId so both keyspaces are cleared.
             const client = findUser(newObj.id)
             const accountId = client?.Account?.providerAccountId
-            if (accountId) invalidTokens.delete(accountId)
+            if (accountId) {
+              invalidTokens.delete(accountId)
+            }
             logger.info('[WATCHER USER] Unbanning user', { userId: newObj.id })
             return
           }
 
           const client = findUser(newObj.id)
-          if (!client) return
+          if (!client) {
+            return
+          }
 
           client.name = newObj.name
           client.locale = newObj.locale
@@ -337,19 +368,21 @@ class SetupSupabase {
           if (newObj.mmr !== 0 && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {
             client.mmr = newObj.mmr
 
-            if (!client.stream_online) return
+            if (!client.stream_online) {
+              return
+            }
             logger.info('[WATCHER MMR] Sending mmr to socket', {
-              name: client.name,
               mmr: newObj.mmr,
+              name: client.name,
             })
             try {
               const deets = await getRankDetail(newObj.mmr, client.steam32Id)
               server.io.to(client.token).emit('update-medal', deets)
-            } catch (e) {
-              logger.error('Error in watcher postgres update', { e })
+            } catch (error) {
+              logger.error('Error in watcher postgres update', { error })
             }
           }
-        },
+        }
       )
       .on(
         'postgres_changes',
@@ -366,9 +399,9 @@ class SetupSupabase {
 
           if (subError || !subscriptionData) {
             logger.error('Error fetching subscription or subscription not found for gift', {
+              error: subError,
               giftId: newObj.id,
               subscriptionId: newObj.subscriptionId,
-              error: subError,
             })
             return
           }
@@ -378,9 +411,9 @@ class SetupSupabase {
           // Only proceed if the client is found and currently considered online
           if (!client?.stream_online) {
             logger.info('Gift notification skipped: Client not found or not online', {
-              userId: subscriptionData.userId,
               found: !!client,
               online: client?.stream_online,
+              userId: subscriptionData.userId,
             })
             return
           }
@@ -395,7 +428,7 @@ class SetupSupabase {
             const isValidQuantity = !Number.isNaN(giftQuantityNum) && giftQuantityNum > 0
 
             if (isValidQuantity) {
-              const giftType = newObj.giftType
+              const { giftType } = newObj
 
               if (giftType) {
                 if (giftType === 'monthly') {
@@ -425,8 +458,8 @@ class SetupSupabase {
             // Construct the base message using translation keys
             const baseMessage = newObj.senderName
               ? t('giftSub', {
-                  senderName: newObj.senderName,
                   lng: client.locale,
+                  senderName: newObj.senderName,
                 })
               : t('giftSubAnonymous', {
                   lng: client.locale,
@@ -454,14 +487,14 @@ class SetupSupabase {
             // Send notification message to chat
             logger.info(`Sending gift notification: ${fullMessage}`) // Add logging
             chatClient.say(client.name, fullMessage)
-          } catch (e) {
+          } catch (error) {
             logger.error('Error constructing or sending gift notification to chat', {
-              error: e,
-              userId: client.token,
+              error,
               giftId: newObj.id,
+              userId: client.token,
             })
           }
-        },
+        }
       )
       .on(
         'postgres_changes',
@@ -476,20 +509,22 @@ class SetupSupabase {
               twitchChat.emit('clear-disable-cache', { userId: newObj.userId })
             }
 
-            if (!client) {
+            if (client) {
+              toggleDotabod(newObj.userId, !!newObj.value, client.name, client.locale)
+            } else {
               // in case they ban dotabod and we reboot server,
               // we'll never have the client cached, so we have to lookup the user again
               try {
                 void this.toggleHandler(newObj.userId, !!newObj.value)
-              } catch (e) {
-                logger.error('Error in toggleHandler', { e })
+              } catch (error) {
+                logger.error('Error in toggleHandler', { error })
               }
-            } else {
-              toggleDotabod(newObj.userId, !!newObj.value, client.name, client.locale)
             }
           }
 
-          if (!client) return
+          if (!client) {
+            return
+          }
 
           // replace the new setting with the one we have saved in cache
           logger.info('[WATCHER SETTING] Updating setting for', {
@@ -510,22 +545,24 @@ class SetupSupabase {
 
           // Sending this one even when offline, because they might be testing locally
           logger.debug('[WATCHER SETTING] Sending new setting value to socket', {
-            name: client.name,
             key: newObj.key,
+            name: client.name,
             value: newObj.value,
           })
           server.io.to(client.token).emit('refresh-settings', newObj.key)
-        },
+        }
       )
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'win_loss_adjustments' },
         (payload: { new: Tables<'win_loss_adjustments'> }) => {
           const client = findUser(payload.new.user_id)
-          if (!client) return
+          if (!client) {
+            return
+          }
 
           gsiHandlers.get(client.token)?.emitWLUpdate(true)
-        },
+        }
       )
       .on(
         'postgres_changes',
@@ -557,7 +594,9 @@ class SetupSupabase {
             const affectedUserIds = new Set<string>()
 
             for (const userId of oldConnectedUserIds) {
-              if (!newConnectedUserIds.has(userId)) affectedUserIds.add(userId)
+              if (!newConnectedUserIds.has(userId)) {
+                affectedUserIds.add(userId)
+              }
             }
 
             if (oldObj.userId !== newObj.userId) {
@@ -565,27 +604,31 @@ class SetupSupabase {
               affectedUserIds.add(newObj.userId)
             }
 
-            if (affectedUserIds.size) await this.clearSteamUsers(affectedUserIds)
+            if (affectedUserIds.size) {
+              await this.clearSteamUsers(affectedUserIds)
+            }
           }
 
           const client = findUser(newObj.userId)
 
           // Just here to update local memory
-          if (!client) return
+          if (!client) {
+            return
+          }
 
           logger.debug('[WATCHER STEAM] Updating steam accounts for', {
             name: client.name,
           })
 
           const currentSteamIdx = client.SteamAccount.findIndex(
-            (s) => s.steam32Id === newObj.steam32Id,
+            (s) => s.steam32Id === newObj.steam32Id
           )
           if (currentSteamIdx === -1) {
             client.SteamAccount.push({
-              name: newObj.name,
-              mmr: newObj.mmr,
-              steam32Id: newObj.steam32Id,
               leaderboard_rank: newObj.leaderboard_rank,
+              mmr: newObj.mmr,
+              name: newObj.name,
+              steam32Id: newObj.steam32Id,
             })
           } else {
             client.SteamAccount[currentSteamIdx].name = newObj.name
@@ -597,20 +640,22 @@ class SetupSupabase {
           if (client.steam32Id === newObj.steam32Id) {
             client.mmr = newObj.mmr
 
-            if (!client.stream_online) return
+            if (!client.stream_online) {
+              return
+            }
 
             getRankDetail(newObj.mmr, newObj.steam32Id)
               .then((deets) => {
                 server.io.to(client.token).emit('update-medal', deets)
               })
-              .catch((e) => {
-                logger.info('[WATCHER STEAM] Error getting rank detail', { e })
+              .catch((error) => {
+                logger.info('[WATCHER STEAM] Error getting rank detail', { error })
               })
           }
-        },
+        }
       )
       .subscribe((status: string, err?: Error) => {
-        logger.info('[SUPABASE] Subscription status on dota:', { status, err })
+        logger.info('[SUPABASE] Subscription status on dota:', { err, status })
       })
   }
 }

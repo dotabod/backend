@@ -1,13 +1,14 @@
 // Regression tests for the inverted date subtraction in checkAltAccount: the
 // diff used to be `creation - follow`, which is always <= 0 (an account must
 // exist before it can follow), so the 0-10 day "alt" window almost never fired.
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks'
 
 const state: {
   creationDate: Date
   followDate: Date | null
-  sayCalls: Array<{ channel: string; text: string; messageId?: string }>
+  sayCalls: { channel: string; text: string; messageId?: string }[]
 } = {
   creationDate: new Date('2026-01-01T00:00:00Z'),
   followDate: new Date('2026-01-06T00:00:00Z'),
@@ -15,35 +16,35 @@ const state: {
 }
 
 function reinstallMocks() {
-  vi.doMock('@dotabod/shared-utils', () =>
+  vi.doMock(import('@dotabod/shared-utils'), () =>
     buildSharedUtilsMock({
-      supabase: {},
-      logger: {
-        info: () => undefined,
-        error: () => undefined,
-        warn: () => undefined,
-        debug: () => undefined,
-      },
       getTwitchAPI: async () => ({
-        users: {
-          getUserByName: async () => ({ creationDate: state.creationDate }),
-        },
         channels: {
           getChannelFollowers: async () => ({
             data: state.followDate ? [{ followDate: state.followDate }] : [],
           }),
         },
+        users: {
+          getUserByName: async () => ({ creationDate: state.creationDate }),
+        },
       }),
-    }),
+      logger: {
+        debug: () => {},
+        error: () => {},
+        info: () => {},
+        warn: () => {},
+      },
+      supabase: {},
+    })
   )
 
-  vi.doMock('../chatClient', () => ({
+  vi.doMock(import('../chatClient'), () => ({
     chatClient: {
       say: (channel: string, text: string, messageId?: string) => {
-        state.sayCalls.push({ channel, text, messageId })
+        state.sayCalls.push({ channel, messageId, text })
       },
-      sayWithoutSuggestion: () => undefined,
-      whisper: () => undefined,
+      sayWithoutSuggestion: () => {},
+      whisper: () => {},
     },
   }))
 }

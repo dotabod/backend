@@ -8,13 +8,12 @@ import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('set', {
   aliases: ['cosmetics', 'loadout'],
-  onlyOnline: true,
   dbkey: DBSettings.commandSet,
   handler: async (message, _args) => {
     const {
       channel: { name: channel, client },
     } = message
-    const locale = client.locale
+    const { locale } = client
 
     const matchId = client.gsi?.map?.matchid
     const heroId = client.gsi?.hero?.id
@@ -22,7 +21,7 @@ commandHandler.registerCommand('set', {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -36,7 +35,7 @@ commandHandler.registerCommand('set', {
       chatClient.say(
         channel,
         t('cosmetics.empty', { heroName, lng: locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -44,12 +43,13 @@ commandHandler.registerCommand('set', {
     chatClient.say(
       channel,
       t('cosmetics.list', {
-        heroName,
         count: items.length,
-        url: `dotabod.com/${client.name}/set`,
+        heroName,
         lng: locale,
+        url: `dotabod.com/${client.name}/set`,
       }),
-      message.user.messageId,
+      message.user.messageId
     )
   },
+  onlyOnline: true,
 })

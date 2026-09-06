@@ -22,12 +22,14 @@ export async function checkSupabaseHealth(): Promise<{ up: boolean; msg: string 
       .limit(1)
       .abortSignal(AbortSignal.timeout(SUPABASE_HEALTH_TIMEOUT_MS))
 
-    if (error) return { up: false, msg: `supabase error: ${error.message}` }
-    return { up: true, msg: 'supabase reachable' }
-  } catch (e) {
+    if (error) {
+      return { msg: `supabase error: ${error.message}`, up: false }
+    }
+    return { msg: 'supabase reachable', up: true }
+  } catch (error) {
     return {
+      msg: `supabase unreachable: ${error instanceof Error ? error.message : String(error)}`,
       up: false,
-      msg: `supabase unreachable: ${e instanceof Error ? e.message : String(e)}`,
     }
   }
 }

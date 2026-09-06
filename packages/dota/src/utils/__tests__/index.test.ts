@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it } from 'vitest'
+
 import {
   dotabodMatchHistoryUrl,
   dotabodProfileUrl,
@@ -20,7 +21,7 @@ describe('steamID conversions', () => {
   })
 })
 
-describe('fmtMSS', () => {
+describe(fmtMSS, () => {
   it('zero-pads minutes and seconds', () => {
     expect(fmtMSS(0)).toBe('00:00')
     expect(fmtMSS(90)).toBe('01:30')
@@ -28,53 +29,53 @@ describe('fmtMSS', () => {
   })
 })
 
-describe('is8500Plus', () => {
+describe(is8500Plus, () => {
   const client = (overrides: Record<string, unknown>) => overrides as any
 
   it('is true when client mmr exceeds 8500', () => {
-    expect(is8500Plus(client({ mmr: 9000, SteamAccount: [] }))).toBe(true)
+    expect(is8500Plus(client({ SteamAccount: [], mmr: 9000 }))).toBeTruthy()
   })
 
   it('is true when the matching steam account is at or above 8500', () => {
     expect(
-      is8500Plus(client({ mmr: 0, steam32Id: 1, SteamAccount: [{ steam32Id: 1, mmr: 8500 }] })),
-    ).toBe(true)
+      is8500Plus(client({ SteamAccount: [{ mmr: 8500, steam32Id: 1 }], mmr: 0, steam32Id: 1 }))
+    ).toBeTruthy()
   })
 
   it('is true when the matching steam account has a leaderboard rank', () => {
     expect(
       is8500Plus(
         client({
+          SteamAccount: [{ leaderboard_rank: 42, mmr: 100, steam32Id: 1 }],
           mmr: 0,
           steam32Id: 1,
-          SteamAccount: [{ steam32Id: 1, mmr: 100, leaderboard_rank: 42 }],
-        }),
-      ),
-    ).toBe(true)
+        })
+      )
+    ).toBeTruthy()
   })
 
   it('is false for a normal sub-8500 account', () => {
     expect(
-      is8500Plus(client({ mmr: 3000, steam32Id: 1, SteamAccount: [{ steam32Id: 1, mmr: 3000 }] })),
-    ).toBe(false)
+      is8500Plus(client({ SteamAccount: [{ mmr: 3000, steam32Id: 1 }], mmr: 3000, steam32Id: 1 }))
+    ).toBeFalsy()
   })
 })
 
 describe('Dotabod profile URLs', () => {
   const client = (overrides: Record<string, unknown>) => overrides as any
-  const normal = client({ mmr: 3000, steam32Id: 1, SteamAccount: [{ steam32Id: 1, mmr: 3000 }] })
-  const high = client({ mmr: 9000, SteamAccount: [] })
+  const normal = client({ SteamAccount: [{ mmr: 3000, steam32Id: 1 }], mmr: 3000, steam32Id: 1 })
+  const high = client({ SteamAccount: [], mmr: 9000 })
 
   it('normalizes channel names for profile and match-history routes', () => {
     expect(dotabodProfileUrl('Streamer')).toBe('dotabod.com/streamer')
     expect(dotabodMatchHistoryUrl({ ...normal, name: '#Streamer' })).toBe(
-      'dotabod.com/streamer/matches',
+      'dotabod.com/streamer/matches'
     )
   })
 
   it('returns the first-party URL for 8500+ accounts', () => {
     expect(dotabodMatchHistoryUrl({ ...high, name: 'streamer' })).toBe(
-      'dotabod.com/streamer/matches',
+      'dotabod.com/streamer/matches'
     )
   })
 

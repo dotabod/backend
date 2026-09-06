@@ -7,7 +7,6 @@ import commandHandler from '../lib/CommandHandler'
 import { findAccountFromCmd } from '../lib/findGSIByAccountId'
 
 commandHandler.registerCommand('xpm', {
-  onlyOnline: true,
   dbkey: DBSettings.commandXPM,
   handler: async (message, args, command) => {
     const {
@@ -19,7 +18,7 @@ commandHandler.registerCommand('xpm', {
         client,
         args,
         client.locale,
-        command,
+        command
       )
       const heroName =
         player && 'xpm' in player
@@ -29,14 +28,15 @@ commandHandler.registerCommand('xpm', {
       chatClient.say(
         channel,
         t('xpm', { heroName, lng: client.locale, num: xpm }),
-        message.user.messageId,
+        message.user.messageId
       )
-    } catch (e) {
+    } catch (error) {
       chatClient.say(
         message.channel.name,
-        (e as Error)?.message ?? t('gameNotFound', { lng: client.locale }),
-        message.user.messageId,
+        (error as Error)?.message ?? t('gameNotFound', { lng: client.locale }),
+        message.user.messageId
       )
     }
   },
+  onlyOnline: true,
 })

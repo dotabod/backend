@@ -19,8 +19,8 @@ export async function getAccountsFromMatch({
   // spectator account ids
   if (Array.isArray(players) && players.length) {
     return {
-      matchPlayers: players,
       accountIds: players.map((player) => player.accountid),
+      matchPlayers: players,
     }
   }
 
@@ -38,19 +38,19 @@ export async function getAccountsFromMatch({
       Array.isArray(response?.teams) && response?.teams.length === 2
         ? [
             ...response.teams[0].players.map((a) => ({
-              heroid: a.heroid,
               accountid: Number(a.accountid),
+              heroid: a.heroid,
             })),
             ...response.teams[1].players.map((a) => ({
-              heroid: a.heroid,
               accountid: Number(a.accountid),
+              heroid: a.heroid,
             })),
           ]
         : ([] as { heroid: number; accountid: number }[])
 
     return {
-      matchPlayers,
       accountIds: matchPlayers.map((player) => player.accountid),
+      matchPlayers,
     }
   } finally {
     await mongo.close()

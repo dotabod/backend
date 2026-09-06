@@ -5,26 +5,27 @@
 // master (default on). The one-time "this feature is new" notice lives elsewhere
 // (announceFeatures.ts). These tests drive the handler directly, bypassing the stream_online gate
 // in EventHandler, so they also exercise the anti-snipe state gate end-to-end.
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { buildSharedUtilsMock, initTestI18n } from '../../../../__tests__/sharedMocks'
 
 const loggerMock = {
-  info: () => undefined,
-  error: () => undefined,
-  warn: () => undefined,
-  debug: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 // captureCosmetics is mocked below, so nothing in this path actually hits supabase.
 const supabaseMock = {
   from: () => ({ upsert: async () => ({ data: null, error: null }) }),
 }
-vi.doMock('@dotabod/shared-utils', () =>
-  buildSharedUtilsMock({ supabase: supabaseMock, logger: loggerMock }),
+vi.doMock(import('@dotabod/shared-utils'), () =>
+  buildSharedUtilsMock({ logger: loggerMock, supabase: supabaseMock })
 )
 
 // In-memory Redis so the per-match announce dedupe is exercised for real.
 const redisStore: Record<string, string> = {}
-vi.doMock('../../../../db/RedisClient', () => ({
+vi.doMock(import('../../../../db/RedisClient'), () => ({
   default: {
     getInstance: () => ({
       client: {
@@ -41,15 +42,15 @@ vi.doMock('../../../../db/RedisClient', () => ({
 // Control the resolved loadout returned by the (real, elsewhere-tested) capture.
 let capturedItems: unknown[] = []
 const captureMock = vi.fn(async () => capturedItems)
-vi.doMock('../../../lib/captureCosmetics', () => ({ captureCosmetics: captureMock }))
+vi.doMock(import('../../../lib/captureCosmetics'), () => ({ captureCosmetics: captureMock }))
 
 // Capture say() calls instead of hitting the real chat/delay pipeline.
 const sayMock = vi.fn()
-vi.doMock('../../../say', () => ({ say: sayMock }))
+vi.doMock(import('../../../say'), () => ({ say: sayMock }))
 
 // Capture the registered handler instead of wiring the global event emitter.
 let registeredHandler: ((dotaClient: any, heroId: number) => Promise<void> | void) | undefined
-vi.doMock('../../EventHandler', () => ({
+vi.doMock(import('../../EventHandler'), () => ({
   default: {
     registerEvent: (_name: string, opts: { handler: typeof registeredHandler }) => {
       registeredHandler = opts.handler
@@ -62,7 +63,10 @@ await import('../hero.id')
 
 const TOKEN = 'user-token-1'
 const INVOKER_ID = 74
-type Setting = { key: string; value: unknown }
+interface Setting {
+  key: string
+  value: unknown
+}
 
 function makeDotaClient(
   overrides: {
@@ -70,7 +74,7 @@ function makeDotaClient(
     matchid?: string
     settings?: Setting[]
     gameState?: string
-  } = {},
+  } = {}
 ): { client: any } {
   const {
     stream_online = true,
@@ -82,17 +86,17 @@ function makeDotaClient(
   } = overrides
   return {
     client: {
-      name: 'streamer',
-      token: TOKEN,
+      gsi: {
+        hero: { id: INVOKER_ID },
+        map: { game_state: gameState, matchid },
+        player: { activity: 'playing' },
+      },
       locale: 'en',
+      name: 'streamer',
+      settings,
       stream_online,
       subscription: undefined,
-      settings,
-      gsi: {
-        player: { activity: 'playing' },
-        map: { matchid, game_state: gameState },
-        hero: { id: INVOKER_ID },
-      },
+      token: TOKEN,
     },
   }
 }
@@ -103,7 +107,9 @@ describe('hero:id — cosmetic set announce', () => {
   beforeEach(() => {
     captureMock.mockClear()
     sayMock.mockReset()
-    for (const k of Object.keys(redisStore)) delete redisStore[k]
+    for (const k of Object.keys(redisStore)) {
+      delete redisStore[k]
+    }
     capturedItems = [{ defindex: 1 }, { defindex: 2 }, { defindex: 3 }, { defindex: 4 }]
   })
 
@@ -114,8 +120,8 @@ describe('hero:id — cosmetic set announce', () => {
   it('announces the captured set (hero + count + link) by default while live', async () => {
     await registeredHandler!(makeDotaClient(), INVOKER_ID)
 
-    expect(captureMock).toHaveBeenCalledTimes(1)
-    expect(sayMock).toHaveBeenCalledTimes(1)
+    expect(captureMock).toHaveBeenCalledOnce()
+    expect(sayMock).toHaveBeenCalledOnce()
     const [cosmetics] = messages()
     expect(cosmetics).toContain('Playing Invoker Pog new card unlocked')
     expect(cosmetics).toContain('4 cosmetics')
@@ -142,10 +148,10 @@ describe('hero:id — cosmetic set announce', () => {
   it('stays silent when the master toggle is off and the feature is untouched', async () => {
     await registeredHandler!(
       makeDotaClient({ settings: [{ key: 'autoOptInNewFeatures', value: false }] }),
-      INVOKER_ID,
+      INVOKER_ID
     )
 
-    expect(captureMock).toHaveBeenCalledTimes(1)
+    expect(captureMock).toHaveBeenCalledOnce()
     expect(sayMock).not.toHaveBeenCalled()
   })
 
@@ -157,19 +163,19 @@ describe('hero:id — cosmetic set announce', () => {
           { key: 'cosmeticsAnnounce', value: true },
         ],
       }),
-      INVOKER_ID,
+      INVOKER_ID
     )
 
-    expect(messages().some((m) => m.includes('Playing Invoker Pog new card unlocked'))).toBe(true)
+    expect(messages().some((m) => m.includes('Playing Invoker Pog new card unlocked'))).toBeTruthy()
   })
 
   it('stays silent when explicitly disabled even with the master toggle on', async () => {
     await registeredHandler!(
       makeDotaClient({ settings: [{ key: 'cosmeticsAnnounce', value: false }] }),
-      INVOKER_ID,
+      INVOKER_ID
     )
 
-    expect(captureMock).toHaveBeenCalledTimes(1)
+    expect(captureMock).toHaveBeenCalledOnce()
     expect(sayMock).not.toHaveBeenCalled()
   })
 
@@ -183,7 +189,7 @@ describe('hero:id — cosmetic set announce', () => {
   it('holds the reveal during hero selection so it never tips stream snipers', async () => {
     await registeredHandler!(
       makeDotaClient({ gameState: 'DOTA_GAMERULES_STATE_HERO_SELECTION' }),
-      INVOKER_ID,
+      INVOKER_ID
     )
 
     // Nothing leaks before strategy phase — no snapshot, no chat. The strategy-time
@@ -196,7 +202,7 @@ describe('hero:id — cosmetic set announce', () => {
     capturedItems = []
     await registeredHandler!(makeDotaClient(), INVOKER_ID)
 
-    expect(captureMock).toHaveBeenCalledTimes(1)
+    expect(captureMock).toHaveBeenCalledOnce()
     expect(sayMock).not.toHaveBeenCalled()
   })
 })

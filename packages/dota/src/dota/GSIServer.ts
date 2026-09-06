@@ -1,30 +1,28 @@
 import http from 'node:http'
+
 import { getTwitchAPI, logger, supabase } from '@dotabod/shared-utils'
 import cors from 'cors'
-import express, {
-  type ErrorRequestHandler,
-  json,
-  type Request,
-  type Response,
-  urlencoded,
-} from 'express'
+import express, { json, urlencoded } from 'express'
+import type { ErrorRequestHandler, Request, Response } from 'express'
 import bodyParserErrorHandler from 'express-body-parser-error-handler'
-import { Server, type Socket } from 'socket.io'
+import { Server } from 'socket.io'
+import type { Socket } from 'socket.io'
+
 import getDBUser from '../db/getDBUser'
 import { getWL } from '../db/getWL'
 import { MAX_WL_STATS_DAYS, normalizeStatsStartDate } from '../db/winLossWindow'
 import { twitchEvent } from '../twitch/index'
 import type { Ability, Item } from '../types'
-import { initDotaPatchChecker } from './DotaPatchChecker'
 import { getDiagnosticPayload } from './diagnosticPayload'
-import { emitMinimapBlockerStatus } from './GSIHandler'
-import type { GSIServerInterface } from './GSIServerTypes'
+import { initDotaPatchChecker } from './DotaPatchChecker'
 import {
   newData,
   processChanges,
   processUnmarkedKillListChanges,
   recoverMultiAccount,
 } from './globalEventEmitter'
+import { emitMinimapBlockerStatus } from './GSIHandler'
+import type { GSIServerInterface } from './GSIServerTypes'
 import { gsiHandlers } from './lib/consts'
 import { isGsiFresh } from './lib/getCurrentMatchId'
 import { MatchDataService } from './lib/matchData'
@@ -48,10 +46,10 @@ const STALE_OVERLAY_CHECK_INTERVAL_MS = 15_000
 
 function emitInactiveOverlayState(io: Server, token: string) {
   io.to(token).emit('block', {
-    type: null,
+    matchId: null,
     state: 'GSI_STALE',
     team: null,
-    matchId: null,
+    type: null,
   })
   io.to(token).emit('notable-players', [])
 }
@@ -74,15 +72,17 @@ function handleSocketAuth(socket: Socket, next: (err?: Error) => void) {
         }
 
         if (reason === 'Token is currently being looked up' && attempt < 20) {
-          setTimeout(() => authenticate(attempt + 1), 100)
+          setTimeout(() => {
+            authenticate(attempt + 1)
+          }, 100)
           return
         }
 
         socket.emit('auth_error', 'Invalid token')
         socket.disconnect(true)
       })
-      .catch((e) => {
-        logger.info('[GSI] Error checking auth', { token, twitchId, e })
+      .catch((error) => {
+        logger.info('[GSI] Error checking auth', { error, token, twitchId })
         socket.emit('auth_error', 'Authentication error')
         socket.disconnect(true)
       })
@@ -111,7 +111,7 @@ async function handleSocketConnection(socket: Socket) {
       'request-wl',
       async (
         request: { statsDays?: unknown; statsStartDate?: unknown } | undefined,
-        respond: (response: unknown) => void,
+        respond: (response: unknown) => void
       ) => {
         const hasStatsDaysOverride = Object.hasOwn(request ?? {}, 'statsDays')
         const hasStatsStartDateOverride = Object.hasOwn(request ?? {}, 'statsStartDate')
@@ -167,7 +167,7 @@ async function handleSocketConnection(socket: Socket) {
           })
           respond({ error: 'Unable to load win/loss record' })
         }
-      },
+      }
     )
     return
   }
@@ -177,7 +177,9 @@ async function handleSocketConnection(socket: Socket) {
   // Signal that this user's overlay browser source has connected at least once.
   // Drives the setup wizard's Step 3 verify-state. Cached + idempotent.
   recordOverlaySocketActivity(token)
-  socket.on('diagnostic-heartbeat', () => recordOverlaySocketActivity(token))
+  socket.on('diagnostic-heartbeat', () => {
+    recordOverlaySocketActivity(token)
+  })
 
   const handler = gsiHandlers.get(token)
   if (handler && !handler.disabled && handler.client.stream_online) {
@@ -191,10 +193,10 @@ async function handleSocketConnection(socket: Socket) {
       await handler.setupOBSBlockers(handler.client.gsi?.map?.game_state ?? '')
     } else {
       socket.emit('block', {
-        type: null,
+        matchId: null,
         state: 'GSI_STALE',
         team: null,
-        matchId: null,
+        type: null,
       })
       socket.emit('notable-players', [])
     }
@@ -218,11 +220,11 @@ class GSIServer implements GSIServerInterface {
     const app = express()
     const httpServer = http.createServer(app)
     this.io = new Server(httpServer, {
-      pingTimeout: 60_000,
-      pingInterval: 15000,
       cors: {
         origin: allowedOrigins,
       },
+      pingInterval: 15_000,
+      pingTimeout: 60_000,
     })
 
     app.use(cors({ origin: allowedOrigins }))
@@ -240,7 +242,7 @@ class GSIServer implements GSIServerInterface {
       processChanges('previously'),
       processChanges('added'),
       processUnmarkedKillListChanges,
-      newData,
+      newData
     )
 
     // Track resubscribe request timestamps separately from regular GSI posts
@@ -280,13 +282,13 @@ class GSIServer implements GSIServerInterface {
       // Rate limiting - prevent abuse by limiting frequency of resubscribe requests
       const lastResubscribeRequestTime = resubscribeRequestTimestamps.get(token)
       const now = Date.now()
-      const cooldownPeriod = 300000 // 5 minute cooldown between resubscribe requests
+      const cooldownPeriod = 300_000 // 5 minute cooldown between resubscribe requests
 
       if (lastResubscribeRequestTime && now - lastResubscribeRequestTime < cooldownPeriod) {
         logger.info('[GSI] Resubscribe request rate limited', { token })
         res.status(429).json({
-          status: 'too many requests',
           retryAfter: Math.ceil((lastResubscribeRequestTime + cooldownPeriod - now) / 1000),
+          status: 'too many requests',
         })
         return
       }
@@ -301,7 +303,7 @@ class GSIServer implements GSIServerInterface {
     app.get('/tooltips/:channelId', async (req: Request, res: Response) => {
       const { channelId } = req.params
       // make sure channel id is a number
-      if (typeof channelId !== 'string' || !channelId.match(/^\d+$/)) {
+      if (typeof channelId !== 'string' || !/^\d+$/.test(channelId)) {
         res.status(200).json({ status: 'ok' })
         return
       }
@@ -318,13 +320,13 @@ class GSIServer implements GSIServerInterface {
       const roster = await new MatchDataService(user).resolveRoster()
 
       const messageToSend = {
-        items: items.map((item) => item.name),
-        neutral: dotaClient?.items?.neutral0?.name,
-        hero: dotaClient?.hero?.id,
         abilities: dotaClient?.abilities
           ? Object.values(dotaClient?.abilities).map((ability: Ability) => ability.name)
           : [],
+        hero: dotaClient?.hero?.id,
         heroes: roster.players.map((p) => p.heroId),
+        items: items.map((item) => item.name),
+        neutral: dotaClient?.items?.neutral0?.name,
       }
 
       res.status(200).json(messageToSend)
@@ -340,7 +342,7 @@ class GSIServer implements GSIServerInterface {
     })
 
     httpServer.listen(5120, () => {
-      logger.info(`[GSI] Dota 2 GSI listening on *:${5120}`)
+      logger.info(`[GSI] Dota 2 GSI listening on *:5120`)
     })
 
     this.io.use(handleSocketAuth)
@@ -376,8 +378,8 @@ class GSIServer implements GSIServerInterface {
 
     // Nudge mods once per unresolved match while the stream is live
     setInterval(() => {
-      remindUnresolvedMatches().catch((e) => {
-        logger.error('[BETS] remindUnresolvedMatches failed', { e })
+      remindUnresolvedMatches().catch((error) => {
+        logger.error('[BETS] remindUnresolvedMatches failed', { error })
       })
     }, UNRESOLVED_REMINDER_INTERVAL_MS)
 
@@ -407,7 +409,7 @@ class GSIServer implements GSIServerInterface {
     }
 
     logger.info(
-      `[GSI_ClipDelete] Starting clip deletion queue processing (${clipsToDeleteQueue.size} users)`,
+      `[GSI_ClipDelete] Starting clip deletion queue processing (${clipsToDeleteQueue.size} users)`
     )
     isProcessingDeleteQueue = true
 

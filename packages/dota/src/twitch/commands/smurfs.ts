@@ -8,7 +8,6 @@ import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('smurfs', {
   aliases: ['lifetimes', 'totals', 'games', 'smurf'],
-  onlyOnline: true,
   dbkey: DBSettings.commandSmurfs,
   handler: async (message) => {
     const {
@@ -24,7 +23,7 @@ commandHandler.registerCommand('smurfs', {
               url: 'dotabod.com/dashboard/features',
             })
           : t('unknownSteam', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -35,12 +34,13 @@ commandHandler.registerCommand('smurfs', {
       .then((desc) => {
         chatClient.say(message.channel.name, desc, message.user.messageId)
       })
-      .catch((e) => {
+      .catch((error) => {
         chatClient.say(
           message.channel.name,
-          e?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-          message.user.messageId,
+          error?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+          message.user.messageId
         )
       })
   },
+  onlyOnline: true,
 })

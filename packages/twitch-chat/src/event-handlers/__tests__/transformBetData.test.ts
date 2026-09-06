@@ -1,98 +1,99 @@
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it } from 'vitest'
+
 import { transformBetData } from '../transformBetData.ts'
 
-describe('transformBetData', () => {
+describe(transformBetData, () => {
   it('maps title and converts locked_at to an endDate', () => {
     const result = transformBetData({
-      title: 'Will we win?',
       locked_at: '2026-05-20T00:00:00.000Z',
       outcomes: [],
+      title: 'Will we win?',
     })
 
     expect(result.title).toBe('Will we win?')
-    expect(result.endDate).toEqual(new Date('2026-05-20T00:00:00.000Z'))
-    expect(result.outcomes).toEqual([])
+    expect(result.endDate).toStrictEqual(new Date('2026-05-20T00:00:00.000Z'))
+    expect(result.outcomes).toStrictEqual([])
   })
 
   it('uses empty string endDate when locked_at is absent', () => {
-    const result = transformBetData({ title: 'No lock', outcomes: [] })
+    const result = transformBetData({ outcomes: [], title: 'No lock' })
     expect(result.endDate).toBe('')
   })
 
   it('maps locks_at to endDate for begin/progress events', () => {
     const result = transformBetData({
-      title: 'Will we win?',
       locks_at: '2026-06-01T12:00:00.000Z',
       outcomes: [],
+      title: 'Will we win?',
     })
 
-    expect(result.endDate).toEqual(new Date('2026-06-01T12:00:00.000Z'))
+    expect(result.endDate).toStrictEqual(new Date('2026-06-01T12:00:00.000Z'))
   })
 
   it('maps ended_at to endDate for end events', () => {
     const result = transformBetData({
-      title: 'Done',
       ended_at: '2026-06-01T12:30:00.000Z',
       outcomes: [],
+      title: 'Done',
     })
 
-    expect(result.endDate).toEqual(new Date('2026-06-01T12:30:00.000Z'))
+    expect(result.endDate).toStrictEqual(new Date('2026-06-01T12:30:00.000Z'))
   })
 
   it('prefers locks_at over locked_at over ended_at when multiple are present', () => {
     const result = transformBetData({
-      title: 'Priority',
-      locks_at: '2026-06-01T12:00:00.000Z',
-      locked_at: '2026-06-01T12:15:00.000Z',
       ended_at: '2026-06-01T12:30:00.000Z',
+      locked_at: '2026-06-01T12:15:00.000Z',
+      locks_at: '2026-06-01T12:00:00.000Z',
       outcomes: [],
+      title: 'Priority',
     })
 
-    expect(result.endDate).toEqual(new Date('2026-06-01T12:00:00.000Z'))
+    expect(result.endDate).toStrictEqual(new Date('2026-06-01T12:00:00.000Z'))
 
     const lockedAndEnded = transformBetData({
-      title: 'Locked',
-      locked_at: '2026-06-01T12:15:00.000Z',
       ended_at: '2026-06-01T12:30:00.000Z',
+      locked_at: '2026-06-01T12:15:00.000Z',
       outcomes: [],
+      title: 'Locked',
     })
 
-    expect(lockedAndEnded.endDate).toEqual(new Date('2026-06-01T12:15:00.000Z'))
+    expect(lockedAndEnded.endDate).toStrictEqual(new Date('2026-06-01T12:15:00.000Z'))
   })
 
   it('maps outcomes with top_predictors into totals and topUsers', () => {
     const result = transformBetData({
-      title: 'Match',
       outcomes: [
         {
-          title: 'Yes',
           channel_points: 500,
-          users: 3,
+          title: 'Yes',
           top_predictors: [
-            { user_name: 'alice', channel_points_used: 100, channel_points_won: 200 },
+            { channel_points_used: 100, channel_points_won: 200, user_name: 'alice' },
           ],
+          users: 3,
         },
       ],
+      title: 'Match',
     })
 
-    expect(result.outcomes).toEqual([
+    expect(result.outcomes).toStrictEqual([
       {
-        totalVotes: 500,
-        totalUsers: 3,
         title: 'Yes',
-        topUsers: [{ userDisplayName: 'alice', channelPointsUsed: 100, channelPointsWon: 200 }],
+        topUsers: [{ channelPointsUsed: 100, channelPointsWon: 200, userDisplayName: 'alice' }],
+        totalUsers: 3,
+        totalVotes: 500,
       },
     ])
   })
 
   it('leaves totals and topUsers undefined when top_predictors is absent', () => {
     const result = transformBetData({
+      outcomes: [{ channel_points: 500, title: 'No', users: 3 }],
       title: 'Match',
-      outcomes: [{ title: 'No', channel_points: 500, users: 3 }],
     })
 
-    expect(result.outcomes).toEqual([
-      { totalVotes: undefined, totalUsers: undefined, title: 'No', topUsers: undefined },
+    expect(result.outcomes).toStrictEqual([
+      { title: 'No', topUsers: undefined, totalUsers: undefined, totalVotes: undefined },
     ])
   })
 
@@ -102,21 +103,21 @@ describe('transformBetData', () => {
 
   it('passes null channel_points_won through (refund/loss case per Twitch spec)', () => {
     const result = transformBetData({
-      title: 'Refund?',
       outcomes: [
         {
-          title: 'Yes',
           channel_points: 100,
-          users: 1,
+          title: 'Yes',
           top_predictors: [
-            { user_name: 'bob', channel_points_used: 100, channel_points_won: null },
+            { channel_points_used: 100, channel_points_won: null, user_name: 'bob' },
           ],
+          users: 1,
         },
       ],
+      title: 'Refund?',
     })
 
-    expect(result.outcomes?.[0].topUsers).toEqual([
-      { userDisplayName: 'bob', channelPointsUsed: 100, channelPointsWon: null },
+    expect(result.outcomes?.[0].topUsers).toStrictEqual([
+      { channelPointsUsed: 100, channelPointsWon: null, userDisplayName: 'bob' },
     ])
   })
 })

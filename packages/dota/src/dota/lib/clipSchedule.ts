@@ -1,7 +1,10 @@
 import { randomUUID } from 'node:crypto'
+
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
+
 import { redisClient } from '../../db/redisInstance'
-import { type CreateReadyClipOptions, createReadyClip } from './createReadyClip'
+import { createReadyClip } from './createReadyClip'
+import type { CreateReadyClipOptions } from './createReadyClip'
 import { delayedQueue } from './DelayedQueue'
 
 // Heroes stay on the HUD all game, so retry generously with no deadline.
@@ -19,11 +22,11 @@ import { delayedQueue } from './DelayedQueue'
 // the window backward from the same end anchor, so this costs nothing but doubles
 // the room for the aim to be wrong.
 export const GAMEPLAY_CLIP_OPTS: CreateReadyClipOptions = {
+  durationSeconds: 60,
+  initialDelayMs: 20_000,
   maxAttempts: 3,
   pollAttempts: 4,
   pollIntervalMs: 5000,
-  initialDelayMs: 20000,
-  durationSeconds: 60,
 }
 
 // The draft screen is only visible briefly, so keep the retry budget time-boxed,
@@ -33,10 +36,10 @@ export const GAMEPLAY_CLIP_OPTS: CreateReadyClipOptions = {
 // ~100% of the time. Polling the same clip longer doesn't move its content
 // (createAfterDelay captured the buffer at creation), so the draft UI is intact.
 export const DRAFT_CLIP_OPTS: CreateReadyClipOptions = {
+  deadlineMs: 45_000,
   maxAttempts: 2,
   pollAttempts: 5,
   pollIntervalMs: 5000,
-  deadlineMs: 45000,
 }
 
 export interface ClipTaskPayload {
@@ -111,8 +114,8 @@ async function createAndSubmitClip(payload: ClipTaskPayload): Promise<void> {
     }).catch((error) => {
       logger.error(`${logPrefix} Error sending clip processing request`, {
         ...logContext,
-        error: error.message,
         clipId,
+        error: error.message,
       })
     })
   } catch (clipError) {
@@ -125,15 +128,17 @@ async function createAndSubmitClip(payload: ClipTaskPayload): Promise<void> {
 
 function realDeps(): ClipScheduleDeps {
   return {
-    zAdd: (member, score) => redisClient.client.zAdd(CLIP_SCHEDULE_KEY, { score, value: member }),
-    zRem: (member) => redisClient.client.zRem(CLIP_SCHEDULE_KEY, member),
-    zRangeAll: () => redisClient.client.zRangeByScore(CLIP_SCHEDULE_KEY, '-inf', '+inf'),
     arm: (delayMs, cb) => {
       delayedQueue.addTask(delayMs, cb)
     },
-    run: createAndSubmitClip,
-    now: Date.now,
     logger,
+    now: Date.now,
+    run: createAndSubmitClip,
+    zAdd: async (member, score) =>
+      await redisClient.client.zAdd(CLIP_SCHEDULE_KEY, { score, value: member }),
+    zRangeAll: async () =>
+      await redisClient.client.zRangeByScore(CLIP_SCHEDULE_KEY, '-inf', '+inf'),
+    zRem: async (member) => await redisClient.client.zRem(CLIP_SCHEDULE_KEY, member),
   }
 }
 
@@ -158,7 +163,9 @@ async function fireClip(deps: ClipScheduleDeps, member: string): Promise<void> {
       error: (error as Error).message,
     })
   }
-  if (!removed) return
+  if (!removed) {
+    return
+  }
 
   await deps.run(parsed)
 }
@@ -166,10 +173,10 @@ async function fireClip(deps: ClipScheduleDeps, member: string): Promise<void> {
 export async function scheduleClipWith(
   deps: ClipScheduleDeps,
   delayMs: number,
-  payload: ClipTaskPayload,
+  payload: ClipTaskPayload
 ): Promise<void> {
   const executeAt = deps.now() + Math.max(0, delayMs)
-  const member = JSON.stringify({ id: randomUUID(), executeAt, ...payload } as ClipScheduleMember)
+  const member = JSON.stringify({ executeAt, id: randomUUID(), ...payload })
 
   try {
     await deps.zAdd(member, executeAt)
@@ -181,7 +188,9 @@ export async function scheduleClipWith(
     })
   }
 
-  deps.arm(delayMs, () => fireClip(deps, member))
+  deps.arm(delayMs, async () => {
+    await fireClip(deps, member)
+  })
 }
 
 export async function rearmWith(deps: ClipScheduleDeps): Promise<void> {
@@ -204,27 +213,29 @@ export async function rearmWith(deps: ClipScheduleDeps): Promise<void> {
     try {
       parsed = JSON.parse(member) as ClipScheduleMember
     } catch {
-      await deps.zRem(member).catch(() => undefined)
+      await deps.zRem(member).catch(() => {})
       dropped++
       continue
     }
 
     const lateBy = now - parsed.executeAt
     if (lateBy > MAX_LATE_MS) {
-      await deps.zRem(member).catch(() => undefined)
+      await deps.zRem(member).catch(() => {})
       dropped++
       continue
     }
 
     const delayMs = lateBy <= 0 ? parsed.executeAt - now : 0
-    deps.arm(delayMs, () => fireClip(deps, member))
+    deps.arm(delayMs, async () => {
+      await fireClip(deps, member)
+    })
     rearmed++
   }
 
   if (rearmed || dropped) {
     deps.logger.info('[ClipSchedule] Re-armed persisted clip tasks after startup', {
-      rearmed,
       dropped,
+      rearmed,
     })
   }
 }
@@ -232,12 +243,12 @@ export async function rearmWith(deps: ClipScheduleDeps): Promise<void> {
 // Persist the task in Redis and arm the in-process timer. The handler can
 // fire-and-forget this; Redis is the durability backstop, the DelayedQueue is
 // the normal fire path.
-export function scheduleClip(delayMs: number, payload: ClipTaskPayload): Promise<void> {
-  return scheduleClipWith(realDeps(), delayMs, payload)
+export async function scheduleClip(delayMs: number, payload: ClipTaskPayload): Promise<void> {
+  await scheduleClipWith(realDeps(), delayMs, payload)
 }
 
 // Re-arm clip tasks that outlived a restart. Future tasks keep their original
 // fire time; recently-passed tasks fire ~immediately; stale ones are dropped.
-export function rearmPersistedClips(): Promise<void> {
-  return rearmWith(realDeps())
+export async function rearmPersistedClips(): Promise<void> {
+  await rearmWith(realDeps())
 }

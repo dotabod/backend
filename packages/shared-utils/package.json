@@ -9,14 +9,14 @@
   "exports": {
     ".": {
       "import": "./dist/index.js",
-      "types": "./src/index.ts"
+      "types": "./dist/index.d.ts"
     }
   },
   "scripts": {
     "prebuild": "rm -rf dist",
-    "build": "vp pack src/index.ts -f esm -d dist --sourcemap",
+    "build": "tsdown --config ../../tsdown.config.ts src/index.ts -f esm -d dist --sourcemap",
     "typecheck": "tsc --noEmit",
-    "test": "vp test"
+    "test": "vitest run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.21.0",

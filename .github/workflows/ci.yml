@@ -49,9 +49,7 @@ jobs:
           max_attempts: 3
           retry_wait_seconds: 10
           command: pnpm install --frozen-lockfile
-      - name: Lint + format check
-        run: pnpm exec vp check
-      - name: Typecheck
-        run: pnpm -r run typecheck
+      - name: Format, lint, typecheck + dead-code check
+        run: pnpm run quality
       - name: Run tests
-        run: pnpm exec vp test
+        run: pnpm exec vitest run

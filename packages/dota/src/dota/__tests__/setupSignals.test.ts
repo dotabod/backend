@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const upsert = vi.hoisted(() => vi.fn())
 
-vi.mock('@dotabod/shared-utils', () => ({
+vi.mock(import('@dotabod/shared-utils'), () => ({
   logger: { info: vi.fn() },
   supabase: {
     from: vi.fn(() => ({ upsert })),
@@ -25,11 +25,11 @@ describe('setup activity signals', () => {
 
     expect(upsert).toHaveBeenCalledWith(
       expect.objectContaining({ key: 'gsi_first_seen_at', userId: 'gsi-user' }),
-      expect.objectContaining({ ignoreDuplicates: true }),
+      expect.objectContaining({ ignoreDuplicates: true })
     )
     expect(upsert).toHaveBeenCalledWith(
       expect.objectContaining({ key: 'gsi_last_seen_at', userId: 'gsi-user' }),
-      expect.objectContaining({ ignoreDuplicates: false }),
+      expect.objectContaining({ ignoreDuplicates: false })
     )
   })
 
@@ -49,7 +49,7 @@ describe('setup activity signals', () => {
     await vi.runAllTimersAsync()
 
     const lastSeenWrites = upsert.mock.calls.filter(
-      ([row]) => row.key === 'overlay_socket_last_seen_at',
+      ([row]) => row.key === 'overlay_socket_last_seen_at'
     )
     expect(lastSeenWrites).toHaveLength(2)
   })

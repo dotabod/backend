@@ -1,16 +1,19 @@
-import { describe, expect, it, vi } from 'vite-plus/test'
+import { describe, expect, it, vi } from 'vitest'
+
 import { buildSharedUtilsMock } from '../../../__tests__/sharedMocks.ts'
 
 const noopLogger = {
-  info: () => undefined,
-  error: () => undefined,
-  warn: () => undefined,
-  debug: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 
 // createReadyClip only touches `logger` from shared-utils; the Twitch ApiClient
 // is passed in, so a no-op surface keeps the test fully offline.
-vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ supabase: {}, logger: noopLogger }))
+vi.doMock(import('@dotabod/shared-utils'), () =>
+  buildSharedUtilsMock({ logger: noopLogger, supabase: {} })
+)
 
 const { createReadyClip } = await import('../createReadyClip.ts')
 
@@ -26,7 +29,7 @@ function fakeApi(opts: {
   // Clip creation goes through `callApi` rather than `clips.createClip` because
   // Twurple can't send Twitch's `duration` parameter; capture the queries so tests
   // can assert what was actually requested.
-  const createQueries: Array<Record<string, string>> = []
+  const createQueries: Record<string, string>[] = []
   const api = {
     callApi: async ({ query }: { query: Record<string, string> }) => {
       createCalls += 1
@@ -35,7 +38,9 @@ function fakeApi(opts: {
         throw new Error('createClip boom')
       }
       const id = opts.clipIds[createCalls - 1]
-      if (id === undefined) throw new Error('ran out of fake clip ids')
+      if (id === undefined) {
+        throw new Error('ran out of fake clip ids')
+      }
       return { data: [{ id }] }
     },
     clips: {
@@ -47,8 +52,8 @@ function fakeApi(opts: {
     },
   }
   return {
-    createQueries,
     api: api as any,
+    createQueries,
     getCreateCalls: () => createCalls,
     getGetCalls: () => getCalls,
   }
@@ -77,7 +82,7 @@ describe('createReadyClip', () => {
 
     await createReadyClip(api, 'acct', { ...FAST_OPTS, durationSeconds: 60 }, '[Test]', {})
 
-    expect(createQueries[0]).toEqual({ broadcaster_id: 'acct', duration: '60' })
+    expect(createQueries[0]).toStrictEqual({ broadcaster_id: 'acct', duration: '60' })
   })
 
   it('omits duration entirely when unset, leaving Twitch on its default', async () => {
@@ -88,7 +93,7 @@ describe('createReadyClip', () => {
 
     await createReadyClip(api, 'acct', FAST_OPTS, '[Test]', {})
 
-    expect(createQueries[0]).toEqual({ broadcaster_id: 'acct' })
+    expect(createQueries[0]).toStrictEqual({ broadcaster_id: 'acct' })
   })
 
   it('waits initialDelayMs after creating the clip before the first poll', async () => {
@@ -105,7 +110,7 @@ describe('createReadyClip', () => {
       'acct',
       { ...FAST_OPTS, initialDelayMs: 50 },
       '[Test]',
-      {},
+      {}
     )
 
     expect(result).toBe('clip-a')
@@ -140,8 +145,8 @@ describe('createReadyClip', () => {
   it('continues to the next attempt when createClip throws', async () => {
     const { api, getCreateCalls } = fakeApi({
       clipIds: ['ignored', 'good'],
-      durations: { good: 30 },
       createThrowsOn: [1],
+      durations: { good: 30 },
     })
 
     const result = await createReadyClip(api, 'acct', FAST_OPTS, '[Test]', {})
@@ -157,9 +162,9 @@ describe('createReadyClip', () => {
     const offlineError: Error & { statusCode?: number; body?: string } = Object.assign(
       new Error('Channel offline.'),
       {
-        statusCode: 404,
         body: '{"error":"Not Found","status":404,"message":"Channel offline."}',
-      },
+        statusCode: 404,
+      }
     )
     const api = {
       callApi: async () => {
@@ -183,7 +188,7 @@ describe('createReadyClip', () => {
     // error log — short-circuit instead.
     let createCalls = 0
     const scopeError = new Error(
-      'This token does not have any of the requested scopes (clips:edit) and can not be upgraded.',
+      'This token does not have any of the requested scopes (clips:edit) and can not be upgraded.'
     )
     const api = {
       callApi: async () => {
@@ -222,7 +227,7 @@ describe('createReadyClip', () => {
       'acct',
       { maxAttempts: 2, pollAttempts: 5, pollIntervalMs: 1 },
       '[Test]',
-      {},
+      {}
     )
 
     expect(result).toBe('slow') // the original clip, not a recreation
@@ -253,7 +258,7 @@ describe('createReadyClip', () => {
       'acct',
       { maxAttempts: 2, pollAttempts: 2, pollIntervalMs: 1 },
       '[Test]',
-      {},
+      {}
     )
 
     expect(result).toBeNull() // never caught a transcode within 2 polls
@@ -271,9 +276,9 @@ describe('createReadyClip', () => {
     const result = await createReadyClip(
       api,
       'acct',
-      { maxAttempts: 5, pollAttempts: 3, pollIntervalMs: 20, deadlineMs: 5 },
+      { deadlineMs: 5, maxAttempts: 5, pollAttempts: 3, pollIntervalMs: 20 },
       '[Test]',
-      {},
+      {}
     )
 
     expect(result).toBeNull()

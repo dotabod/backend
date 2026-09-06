@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vite-plus/test'
+import { describe, expect, it, vi } from 'vitest'
 
 // Regression test for the cached-rejection bug: a failed connect() used to leave
 // the rejected promise on the singleton, so every later connect() returned that
@@ -10,11 +10,13 @@ const fakeDb = { name: 'fake-db' }
 // connect() reads MONGO_URL at call time and parses it with new URL().
 process.env.MONGO_URL = 'mongodb://localhost:27017/dotabod-test'
 
-vi.doMock('mongodb', () => ({
+vi.doMock(import('mongodb'), () => ({
   MongoClient: {
     connect: async () => {
       connectAttempts++
-      if (connectAttempts === 1) throw new Error('mongo down')
+      if (connectAttempts === 1) {
+        throw new Error('mongo down')
+      }
       return { db: () => fakeDb }
     },
   },
@@ -22,21 +24,23 @@ vi.doMock('mongodb', () => ({
 
 // Drive every attempt synchronously and treat each failure as final (no real
 // backoff timers in tests).
-vi.doMock('retry', () => ({
+vi.doMock(import('retry'), () => ({
   default: {
     operation: () => ({
-      attempt: (cb: (currentAttempt: number) => void) => cb(1),
+      attempt: (cb: (currentAttempt: number) => void) => {
+        cb(1)
+      },
       retry: () => false,
     }),
   },
 }))
 
-vi.doMock('../utils/logger', () => ({
+vi.doMock(import('../utils/logger'), () => ({
   logger: {
-    info: () => undefined,
-    error: () => undefined,
-    warn: () => undefined,
-    debug: () => undefined,
+    debug: () => {},
+    error: () => {},
+    info: () => {},
+    warn: () => {},
   },
 }))
 

@@ -1,45 +1,48 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks.ts'
 import type { RosterPlayer } from '../../dota/lib/matchData'
 
 const noopLogger = {
-  info: () => undefined,
-  error: () => undefined,
-  warn: () => undefined,
-  debug: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 
-vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ supabase: {}, logger: noopLogger }))
+vi.doMock(import('@dotabod/shared-utils'), () =>
+  buildSharedUtilsMock({ logger: noopLogger, supabase: {} })
+)
 
-vi.doMock('@dotabod/profanity-filter', () => ({
+vi.doMock(import('@dotabod/profanity-filter'), () => ({
   moderateText: async (text: string) => text,
 }))
 
 // Mongo yields no game mode and no DB-stored notable players, so output reflects
 // only the players passed in.
-vi.doMock('../MongoDBSingleton', () => ({
+vi.doMock(import('../MongoDBSingleton'), () => ({
   default: {
+    close: async () => {},
     connect: async () => ({
       collection: () => ({
-        findOne: async () => null,
         find: () => ({ toArray: async () => [] }),
+        findOne: async () => null,
       }),
     }),
-    close: async () => undefined,
   },
 }))
 
 // getPlayers / calculateAvg are only reached on the non-draft path. Stub them so
 // importing notableplayers doesn't pull in their transitive deps (steam socket).
 const getPlayersMock = vi.fn(async () => ({
-  matchPlayers: [] as RosterPlayer[],
   accountIds: [] as number[],
   gameMode: undefined,
+  matchPlayers: [] as RosterPlayer[],
 }))
-vi.doMock('../../dota/lib/getPlayers', () => ({ getPlayers: getPlayersMock }))
-vi.doMock('../../dota/lib/calculateAvg', () => ({ calculateAvg: async () => 'Divine' }))
+vi.doMock(import('../../dota/lib/getPlayers'), () => ({ getPlayers: getPlayersMock }))
+vi.doMock(import('../../dota/lib/calculateAvg'), () => ({ calculateAvg: async () => 'Divine' }))
 const getSteamPlayerSummariesMock = vi.fn(async () => new Map())
-vi.doMock('../playerSummaries', () => ({
+vi.doMock(import('../playerSummaries'), () => ({
   getSteamPlayerSummaries: getSteamPlayerSummariesMock,
 }))
 
@@ -58,22 +61,22 @@ beforeEach(() => {
   getPlayersMock.mockClear()
 })
 
-const blank = { slot: null, team: null, rank: null, selected: null }
+const blank = { rank: null, selected: null, slot: null, team: null }
 const draftPlayers: RosterPlayer[] = [
-  { ...blank, heroId: null, accountId: null, playerName: 'Dendi' },
-  { ...blank, heroId: null, accountId: null, playerName: 'Puppey' },
-  { ...blank, heroId: null, accountId: null, playerName: 'N0tail' },
+  { ...blank, accountId: null, heroId: null, playerName: 'Dendi' },
+  { ...blank, accountId: null, heroId: null, playerName: 'Puppey' },
+  { ...blank, accountId: null, heroId: null, playerName: 'N0tail' },
 ]
 
 describe('notablePlayers — draft-only (heroes pending)', () => {
   it('renders names without hero suffix and a waiting note', async () => {
     const result = await notablePlayers({
-      locale: 'en',
-      twitchChannelId: 'chan',
       currentMatchId: '123',
+      heroesStatus: 'waiting',
+      locale: 'en',
       players: draftPlayers,
       steam32Id: null,
-      heroesStatus: 'waiting',
+      twitchChannelId: 'chan',
     })
 
     expect(result.description).toBe('[waiting on heroes]: Dendi · Puppey · N0tail')
@@ -84,12 +87,12 @@ describe('notablePlayers — draft-only (heroes pending)', () => {
 
   it('uses the "heroes not found" note when status is failed', async () => {
     const result = await notablePlayers({
-      locale: 'en',
-      twitchChannelId: 'chan',
       currentMatchId: '123',
+      heroesStatus: 'failed',
+      locale: 'en',
       players: draftPlayers,
       steam32Id: null,
-      heroesStatus: 'failed',
+      twitchChannelId: 'chan',
     })
 
     expect(result.description).toBe('[heroes not found]: Dendi · Puppey · N0tail')
@@ -99,48 +102,48 @@ describe('notablePlayers — draft-only (heroes pending)', () => {
 describe('notablePlayers — normal path (heroes known)', () => {
   it('uses Steam identities instead of OCR for every SourceTV account', async () => {
     getPlayersMock.mockResolvedValueOnce({
-      matchPlayers: [
-        { ...blank, slot: 0, heroId: 1, accountId: 123, playerName: 'Wrong OCR name' },
-        { ...blank, slot: 1, heroId: 2, accountId: 456, playerName: null },
-      ],
       accountIds: [123, 456],
       gameMode: undefined,
+      matchPlayers: [
+        { ...blank, accountId: 123, heroId: 1, playerName: 'Wrong OCR name', slot: 0 },
+        { ...blank, accountId: 456, heroId: 2, playerName: null, slot: 1 },
+      ],
     })
     getSteamPlayerSummariesMock.mockResolvedValueOnce(
       new Map([
-        [123, { personaName: 'Steam One', countryCode: 'SE' }],
-        [456, { personaName: 'Steam Two', countryCode: null }],
-      ]),
+        [123, { countryCode: 'SE', personaName: 'Steam One' }],
+        [456, { countryCode: null, personaName: 'Steam Two' }],
+      ])
     )
 
     const result = await notablePlayers({
-      locale: 'en',
-      twitchChannelId: 'chan',
       currentMatchId: '123',
-      players: undefined,
       enableFlags: true,
-      steam32Id: null,
+      locale: 'en',
+      players: undefined,
       rosterSource: 'sourcetv',
+      steam32Id: null,
+      twitchChannelId: 'chan',
     })
 
     expect(result.description).toBe('[Divine avg]: 🇸🇪 Steam One (Anti-Mage) · Steam Two (Axe)')
-    expect(result.playerList.map((player) => player.name)).toEqual(['Steam One', 'Steam Two'])
-    expect(result.playerList.map((player) => player.country_code)).toEqual(['SE', ''])
+    expect(result.playerList.map((player) => player.name)).toStrictEqual(['Steam One', 'Steam Two'])
+    expect(result.playerList.map((player) => player.country_code)).toStrictEqual(['SE', ''])
   })
 
   it('keeps the "Name (Hero)" format and avg header', async () => {
     getPlayersMock.mockResolvedValueOnce({
-      matchPlayers: [{ ...blank, slot: 0, heroId: 1, accountId: 123, playerName: 'Bob' }],
       accountIds: [123],
       gameMode: undefined,
+      matchPlayers: [{ ...blank, accountId: 123, heroId: 1, playerName: 'Bob', slot: 0 }],
     })
 
     const result = await notablePlayers({
-      locale: 'en',
-      twitchChannelId: 'chan',
       currentMatchId: '123',
+      locale: 'en',
       players: undefined,
       steam32Id: null,
+      twitchChannelId: 'chan',
     })
 
     expect(result.description).toBe('[Divine avg]: Bob (Anti-Mage)')
@@ -152,20 +155,20 @@ describe('notablePlayers — normal path (heroes known)', () => {
     // whose name OCR missed (Techies in match 8821057580) must still appear,
     // falling back to a "Player N" label rather than vanishing from the roster.
     getPlayersMock.mockResolvedValueOnce({
-      matchPlayers: [
-        { ...blank, heroId: 1, accountId: null, playerName: 'Named' },
-        { ...blank, heroId: 2, accountId: null, playerName: null },
-      ],
       accountIds: [0, 0],
       gameMode: undefined,
+      matchPlayers: [
+        { ...blank, accountId: null, heroId: 1, playerName: 'Named' },
+        { ...blank, accountId: null, heroId: 2, playerName: null },
+      ],
     })
 
     const result = await notablePlayers({
-      locale: 'en',
-      twitchChannelId: 'chan',
       currentMatchId: '123',
+      locale: 'en',
       players: undefined,
       steam32Id: null,
+      twitchChannelId: 'chan',
     })
 
     expect(result.playerList).toHaveLength(2)

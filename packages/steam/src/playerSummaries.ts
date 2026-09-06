@@ -1,4 +1,4 @@
-const STEAM_ID64_BASE = 76561197960265728n
+const STEAM_ID64_BASE = 76_561_197_960_265_728n
 const CACHE_TTL_MS = 10 * 60 * 1000
 
 export interface SteamPlayerSummary {
@@ -44,7 +44,7 @@ export class SteamPlayerSummaryService {
 
   async get(accountIds: number[]): Promise<SteamPlayerSummary[]> {
     const uniqueIds = [
-      ...new Set(accountIds.filter((id) => Number.isInteger(id) && id > 0 && id <= 0xffffffff)),
+      ...new Set(accountIds.filter((id) => Number.isInteger(id) && id > 0 && id <= 0xff_ff_ff_ff)),
     ]
     const now = Date.now()
     const results = new Map<number, SteamPlayerSummary>()
@@ -72,11 +72,11 @@ export class SteamPlayerSummaryService {
         const web = webSummaries.get(accountId)
         const summary = {
           account_id: accountId,
-          persona_name: personas?.[steamId]?.player_name?.trim() || web?.personaName || null,
           country_code: web?.countryCode || null,
+          persona_name: personas?.[steamId]?.player_name?.trim() || web?.personaName || null,
         }
         results.set(accountId, summary)
-        this.cache.set(accountId, { summary, expiresAt: now + CACHE_TTL_MS })
+        this.cache.set(accountId, { expiresAt: now + CACHE_TTL_MS, summary })
       }
     }
 
@@ -87,33 +87,41 @@ export class SteamPlayerSummaryService {
   }
 
   private async fetchWebSummaries(
-    steamIds: string[],
+    steamIds: string[]
   ): Promise<Map<number, { personaName: string | null; countryCode: string | null }>> {
-    if (!this.apiKey || !steamIds.length) return new Map()
+    if (!this.apiKey || !steamIds.length) {
+      return new Map()
+    }
 
     const url = new URL('https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/')
     url.searchParams.set('key', this.apiKey)
     url.searchParams.set('steamids', steamIds.join(','))
     const response = await this.fetchImpl(url)
-    if (!response.ok) return new Map()
+    if (!response.ok) {
+      return new Map()
+    }
 
     const body = (await response.json()) as {
       response?: {
-        players?: Array<{
+        players?: {
           steamid?: string
           personaname?: string
           loccountrycode?: string
-        }>
+        }[]
       }
     }
     const summaries = new Map<number, { personaName: string | null; countryCode: string | null }>()
     for (const player of body.response?.players ?? []) {
-      if (!player.steamid) continue
+      if (!player.steamid) {
+        continue
+      }
       const accountId = toAccountId(player.steamid)
-      if (!Number.isInteger(accountId) || accountId <= 0) continue
+      if (!Number.isInteger(accountId) || accountId <= 0) {
+        continue
+      }
       summaries.set(accountId, {
-        personaName: player.personaname?.trim() || null,
         countryCode: player.loccountrycode?.trim().toUpperCase() || null,
+        personaName: player.personaname?.trim() || null,
       })
     }
     return summaries

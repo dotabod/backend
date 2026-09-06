@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import {
   clearSubscriptions,
   eventSubMap,
@@ -8,11 +9,11 @@ import {
 } from './sharedMocks.ts'
 
 const sub = (overrides: Record<string, unknown> = {}) => ({
+  condition: { broadcaster_user_id: '111' },
   id: 's1',
   status: 'enabled',
-  type: 'stream.online',
   transport: { method: 'conduit' },
-  condition: { broadcaster_user_id: '111' },
+  type: 'stream.online',
   ...overrides,
 })
 
@@ -23,7 +24,7 @@ beforeEach(() => {
   fetchState.calls = []
 })
 
-describe('fetchExistingSubscriptions', () => {
+describe(fetchExistingSubscriptions, () => {
   it('stores fetched subscriptions in eventSubMap keyed by broadcaster', async () => {
     fetchState.queue = [
       { json: { data: [sub({ id: 's1', type: 'stream.online' })], pagination: {}, total: 1 } },
@@ -37,14 +38,14 @@ describe('fetchExistingSubscriptions', () => {
     fetchState.queue = [
       {
         json: {
-          data: [sub({ id: 's1', condition: { broadcaster_user_id: '111' } })],
+          data: [sub({ condition: { broadcaster_user_id: '111' }, id: 's1' })],
           pagination: { cursor: 'next' },
         },
       },
       {
         json: {
           data: [
-            sub({ id: 's2', type: 'stream.offline', condition: { broadcaster_user_id: '222' } }),
+            sub({ condition: { broadcaster_user_id: '222' }, id: 's2', type: 'stream.offline' }),
           ],
           pagination: {},
         },
@@ -63,7 +64,7 @@ describe('fetchExistingSubscriptions', () => {
         json: {
           data: [
             sub({ id: 'webhook-1', transport: { method: 'webhook' } }),
-            sub({ id: 'orphan-1', condition: {} }),
+            sub({ condition: {}, id: 'orphan-1' }),
           ],
           pagination: {},
         },
@@ -80,14 +81,14 @@ describe('fetchExistingSubscriptions', () => {
         json: {
           data: [
             sub({
+              condition: { client_id: 'cid' },
               id: 'auth-grant-1',
               type: 'user.authorization.grant',
-              condition: { client_id: 'cid' },
             }),
             sub({
+              condition: { client_id: 'cid' },
               id: 'auth-revoke-1',
               type: 'user.authorization.revoke',
-              condition: { client_id: 'cid' },
             }),
           ],
           pagination: {},

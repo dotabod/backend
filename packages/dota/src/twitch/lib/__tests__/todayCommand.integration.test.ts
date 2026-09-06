@@ -1,18 +1,23 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { t } from 'i18next'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
 // !today reads getTodayHeroStats, which terminates its supabase query on
 // `.order()` and resolves to `state.recentList` (see setupMocks).
-type TodayMatch = { matchId: string; hero_name: string | null; won: boolean }
+interface TodayMatch {
+  matchId: string
+  hero_name: string | null
+  won: boolean
+}
 
 const setMatches = (matches: TodayMatch[]) => {
   state.recentList = matches
 }
 
 const match = (hero_name: string, won: boolean, matchId = '1'): TodayMatch => ({
-  matchId,
   hero_name,
+  matchId,
   won,
 })
 
@@ -32,9 +37,9 @@ describe('!today', () => {
 
     await commandHandler.handleMessage(
       makeMessage({
-        content: '!today',
         clientOverrides: { settings: [{ key: 'wlStatsDays', value: 30 }] },
-      }),
+        content: '!today',
+      })
     )
 
     expect(state.gteCalls).toContainEqual({
@@ -56,7 +61,7 @@ describe('!today', () => {
 
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(
-      t('today.single', { lng: 'en', heroName: 'Lina', wins: 0, losses: 1 }),
+      t('today.single', { heroName: 'Lina', lng: 'en', losses: 1, wins: 0 })
     )
     // The redundant summary (e.g. "0W 1L (1 game)") must not be appended.
     expect(state.chatSayCalls[0].message).not.toContain('·')
@@ -73,7 +78,7 @@ describe('!today', () => {
 
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(
-      t('today.single', { lng: 'en', heroName: 'Lina', wins: 2, losses: 1 }),
+      t('today.single', { heroName: 'Lina', lng: 'en', losses: 1, wins: 2 })
     )
   })
 
@@ -87,7 +92,7 @@ describe('!today', () => {
     await commandHandler.handleMessage(makeMessage({ content: '!today' }))
 
     expect(state.chatSayCalls).toHaveLength(1)
-    const summary = t('today.summary', { lng: 'en', count: 4, wins: 2, losses: 2, total: 4 })
+    const summary = t('today.summary', { count: 4, lng: 'en', losses: 2, total: 4, wins: 2 })
     expect(state.chatSayCalls[0].message).toBe(`Lina 2W 1L | Pudge 1L · ${summary}`)
   })
 })

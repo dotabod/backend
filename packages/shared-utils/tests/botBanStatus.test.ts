@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { resetUtilsState, utilsState } from './setupMocks.ts'
 
 const { botStatus, checkBotStatus } = await import('../src/twitch/botBanStatus')
@@ -17,7 +18,7 @@ describe('checkBotStatus', () => {
 
     const res = await checkBotStatus()
 
-    expect(res).toBe(true)
+    expect(res).toBeTruthy()
     // No DB lookup happened, so no error log.
     expect(utilsState.loggerErrorCalls).toHaveLength(0)
   })
@@ -27,8 +28,8 @@ describe('checkBotStatus', () => {
 
     const res = await checkBotStatus()
 
-    expect(res).toBe(true)
-    expect(botStatus.isBanned).toBe(true)
+    expect(res).toBeTruthy()
+    expect(botStatus.isBanned).toBeTruthy()
   })
 
   it('returns true (banned) when tokens require refresh', async () => {
@@ -39,8 +40,8 @@ describe('checkBotStatus', () => {
 
     const res = await checkBotStatus()
 
-    expect(res).toBe(true)
-    expect(botStatus.isBanned).toBe(true)
+    expect(res).toBeTruthy()
+    expect(botStatus.isBanned).toBeTruthy()
   })
 
   it('returns false (not banned) when tokens are valid and current', async () => {
@@ -51,7 +52,7 @@ describe('checkBotStatus', () => {
 
     const res = await checkBotStatus()
 
-    expect(res).toBe(false)
-    expect(botStatus.isBanned).toBe(false)
+    expect(res).toBeFalsy()
+    expect(botStatus.isBanned).toBeFalsy()
   })
 })

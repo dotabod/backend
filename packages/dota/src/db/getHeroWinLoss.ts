@@ -1,4 +1,5 @@
 import { logger, supabase } from '@dotabod/shared-utils'
+
 import { getHeroById } from '../dota/lib/heroes'
 
 const HERO_STATS_WINDOW_DAYS = 30
@@ -22,11 +23,13 @@ export async function getHeroWinLoss({
   token,
 }: HeroWinLossParams): Promise<HeroWinLoss | null> {
   const hero = getHeroById(heroId)
-  if (!hero || !steam32Id || !token) return { lose: 0, win: 0 }
+  if (!hero || !steam32Id || !token) {
+    return { lose: 0, win: 0 }
+  }
 
   try {
     const fromDate = new Date(
-      Date.now() - HERO_STATS_WINDOW_DAYS * 24 * 60 * 60 * 1000,
+      Date.now() - HERO_STATS_WINDOW_DAYS * 24 * 60 * 60 * 1000
     ).toISOString()
     let userId = token
     if (!isStreamer) {
@@ -36,7 +39,9 @@ export async function getHeroWinLoss({
         .eq('steam32Id', steam32Id)
         .single()
 
-      if (accountError || !steamAccount?.userId) return { lose: 0, win: 0 }
+      if (accountError || !steamAccount?.userId) {
+        return { lose: 0, win: 0 }
+      }
       userId = steamAccount.userId
     }
 
@@ -59,11 +64,15 @@ export async function getHeroWinLoss({
 
     return (matches ?? []).reduce<HeroWinLoss>(
       (record, match) => {
-        if (match.won === true) record.win++
-        if (match.won === false) record.lose++
+        if (match.won === true) {
+          record.win++
+        }
+        if (match.won === false) {
+          record.lose++
+        }
         return record
       },
-      { lose: 0, win: 0 },
+      { lose: 0, win: 0 }
     )
   } catch (error) {
     logger.error('[HERO] Failed to read tracked hero stats', {

@@ -14,7 +14,9 @@ const whisperQueue: { channel: string; text: string }[] = []
 let processingQueue = false
 
 const processQueue = async () => {
-  if (processingQueue || whisperQueue.length === 0) return
+  if (processingQueue || whisperQueue.length === 0) {
+    return
+  }
   processingQueue = true
 
   while (whisperQueue.length > 0) {
@@ -37,7 +39,7 @@ const processQueue = async () => {
 }
 
 const sendWhisper = (channel: string, text: string) => {
-  const MAX_WHISPER_LENGTH = 10000
+  const MAX_WHISPER_LENGTH = 10_000
   const chunks = text.match(new RegExp(`.{1,${MAX_WHISPER_LENGTH}}`, 'g')) || []
 
   chunks.forEach((chunk) => {
@@ -48,7 +50,7 @@ const sendWhisper = (channel: string, text: string) => {
   whispersInLastMinute++
 
   setTimeout(() => whispersInLastSecond--, 1000)
-  setTimeout(() => whispersInLastMinute--, 60000)
+  setTimeout(() => whispersInLastMinute--, 60_000)
 }
 
 // Chat client object
@@ -57,7 +59,7 @@ export const chatClient = {
     channel: string,
     text: string,
     reply_parent_message_id?: string,
-    bypassDisableCheck = false,
+    bypassDisableCheck = false
   ): void => {
     const user = findUserByName(channel.toLowerCase().replace('#', ''))
     const hasNewestScopes = user?.Account?.scope?.includes('channel:bot')
@@ -67,9 +69,11 @@ export const chatClient = {
         const isDisabled = getValueOrDefault(
           DBSettings.commandDisable,
           user.settings,
-          user.subscription,
+          user.subscription
         )
-        if (isDisabled) return
+        if (isDisabled) {
+          return
+        }
       }
 
       // Consume a pending command-suggestion suffix from the active command
@@ -90,7 +94,9 @@ export const chatClient = {
   // trailing "Also try !x" would point viewers at an equally-dataless sibling.
   sayWithoutSuggestion: (channel: string, text: string, reply_parent_message_id?: string): void => {
     const ctx = suggestionContext.getStore()
-    if (ctx) ctx.suffix = null
+    if (ctx) {
+      ctx.suffix = null
+    }
     chatClient.say(channel, text, reply_parent_message_id)
   },
   whisper: (channel: string, text: string | undefined) => {

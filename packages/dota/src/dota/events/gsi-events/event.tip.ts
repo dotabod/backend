@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 
-import { DotaEventTypes, type TipEvent } from '../../../types'
+import { DotaEventTypes } from '../../../types'
+import type { TipEvent } from '../../../types'
 import { getRedisNumberValue, is8500Plus } from '../../../utils/index'
 import { getHeroNameOrColor } from '../../lib/heroes'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
@@ -10,11 +11,15 @@ import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
   handler: async (dotaClient, event: TipEvent) => {
-    if (!dotaClient.client.stream_online) return
-    if (!isPlayingMatch(dotaClient.client.gsi)) return
+    if (!dotaClient.client.stream_online) {
+      return
+    }
+    if (!isPlayingMatch(dotaClient.client.gsi)) {
+      return
+    }
 
     const roster = await new MatchDataService(dotaClient.client).resolveRoster()
-    const players = roster.players
+    const { players } = roster
 
     // tip events carry sender_player_id / receiver_player_id, NOT player_id —
     // the fallback must use those, or the index becomes undefined and tips break.
@@ -43,14 +48,14 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
         heroName
           ? t('tip.from', {
               emote: 'ICANT',
-              lng: dotaClient.client.locale,
               heroName,
+              lng: dotaClient.client.locale,
             })
           : t('tip.fromUnknown', {
               emote: 'ICANT',
               lng: dotaClient.client.locale,
             }),
-        { chattersKey: 'tip' },
+        { chattersKey: 'tip' }
       )
     }
 
@@ -67,14 +72,14 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
         toHero
           ? t('tip.to', {
               emote: 'PepeLaugh',
-              lng: dotaClient.client.locale,
               heroName: toHero,
+              lng: dotaClient.client.locale,
             })
           : t('tip.toUnknown', {
               emote: 'PepeLaugh',
               lng: dotaClient.client.locale,
             }),
-        { chattersKey: 'tip' },
+        { chattersKey: 'tip' }
       )
     }
   },

@@ -1,16 +1,17 @@
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { redisClient } from '../../db/redisInstance'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { DBSettings } from '../../settings'
 import { steamSocket } from '../../steam/ws'
 import type { MatchMinimalDetailsResponse } from '../../types'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 import { resolveByMostRecentMatch, resolveMatchRetroactively } from '../lib/resolveMatch'
 
 commandHandler.registerCommand('lost', {
-  permission: 2, // Mods and broadcaster only
   cooldown: 0,
   dbkey: DBSettings.commandLost,
   handler: async (message: MessageType, args: string[]) => {
@@ -27,11 +28,11 @@ commandHandler.registerCommand('lost', {
         chatClient.say(
           channel,
           t('bets.retroactiveMatchNotFound', {
-            matchId: matchIdArg,
             emote: 'PauseChamp',
             lng: client.locale,
+            matchId: matchIdArg,
           }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -42,7 +43,7 @@ commandHandler.registerCommand('lost', {
         false, // lost
         username,
         channel,
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -50,7 +51,7 @@ commandHandler.registerCommand('lost', {
     try {
       // Check if there's a pending manual resolution
       const pendingResolution = await redisClient.client.get(
-        `${client.token}:pendingManualResolution`,
+        `${client.token}:pendingManualResolution`
       )
 
       if (!pendingResolution) {
@@ -62,9 +63,11 @@ commandHandler.registerCommand('lost', {
           false,
           username,
           channel,
-          message.user.messageId,
+          message.user.messageId
         )
-        if (flipped) return
+        if (flipped) {
+          return
+        }
 
         chatClient.say(
           channel,
@@ -72,7 +75,7 @@ commandHandler.registerCommand('lost', {
             emote: 'PauseChamp',
             lng: client.locale,
           }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -80,8 +83,8 @@ commandHandler.registerCommand('lost', {
       const { matchId } = JSON.parse(pendingResolution)
 
       logger.info('[BETS] Manual resolution requested - lost', {
-        name: client.name,
         matchId,
+        name: client.name,
         resolvedBy: username,
       })
 
@@ -93,8 +96,8 @@ commandHandler.registerCommand('lost', {
 
       if (!myTeam) {
         logger.error('[BETS] Could not determine team for manual resolution', {
-          name: client.name,
           matchId,
+          name: client.name,
         })
         chatClient.say(
           channel,
@@ -102,7 +105,7 @@ commandHandler.registerCommand('lost', {
             emote: 'PauseChamp',
             lng: client.locale,
           }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -118,18 +121,18 @@ commandHandler.registerCommand('lost', {
             } else {
               resolve(response)
             }
-          },
+          }
         )
       })
 
       let gcData: MatchMinimalDetailsResponse | undefined
       try {
         gcData = await getMatchDetailsPromise
-      } catch (e) {
+      } catch (error) {
         // If we can't get the data, we'll proceed without it
         logger.info('[BETS] Could not get match details for manual resolution, proceeding anyway', {
+          error,
           matchId,
-          error: e,
         })
       }
 
@@ -141,8 +144,8 @@ commandHandler.registerCommand('lost', {
 
       if (!handler) {
         logger.error('[BETS] Could not find GSI handler for manual resolution', {
-          name: client.name,
           matchId,
+          name: client.name,
         })
         chatClient.say(
           channel,
@@ -150,7 +153,7 @@ commandHandler.registerCommand('lost', {
             emote: 'PauseChamp',
             lng: client.locale,
           }),
-          message.user.messageId,
+          message.user.messageId
         )
         return
       }
@@ -163,22 +166,23 @@ commandHandler.registerCommand('lost', {
         channel,
         t('bets.manualResolutionSuccess', {
           context: 'lost',
+          lng: client.locale,
           matchId,
           username,
-          lng: client.locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
     } catch (error) {
-      logger.error('[BETS] Error in manual resolution command (lost)', { error, channel })
+      logger.error('[BETS] Error in manual resolution command (lost)', { channel, error })
       chatClient.say(
         channel,
         t('bets.manualResolutionError', {
           emote: 'PauseChamp',
           lng: client.locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
     }
   },
+  permission: 2, // Mods and broadcaster only,
 })

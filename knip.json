@@ -1,13 +1,12 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "ignore": ["packages/clip-processor-py/**"],
-  "ignoreBinaries": ["doppler", "upgrade-interactive", "i18next"],
+  "ignore": ["packages/shared-utils/src/db/supabase-types.ts"],
+  "ignoreBinaries": ["doppler", "i18next"],
   "workspaces": {
     ".": {
       "entry": [
         "detect-circular-deps.ts",
         "scripts/remove-unused-decls.ts",
-        "services/crowdin/src/i18next-parser.config.js",
         "services/mongodb/src/init.js"
       ]
     },
@@ -18,8 +17,9 @@
       "entry": ["src/example-client.ts", "tests/**/*.ts"]
     },
     "packages/shared-utils": {},
-    "packages/steam": {},
-    "packages/twitch": {},
+    "packages/steam": {
+      "entry": ["healthcheck.mjs"]
+    },
     "packages/twitch-chat": {
       "entry": ["src/**/__tests__/**/*.ts"]
     },

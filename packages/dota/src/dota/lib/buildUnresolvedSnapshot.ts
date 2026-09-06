@@ -29,7 +29,9 @@ interface LiveGsiLike {
 // Treats empty strings as missing — the disconnect GSI packet often returns
 // `hero.name = ""` rather than dropping the key.
 const liveString = (v: string | null | undefined): string | null => {
-  if (typeof v !== 'string') return null
+  if (typeof v !== 'string') {
+    return null
+  }
   return v.length > 0 ? v : null
 }
 
@@ -42,12 +44,16 @@ const liveString = (v: string | null | undefined): string | null => {
 // to a real cached value.
 const monotonic = (
   live: number | null | undefined,
-  prev: number | null | undefined,
+  prev: number | null | undefined
 ): number | null => {
   const l = typeof live === 'number' ? live : null
   const p = typeof prev === 'number' ? prev : null
-  if (l == null) return p
-  if (p == null) return l
+  if (l == null) {
+    return p
+  }
+  if (p == null) {
+    return l
+  }
   return Math.max(l, p)
 }
 
@@ -64,14 +70,14 @@ export function mergeInGameSnapshotTick(args: {
   const samePrev = prev?.matchId === matchId ? prev : null
   const liveHero = liveString(gsi?.hero?.name)
   return {
-    matchId,
+    assists: monotonic(gsi?.player?.assists, samePrev?.assists),
+    deaths: monotonic(gsi?.player?.deaths, samePrev?.deaths),
+    dire_score: monotonic(gsi?.map?.dire_score, samePrev?.dire_score),
+    duration: monotonic(gsi?.map?.game_time, samePrev?.duration),
     hero_name: liveHero ?? samePrev?.hero_name ?? null,
     kills: monotonic(gsi?.player?.kills, samePrev?.kills),
-    deaths: monotonic(gsi?.player?.deaths, samePrev?.deaths),
-    assists: monotonic(gsi?.player?.assists, samePrev?.assists),
-    duration: monotonic(gsi?.map?.game_time, samePrev?.duration),
+    matchId,
     radiant_score: monotonic(gsi?.map?.radiant_score, samePrev?.radiant_score),
-    dire_score: monotonic(gsi?.map?.dire_score, samePrev?.dire_score),
   }
 }
 
@@ -94,13 +100,13 @@ export function buildClosingScores(args: {
 } {
   const { gcPlayer, gcMatch, gsi } = args
   return {
+    dire_score: monotonic(gcMatch?.dire_score, gsi?.map?.dire_score),
     kda: {
-      kills: monotonic(gcPlayer?.kills, gsi?.player?.kills),
-      deaths: monotonic(gcPlayer?.deaths, gsi?.player?.deaths),
       assists: monotonic(gcPlayer?.assists, gsi?.player?.assists),
+      deaths: monotonic(gcPlayer?.deaths, gsi?.player?.deaths),
+      kills: monotonic(gcPlayer?.kills, gsi?.player?.kills),
     },
     radiant_score: monotonic(gcMatch?.radiant_score, gsi?.map?.radiant_score),
-    dire_score: monotonic(gcMatch?.dire_score, gsi?.map?.dire_score),
   }
 }
 
@@ -126,12 +132,12 @@ export function buildUnresolvedSnapshot(args: {
 
   const iso = now.toISOString()
   return {
-    matchId,
-    hero_name,
-    kda: { kills, deaths, assists, duration },
-    radiant_score,
-    dire_score,
     created_at: iso,
+    dire_score,
+    hero_name,
+    kda: { assists, deaths, duration, kills },
+    matchId,
+    radiant_score,
     updated_at: iso,
   }
 }

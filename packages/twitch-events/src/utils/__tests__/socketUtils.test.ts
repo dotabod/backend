@@ -2,40 +2,42 @@
 // `enable` / `resubscribe` handlers. handleNewUser rejects on critical-sub
 // failures; without the .catch those rejections become unhandledRejection
 // and Node 24 crashes the single-replica twitch-events service.
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const logCalls: { info: any[]; error: any[]; warn: any[] } = { info: [], error: [], warn: [] }
-let handleNewUserBehavior: (id: string, resub: boolean) => Promise<void> = async () => undefined
+const logCalls: { info: any[]; error: any[]; warn: any[] } = { error: [], info: [], warn: [] }
+let handleNewUserBehavior: (id: string, resub: boolean) => Promise<void> = async () => {}
 
-vi.doMock('@dotabod/shared-utils', () => ({
+vi.doMock(import('@dotabod/shared-utils'), () => ({
+  botStatus: { isBanned: false },
+  fetchConduitId: async () => 'conduit-1',
   logger: {
+    debug: () => {},
+    error: (message: string, meta?: Record<string, unknown>) =>
+      logCalls.error.push({ message, meta }),
     info: (message: string, meta?: Record<string, unknown>) =>
       logCalls.info.push({ message, meta }),
     warn: (message: string, meta?: Record<string, unknown>) =>
       logCalls.warn.push({ message, meta }),
-    error: (message: string, meta?: Record<string, unknown>) =>
-      logCalls.error.push({ message, meta }),
-    debug: () => undefined,
   },
-  botStatus: { isBanned: false },
-  fetchConduitId: async () => 'conduit-1',
   supabase: { from: () => ({}) },
 }))
 
 // Replace the heavy handleNewUser implementation with a test double whose
 // behavior the test owns turn-by-turn.
-vi.doMock('../../handleNewUser', () => ({
-  handleNewUser: (id: string, resub: boolean) => handleNewUserBehavior(id, resub),
+vi.doMock(import('../../handleNewUser'), () => ({
+  handleNewUser: async (id: string, resub: boolean) => {
+    await handleNewUserBehavior(id, resub)
+  },
 }))
 
-vi.doMock('../../twitch/lib/revokeEvent', () => ({
-  revokeEvent: async () => undefined,
+vi.doMock(import('../../twitch/lib/revokeEvent'), () => ({
+  revokeEvent: async () => {},
 }))
 
 // socket.io's Server constructor binds a port at module load. Replace it
 // with a no-op so importing socketUtils doesn't try to listen on 5015 in
 // the test process.
-vi.doMock('socket.io', () => ({
+vi.doMock(import('socket.io'), () => ({
   Server: class FakeServer {
     on() {}
   },
@@ -49,7 +51,7 @@ beforeEach(() => {
   logCalls.info = []
   logCalls.error = []
   logCalls.warn = []
-  handleNewUserBehavior = async () => undefined
+  handleNewUserBehavior = async () => {}
 })
 
 afterEach(() => {
@@ -67,11 +69,11 @@ describe('onSocketEnable', () => {
     await new Promise<void>((r) => setTimeout(r, 0))
 
     expect(
-      logCalls.error.some((c) => c.message === '[TWITCHEVENTS] socket enable handleNewUser failed'),
-    ).toBe(true)
+      logCalls.error.some((c) => c.message === '[TWITCHEVENTS] socket enable handleNewUser failed')
+    ).toBeTruthy()
     expect(logCalls.error[0].meta).toMatchObject({
-      providerAccountId: 'tw-1',
       error: 'critical subscription failed',
+      providerAccountId: 'tw-1',
     })
   })
 
@@ -79,7 +81,7 @@ describe('onSocketEnable', () => {
     onSocketEnable('tw-ok')
     await new Promise<void>((r) => setTimeout(r, 0))
 
-    expect(logCalls.info.some((c) => c.message.includes('Enabling events for user'))).toBe(true)
+    expect(logCalls.info.some((c) => c.message.includes('Enabling events for user'))).toBeTruthy()
     expect(logCalls.error).toHaveLength(0)
   })
 })
@@ -94,8 +96,8 @@ describe('onSocketResubscribe', () => {
 
     expect(
       logCalls.error.some(
-        (c) => c.message === '[TWITCHEVENTS] socket resubscribe handleNewUser failed',
-      ),
-    ).toBe(true)
+        (c) => c.message === '[TWITCHEVENTS] socket resubscribe handleNewUser failed'
+      )
+    ).toBeTruthy()
   })
 })

@@ -14,7 +14,8 @@
 // already used by openTwitchBet.ts.
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vite-plus/test'
+
+import { describe, expect, it } from 'vitest'
 
 // import.meta.dirname → packages/shared-utils/tests; '../..' lifts to packages/.
 const REPO_PACKAGES = join(import.meta.dirname, '../..')
@@ -31,7 +32,9 @@ const ALLOWED_FILES = new Set([
 
 function* walk(dir: string): Generator<string> {
   for (const entry of readdirSync(dir)) {
-    if (SKIP_DIRS.has(entry)) continue
+    if (SKIP_DIRS.has(entry)) {
+      continue
+    }
     const full = join(dir, entry)
     const st = statSync(full)
     if (st.isDirectory()) {
@@ -57,14 +60,20 @@ const VIOLATION_PATTERNS: RegExp[] = [
 
 describe('commandDisable facade pinning', () => {
   it('no source file outside the facade calls trackDisableReason/trackResolveReason with commandDisable', () => {
-    const offenders: Array<{ file: string; snippet: string }> = []
+    const offenders: { file: string; snippet: string }[] = []
 
     for (const file of walk(REPO_PACKAGES)) {
-      if (ALLOWED_FILES.has(file)) continue
-      const src = readFileSync(file, 'utf8')
+      if (ALLOWED_FILES.has(file)) {
+        continue
+      }
+      const src = readFileSync(file, 'utf-8')
       // Cheap pre-filter to skip the vast majority of files.
-      if (!src.includes('commandDisable')) continue
-      if (!src.includes('trackDisableReason') && !src.includes('trackResolveReason')) continue
+      if (!src.includes('commandDisable')) {
+        continue
+      }
+      if (!src.includes('trackDisableReason') && !src.includes('trackResolveReason')) {
+        continue
+      }
 
       for (const pattern of VIOLATION_PATTERNS) {
         const match = src.match(pattern)
@@ -80,16 +89,16 @@ describe('commandDisable facade pinning', () => {
 
     if (offenders.length > 0) {
       const msg = offenders
-        .map((o) => `  ${o.file}\n    ${o.snippet.replace(/\s+/g, ' ')}`)
+        .map((o) => `  ${o.file}\n    ${o.snippet.replaceAll(/\s+/g, ' ')}`)
         .join('\n')
       throw new Error(
         `Found direct trackDisableReason/trackResolveReason calls on 'commandDisable'.\n` +
           `Use the commandDisable facade (\`commandDisable.disable\`, \`commandDisable.enable\`,\n` +
           `\`commandDisable.recordNotification\`) — see packages/shared-utils/src/disableReason/commandDisable.ts.\n` +
-          `Offenders:\n${msg}`,
+          `Offenders:\n${msg}`
       )
     }
 
-    expect(offenders).toEqual([])
+    expect(offenders).toStrictEqual([])
   })
 })

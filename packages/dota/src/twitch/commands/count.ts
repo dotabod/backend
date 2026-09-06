@@ -11,13 +11,13 @@ commandHandler.registerCommand('count', {
     const gsiSize = gsiHandlers.size
 
     const bothParts = `${t('connections.gsi', {
-      lng: message.channel.client.locale,
       channel: message.channel.name,
       count: gsiSize,
-    })} · ${t('connections.overlay', {
       lng: message.channel.client.locale,
+    })} · ${t('connections.overlay', {
       channel: message.channel.name,
       count: sockets,
+      lng: message.channel.client.locale,
     })}`
 
     chatClient.say(message.channel.name, bothParts, message.user.messageId)

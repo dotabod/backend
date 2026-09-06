@@ -1,22 +1,23 @@
 import { spawnSync } from 'node:child_process'
+
 import { Project, SyntaxKind } from 'ts-morph'
 
-type Diagnostic = {
+interface Diagnostic {
   code: string
   filename: string
   message: string
   labels: { span: { offset: number; length: number; line: number; column: number } }[]
 }
 
-const result = spawnSync('npx', ['oxlint', '--format=json'], { encoding: 'utf8' })
+const result = spawnSync('npx', ['oxlint', '--format=json'], { encoding: 'utf-8' })
 const { diagnostics } = JSON.parse(result.stdout) as { diagnostics: Diagnostic[] }
 
 const unused = diagnostics.filter((d) => d.code === 'eslint(no-unused-vars)')
 console.log(`Found ${unused.length} no-unused-vars diagnostics`)
 
 const project = new Project({
-  tsConfigFilePath: 'tsconfig.json',
   skipAddingFilesFromTsConfig: true,
+  tsConfigFilePath: 'tsconfig.json',
 })
 
 const byFile = new Map<string, Diagnostic[]>()
@@ -41,7 +42,7 @@ for (const [filename, diags] of byFile) {
   diags.sort((a, b) => b.labels[0].span.offset - a.labels[0].span.offset)
 
   for (const d of diags) {
-    const offset = d.labels[0].span.offset
+    const { offset } = d.labels[0].span
     const ident = source.getDescendantAtPos(offset)
     if (!ident) {
       console.warn(`  skip (no node): ${filename}:${d.labels[0].span.line}`)
@@ -68,15 +69,17 @@ for (const [filename, diags] of byFile) {
     let toRemove = parent
     if (kind === SyntaxKind.VariableDeclaration || kind === SyntaxKind.BindingElement) {
       const stmt = parent.getFirstAncestorByKind(SyntaxKind.VariableStatement)
-      if (stmt) toRemove = stmt
+      if (stmt) {
+        toRemove = stmt
+      }
     }
 
     try {
       ;(toRemove as unknown as { remove: () => void }).remove()
       removed++
-    } catch (e) {
+    } catch (error) {
       console.warn(
-        `  failed to remove ${filename}:${d.labels[0].span.line} — ${(e as Error).message}`,
+        `  failed to remove ${filename}:${d.labels[0].span.line} — ${(error as Error).message}`
       )
       skipped++
     }

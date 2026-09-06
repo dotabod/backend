@@ -5,11 +5,10 @@ import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/get
 import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
 import { clippingDisabledNote } from '../lib/clippingNote'
+import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('avg', {
-  onlyOnline: true,
   dbkey: DBSettings.commandAvg,
   handler: async (message) => {
     const {
@@ -24,7 +23,7 @@ commandHandler.registerCommand('avg', {
               url: 'dotabod.com/dashboard/features',
             })
           : t('unknownSteam', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -35,7 +34,7 @@ commandHandler.registerCommand('avg', {
         t(isCurrentCustomGame(client) ? 'customGameNoRoster' : 'gameNotFound', {
           lng: client.locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -52,19 +51,20 @@ commandHandler.registerCommand('avg', {
     }
 
     calculateAvg({
-      locale: client.locale,
       currentMatchId: message.channel.client.gsi?.map?.matchid,
+      locale: client.locale,
       players: roster.players,
     })
       .then((avg) => {
         chatClient.say(message.channel.name, `${avg}${avgDescriptor}`, message.user.messageId)
       })
-      .catch((e) => {
+      .catch((error) => {
         chatClient.say(
           message.channel.name,
-          e?.message ?? t('gameNotFound', { lng: client.locale }),
-          message.user.messageId,
+          error?.message ?? t('gameNotFound', { lng: client.locale }),
+          message.user.messageId
         )
       })
   },
+  onlyOnline: true,
 })

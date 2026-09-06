@@ -1,33 +1,33 @@
 import { countryCodeEmoji } from 'country-code-emoji'
 import { t } from 'i18next'
+
 import RedisClient from '../../db/RedisClient'
-import { MatchDataService } from '../../dota/lib/matchData'
 import { isSpectator } from '../../dota/lib/isSpectator'
+import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME } from '../../settings'
 import { getSteamPlayerSummaries } from '../../steam/playerSummaries'
 import CustomError from '../../utils/customError'
 import { is8500Plus } from '../../utils/index'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('geo', {
   aliases: ['country', 'location'],
-  permission: 2,
   dbkey: DBSettings.commandGeo,
-
   handler: async (message: MessageType, _args: string[]) => {
     const {
       channel: { name: channel, client },
     } = message
 
-    const locale = client.locale
+    const { locale } = client
     const currentMatchId = client.gsi?.map?.matchid
 
     if (!currentMatchId) {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -47,7 +47,7 @@ commandHandler.registerCommand('geo', {
         }
         const redisClient = RedisClient.getInstance()
         const steamServerId = await redisClient.client.get(
-          `${currentMatchId}:${client.token}:steamServerId`,
+          `${currentMatchId}:${client.token}:steamServerId`
         )
 
         if (!steamServerId) {
@@ -69,8 +69,10 @@ commandHandler.registerCommand('geo', {
 
       const countriesList = matchPlayers
         .map((p) => {
-          const cc = p.accountId !== null ? summaries.get(p.accountId)?.countryCode : undefined
-          if (!cc) return '?'
+          const cc = p.accountId === null ? undefined : summaries.get(p.accountId)?.countryCode
+          if (!cc) {
+            return '?'
+          }
           return countryCodeEmoji(cc) || cc
         })
         .join(' · ')
@@ -78,14 +80,17 @@ commandHandler.registerCommand('geo', {
       chatClient.say(
         channel,
         t('countryPlayerList', {
-          lng: locale,
           countries: countriesList,
+          lng: locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
-    } catch (e) {
-      const msg = !(e as Error)?.message ? t('gameNotFound', { lng: locale }) : (e as Error).message
+    } catch (error) {
+      const msg = (error as Error)?.message
+        ? (error as Error).message
+        : t('gameNotFound', { lng: locale })
       chatClient.say(channel, msg, message.user.messageId)
     }
   },
+  permission: 2,
 })

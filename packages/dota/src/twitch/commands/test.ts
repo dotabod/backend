@@ -1,6 +1,7 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import axios from 'axios'
 import { t } from 'i18next'
+
 import type { DelayedGames } from '../../../../steam/src/types/index'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { MatchDataService } from '../../dota/lib/matchData'
@@ -8,7 +9,8 @@ import MongoDBSingleton from '../../steam/MongoDBSingleton'
 import { steamSocket } from '../../steam/ws'
 import CustomError from '../../utils/customError'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 const fetchUserByName = async (name: string) => {
   const { data: user, error } = await supabase
@@ -23,7 +25,7 @@ const fetchUserByName = async (name: string) => {
       steam_accounts (
         steam32Id
       )
-    `,
+    `
     )
     .eq('name', name)
     .single()
@@ -37,7 +39,9 @@ const fetchUserByName = async (name: string) => {
 }
 
 const generateLogQuery = (user: Awaited<ReturnType<typeof fetchUserByName>>) => {
-  if (!user) return
+  if (!user) {
+    return
+  }
 
   const steamAccountQueries = user.steam_accounts
     .map((account: { steam32Id: number }) => `steam32Id:${account.steam32Id} or`)
@@ -73,7 +77,7 @@ const handleUserCommand = (message: MessageType, _args: string[]) => {
       Account ID: ${accountId}
       Steam32 ID: ${client.steam32Id}
       Token: ${client.token}
-    `,
+    `
   )
 }
 
@@ -96,7 +100,7 @@ const handleCardsCommand = async (message: MessageType) => {
   const getCardsPromise = new Promise<unknown>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: channel.client.locale })))
-    }, 10000) // 5 second timeout
+    }, 10_000) // 5 second timeout
 
     steamSocket.emit('getCards', accountIds, false, (err: unknown, response: unknown) => {
       clearTimeout(timeoutId)
@@ -114,7 +118,7 @@ const handleCardsCommand = async (message: MessageType) => {
   } catch (error) {
     chatClient.whisper(
       user.userId,
-      `Error getting cards: ${error instanceof Error ? error.message : String(error)}`,
+      `Error getting cards: ${error instanceof Error ? error.message : String(error)}`
     )
   }
 
@@ -127,8 +131,8 @@ const handleCardCommand = (message: MessageType, args: string[]) => {
     const timeoutId = setTimeout(() => {
       reject(
         new CustomError(
-          t('matchData8500', { emote: 'PoroSad', lng: message.channel.client.locale }),
-        ),
+          t('matchData8500', { emote: 'PoroSad', lng: message.channel.client.locale })
+        )
       )
     }, 5000) // 5 second timeout
 
@@ -170,11 +174,11 @@ const handleServerCommand = async (message: MessageType, args: string[]) => {
   const getDelayedDataPromise = new Promise<string>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       reject(new CustomError('timed out getting steam server'))
-    }, 10000) // 10 second timeout
+    }, 10_000) // 10 second timeout
 
     logger.info('[STEAM] Getting user steam server', {
-      steam32Id,
       channelClientSteam32Id: channel.client.steam32Id,
+      steam32Id,
     })
     steamSocket.emit(
       'getUserSteamServer',
@@ -183,63 +187,63 @@ const handleServerCommand = async (message: MessageType, args: string[]) => {
         clearTimeout(timeoutId)
         if (err) {
           logger.error('[STEAM] Error getting user steam server', {
+            channelClientSteam32Id: channel.client.steam32Id,
             err,
             steam32Id,
-            channelClientSteam32Id: channel.client.steam32Id,
           })
           reject(err)
         } else {
           logger.info('[STEAM] Got user steam server', {
-            steamServerId,
-            steam32Id,
             channelClientSteam32Id: channel.client.steam32Id,
+            steam32Id,
+            steamServerId,
           })
           resolve(steamServerId)
         }
-      },
+      }
     )
   })
 
   try {
     const steamServerId = await getDelayedDataPromise
     logger.info('[STEAM] Got user steam server', {
-      steamServerId,
-      steam32Id,
       channelClientSteam32Id: channel.client.steam32Id,
+      steam32Id,
+      steamServerId,
     })
 
     if (!steamServerId) {
       logger.error('[STEAM] No steam server id', {
-        steamServerId,
-        steam32Id,
         channelClientSteam32Id: channel.client.steam32Id,
+        steam32Id,
+        steamServerId,
       })
       chatClient.whisper(user.userId, t('gameNotFound', { lng: channel.client.locale }))
       return
     }
 
     logger.info('[STEAM] Getting game data for steam server id', {
-      steamServerId,
-      steam32Id,
       channelClientSteam32Id: channel.client.steam32Id,
+      steam32Id,
+      steamServerId,
     })
     chatClient.whisper(user.userId, `Getting game data for ${steamServerId}`)
 
     const game = (
       await axios<DelayedGames>(
-        `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamServerId}`,
+        `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steamServerId}`
       )
     )?.data
     logger.info('[STEAM] Got game data', {
-      game,
-      steamServerId,
-      steam32Id,
       channelClientSteam32Id: channel.client.steam32Id,
+      game,
+      steam32Id,
+      steamServerId,
     })
     chatClient.whisper(user.userId, JSON.stringify(game))
     chatClient.whisper(
       user.userId,
-      `name: ${channel.name} steam32id: ${channel.client.steam32Id} token: ${channel.client.token}`,
+      `name: ${channel.name} steam32id: ${channel.client.steam32Id} token: ${channel.client.token}`
     )
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -273,39 +277,49 @@ const handleSubscriptionCommand = async (message: MessageType) => {
 }
 
 commandHandler.registerCommand('test', {
-  permission: 4,
-
   handler: async (message, args) => {
     switch (args[0]) {
-      case 'subscription':
+      case 'subscription': {
         await handleSubscriptionCommand(message)
         break
-      case 'user':
+      }
+      case 'user': {
         handleUserCommand(message, args)
         break
-      case 'game':
+      }
+      case 'game': {
         handleGameCommand(message)
         break
-      case '2m':
+      }
+      case '2m': {
         void handle2mDataCommand(message)
         break
-      case 'reset':
+      }
+      case 'reset': {
         await handleResetCommand(message)
         break
-      case 'cards':
+      }
+      case 'cards': {
         await handleCardsCommand(message)
         break
-      case 'card':
+      }
+      case 'card': {
         handleCardCommand(message, args)
         break
-      case 'logs':
+      }
+      case 'logs': {
         await handleLogsCommand(message)
         break
-      case 'server':
+      }
+      case 'server': {
         void handleServerCommand(message, args)
         break
-      default:
+      }
+      default: {
         chatClient.whisper(message.user.userId, 'Invalid command')
+      }
     }
   },
+
+  permission: 4,
 })

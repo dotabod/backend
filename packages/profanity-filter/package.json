@@ -2,7 +2,8 @@
   "name": "@dotabod/profanity-filter",
   "files": [
     "dist",
-    "index.ts"
+    "index.ts",
+    "src"
   ],
   "type": "module",
   "main": "index.ts",
@@ -10,15 +11,15 @@
   "exports": {
     ".": {
       "import": "./dist/index.js",
-      "types": "./index.ts"
+      "types": "./dist/index.d.ts"
     }
   },
   "scripts": {
     "prebuild": "rm -rf dist",
-    "build": "vp pack index.ts -f esm -d dist --sourcemap",
-    "test": "vp test",
-    "test:watch": "vp test watch",
-    "test:coverage": "vp test run --coverage",
+    "build": "tsdown --config ../../tsdown.config.ts index.ts -f esm -d dist --sourcemap",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -35,7 +36,6 @@
     "washyourmouthoutwithsoap": "^1.0.2"
   },
   "devDependencies": {
-    "@types/leo-profanity": "^1.5.4",
     "@types/naughty-words": "^1.2.3"
   }
 }

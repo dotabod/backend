@@ -1,23 +1,24 @@
 import { logger } from '@dotabod/shared-utils'
+
 import { DBSettings, getValueOrDefault } from '../../../settings'
 import { is8500Plus } from '../../../utils/index'
 import { getStreamDelay } from '../../getStreamDelay'
-import { DRAFT_CLIP_OPTS, GAMEPLAY_CLIP_OPTS, scheduleClip } from '../../lib/clipSchedule'
-import {
-  type allStates,
-  draftStartByMatchId,
-  GLOBAL_DELAY,
-  gameInProgressClipByMatchId,
-} from '../../lib/consts'
 import { announceCapturedCosmetics } from '../../lib/announceCosmetics'
+import { DRAFT_CLIP_OPTS, GAMEPLAY_CLIP_OPTS, scheduleClip } from '../../lib/clipSchedule'
+import { draftStartByMatchId, GLOBAL_DELAY, gameInProgressClipByMatchId } from '../../lib/consts'
+import type { allStates } from '../../lib/consts'
 import { isPlayingMatch } from '../../lib/isPlayingMatch'
 import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent('map:game_state', {
   handler: async (dotaClient, gameState: (typeof allStates)[number]) => {
     // Early returns for invalid conditions
-    if (!dotaClient.client.stream_online) return
-    if (!isPlayingMatch(dotaClient.client.gsi, false)) return
+    if (!dotaClient.client.stream_online) {
+      return
+    }
+    if (!isPlayingMatch(dotaClient.client.gsi, false)) {
+      return
+    }
 
     // Release the held cosmetic-set announcement once the hero is visible to everyone
     // (strategy phase on). The pick fired hero:id back in hero selection, where the reveal is
@@ -40,7 +41,7 @@ eventHandler.registerEvent('map:game_state', {
     // (/detect_in_game) ships. Short-circuit before the work below so disabling
     // it costs nothing on every game-start transition.
     if (
-      'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS' === gameState &&
+      gameState === 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS' &&
       process.env.VISION_IN_GAME_ENABLED !== 'true'
     ) {
       return
@@ -55,7 +56,7 @@ eventHandler.registerEvent('map:game_state', {
     const autoClippingEnabled = !getValueOrDefault(
       DBSettings.disableAutoClipping,
       dotaClient.client.settings,
-      dotaClient.client.subscription,
+      dotaClient.client.subscription
     )
     if (!autoClippingEnabled) {
       return
@@ -63,8 +64,8 @@ eventHandler.registerEvent('map:game_state', {
 
     // Extract common log context
     const logContext = {
-      name: dotaClient.client.name,
       matchId: dotaClient.client.gsi?.map?.matchid,
+      name: dotaClient.client.name,
       state: gameState,
     }
 
@@ -78,28 +79,28 @@ eventHandler.registerEvent('map:game_state', {
     }
 
     // Create a clip when the draft starts to get a list of players
-    if ('DOTA_GAMERULES_STATE_PLAYER_DRAFT' === gameState) {
+    if (gameState === 'DOTA_GAMERULES_STATE_PLAYER_DRAFT') {
       draftStartByMatchId.set(dotaClient.client.gsi?.map?.matchid || '', true)
-      const DRAFT_CLIP_DELAY_MS = 46000 // 46 seconds
+      const DRAFT_CLIP_DELAY_MS = 46_000 // 46 seconds
       const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)
       logger.info(
         '[Draft Clip] Draft started, creating clip in 46 seconds + stream delay',
-        logContext,
+        logContext
       )
 
       // Delay to ensure the draft has started
       await scheduleClip(DRAFT_CLIP_DELAY_MS + streamDelay - GLOBAL_DELAY, {
         accountId,
-        matchId: dotaClient.client.gsi?.map?.matchid,
         detectPath: 'detect_draft',
-        opts: DRAFT_CLIP_OPTS,
-        logPrefix: '[Draft Clip]',
         logContext,
+        logPrefix: '[Draft Clip]',
+        matchId: dotaClient.client.gsi?.map?.matchid,
+        opts: DRAFT_CLIP_OPTS,
       })
       return
     }
 
-    if ('DOTA_GAMERULES_STATE_STRATEGY_TIME' === gameState) {
+    if (gameState === 'DOTA_GAMERULES_STATE_STRATEGY_TIME') {
       // The roster panel (names + ranks + heroes — the only screen carrying all three)
       // is up for the ~30s of strategy time, and a Twitch clip covers a ~30s window
       // ending at the createClip call, so a SMALLER value fires earlier and leaves MORE
@@ -114,16 +115,16 @@ eventHandler.registerEvent('map:game_state', {
       // (scripts/clip-debug/scan_clip.py writes the crop), then
       //   new = current - (15 - median_clock) * 1000
       // and update the measured range above, since it goes stale with the constant.
-      const CLIP_DELAY_MS = 43750
+      const CLIP_DELAY_MS = 43_750
       const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)
 
       await scheduleClip(CLIP_DELAY_MS + streamDelay - GLOBAL_DELAY, {
         accountId,
-        matchId: dotaClient.client.gsi?.map?.matchid,
         detectPath: 'detect',
-        opts: GAMEPLAY_CLIP_OPTS,
-        logPrefix: '[Clip]',
         logContext,
+        logPrefix: '[Clip]',
+        matchId: dotaClient.client.gsi?.map?.matchid,
+        opts: GAMEPLAY_CLIP_OPTS,
       })
       return
     }
@@ -131,21 +132,23 @@ eventHandler.registerEvent('map:game_state', {
     // The in-game top HUD hero bar shows all 10 heroes for the whole match and is
     // less likely to be covered by OBS overlays than the pre-game screens, so grab
     // an extra clip once the player has loaded in.
-    if ('DOTA_GAMERULES_STATE_GAME_IN_PROGRESS' === gameState) {
+    if (gameState === 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS') {
       const matchId = dotaClient.client.gsi?.map?.matchid || ''
-      if (gameInProgressClipByMatchId.get(matchId)) return
+      if (gameInProgressClipByMatchId.get(matchId)) {
+        return
+      }
       gameInProgressClipByMatchId.set(matchId, true)
 
-      const IN_GAME_CLIP_DELAY_MS = 60000 // settle ~1 min in; top bar is up all game
+      const IN_GAME_CLIP_DELAY_MS = 60_000 // settle ~1 min in; top bar is up all game
       const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)
 
       await scheduleClip(IN_GAME_CLIP_DELAY_MS + streamDelay - GLOBAL_DELAY, {
         accountId,
-        matchId,
         detectPath: 'detect_in_game',
-        opts: GAMEPLAY_CLIP_OPTS,
-        logPrefix: '[In-Game Clip]',
         logContext,
+        logPrefix: '[In-Game Clip]',
+        matchId,
+        opts: GAMEPLAY_CLIP_OPTS,
       })
     }
   },

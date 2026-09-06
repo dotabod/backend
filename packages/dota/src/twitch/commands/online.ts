@@ -1,12 +1,12 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { server } from '../../dota/server'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('online', {
   aliases: ['offline'],
-  permission: 2,
   cooldown: 0,
   handler: async (message, _args, command) => {
     const {
@@ -26,7 +26,7 @@ commandHandler.registerCommand('online', {
         client.locale,
         state,
         oppositeCommand,
-        isOnlineCommand ? 'on' : 'off',
+        isOnlineCommand ? 'on' : 'off'
       )
       await updateStreamStatus(client.token, isOnlineCommand)
       refreshSettings(client.token)
@@ -36,6 +36,7 @@ commandHandler.registerCommand('online', {
     notifyStreamStatus(message.channel.name, client.locale, state, oppositeCommand)
     refreshSettings(client.token)
   },
+  permission: 2,
 })
 
 const notifyStreamStatus = (
@@ -43,17 +44,17 @@ const notifyStreamStatus = (
   locale: string,
   state: string,
   command?: string,
-  context = 'none',
+  context = 'none'
 ) => {
   chatClient.say(
     channelName,
     t('stream', {
-      lng: locale,
       channel: channelName,
-      state,
       command,
       context,
-    }),
+      lng: locale,
+      state,
+    })
   )
 }
 

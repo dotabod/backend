@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it } from 'vitest'
+
 import type { SubscriptionRow } from '../../types/subscription.ts'
 import {
   canAccessFeature,
@@ -7,10 +8,15 @@ import {
   isInGracePeriod,
 } from '../subscription.ts'
 
-const sub = (overrides: Partial<SubscriptionRow>): SubscriptionRow =>
-  ({ id: 's1', tier: 'PRO', status: 'ACTIVE', isGift: false, ...overrides }) as SubscriptionRow
+const sub = (overrides: Partial<SubscriptionRow>): SubscriptionRow => ({
+  id: 's1',
+  isGift: false,
+  status: 'ACTIVE',
+  tier: 'PRO',
+  ...overrides,
+})
 
-describe('getRequiredTier', () => {
+describe(getRequiredTier, () => {
   it('defaults to PRO when no feature is given', () => {
     expect(getRequiredTier()).toBe('PRO')
   })
@@ -32,53 +38,55 @@ describe('getRequiredTier', () => {
   })
 })
 
-describe('isChatterKey', () => {
+describe(isChatterKey, () => {
   it('is true for chatters.* keys', () => {
-    expect(isChatterKey('chatters.midas')).toBe(true)
+    expect(isChatterKey('chatters.midas')).toBeTruthy()
   })
 
   it('is false for non-chatter keys', () => {
-    expect(isChatterKey('mmr')).toBe(false)
+    expect(isChatterKey('mmr')).toBeFalsy()
   })
 })
 
-describe('isInGracePeriod', () => {
+describe(isInGracePeriod, () => {
   it('is over (grace period ended 2025-04-30)', () => {
-    expect(isInGracePeriod()).toBe(false)
+    expect(isInGracePeriod()).toBeFalsy()
   })
 })
 
-describe('canAccessFeature', () => {
+describe(canAccessFeature, () => {
   it('grants free features regardless of subscription', () => {
-    expect(canAccessFeature('mmr', null)).toEqual({ hasAccess: true, requiredTier: 'FREE' })
+    expect(canAccessFeature('mmr', null)).toStrictEqual({ hasAccess: true, requiredTier: 'FREE' })
   })
 
   it('denies pro features without a subscription', () => {
-    expect(canAccessFeature('bets', null)).toEqual({ hasAccess: false, requiredTier: 'PRO' })
+    expect(canAccessFeature('bets', null)).toStrictEqual({ hasAccess: false, requiredTier: 'PRO' })
   })
 
   it('grants a pro feature to an active PRO subscriber', () => {
-    expect(canAccessFeature('bets', sub({ tier: 'PRO', status: 'ACTIVE' }))).toEqual({
+    expect(canAccessFeature('bets', sub({ status: 'ACTIVE', tier: 'PRO' }))).toStrictEqual({
       hasAccess: true,
       requiredTier: 'PRO',
     })
   })
 
   it('grants a pro feature to a TRIALING PRO subscriber', () => {
-    expect(canAccessFeature('bets', sub({ tier: 'PRO', status: 'TRIALING' })).hasAccess).toBe(true)
+    expect(
+      canAccessFeature('bets', sub({ status: 'TRIALING', tier: 'PRO' })).hasAccess
+    ).toBeTruthy()
   })
 
   it('denies a pro feature to a FREE-tier subscriber', () => {
-    expect(canAccessFeature('bets', sub({ tier: 'FREE', status: 'ACTIVE' })).hasAccess).toBe(false)
+    expect(canAccessFeature('bets', sub({ status: 'ACTIVE', tier: 'FREE' })).hasAccess).toBeFalsy()
   })
 
   it('denies a pro feature when the subscription is a gift (not yet active)', () => {
-    expect(canAccessFeature('bets', sub({ tier: 'PRO', isGift: true })).hasAccess).toBe(false)
+    expect(canAccessFeature('bets', sub({ isGift: true, tier: 'PRO' })).hasAccess).toBeFalsy()
   })
 
   it('denies a pro feature when the subscription is canceled', () => {
     expect(
-      canAccessFeature('bets', sub({ tier: 'PRO', status: 'CANCELED' as any })).hasAccess,
-    ).toBe(false)
+      canAccessFeature('bets', sub({ status: 'CANCELED' as any, tier: 'PRO' })).hasAccess
+    ).toBeFalsy()
   })
 })

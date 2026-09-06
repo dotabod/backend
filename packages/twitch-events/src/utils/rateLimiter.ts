@@ -20,8 +20,8 @@ export async function checkAndFixUserSubscriptions(userId: string) {
     url.searchParams.append('broadcaster_user_id', userId)
 
     const response = await fetch(url.toString(), {
-      method: 'GET',
       headers,
+      method: 'GET',
     })
 
     if (response.status !== 200) {
@@ -45,8 +45,8 @@ export async function checkAndFixUserSubscriptions(userId: string) {
     // to avoid circular dependencies
   } catch (error) {
     logger.error('Error checking subscriptions', {
-      userId,
       error: error instanceof Error ? error.message : String(error),
+      userId,
     })
   }
 }

@@ -1,7 +1,9 @@
 import { t } from 'i18next'
+
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('commands', {
   dbkey: DBSettings.commandCommands,
@@ -11,10 +13,10 @@ commandHandler.registerCommand('commands', {
       channel,
       t('commandsPage', {
         channel,
-        url: `dotabod.com/${channel}`,
         lng: message.channel.client.locale,
+        url: `dotabod.com/${channel}`,
       }),
-      message.user.messageId,
+      message.user.messageId
     )
   },
 })

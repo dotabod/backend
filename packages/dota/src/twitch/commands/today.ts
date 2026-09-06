@@ -1,16 +1,22 @@
 import { t } from 'i18next'
+
 import { getTodayHeroStats } from '../../db/getTodayHeroStats'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 // Twitch chat limit is 500 characters
 const TWITCH_CHAR_LIMIT = 500
 
 // Format a single hero stat: "Hero 3W 1L", "Hero 2W", or "Hero 1L"
 function formatHeroStat(heroName: string, wins: number, losses: number): string {
-  if (wins && losses) return `${heroName} ${wins}W ${losses}L`
-  if (wins) return `${heroName} ${wins}W`
+  if (wins && losses) {
+    return `${heroName} ${wins}W ${losses}L`
+  }
+  if (wins) {
+    return `${heroName} ${wins}W`
+  }
   return `${heroName} ${losses}L`
 }
 
@@ -24,12 +30,16 @@ function splitIntoMessages(parts: string[], separator: string, limit: number): s
     if (wouldBe.length <= limit) {
       current = wouldBe
     } else {
-      if (current) messages.push(current)
+      if (current) {
+        messages.push(current)
+      }
       current = part
     }
   }
 
-  if (current) messages.push(current)
+  if (current) {
+    messages.push(current)
+  }
   return messages
 }
 
@@ -50,7 +60,7 @@ commandHandler.registerCommand('today', {
               url: 'dotabod.com/dashboard/features',
             })
           : t('unknownSteam', { lng: client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -68,19 +78,19 @@ commandHandler.registerCommand('today', {
       chatClient.say(
         channel,
         t('today.single', {
-          lng: client.locale,
           heroName: stat.heroName,
-          wins: stat.wins,
+          lng: client.locale,
           losses: stat.losses,
+          wins: stat.wins,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
 
     // Format each hero stat
     const formattedStats = heroStats.map((stat) =>
-      formatHeroStat(stat.heroName, stat.wins, stat.losses),
+      formatHeroStat(stat.heroName, stat.wins, stat.losses)
     )
 
     // Calculate totals
@@ -94,11 +104,11 @@ commandHandler.registerCommand('today', {
     // Try to fit everything in one message first
     const heroStatsStr = formattedStats.join(separator)
     const summaryStr = t('today.summary', {
-      lng: client.locale,
       count: totalGames,
-      wins: totalWins,
+      lng: client.locale,
       losses: totalLosses,
       total: totalGames,
+      wins: totalWins,
     })
 
     const fullMessage = `${heroStatsStr} · ${summaryStr}`

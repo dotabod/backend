@@ -19,10 +19,10 @@ export const transformPollData = (data: PollEvent) => {
   const endDateStr = data.ends_at ?? data.ended_at
   return {
     choices: data.choices.map((choice) => ({
-      totalVotes: choice.votes ?? 0,
       title: choice.title,
+      totalVotes: choice.votes ?? 0,
     })),
-    title: data.title,
     endDate: endDateStr ? new Date(endDateStr) : '',
+    title: data.title,
   }
 }

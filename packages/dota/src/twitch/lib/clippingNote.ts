@@ -1,6 +1,7 @@
 import { t } from 'i18next'
-import { DBSettings, getValueOrDefault } from '../../settings'
+
 import type { RosterPlayer } from '../../dota/lib/matchData'
+import { DBSettings, getValueOrDefault } from '../../settings'
 import type { SocketClient } from '../../types'
 import { is8500Plus } from '../../utils/index'
 
@@ -13,18 +14,22 @@ export function clippingDisabledNote(client: SocketClient, matchPlayers: RosterP
   const disabled = getValueOrDefault(
     DBSettings.disableAutoClipping,
     client.settings,
-    client.subscription,
+    client.subscription
   )
-  if (!disabled || !is8500Plus(client)) return ''
+  if (!disabled || !is8500Plus(client)) {
+    return ''
+  }
 
   // Only count OTHER players' heroes: when no roster is available
   // MatchDataService falls back to a single gsi-self player carrying the
   // streamer's own hero id, which would otherwise look like a real roster and
   // wrongly suppress the note (the exact no-clips case this note is for).
   const hasOtherPlayers = matchPlayers.some(
-    (player) => (player.heroId ?? 0) > 0 && player.accountId !== client.steam32Id,
+    (player) => (player.heroId ?? 0) > 0 && player.accountId !== client.steam32Id
   )
-  if (hasOtherPlayers) return ''
+  if (hasOtherPlayers) {
+    return ''
+  }
 
   return t('clippingDisabled', { lng: client.locale })
 }

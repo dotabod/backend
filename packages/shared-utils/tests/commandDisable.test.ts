@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { resetUtilsState, utilsState } from './setupMocks.ts'
 
 const { commandDisable } = await import('../src/disableReason/commandDisable')
@@ -9,22 +10,22 @@ beforeEach(() => {
 
 describe('commandDisable.disable', () => {
   it('upserts settings.value=true (inverted: true = disabled) + audit row', async () => {
-    await commandDisable.disable('user-1', 'MANUAL_DISABLE', { disabled_by: 'mod1' } as any)
+    await commandDisable.disable('user-1', 'MANUAL_DISABLE', { disabled_by: 'mod1' })
 
     expect(utilsState.upserts).toHaveLength(1)
     expect(utilsState.upserts[0]).toMatchObject({
       table: 'settings',
       values: {
-        userId: 'user-1',
-        key: 'commandDisable',
-        value: true,
         disable_reason: 'MANUAL_DISABLE',
+        key: 'commandDisable',
+        userId: 'user-1',
+        value: true,
       },
     })
     expect(utilsState.inserts).toHaveLength(1)
     expect(utilsState.inserts[0]).toMatchObject({
       table: 'disable_notifications',
-      values: { user_id: 'user-1', setting_key: 'commandDisable', reason: 'MANUAL_DISABLE' },
+      values: { reason: 'MANUAL_DISABLE', setting_key: 'commandDisable', user_id: 'user-1' },
     })
   })
 })
@@ -35,9 +36,9 @@ describe('commandDisable.enable', () => {
 
     const settingsUpdate = utilsState.updates.find((u) => u.table === 'settings')
     expect(settingsUpdate?.values).toMatchObject({
-      value: false,
-      disable_reason: null,
       auto_disabled_at: null,
+      disable_reason: null,
+      value: false,
     })
     // No separate settings upsert — the value flip is folded in.
     expect(utilsState.upserts.filter((u) => u.table === 'settings')).toHaveLength(0)
@@ -49,22 +50,22 @@ describe('commandDisable.enable', () => {
     const notifUpdate = utilsState.updates.find((u) => u.table === 'disable_notifications')
     expect(
       notifUpdate?.filters.some(
-        (f) => f.method === 'eq' && f.col === 'reason' && f.val === 'ACCOUNT_SHARING',
-      ),
-    ).toBe(true)
+        (f) => f.method === 'eq' && f.col === 'reason' && f.val === 'ACCOUNT_SHARING'
+      )
+    ).toBeTruthy()
   })
 })
 
 describe('commandDisable.recordNotification', () => {
   it('inserts an audit row without touching settings', async () => {
-    await commandDisable.recordNotification('user-1', 'ACCOUNT_SHARING', { foo: 'bar' } as any)
+    await commandDisable.recordNotification('user-1', 'ACCOUNT_SHARING', { foo: 'bar' })
 
     expect(utilsState.upserts).toHaveLength(0)
     expect(utilsState.updates).toHaveLength(0)
     expect(utilsState.inserts).toHaveLength(1)
     expect(utilsState.inserts[0]).toMatchObject({
       table: 'disable_notifications',
-      values: { user_id: 'user-1', setting_key: 'commandDisable', reason: 'ACCOUNT_SHARING' },
+      values: { reason: 'ACCOUNT_SHARING', setting_key: 'commandDisable', user_id: 'user-1' },
     })
   })
 })

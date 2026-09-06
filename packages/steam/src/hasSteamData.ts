@@ -23,5 +23,5 @@ export function hasSteamData(game?: DelayedGames | null) {
     hasPlayers &&
     game.teams[0].players.every((player) => player.heroid) &&
     game.teams[1].players.every((player) => player.heroid)
-  return { hasAccountIds, hasPlayers, hasHeroes }
+  return { hasAccountIds, hasHeroes, hasPlayers }
 }

@@ -3,19 +3,22 @@
 // mock.module's ranks to stub getRankTitle/getRankDescription/getDotabodRankProfile).
 // rankTierToMmr/mmrToRankTier/estimateMMR/getRankDetail are preserved real via
 // that harness's spread, so they're stable no matter the suite run order.
-import { describe, expect, it, vi } from 'vite-plus/test'
+import { describe, expect, it, vi } from 'vitest'
+
 import { buildSharedUtilsMock } from '../../../__tests__/sharedMocks.ts'
 
 const noopLogger = {
-  info: () => undefined,
-  error: () => undefined,
-  warn: () => undefined,
-  debug: () => undefined,
+  debug: () => {},
+  error: () => {},
+  info: () => {},
+  warn: () => {},
 }
 
 // ranks.ts -> getWL imports `supabase`/`logger` from shared-utils at load time;
 // these helpers never touch it at runtime, so a no-op surface is enough.
-vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ supabase: {}, logger: noopLogger }))
+vi.doMock(import('@dotabod/shared-utils'), () =>
+  buildSharedUtilsMock({ logger: noopLogger, supabase: {} })
+)
 
 const { rankTierToMmr, mmrToRankTier, estimateMMR, getRankDetail } = await import('../ranks.ts')
 
@@ -65,16 +68,16 @@ describe('estimateMMR', () => {
   })
 
   it('computes region-specific base mmr (ln(1)=0 makes rank 1 the base constant)', () => {
-    expect(estimateMMR(1, 'EUROPE')).toBe(15300)
-    expect(estimateMMR(1, 'US EAST')).toBe(14900)
-    expect(estimateMMR(1, 'BRAZIL')).toBe(14150)
+    expect(estimateMMR(1, 'EUROPE')).toBe(15_300)
+    expect(estimateMMR(1, 'US EAST')).toBe(14_900)
+    expect(estimateMMR(1, 'BRAZIL')).toBe(14_150)
   })
 })
 
 describe('getRankDetail', () => {
   it('returns null for non-positive mmr', async () => {
-    expect(await getRankDetail(0)).toBeNull()
-    expect(await getRankDetail(-10)).toBeNull()
+    await expect(getRankDetail(0)).resolves.toBeNull()
+    await expect(getRankDetail(-10)).resolves.toBeNull()
   })
 
   it('returns rank progression details for an in-range mmr', async () => {
@@ -91,6 +94,6 @@ describe('getRankDetail', () => {
     const detail = await getRankDetail(5619)
     expect(detail).not.toBeNull()
     // The leaderboard-branch shape carries `standing`; the in-range shape doesn't.
-    expect(detail && 'standing' in detail).toBe(true)
+    expect(detail && 'standing' in detail).toBeTruthy()
   })
 })

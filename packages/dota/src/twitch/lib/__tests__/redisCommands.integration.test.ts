@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
 import { t } from 'i18next'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
 beforeEach(() => {
@@ -26,7 +27,7 @@ describe('!clearsharing', () => {
 
   it('blocks viewers (permission below mod)', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!clearsharing', permission: 0, userName: 'viewer' }),
+      makeMessage({ content: '!clearsharing', permission: 0, userName: 'viewer' })
     )
     expect(state.redisDelCalls).toHaveLength(0)
     expect(state.chatSayCalls).toHaveLength(0)
@@ -36,7 +37,7 @@ describe('!clearsharing', () => {
 describe('!lgs', () => {
   it('reports unknownSteam when there is no steam id', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!lgs', clientOverrides: { steam32Id: null } }),
+      makeMessage({ clientOverrides: { steam32Id: null }, content: '!lgs' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(t('unknownSteam', { lng: 'en' }))
@@ -45,13 +46,13 @@ describe('!lgs', () => {
   it('reports the multiAccount message when no steam id and multiAccount is set', async () => {
     await commandHandler.handleMessage(
       makeMessage({
+        clientOverrides: { multiAccount: true, steam32Id: null } as any,
         content: '!lgs',
-        clientOverrides: { steam32Id: null, multiAccount: true } as any,
-      }),
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(
-      t('multiAccount', { lng: 'en', url: 'dotabod.com/dashboard/features' }),
+      t('multiAccount', { lng: 'en', url: 'dotabod.com/dashboard/features' })
     )
   })
 })

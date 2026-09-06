@@ -1,6 +1,6 @@
 import { logger } from '@dotabod/shared-utils'
 
-export const DISABLE_CACHE_EXPIRY = 30000 // 30 seconds
+export const DISABLE_CACHE_EXPIRY = 30_000 // 30 seconds
 
 export const disableUserCache = new Map<
   string,
@@ -21,8 +21,8 @@ export function clearDisableCache(userId: string) {
 
   if (keysToDelete.length > 0) {
     logger.info('[DISABLE_CACHE] Cleared cache for user', {
-      userId,
       clearedKeys: keysToDelete.length,
+      userId,
     })
   }
 }

@@ -1,13 +1,14 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { WL_RESET_SETTING_KEY } from '../../db/winLossWindow'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { server } from '../../dota/server'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('resetwl', {
-  permission: 2,
   cooldown: 0,
   handler: (message: MessageType, _args: string[]) => {
     async function handler() {
@@ -19,11 +20,11 @@ commandHandler.registerCommand('resetwl', {
       await supabase.from('settings').upsert(
         {
           key: WL_RESET_SETTING_KEY,
-          userId: client.token,
           updated_at: resetAt,
+          userId: client.token,
           value: resetAt,
         },
-        { onConflict: 'userId, key' },
+        { onConflict: 'userId, key' }
       )
 
       const resetSetting = client.settings.find((setting) => setting.key === WL_RESET_SETTING_KEY)
@@ -37,7 +38,7 @@ commandHandler.registerCommand('resetwl', {
       chatClient.say(
         channel,
         t('refresh', { lng: message.channel.client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
       if (server?.io) {
         server.io.to(client.token).emit('refresh')
@@ -46,17 +47,18 @@ commandHandler.registerCommand('resetwl', {
       chatClient.say(
         message.channel.name,
         t('resetwl', {
-          lng: message.channel.client.locale,
           channel: message.channel.name,
+          lng: message.channel.client.locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
     }
 
     try {
       void handler()
-    } catch (e) {
-      logger.error('Error in resetwl command', e)
+    } catch (error) {
+      logger.error('Error in resetwl command', error)
     }
   },
+  permission: 2,
 })

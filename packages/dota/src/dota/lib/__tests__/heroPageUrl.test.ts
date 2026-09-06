@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it } from 'vitest'
+
 import { getHeroPageUrl, withHeroLink } from '../heroes.ts'
 
-describe('getHeroPageUrl', () => {
+describe(getHeroPageUrl, () => {
   it('builds the url from the localized name, lowercased without spaces', () => {
     expect(getHeroPageUrl(82)).toBe('dota2.com/hero/meepo')
   })
@@ -23,20 +24,20 @@ describe('getHeroPageUrl', () => {
 
   it('returns null for an unknown or missing id', () => {
     expect(getHeroPageUrl(0)).toBeNull()
-    expect(getHeroPageUrl(undefined)).toBeNull()
-    expect(getHeroPageUrl(99999)).toBeNull()
+    expect(getHeroPageUrl()).toBeNull()
+    expect(getHeroPageUrl(99_999)).toBeNull()
   })
 })
 
-describe('withHeroLink', () => {
+describe(withHeroLink, () => {
   it('appends the hero link with a separator when the hero resolves', () => {
     expect(withHeroLink('Meepo innate: Divided We Stand', 82)).toBe(
-      'Meepo innate: Divided We Stand · dota2.com/hero/meepo',
+      'Meepo innate: Divided We Stand · dota2.com/hero/meepo'
     )
   })
 
   it('returns the text unchanged when the hero cannot be resolved', () => {
     expect(withHeroLink('some text', 0)).toBe('some text')
-    expect(withHeroLink('some text', undefined)).toBe('some text')
+    expect(withHeroLink('some text')).toBe('some text')
   })
 })

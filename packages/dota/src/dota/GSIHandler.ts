@@ -1,6 +1,7 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { Long } from 'mongodb'
+
 import { getWL, LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../db/getWL'
 import { redisClient } from '../db/redisInstance'
 import { DBSettings, getValueOrDefault } from '../settings'
@@ -9,14 +10,8 @@ import { steamSocket } from '../steam/ws'
 import { closeTwitchBet } from '../twitch/lib/closeTwitchBet'
 import { isPredictionAlreadyActiveError, openTwitchBet } from '../twitch/lib/openTwitchBet'
 import { refundTwitchBet } from '../twitch/lib/refundTwitchBets'
-import type { MatchMinimalDetailsResponse } from '../types'
-import {
-  type BlockType,
-  type DotaEvent,
-  DotaGcTeam,
-  EMatchOutcome,
-  type SocketClient,
-} from '../types'
+import { DotaGcTeam, EMatchOutcome } from '../types'
+import type { MatchMinimalDetailsResponse, BlockType, DotaEvent, SocketClient } from '../types'
 import { getRedisNumberValue, is8500Plus, steamID64toSteamID32 } from '../utils/index'
 import { maybeSendRoshAegisEvent } from './events/gsi-events/maybeSendRoshAegisEvent'
 import { clearPlayingHeroSlotCache } from './events/gsi-events/newdata'
@@ -24,23 +19,24 @@ import { sendExtensionPubSubBroadcastMessageIfChanged } from './events/gsi-event
 import { DataBroadcaster, sendInitialData } from './events/minimap/DataBroadcaster'
 import type { DataBroadcasterInterface } from './events/minimap/DataBroadcasterTypes'
 import { minimapParser } from './events/minimap/parser'
+import { getStreamDelay } from './getStreamDelay'
 import { setGSIHandlerConstructor } from './GSIHandlerFactory'
 import type { GSIHandlerType } from './GSIHandlerTypes'
-import { getStreamDelay } from './getStreamDelay'
+import {
+  buildClosingScores,
+  buildUnresolvedSnapshot,
+  mergeInGameSnapshotTick,
+} from './lib/buildUnresolvedSnapshot'
+import type { InGameSnapshot } from './lib/buildUnresolvedSnapshot'
 import { blockTypes, pickSates } from './lib/consts'
 import { delayedQueue } from './lib/DelayedQueue'
-import getHero, { type HeroNames } from './lib/getHero'
+import getHero from './lib/getHero'
+import type { HeroNames } from './lib/getHero'
 import { getHeroById } from './lib/heroes'
 import { isArcade } from './lib/isArcade'
 import { isSpectator } from './lib/isSpectator'
 import { getStreamersInMatch, MatchDataService } from './lib/matchData'
 import { getRankDetail } from './lib/ranks'
-import {
-  buildClosingScores,
-  buildUnresolvedSnapshot,
-  type InGameSnapshot,
-  mergeInGameSnapshotTick,
-} from './lib/buildUnresolvedSnapshot'
 import {
   formatUnresolvedMatch,
   REMINDER_FLAG_TTL_S,
@@ -79,14 +75,18 @@ interface MMR {
 }
 
 export function emitMinimapBlockerStatus(client: SocketClient) {
-  if (!client.stream_online || !client.beta_tester || !client.gsi) return
+  if (!client.stream_online || !client.beta_tester || !client.gsi) {
+    return
+  }
 
   const enabled = getValueOrDefault(
     DBSettings['minimap-blocker'],
     client.settings,
-    client.subscription,
+    client.subscription
   )
-  if (!enabled) return
+  if (!enabled) {
+    return
+  }
 
   const parsedData = minimapParser.parse(client.gsi)
   sendInitialData(client.token)
@@ -119,8 +119,8 @@ export async function deleteRedisData(client: SocketClient) {
       .del(`${token}:treadtoggle`)
       .del(`${token}:pendingManualResolution`)
       .exec()
-  } catch (e) {
-    logger.error('err deleteRedisData', { e })
+  } catch (error) {
+    logger.error('err deleteRedisData', { error })
   }
 }
 
@@ -147,7 +147,7 @@ class GSIHandler implements GSIHandlerType {
   creatingSteamAccount = false
   checkingEarlyDCWinner = false
   multiAccountRevalidatedAt?: number
-  treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
+  treadsData = { manaAtLastToggle: 0, manaSaved: 0, treadToggles: 0 }
   disabled = false
 
   // Last fresh in-game stats, kept up to date on every GSI tick while the
@@ -168,7 +168,7 @@ class GSIHandler implements GSIHandlerType {
     const isBotDisabled = getValueOrDefault(
       DBSettings.commandDisable,
       this.client.settings,
-      this.client.subscription,
+      this.client.subscription
     )
     if (isBotDisabled) {
       this.disable()
@@ -218,32 +218,36 @@ class GSIHandler implements GSIHandlerType {
 
   private resetPlayerData() {
     this.events = []
-    this.treadsData = { treadToggles: 0, manaSaved: 0, manaAtLastToggle: 0 }
+    this.treadsData = { manaAtLastToggle: 0, manaSaved: 0, treadToggles: 0 }
     this.creatingSteamAccount = false
     this.checkingEarlyDCWinner = false
     this.lastInGameSnapshot = null
   }
 
   private async suppressUnresolvedReminder(matchId: string | number) {
-    if (!this.client.token) return
+    if (!this.client.token) {
+      return
+    }
     try {
       await redisClient.client.setEx(
         reminderSentFlagKey(this.client.token, matchId.toString()),
         REMINDER_FLAG_TTL_S,
-        '1',
+        '1'
       )
-    } catch (e) {
-      logger.error('[BETS] Error suppressing unresolved reminder', { e, matchId })
+    } catch (error) {
+      logger.error('[BETS] Error suppressing unresolved reminder', { error, matchId })
     }
   }
 
   private captureInGameSnapshot() {
     const matchId = this.client.gsi?.map?.matchid
-    if (!matchId || matchId === '0') return
+    if (!matchId || matchId === '0') {
+      return
+    }
 
     this.lastInGameSnapshot = mergeInGameSnapshotTick({
-      matchId,
       gsi: this.client.gsi,
+      matchId,
       prev: this.lastInGameSnapshot,
     })
   }
@@ -304,20 +308,22 @@ class GSIHandler implements GSIHandlerType {
   }
 
   emitWLUpdate(allowOffline = false) {
-    if (!allowOffline && !this.client.stream_online) return
+    if (!allowOffline && !this.client.stream_online) {
+      return
+    }
 
     const mmrEnabled = getValueOrDefault(
       DBSettings['mmr-tracker'],
       this.client.settings,
-      this.client.subscription,
+      this.client.subscription
     )
     getWL({
-      lng: this.client.locale,
       channelId: this.getChannelId(),
+      lng: this.client.locale,
       mmrEnabled,
       settings: this.client.settings,
-      subscription: this.client.subscription,
       streamStartDate: this.client.stream_start_date,
+      subscription: this.client.subscription,
       userId: this.client.token,
     })
       .then(({ record, statsDays, statsDaysTotal }) => {
@@ -337,30 +343,34 @@ class GSIHandler implements GSIHandlerType {
       })
   }
   async emitNotablePlayers() {
-    if (!this.client.stream_online) return
+    if (!this.client.stream_online) {
+      return
+    }
 
     const roster = await new MatchDataService(this.client).resolveRoster()
 
     const enableCountries = getValueOrDefault(
       DBSettings.notablePlayersOverlayFlagsCmd,
       this.client.settings,
-      this.client.subscription,
+      this.client.subscription
     )
     const notablePlayersEnabled = getValueOrDefault(
       DBSettings.notablePlayersOverlay,
       this.client.settings,
-      this.client.subscription,
+      this.client.subscription
     )
-    if (!notablePlayersEnabled) return
+    if (!notablePlayersEnabled) {
+      return
+    }
 
     notablePlayers({
-      locale: this.client.locale,
-      twitchChannelId: this.getChannelId(),
       currentMatchId: this.client.gsi?.map?.matchid,
-      players: roster.players,
       enableFlags: enableCountries,
-      steam32Id: this.getSteam32(),
+      locale: this.client.locale,
+      players: roster.players,
       rosterSource: roster.source,
+      steam32Id: this.getSteam32(),
+      twitchChannelId: this.getChannelId(),
     })
       .then((response) => {
         if (response.playerList.length) {
@@ -377,26 +387,36 @@ class GSIHandler implements GSIHandlerType {
   }
 
   async emitStreamersInMatch(matchId = this.client.gsi?.map?.matchid) {
-    if (!this.client.stream_online) return
-    if (!matchId || matchId === '0') return
+    if (!this.client.stream_online) {
+      return
+    }
+    if (!matchId || matchId === '0') {
+      return
+    }
 
     const announceEnabled = getValueOrDefault(
       DBSettings.streamersAnnounce,
       this.client.settings,
-      this.client.subscription,
+      this.client.subscription
     )
-    if (!announceEnabled) return
+    if (!announceEnabled) {
+      return
+    }
 
     // Announce at most once per match (guards rejoins and any duplicate scheduling).
     const announcedKey = `${this.client.token}:streamersAnnounced`
-    if ((await redisClient.client.get(announcedKey)) === matchId) return
+    if ((await redisClient.client.get(announcedKey)) === matchId) {
+      return
+    }
 
     const count = await getStreamersInMatch({
       client: this.client,
-      matchId,
       excludeUserId: this.client.token,
+      matchId,
     })
-    if (count <= 0) return
+    if (count <= 0) {
+      return
+    }
 
     await redisClient.client.set(announcedKey, matchId)
     say(this.client, t('streamersInMatchAnnounce', { count, lng: this.client.locale }), {
@@ -409,9 +429,9 @@ class GSIHandler implements GSIHandlerType {
       .then((deets) => {
         server.io.to(this.client.token).emit('update-medal', deets)
       })
-      .catch((e) => {
+      .catch((error) => {
         logger.error('[MMR] emitBadgeUpdate Error getting rank detail', {
-          e: e?.message || e,
+          e: error?.message || error,
         })
       })
   }
@@ -421,7 +441,9 @@ class GSIHandler implements GSIHandlerType {
   // the user may have a steam account saved, but not this one for this match
   // so add to their list of steam accounts
   async updateSteam32Id() {
-    if (this.creatingSteamAccount || !this.client.gsi?.player?.steamid) return
+    if (this.creatingSteamAccount || !this.client.gsi?.player?.steamid) {
+      return
+    }
 
     // Set a flag to prevent concurrent calls
     this.creatingSteamAccount = true
@@ -440,8 +462,8 @@ class GSIHandler implements GSIHandlerType {
         // Logged into a new steam account on the same twitch channel
         Object.assign(this.client, {
           mmr: foundAct.mmr,
-          steam32Id,
           multiAccount: undefined,
+          steam32Id,
         })
         this.multiAccountRevalidatedAt = undefined
         this.emitBadgeUpdate()
@@ -470,7 +492,9 @@ class GSIHandler implements GSIHandlerType {
         .maybeSingle()
 
       if (error) {
-        if (isMultiAccount) this.multiAccountRevalidatedAt = Date.now()
+        if (isMultiAccount) {
+          this.multiAccountRevalidatedAt = Date.now()
+        }
         logger.error('Error in updateSteam32Id', { error, name: this.client.name })
         return
       }
@@ -505,7 +529,7 @@ class GSIHandler implements GSIHandlerType {
       mmr: number
       connectedUserIds: string[] | null
     },
-    steam32Id: number,
+    steam32Id: number
   ) {
     if (res.userId === this.client.token) {
       await supabase
@@ -520,18 +544,16 @@ class GSIHandler implements GSIHandlerType {
       // Update local SteamAccount list if not present
       if (!this.client.SteamAccount.find((act) => act.steam32Id === steam32Id)) {
         this.client.SteamAccount.push({
-          mmr: res.mmr,
-          steam32Id,
-          name: this.client.gsi?.player?.name || null,
           leaderboard_rank: null,
+          mmr: res.mmr,
+          name: this.client.gsi?.player?.name || null,
+          steam32Id,
         })
       }
     } else {
       this.client.multiAccount = steam32Id
       this.multiAccountRevalidatedAt = Date.now()
-      const uniqueUserIds = Array.from(
-        new Set([...(res?.connectedUserIds ?? []), this.client.token]),
-      )
+      const uniqueUserIds = [...new Set([...(res?.connectedUserIds ?? []), this.client.token])]
       await supabase
         .from('steam_accounts')
         .update({
@@ -548,9 +570,9 @@ class GSIHandler implements GSIHandlerType {
     const name = this.client.gsi?.player?.name || null
     const { error } = await supabase.from('steam_accounts').insert({
       mmr,
+      name,
       steam32Id,
       userId: this.client.token,
-      name,
     })
 
     if (error) {
@@ -564,13 +586,13 @@ class GSIHandler implements GSIHandlerType {
       .eq('id', this.client.token)
 
     this.client.SteamAccount.push({
-      mmr,
-      steam32Id,
-      name,
       leaderboard_rank: null,
+      mmr,
+      name,
+      steam32Id,
     })
 
-    Object.assign(this.client, { mmr, steam32Id, multiAccount: undefined })
+    Object.assign(this.client, { mmr, multiAccount: undefined, steam32Id })
     this.multiAccountRevalidatedAt = undefined
     this.emitBadgeUpdate()
     return true
@@ -590,13 +612,13 @@ class GSIHandler implements GSIHandlerType {
     const ranked = lobbyType === LOBBY_TYPE_RANKED
 
     const extraInfo = {
-      name: this.client.name,
-      steam32Id: this.client.steam32Id,
-      matchId,
-      isParty,
-      ranked,
       increase,
+      isParty,
       lobbyType,
+      matchId,
+      name: this.client.name,
+      ranked,
+      steam32Id: this.client.steam32Id,
     }
 
     logger.debug('[MMR Update] Begin updating mmr', extraInfo)
@@ -605,17 +627,17 @@ class GSIHandler implements GSIHandlerType {
     await supabase
       .from('matches')
       .update({
-        won: increase,
-        lobby_type: lobbyType,
+        dire_score: scores.dire_score,
         game_mode: gameMode,
+        hero_name: heroName,
         hero_slot: heroSlot,
         is_party: isParty,
-        hero_name: heroName,
         kda: scores.kda,
-        radiant_score: scores.radiant_score,
-        dire_score: scores.dire_score,
-        updated_at: new Date().toISOString(),
+        lobby_type: lobbyType,
         myTeam: myTeam ?? '',
+        radiant_score: scores.radiant_score,
+        updated_at: new Date().toISOString(),
+        won: increase,
       })
       .match({ matchId: `${matchId}`, userId: this.client.token })
 
@@ -633,15 +655,15 @@ class GSIHandler implements GSIHandlerType {
       const mmrEnabled = getValueOrDefault(
         DBSettings['mmr-tracker'],
         this.client.settings,
-        this.client.subscription,
+        this.client.subscription
       )
       if (mmrEnabled) {
         logger.debug('[MMR] Found steam32Id, updating mmr', extraInfo)
         await updateMmr({
+          channel: this.client.name,
           currentMmr: this.getMmr(),
           newMmr: newMMR,
           steam32Id: this.client.steam32Id,
-          channel: this.client.name,
         })
       }
     } else {
@@ -701,7 +723,7 @@ class GSIHandler implements GSIHandlerType {
     if (matchId && client.gsi?.map?.matchid && matchId !== client.gsi.map.matchid) {
       // Check if there's a pending manual resolution for the old match
       const pendingResolution = await redisClient.client.get(
-        `${client.token}:pendingManualResolution`,
+        `${client.token}:pendingManualResolution`
       )
       if (pendingResolution) {
         try {
@@ -711,14 +733,14 @@ class GSIHandler implements GSIHandlerType {
           if (pendingMatchId === matchId) {
             logger.info('[BETS] Expiring pending manual resolution - new match joined', {
               name: client.name,
-              oldMatchId: matchId,
               newMatchId: client.gsi.map.matchid,
+              oldMatchId: matchId,
             })
 
             const betsEnabled = getValueOrDefault(
               DBSettings.bets,
               client.settings,
-              client.subscription,
+              client.subscription
             )
             if (betsEnabled) {
               const predictionResponse = await supabase
@@ -734,7 +756,7 @@ class GSIHandler implements GSIHandlerType {
                 const tellChatBets = getValueOrDefault(
                   DBSettings.tellChatBets,
                   client.settings,
-                  client.subscription,
+                  client.subscription
                 )
                 if (tellChatBets && client.stream_online) {
                   say(
@@ -742,22 +764,22 @@ class GSIHandler implements GSIHandlerType {
                     t('bets.manualResolutionExpired', {
                       emote: 'FeelsBadMan',
                       lng: client.locale,
-                    }),
+                    })
                   )
                 }
               }
             }
           }
-        } catch (e) {
-          logger.error('[BETS] Error handling pending manual resolution expiration', { e })
+        } catch (error) {
+          logger.error('[BETS] Error handling pending manual resolution expiration', { error })
         }
       }
 
       // We have the wrong matchid, reset vars and start over
       logger.info('[BETS] openBets resetClientState because stuck on old match id', {
+        gsiMatchId: client.gsi.map.matchid,
         name: client.name,
         playingMatchId: matchId,
-        gsiMatchId: client.gsi.map.matchid,
         steam32Id: client.steam32Id,
         steamFromGSI: client.gsi.player?.steamid,
         token: client.token,
@@ -772,10 +794,10 @@ class GSIHandler implements GSIHandlerType {
     }
 
     logger.info('[BETS] Begin opening bets', {
+      hero: client.gsi.hero.name,
+      matchId: client.gsi.map.matchid,
       name: client.name,
       playingMatchId: matchId,
-      matchId: client.gsi.map.matchid,
-      hero: client.gsi.hero.name,
     })
 
     this.openingBets = true
@@ -796,8 +818,8 @@ class GSIHandler implements GSIHandlerType {
       await redisClient.client.set(`${client.token}:playingHero`, client.gsi?.hero?.name || '')
     } catch (error) {
       logger.error('Error while saving data to Redis:', {
-        error,
         client: client.name,
+        error,
         matchId: client?.gsi?.map?.matchid || '',
         token: client.token,
       })
@@ -825,7 +847,9 @@ class GSIHandler implements GSIHandlerType {
 
     this.openTheBetTaskId = delayedQueue.addTask(
       getStreamDelay(client.settings, client.subscription),
-      () => this.openTheBet(validatedMatchId, validatedHeroName, validatedMyTeam),
+      async () => {
+        await this.openTheBet(validatedMatchId, validatedHeroName, validatedMyTeam)
+      }
     )
 
     // .catch((e: any) => {
@@ -861,8 +885,8 @@ class GSIHandler implements GSIHandlerType {
         .del(`${this.client.token}:playingTeam`)
         .del(`${this.client.token}:playingHero`)
         .exec()
-    } catch (e) {
-      logger.error('[BETS] Error clearing redis on openTheBet abort', { e })
+    } catch (error) {
+      logger.error('[BETS] Error clearing redis on openTheBet abort', { error })
     }
   }
 
@@ -908,14 +932,14 @@ class GSIHandler implements GSIHandlerType {
     try {
       if (betsEnabled) {
         const bet = await openTwitchBet({
-          heroName: hero?.localized_name,
           client,
+          heroName: hero?.localized_name,
         })
 
         betId = bet?.id
       }
-    } catch (e) {
-      if (isPredictionAlreadyActiveError(e)) {
+    } catch (error) {
+      if (isPredictionAlreadyActiveError(error)) {
         predictionAlreadyActive = true
         logger.info('[BETS] Twitch prediction already active; tracking match only', {
           channel: client.name,
@@ -925,7 +949,7 @@ class GSIHandler implements GSIHandlerType {
         predictionOpenFailed = true
         logger.error('[BETS] Error opening twitch bet', {
           channel: client.name,
-          e: (e as Error)?.message || e,
+          e: (error as Error)?.message || error,
           matchId,
         })
       }
@@ -937,12 +961,12 @@ class GSIHandler implements GSIHandlerType {
     // still be overwritten later (closeBets/updateMmr writes the GC value at
     // match-end; hero.name.ts mid-game-swap handler also updates it).
     await supabase.from('matches').insert({
-      predictionId: betId ?? null,
-      matchId,
-      userId: client.token,
-      myTeam,
-      steam32Id: client.steam32Id,
       hero_name: heroName,
+      matchId,
+      myTeam,
+      predictionId: betId ?? null,
+      steam32Id: client.steam32Id,
+      userId: client.token,
     })
 
     if (getValueOrDefault(DBSettings.streamersAnnounce, client.settings, client.subscription)) {
@@ -961,17 +985,19 @@ class GSIHandler implements GSIHandlerType {
       logger.info('[BETS] open bets', {
         event: 'open_bets',
         matchId,
-        user: client.token,
         player_team: client.gsi?.player?.team_name,
+        user: client.token,
       })
     }
   }
 
   async closeBets(
     winningTeam: 'radiant' | 'dire' | null = null,
-    gcData?: MatchMinimalDetailsResponse,
+    gcData?: MatchMinimalDetailsResponse
   ) {
-    if (this.endingBets) return
+    if (this.endingBets) {
+      return
+    }
     this.endingBets = true
 
     try {
@@ -985,7 +1011,7 @@ class GSIHandler implements GSIHandlerType {
         : undefined
       const matchId = (await redisClient.client.get(`${this.client.token}:matchId`)) ?? longMatchId
       const player = match?.players?.find(
-        (player) => player.account_id === Number(this.client.gsi?.player?.accountid),
+        (player) => player.account_id === Number(this.client.gsi?.player?.accountid)
       )
       const gcTeam =
         player?.team_number === DotaGcTeam.DOTA_GC_TEAM_GOOD_GUYS
@@ -1007,20 +1033,22 @@ class GSIHandler implements GSIHandlerType {
 
       if (this.openingBets || !matchId) {
         logger.debug('[BETS] Not closing bets', {
+          endingBets: this.endingBets,
           name: this.client.name,
           openingBets: this.openingBets,
           playingMatchId: matchId,
-          endingBets: this.endingBets,
         })
 
-        if (!matchId) await this.resetClientState()
+        if (!matchId) {
+          await this.resetClientState()
+        }
         return
       }
 
       const betsEnabled = getValueOrDefault(
         DBSettings.bets,
         this.client.settings,
-        this.client.subscription,
+        this.client.subscription
       )
       const heroSlot =
         player?.player_slot ?? (await getRedisNumberValue(`${this.client.token}:playingHeroSlot`))
@@ -1037,17 +1065,17 @@ class GSIHandler implements GSIHandlerType {
 
       const localWinner = winningTeam
       const scores = buildClosingScores({
-        gcPlayer: player,
         gcMatch: match,
+        gcPlayer: player,
         gsi: this.client.gsi,
       })
       const won = myTeam === localWinner
       logger.info('[BETS] end bets won data', {
-        playingMatchId: matchId,
+        channel: this.client.name,
         localWinner,
         myTeam,
+        playingMatchId: matchId,
         won,
-        channel: this.client.name,
       })
 
       // Both or one undefined
@@ -1061,8 +1089,8 @@ class GSIHandler implements GSIHandlerType {
       }
 
       logger.debug('[BETS] Running end bets to award mmr and close predictions', {
-        name: this.client.name,
         matchId,
+        name: this.client.name,
       })
 
       const channel = this.client.name
@@ -1075,8 +1103,8 @@ class GSIHandler implements GSIHandlerType {
         this.client.gsi?.map?.matchid
       ) {
         logger.info('This is likely a no stats recorded match', {
-          name: this.client.name,
           matchId,
+          name: this.client.name,
         })
 
         if (this.client.stream_online) {
@@ -1084,10 +1112,10 @@ class GSIHandler implements GSIHandlerType {
             this.client,
             t('bets.notScored', {
               emote: 'D:',
+              key: DBSettings.tellChatBets,
               lng: this.client.locale,
               matchId,
-              key: DBSettings.tellChatBets,
-            }),
+            })
           )
           const predictionResponse = await supabase
             .from('matches')
@@ -1099,7 +1127,7 @@ class GSIHandler implements GSIHandlerType {
           if (predictionResponse.data?.predictionId) {
             const oldBetId = await refundTwitchBet(
               this.getChannelId(),
-              predictionResponse.data.predictionId,
+              predictionResponse.data.predictionId
             )
             if (oldBetId) {
               await supabase
@@ -1119,26 +1147,26 @@ class GSIHandler implements GSIHandlerType {
       // https://github.com/dotabod/backend/issues/373#issuecomment-2366822786
       // Default to ranked if we don't have valid data
       const playingLobbyType = await getRedisNumberValue(
-        `${matchId}:${this.client.token}:lobbyType`,
+        `${matchId}:${this.client.token}:lobbyType`
       )
       const playingGameMode = await getRedisNumberValue(`${matchId}:${this.client.token}:gameMode`)
 
       // Use the lobby type from Redis if it exists (including 0)
       // Otherwise default to ranked
-      const localLobbyType = playingLobbyType !== null ? playingLobbyType : LOBBY_TYPE_RANKED
+      const localLobbyType = playingLobbyType === null ? LOBBY_TYPE_RANKED : playingLobbyType
 
       const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)
 
       await this.updateMMR({
-        myTeam,
-        scores: scores,
-        increase: won,
-        lobbyType: localLobbyType,
         gameMode: playingGameMode === null ? 22 : playingGameMode, // 22 is game mode for normal game non turbo
-        matchId: matchId,
-        isParty: isParty,
-        heroSlot,
         heroName,
+        heroSlot,
+        increase: won,
+        isParty,
+        lobbyType: localLobbyType,
+        matchId,
+        myTeam,
+        scores,
       })
 
       const response = await getRankDetail(this.getMmr(), this.getSteam32())
@@ -1152,26 +1180,26 @@ class GSIHandler implements GSIHandlerType {
       const TreadToggleData = this.treadsData
       const toggleHandler = async () => {
         const treadToggleData = await redisClient.getJson<typeof TreadToggleData>(
-          `${this.client.token}:treadtoggle`,
+          `${this.client.token}:treadtoggle`
         )
 
         if (treadToggleData?.treadToggles && this.client.stream_online) {
           say(
             this.client,
             t('treadToggle', {
+              count: treadToggleData.treadToggles,
               lng: this.client.locale,
               manaCount: treadToggleData.manaSaved,
-              count: treadToggleData.treadToggles,
               matchId,
-            }),
+            })
           )
         }
       }
 
       try {
         void toggleHandler()
-      } catch (e) {
-        logger.error('err toggleHandler', { e })
+      } catch (error) {
+        logger.error('err toggleHandler', { error })
       }
 
       let predictionId: string | null = null
@@ -1193,25 +1221,25 @@ class GSIHandler implements GSIHandlerType {
           } else {
             logger.info('[BETS] Skipping Twitch closure because predictionId is unavailable', {
               channel,
-              matchId,
               error: predictionResponse.error?.message,
+              matchId,
             })
           }
         } catch (error) {
           logger.info('[BETS] Skipping Twitch closure because predictionId is unreadable', {
             channel,
-            matchId,
             error: (error as Error)?.message || error,
+            matchId,
           })
         }
       }
 
       delayedQueue.addTask(getStreamDelay(this.client.settings, this.client.subscription), () => {
         const message = won
-          ? t('bets.won', { lng: this.client.locale, emote: 'Happi' })
-          : t('bets.lost', { lng: this.client.locale, emote: 'Happi' })
+          ? t('bets.won', { emote: 'Happi', lng: this.client.locale })
+          : t('bets.lost', { emote: 'Happi', lng: this.client.locale })
 
-        say(this.client, message, { delay: false, chattersKey: 'matchOutcome' })
+        say(this.client, message, { chattersKey: 'matchOutcome', delay: false })
 
         if (!betsEnabled || !predictionId) {
           logger.debug('Bets are not enabled or no prediction was opened, stopping here', {
@@ -1228,28 +1256,28 @@ class GSIHandler implements GSIHandlerType {
           this.getChannelId(),
           matchId,
           this.client.settings,
-          this.client.subscription,
+          this.client.subscription
         )
           .then(() => {
             logger.info('[BETS] end bets', {
+              didWin: won,
               event: 'end_bets',
               matchId,
               name: this.client.name,
-              winning_team: localWinner,
               player_team: myTeam,
-              didWin: won,
+              winning_team: localWinner,
             })
           })
-          .catch((e: unknown) => {
+          .catch((error: unknown) => {
             logger.error('[BETS] Error closing twitch bet', {
               channel,
-              e: (e as Error)?.message || e,
+              e: (error as Error)?.message || error,
               matchId,
             })
           })
           .finally(() => {
-            this.resetClientState().catch((e) => {
-              logger.error('Error resetting client state', { e })
+            this.resetClientState().catch((error) => {
+              logger.error('Error resetting client state', { error })
             })
           })
       })
@@ -1264,8 +1292,8 @@ class GSIHandler implements GSIHandlerType {
     // Prevent multiple concurrent early DC winner checks
     if (this.checkingEarlyDCWinner) {
       logger.info('[BETS] Already checking early DC winner, skipping duplicate call', {
-        name: this.client.name,
         matchId,
+        name: this.client.name,
       })
       return
     }
@@ -1283,19 +1311,19 @@ class GSIHandler implements GSIHandlerType {
 
     if (error || !matchData) {
       logger.info('[BETS] Match already closed or not found, skipping early DC winner check', {
-        name: this.client.name,
-        matchId,
         error: error?.message,
+        matchId,
+        name: this.client.name,
       })
       this.checkingEarlyDCWinner = false
       return
     }
 
     logger.info('[BETS] Streamer exited the match before it ended with a winner', {
-      name: this.client.name,
-      matchId,
-      openingBets: this.openingBets,
       endingBets: this.endingBets,
+      matchId,
+      name: this.client.name,
+      openingBets: this.openingBets,
     })
 
     // Persist a snapshot so unresolved-match messages can show hero / KDA /
@@ -1305,9 +1333,9 @@ class GSIHandler implements GSIHandlerType {
     const cached =
       this.lastInGameSnapshot?.matchId === matchId.toString() ? this.lastInGameSnapshot : null
     const snapshotMatch = buildUnresolvedSnapshot({
-      matchId: matchId.toString(),
-      gsi: this.client.gsi,
       cached,
+      gsi: this.client.gsi,
+      matchId: matchId.toString(),
       now: new Date(),
     })
     // Only write while still unresolved and only if no snapshot exists yet, so a
@@ -1315,18 +1343,18 @@ class GSIHandler implements GSIHandlerType {
     // (the reminder's 10-minute anchor). hero_name is set at bet-open and again
     // on hero swap — only overwrite it when we actually have one.
     const kdaForDb = {
-      kills: snapshotMatch.kda?.kills ?? null,
-      deaths: snapshotMatch.kda?.deaths ?? null,
       assists: snapshotMatch.kda?.assists ?? null,
+      deaths: snapshotMatch.kda?.deaths ?? null,
       duration: snapshotMatch.kda?.duration ?? null,
+      kills: snapshotMatch.kda?.kills ?? null,
     }
     await supabase
       .from('matches')
       .update({
         ...(snapshotMatch.hero_name ? { hero_name: snapshotMatch.hero_name } : {}),
+        dire_score: snapshotMatch.dire_score,
         kda: kdaForDb,
         radiant_score: snapshotMatch.radiant_score,
-        dire_score: snapshotMatch.dire_score,
         updated_at: snapshotMatch.updated_at,
       })
       .match({ matchId: matchId.toString(), userId: this.client.token })
@@ -1339,32 +1367,32 @@ class GSIHandler implements GSIHandlerType {
     if (isHighMmr) {
       // For high MMR players, skip automatic retries and prompt for manual resolution
       logger.info('[BETS] High MMR player detected, prompting for manual resolution', {
-        name: this.client.name,
         matchId,
         mmr: this.getMmr(),
+        name: this.client.name,
       })
 
       // Set pending manual resolution flag in Redis
       await redisClient.client.set(
         `${this.client.token}:pendingManualResolution`,
-        JSON.stringify({ matchId, timestamp: Date.now() }),
+        JSON.stringify({ matchId, timestamp: Date.now() })
       )
 
       // Send chat message to notify mods
       const tellChatBets = getValueOrDefault(
         DBSettings.tellChatBets,
         this.client.settings,
-        this.client.subscription,
+        this.client.subscription
       )
       if (tellChatBets && this.client.stream_online) {
         say(
           this.client,
           t('bets.manualResolution', {
-            matchId,
             details: formatUnresolvedMatch(snapshotMatch),
             emote: 'PauseChamp',
             lng: this.client.locale,
-          }),
+            matchId,
+          })
         )
       }
 
@@ -1374,15 +1402,15 @@ class GSIHandler implements GSIHandlerType {
 
     // Set up retry parameters for lower MMR players
     const MAX_RETRIES = 5 // Try up to 5 times
-    const RETRY_DELAY = 30000 // 30 seconds between retries (total 2.5 minutes)
+    const RETRY_DELAY = 30_000 // 30 seconds between retries (total 2.5 minutes)
     let retryCount = 0
 
     const attemptFetchMatchData = async (): Promise<void> => {
       // Check if they rejoined the match they disconnected from
       if (this.client.gsi?.map?.matchid === matchId) {
         logger.info('[BETS] Streamer rejoined the match, skipping early DC winner check', {
-          name: this.client.name,
           matchId,
+          name: this.client.name,
         })
         return
       }
@@ -1399,8 +1427,8 @@ class GSIHandler implements GSIHandlerType {
 
       if (!matchNotEnded || error) {
         logger.info('[BETS] Match already ended, skipping early DC winner check', {
-          name: this.client.name,
           matchId,
+          name: this.client.name,
         })
         return
       }
@@ -1411,32 +1439,32 @@ class GSIHandler implements GSIHandlerType {
           logger.info(
             'Exceeded maximum retries for early DC match check, prompting for manual resolution',
             {
-              name: this.client.name,
               matchId,
-            },
+              name: this.client.name,
+            }
           )
 
           // Set pending manual resolution flag in Redis
           await redisClient.client.set(
             `${this.client.token}:pendingManualResolution`,
-            JSON.stringify({ matchId, timestamp: Date.now() }),
+            JSON.stringify({ matchId, timestamp: Date.now() })
           )
 
           // Send chat message to notify mods
           const tellChatBets = getValueOrDefault(
             DBSettings.tellChatBets,
             this.client.settings,
-            this.client.subscription,
+            this.client.subscription
           )
           if (tellChatBets) {
             say(
               this.client,
               t('bets.manualResolution', {
-                matchId,
                 details: formatUnresolvedMatch(snapshotMatch),
                 emote: 'PauseChamp',
                 lng: this.client.locale,
-              }),
+                matchId,
+              })
             )
           }
         }
@@ -1459,9 +1487,9 @@ class GSIHandler implements GSIHandlerType {
                 } else {
                   resolve(response)
                 }
-              },
+              }
             )
-          },
+          }
         )
 
         const response = await getMatchDetailsPromise
@@ -1478,8 +1506,8 @@ class GSIHandler implements GSIHandlerType {
         ) {
           logger.info('Successfully retrieved match result for early DC', {
             matchId,
-            name: this.client.name,
             matchOutcome: matchData.match_outcome,
+            name: this.client.name,
           })
 
           // Determine winner based on match outcome
@@ -1500,15 +1528,15 @@ class GSIHandler implements GSIHandlerType {
           // Not scored
           logger.info('Match not scored, skipping early DC winner check', {
             matchId,
-            name: this.client.name,
             matchOutcome: matchData.match_outcome,
+            name: this.client.name,
           })
 
           // Reset flag before calling closeBets to prevent duplicate calls from closeBets
           this.checkingEarlyDCWinner = false
           logger.info('This is likely a no stats recorded match', {
-            name: this.client.name,
             matchId,
+            name: this.client.name,
           })
 
           if (this.client.stream_online) {
@@ -1516,10 +1544,10 @@ class GSIHandler implements GSIHandlerType {
               this.client,
               t('bets.notScored', {
                 emote: 'D:',
+                key: DBSettings.tellChatBets,
                 lng: this.client.locale,
                 matchId,
-                key: DBSettings.tellChatBets,
-              }),
+              })
             )
             const predictionResponse = await supabase
               .from('matches')
@@ -1531,7 +1559,7 @@ class GSIHandler implements GSIHandlerType {
             if (predictionResponse.data?.predictionId) {
               const oldBetId = await refundTwitchBet(
                 this.getChannelId(),
-                predictionResponse.data.predictionId,
+                predictionResponse.data.predictionId
               )
               if (oldBetId) {
                 await supabase
@@ -1549,11 +1577,11 @@ class GSIHandler implements GSIHandlerType {
           // Invalid response, retry after delay
           retryCount++
           logger.info('Invalid match data response, scheduling retry', {
-            name: this.client.name,
             matchId,
+            maxRetries: MAX_RETRIES,
+            name: this.client.name,
             response,
             retryCount,
-            maxRetries: MAX_RETRIES,
           })
 
           setTimeout(attemptFetchMatchData, RETRY_DELAY)
@@ -1562,11 +1590,11 @@ class GSIHandler implements GSIHandlerType {
         // Error occurred, retry after delay
         retryCount++
         logger.error('Error in early DC match check, scheduling retry', {
-          name: this.client.name,
-          matchId,
           error,
-          retryCount,
+          matchId,
           maxRetries: MAX_RETRIES,
+          name: this.client.name,
+          retryCount,
         })
 
         setTimeout(attemptFetchMatchData, RETRY_DELAY)
@@ -1580,15 +1608,17 @@ class GSIHandler implements GSIHandlerType {
       // If any uncaught error occurs, reset the flag
       logger.error('Uncaught error in checkEarlyDCWinner', {
         error,
-        name: this.client.name,
         matchId,
+        name: this.client.name,
       })
       this.checkingEarlyDCWinner = false
     }
   }
 
   private emitBlockEvent({ blockType, state }: { state?: string; blockType: BlockType }) {
-    if (this.blockCache === blockType) return
+    if (this.blockCache === blockType) {
+      return
+    }
 
     this.blockCache = blockType
 
@@ -1602,10 +1632,10 @@ class GSIHandler implements GSIHandlerType {
     }
 
     server.io.to(this.client.token).emit('block', {
-      type: blockType,
+      matchId: this.client.gsi?.map?.matchid,
       state,
       team: this.client.gsi?.player?.team_name,
-      matchId: this.client.gsi?.map?.matchid,
+      type: blockType,
     })
   }
 
@@ -1623,11 +1653,13 @@ class GSIHandler implements GSIHandlerType {
     try {
       if (isSpectator(this.client.gsi) || isArcade(this.client.gsi)) {
         const blockType = isSpectator(this.client.gsi) ? 'spectator' : 'arcade'
-        if (this.blockCache === blockType) return
+        if (this.blockCache === blockType) {
+          return
+        }
 
         this.emitBadgeUpdate()
         this.emitWLUpdate()
-        this.emitBlockEvent({ state, blockType })
+        this.emitBlockEvent({ blockType, state })
 
         if (blockType === 'spectator') {
           await this.emitNotablePlayers()
@@ -1646,14 +1678,14 @@ class GSIHandler implements GSIHandlerType {
       // Picked hero, but enemy can't see yet
       if (pickingPhase && heroPicked && heroNotLockedIn) {
         // invasive hero blocking overlay that hides all picked hero info
-        this.emitBlockEvent({ state, blockType: 'strategy' })
+        this.emitBlockEvent({ blockType: 'strategy', state })
         return
       }
 
       // Picked hero, enemy can see it now
       if (pickingPhase && heroPicked && heroLockedIn) {
         // less invasive strategy that shows our hero but hides teammates
-        this.emitBlockEvent({ state, blockType: 'strategy-2' })
+        this.emitBlockEvent({ blockType: 'strategy-2', state })
         return
       }
 
@@ -1677,7 +1709,7 @@ class GSIHandler implements GSIHandlerType {
         isMainScreenState && matchingBlocker?.type === 'empty' ? null : matchingBlocker?.type
 
       if (matchingBlocker && this.blockCache !== emittedBlockType) {
-        this.emitBlockEvent({ state, blockType: emittedBlockType ?? null })
+        this.emitBlockEvent({ blockType: emittedBlockType ?? null, state })
 
         // POST_GAME and INIT are valid no-block states, but they are also the final reliable
         // signals for clients that leave before GSI sends a packet without map data. Start the
@@ -1696,8 +1728,8 @@ class GSIHandler implements GSIHandlerType {
 
           try {
             await maybeSendRoshAegisEvent(this.client.token, this.client)
-          } catch (e) {
-            logger.error('err maybeSendRoshAegisEvent', { e })
+          } catch (error) {
+            logger.error('err maybeSendRoshAegisEvent', { error })
           }
         }
       }
@@ -1710,16 +1742,16 @@ class GSIHandler implements GSIHandlerType {
       // Unblock all, we are disconnected from the match
       if (!hasValidBlocker && this.blockCache) {
         logger.debug('[BETS] Close bets because unblocked all', {
-          hasValidBlocker,
-          state,
           blockCache: this.blockCache,
+          hasValidBlocker,
           name: this.client.name,
+          state,
         })
 
-        await sendExtensionPubSubBroadcastMessageIfChanged(this, null).catch((e) => {
-          logger.error('err sendExtensionPubSubBroadcastMessageIfChanged', { e })
+        await sendExtensionPubSubBroadcastMessageIfChanged(this, null).catch((error) => {
+          logger.error('err sendExtensionPubSubBroadcastMessageIfChanged', { error })
         })
-        this.emitBlockEvent({ state, blockType: null })
+        this.emitBlockEvent({ blockType: null, state })
         await this.closeBets()
         return
       }

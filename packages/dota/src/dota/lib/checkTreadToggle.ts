@@ -6,10 +6,14 @@ export async function calculateManaSaved(dotaClient: GSIHandlerType) {
   const { treadsData } = dotaClient
   const data = dotaClient.client.gsi
 
-  if (!data?.hero?.mana || !data.hero.max_mana) return
-  const hasPowerTreads = findItem({ itemName: 'item_power_treads', searchStashAlso: false, data })
+  if (!data?.hero?.mana || !data.hero.max_mana) {
+    return
+  }
+  const hasPowerTreads = findItem({ data, itemName: 'item_power_treads', searchStashAlso: false })
   // findItem returns `Item[] | false`; optional-chain would skip narrowing on `false`.
-  if (!hasPowerTreads || !hasPowerTreads[0]) return
+  if (!hasPowerTreads || !hasPowerTreads[0]) {
+    return
+  }
 
   const maxMana = data.hero.max_mana
   const prevMaxMana = data.previously?.hero?.max_mana ?? 0

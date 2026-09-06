@@ -1,5 +1,6 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vite-plus/test'
 import { t } from 'i18next'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
 // Covers the simple, formatting-only commands (no GSI/DB coupling) dispatched
@@ -34,8 +35,11 @@ describe('!version', () => {
   const original = process.env.COMMIT_HASH
 
   afterEach(() => {
-    if (original === undefined) delete process.env.COMMIT_HASH
-    else process.env.COMMIT_HASH = original
+    if (original === undefined) {
+      delete process.env.COMMIT_HASH
+    } else {
+      process.env.COMMIT_HASH = original
+    }
   })
 
   it('reports the unknown-version message when COMMIT_HASH is unset', async () => {
@@ -62,7 +66,7 @@ describe('!steam', () => {
 
   it('reports unknownSteam when no steam32Id and not multiAccount', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!steam', clientOverrides: { steam32Id: null } }),
+      makeMessage({ clientOverrides: { steam32Id: null }, content: '!steam' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(unknownSteam)
@@ -71,9 +75,9 @@ describe('!steam', () => {
   it('reports the multiAccount message when no steam32Id and multiAccount is set', async () => {
     await commandHandler.handleMessage(
       makeMessage({
+        clientOverrides: { multiAccount: true, steam32Id: null } as any,
         content: '!steam',
-        clientOverrides: { steam32Id: null, multiAccount: true } as any,
-      }),
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(multiAccount)
@@ -90,19 +94,19 @@ describe('!match', () => {
   it('chats the match id when fresh GSI says a match is active', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        content: '!match',
         clientOverrides: {
           gsi: {
             map: {
-              matchid: '7777777777',
               game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+              matchid: '7777777777',
               win_team: 'none',
             },
             player: { activity: 'playing' },
           },
           gsiUpdatedAt: Date.now(),
         } as any,
-      }),
+        content: '!match',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain('7777777777')
@@ -111,20 +115,20 @@ describe('!match', () => {
   it('chats the live match id while the streamer is spectating', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        content: '!match',
         clientOverrides: {
           gsi: {
+            hero: { team2: {} },
             map: {
-              matchid: '8980144969',
               game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+              matchid: '8980144969',
               win_team: 'none',
             },
-            player: { activity: 'watching', team_name: 'spectator', team2: {} },
-            hero: { team2: {} },
+            player: { activity: 'watching', team2: {}, team_name: 'spectator' },
           },
           gsiUpdatedAt: Date.now(),
         } as any,
-      }),
+        content: '!match',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(t('matchId', { lng: 'en', matchId: '8980144969' }))
@@ -133,21 +137,21 @@ describe('!match', () => {
   it('explains that Hero Demo does not expose a public match id', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        content: '!match',
         clientOverrides: {
           gsi: {
+            hero: { id: 1 },
             map: {
               customgamename: 'hero_demo',
-              matchid: '0',
               game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+              matchid: '0',
               win_team: 'none',
             },
             player: { activity: 'playing' },
-            hero: { id: 1 },
           },
           gsiUpdatedAt: Date.now(),
         } as any,
-      }),
+        content: '!match',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(t('customGameNoMatchId', { lng: 'en' }))
@@ -159,8 +163,8 @@ describe('!match', () => {
       'post-game state',
       {
         map: {
-          matchid: '7777777777',
           game_state: 'DOTA_GAMERULES_STATE_POST_GAME',
+          matchid: '7777777777',
           win_team: 'radiant',
         },
         player: { activity: 'playing' },
@@ -171,8 +175,8 @@ describe('!match', () => {
       'stale packet',
       {
         map: {
-          matchid: '7777777777',
           game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+          matchid: '7777777777',
           win_team: 'none',
         },
         player: { activity: 'playing' },
@@ -183,8 +187,8 @@ describe('!match', () => {
       'packet without a server receive timestamp',
       {
         map: {
-          matchid: '7777777777',
           game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+          matchid: '7777777777',
           win_team: 'none',
         },
         player: { activity: 'playing' },
@@ -193,7 +197,7 @@ describe('!match', () => {
     ],
   ])('reports that no current match id exists for a %s', async (_label, gsi, gsiUpdatedAt) => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!match', clientOverrides: { gsi, gsiUpdatedAt } as any }),
+      makeMessage({ clientOverrides: { gsi, gsiUpdatedAt } as any, content: '!match' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(t('currentMatchIdNotFound', { lng: 'en' }))
@@ -201,7 +205,7 @@ describe('!match', () => {
 
   it('blocks when the stream is offline (onlyOnline gate)', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!match', clientOverrides: { stream_online: false } }),
+      makeMessage({ clientOverrides: { stream_online: false }, content: '!match' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(notLive)
@@ -219,8 +223,8 @@ describe('!song', () => {
 
   function mockLastFm(payload: unknown) {
     globalThis.fetch = (async () => ({
-      ok: true,
       json: async () => payload,
+      ok: true,
     })) as unknown as typeof fetch
   }
 
@@ -229,8 +233,11 @@ describe('!song', () => {
   })
 
   afterAll(() => {
-    if (origApiKey === undefined) delete process.env.LASTFM_API_KEY
-    else process.env.LASTFM_API_KEY = origApiKey
+    if (origApiKey === undefined) {
+      delete process.env.LASTFM_API_KEY
+    } else {
+      process.env.LASTFM_API_KEY = origApiKey
+    }
   })
 
   afterEach(() => {
@@ -240,9 +247,9 @@ describe('!song', () => {
   it('reports lastFmNotConfigured when the command is enabled but no username is set', async () => {
     await commandHandler.handleMessage(
       makeMessage({
+        clientOverrides: { settings: [{ key: 'commandLastFm', value: true }] },
         content: '!song',
-        clientOverrides: { settings: [{ key: 'commandLastFm', value: true }] } as any,
-      }),
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(t('lastFmNotConfigured', { lng: 'en' }))
@@ -250,7 +257,7 @@ describe('!song', () => {
 
   it('blocks when the stream is offline (onlyOnline gate)', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!song', clientOverrides: { stream_online: false } }),
+      makeMessage({ clientOverrides: { stream_online: false }, content: '!song' })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(notLive)
@@ -264,20 +271,20 @@ describe('!song', () => {
     // Simulate the wire format Last.fm actually sends.
     mockLastFm({
       recenttracks: {
+        '@attr': {},
         track: [
           {
+            '@attr': { nowplaying: 'true' },
+            album: { '#text': 'The Chronic' },
             artist: { '#text': 'Dr. Dre &amp; Friends' },
             name: 'Fuck Wit Dre Day (And Everybody&#39;s Celebratin&#39;)',
-            album: { '#text': 'The Chronic' },
-            '@attr': { nowplaying: 'true' },
           },
         ],
-        '@attr': {},
       },
-    } as any)
+    })
 
     await commandHandler.handleMessage(
-      makeMessage({ content: '!song', clientOverrides: { settings: lastFmSettings } as any }),
+      makeMessage({ clientOverrides: { settings: lastFmSettings }, content: '!song' })
     )
 
     expect(state.chatSayCalls).toHaveLength(1)
@@ -291,29 +298,37 @@ describe('!song', () => {
 
   it('runs artist/title/album through moderateText before emitting', async () => {
     state.moderateTextOverride = (text?: string | string[]) => {
-      if (typeof text !== 'string') return text
+      if (typeof text !== 'string') {
+        return text
+      }
       // Pretend the filter redacted these fields.
-      if (text === 'Bad Artist') return '***'
-      if (text === 'Bad Title') return '***'
-      if (text === 'Bad Album') return '***'
+      if (text === 'Bad Artist') {
+        return '***'
+      }
+      if (text === 'Bad Title') {
+        return '***'
+      }
+      if (text === 'Bad Album') {
+        return '***'
+      }
       return text
     }
     mockLastFm({
       recenttracks: {
+        '@attr': {},
         track: [
           {
+            '@attr': { nowplaying: 'true' },
+            album: { '#text': 'Bad Album' },
             artist: { '#text': 'Bad Artist' },
             name: 'Bad Title',
-            album: { '#text': 'Bad Album' },
-            '@attr': { nowplaying: 'true' },
           },
         ],
-        '@attr': {},
       },
-    } as any)
+    })
 
     await commandHandler.handleMessage(
-      makeMessage({ content: '!song', clientOverrides: { settings: lastFmSettings } as any }),
+      makeMessage({ clientOverrides: { settings: lastFmSettings }, content: '!song' })
     )
 
     expect(state.chatSayCalls).toHaveLength(1)
@@ -327,21 +342,21 @@ describe('!song', () => {
   it('reports songNotPlaying when Last.fm has no current track', async () => {
     mockLastFm({
       recenttracks: {
+        '@attr': {},
         track: [
           {
             artist: { '#text': 'Dr. Dre' },
             name: 'Nuthin But A G Thang',
             album: { '#text': 'The Chronic' },
             // no @attr.nowplaying → not currently playing
-            date: { uts: '1700000000', '#text': '...' },
+            date: { '#text': '...', uts: '1700000000' },
           },
         ],
-        '@attr': {},
       },
-    } as any)
+    })
 
     await commandHandler.handleMessage(
-      makeMessage({ content: '!song', clientOverrides: { settings: lastFmSettings } as any }),
+      makeMessage({ clientOverrides: { settings: lastFmSettings }, content: '!song' })
     )
 
     expect(state.chatSayCalls).toHaveLength(1)

@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import {
   clearSubscriptions,
   eventSubMap,
@@ -23,7 +24,7 @@ const SECONDARY = [
   'channel.poll.end',
 ] as const
 
-describe('runSubscriptionHealthCheck', () => {
+describe(runSubscriptionHealthCheck, () => {
   beforeEach(() => {
     resetState()
     clearSubscriptions()
@@ -63,8 +64,8 @@ describe('runSubscriptionHealthCheck', () => {
 
     expect(result.usersWithIssues).toBe(0)
     expect(result.fixedSubscriptions).toBe(0)
-    expect(state.subscribeCalls.map((c) => c.type)).not.toEqual(
-      expect.arrayContaining(SECONDARY as unknown as string[]),
+    expect(state.subscribeCalls.map((c) => c.type)).not.toStrictEqual(
+      expect.arrayContaining(SECONDARY as unknown as string[])
     )
   })
 
@@ -122,24 +123,24 @@ describe('runSubscriptionHealthCheck', () => {
     // eventSubMap empty (cleared in beforeEach) -> triggers the API fetch path.
     fetchState.queue = [
       {
-        status: 200,
         json: {
           data: [
             {
+              condition: { broadcaster_user_id: '111' },
               id: 's1',
               status: 'enabled',
               type: 'stream.online',
-              condition: { broadcaster_user_id: '111' },
             },
           ],
           pagination: {},
         },
+        status: 200,
       },
     ]
 
     await runSubscriptionHealthCheck()
 
-    expect(fetchState.calls.some((u) => u.includes('eventsub/subscriptions'))).toBe(true)
+    expect(fetchState.calls.some((u) => u.includes('eventsub/subscriptions'))).toBeTruthy()
     // The fetched stream.online sub was loaded into the cache for that broadcaster.
     expect(eventSubMap['111']?.['stream.online']).toMatchObject({ id: 's1' })
   })

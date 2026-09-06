@@ -1,12 +1,12 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('setdelay', {
   aliases: ['delay=', 'setstreamdelay', 'streamdelay='],
-  permission: 2,
   cooldown: 0,
   handler: async (message, args) => {
     if (Number.isNaN(Number(args[0]))) {
@@ -15,7 +15,7 @@ commandHandler.registerCommand('setdelay', {
         t('setStreamDelayNoArgs', {
           lng: message.channel.client.locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
 
       return
@@ -30,27 +30,28 @@ commandHandler.registerCommand('setdelay', {
 
     await supabase.from('settings').upsert(
       {
-        userId: message.channel.client.token,
         key: DBSettings.streamDelay,
-        value: delayInSeconds * 1000,
         updated_at: new Date().toISOString(),
+        userId: message.channel.client.token,
+        value: delayInSeconds * 1000,
       },
       {
         onConflict: 'userId, key',
-      },
+      }
     )
 
     chatClient.say(
       message.channel.name,
-      !delayInSeconds
-        ? t('setStreamDelayRemoved', {
-            lng: message.channel.client.locale,
-          })
-        : t('setStreamDelay', {
+      delayInSeconds
+        ? t('setStreamDelay', {
             lng: message.channel.client.locale,
             seconds: delayInSeconds,
+          })
+        : t('setStreamDelayRemoved', {
+            lng: message.channel.client.locale,
           }),
-      message.user.messageId,
+      message.user.messageId
     )
   },
+  permission: 2,
 })

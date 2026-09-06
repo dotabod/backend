@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
 import { t } from 'i18next'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import { modMode } from '../../../dota/lib/consts.ts'
 import { commandHandler, makeMessage, resetState, state } from './setupMocks.ts'
 
@@ -23,12 +24,12 @@ describe('!setmmr', () => {
   it('updates mmr for a single-account streamer', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!setmmr 4200' }))
     expect(state.updateMmrCalls).toHaveLength(1)
-    expect(state.updateMmrCalls[0]).toMatchObject({ newMmr: '4200', steam32Id: 99999 })
+    expect(state.updateMmrCalls[0]).toMatchObject({ newMmr: '4200', steam32Id: 99_999 })
   })
 
   it('blocks viewers (permission below mod)', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!setmmr 4200', permission: 0, userName: 'viewer' }),
+      makeMessage({ content: '!setmmr 4200', permission: 0, userName: 'viewer' })
     )
     expect(state.updateMmrCalls).toHaveLength(0)
     expect(state.chatSayCalls).toHaveLength(0)
@@ -39,13 +40,13 @@ describe('!modsonly', () => {
   it('enables emote+sub-only mode and announces it on first use', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!modsonly' }))
     expect(state.chatSettingsUpdates).toHaveLength(1)
-    expect(state.chatSettingsUpdates[0].settings).toEqual({
+    expect(state.chatSettingsUpdates[0].settings).toStrictEqual({
       emoteOnlyModeEnabled: true,
       subscriberOnlyModeEnabled: true,
     })
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(
-      t('modsOnly', { emote: 'BASED Clap', context: 'on', lng: 'en' }),
+      t('modsOnly', { context: 'on', emote: 'BASED Clap', lng: 'en' })
     )
   })
 
@@ -53,7 +54,7 @@ describe('!modsonly', () => {
     await commandHandler.handleMessage(makeMessage({ content: '!modsonly' }))
     await commandHandler.handleMessage(makeMessage({ content: '!modsonly' }))
     expect(state.chatSettingsUpdates).toHaveLength(2)
-    expect(state.chatSettingsUpdates[1].settings).toEqual({
+    expect(state.chatSettingsUpdates[1].settings).toStrictEqual({
       emoteOnlyModeEnabled: false,
       subscriberOnlyModeEnabled: false,
     })

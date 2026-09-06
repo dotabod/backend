@@ -1,4 +1,5 @@
 import { t } from 'i18next'
+
 import type { AegisRes } from './AegisRes'
 import { getNewAegisTime } from './getNewAegisTime'
 
@@ -7,17 +8,17 @@ export function generateAegisMessage(res: AegisRes, lng: string) {
 
   if (res.expireS <= 0) {
     return res.heroName
-      ? t('aegis.expired', { emote: ':)', lng, heroName: res.heroName })
+      ? t('aegis.expired', { emote: ':)', heroName: res.heroName, lng })
       : t('aegis.expiredUnknown', { emote: ':)', lng })
   }
 
   if (res.snatched) {
     return res.heroName
-      ? t('aegis.snatched', { emote: 'PepeLaugh', lng, heroName: res.heroName })
+      ? t('aegis.snatched', { emote: 'PepeLaugh', heroName: res.heroName, lng })
       : t('aegis.snatchedUnknown', { lng })
   }
 
   return res.heroName
-    ? t('aegis.pickup', { lng, heroName: res.heroName })
+    ? t('aegis.pickup', { heroName: res.heroName, lng })
     : t('aegis.pickupUnknown', { lng })
 }

@@ -2,10 +2,13 @@ import { redisClient } from '../../../db/redisInstance'
 import type { SocketClient } from '../../../types'
 import type { AegisRes } from './AegisRes'
 import { emitAegisEvent } from './emitAegisEvent'
-import { emitRoshEvent, type RoshRes } from './RoshRes'
+import { emitRoshEvent } from './RoshRes'
+import type { RoshRes } from './RoshRes'
 
 export async function maybeSendRoshAegisEvent(token: string, client?: SocketClient) {
-  if (!client) return
+  if (!client) {
+    return
+  }
 
   const [aegisRes, roshRes] = await Promise.all([
     redisClient.getJson<AegisRes>(`${token}:aegis`),

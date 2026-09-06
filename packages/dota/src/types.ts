@@ -1,4 +1,5 @@
 import type { Database } from '@dotabod/shared-utils'
+
 import type { HeroNames } from './dota/lib/getHero'
 
 export interface SocketClient {

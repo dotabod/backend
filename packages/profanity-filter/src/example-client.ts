@@ -11,14 +11,14 @@ const API_URL = 'http://localhost:3000'
 
 // Test cases to check
 const testCases = [
-  { text: 'Hello world, this is a normal text.', description: 'Normal text' },
-  { text: 'f*u*c*k', description: 'Starred profanity' },
-  { text: 'сука блять', description: 'Russian profanity' },
-  { text: 'пидор', description: 'Russian profanity 2' },
-  { text: 'пидop', description: 'Mixed Latin-Cyrillic Russian profanity' },
-  { text: '操你妈', description: 'Chinese profanity' },
-  { text: 'hijo de puta', description: 'Spanish profanity' },
-  { text: 'scheiße', description: 'German profanity' },
+  { description: 'Normal text', text: 'Hello world, this is a normal text.' },
+  { description: 'Starred profanity', text: 'f*u*c*k' },
+  { description: 'Russian profanity', text: 'сука блять' },
+  { description: 'Russian profanity 2', text: 'пидор' },
+  { description: 'Mixed Latin-Cyrillic Russian profanity', text: 'пидop' },
+  { description: 'Chinese profanity', text: '操你妈' },
+  { description: 'Spanish profanity', text: 'hijo de puta' },
+  { description: 'German profanity', text: 'scheiße' },
 ]
 
 async function testAPI() {
@@ -30,7 +30,7 @@ async function testAPI() {
     // console.log('API Info:')
     // console.log(response.data)
     // console.log('-------------------\n')
-  } catch (_error) {
+  } catch {
     console.error('Error connecting to API. Is the server running?')
     process.exit(1)
   }

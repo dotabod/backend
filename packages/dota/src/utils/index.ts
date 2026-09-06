@@ -2,19 +2,21 @@ import RedisClient from '../db/RedisClient'
 import type { SocketClient } from '../types'
 
 export function steamID64toSteamID32(steamID64: string) {
-  if (!steamID64) return null
+  if (!steamID64) {
+    return null
+  }
   try {
-    return Number(steamID64.substr(-16, 16)) - 6561197960265728
-  } catch (_error) {
+    return Number(steamID64.substr(-16, 16)) - 6_561_197_960_265_728
+  } catch {
     return null
   }
 }
 
-const STEAMID64_OFFSET = 76561197960265728n
+const STEAMID64_OFFSET = 76_561_197_960_265_728n
 export function steamID32toSteamID64(steam32Id: number) {
   try {
     return (BigInt(steam32Id) + STEAMID64_OFFSET).toString()
-  } catch (_error) {
+  } catch {
     return null
   }
 }
@@ -37,7 +39,7 @@ export function fmtMSS(totalSeconds: number) {
 const redisClient = RedisClient.getInstance()
 export const getRedisNumberValue = async (key: string) => {
   const value = await redisClient.client.get(key)
-  return value !== null ? Number(value) : null
+  return value === null ? null : Number(value)
 }
 
 // Tier gate. Today it mainly skips the (already-disabled) GetRealTimeStats fetch and routes high-MMR
@@ -45,7 +47,7 @@ export const getRedisNumberValue = async (key: string) => {
 // feed (which lists games regardless of any single streamer's MMR).
 export const is8500Plus = (dotaClient: SocketClient) => {
   const currentSteamAccount = dotaClient.SteamAccount?.find(
-    (account) => dotaClient.steam32Id === account.steam32Id,
+    (account) => dotaClient.steam32Id === account.steam32Id
   )
 
   if (dotaClient.mmr && dotaClient.mmr > 8500) {

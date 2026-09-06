@@ -1,12 +1,12 @@
 import { commandDisable } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import { redisClient } from '../../db/redisInstance'
 import { chatClient } from '../chatClient'
 import commandHandler from '../lib/CommandHandler'
 
 commandHandler.registerCommand('clearsharing', {
   aliases: ['forcelink'],
-  permission: 2,
   cooldown: 30,
   handler: async (message, _args) => {
     const {
@@ -29,15 +29,16 @@ commandHandler.registerCommand('clearsharing', {
       chatClient.say(
         channel,
         t('clearsharing.success', { lng: client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
-    } catch (_error) {
+    } catch {
       const channel = message.channel.client.name
       chatClient.say(
         channel,
         t('clearsharing.error', { lng: client.locale }),
-        message.user.messageId,
+        message.user.messageId
       )
     }
   },
+  permission: 2,
 })

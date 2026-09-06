@@ -1,29 +1,28 @@
 import { Elysia } from 'elysia'
+
 import { getProfanityDetails, moderateText } from './utils/moderation'
 
 // Create Elysia app
 const app = new Elysia()
-  .get('/', () => {
-    return {
-      name: 'Profanity Filter API',
-      version: '1.0.0',
-      description: 'Multilingual profanity detection and filtering API',
-      endpoints: [
-        {
-          path: '/moderate',
-          method: 'POST',
-          description: 'Moderate text for profanity',
-          body: { text: 'string or string[]' },
-        },
-        {
-          path: '/check',
-          method: 'POST',
-          description: 'Check text for profanity and get detailed information',
-          body: { text: 'string or string[]' },
-        },
-      ],
-    }
-  })
+  .get('/', () => ({
+    description: 'Multilingual profanity detection and filtering API',
+    endpoints: [
+      {
+        body: { text: 'string or string[]' },
+        description: 'Moderate text for profanity',
+        method: 'POST',
+        path: '/moderate',
+      },
+      {
+        body: { text: 'string or string[]' },
+        description: 'Check text for profanity and get detailed information',
+        method: 'POST',
+        path: '/check',
+      },
+    ],
+    name: 'Profanity Filter API',
+    version: '1.0.0',
+  }))
   .post('/moderate', async ({ body }) => {
     const { text } = body as { text: string | string[] }
 
@@ -39,11 +38,11 @@ const app = new Elysia()
         moderatedText = await moderateText(text)
         // Handle array input
         return {
-          original: text,
-          moderated: moderatedText,
           containsProfanity: (moderatedText as string[]).some(
-            (moderated, index) => moderated !== text[index],
+            (moderated, index) => moderated !== text[index]
           ),
+          moderated: moderatedText,
+          original: text,
         }
       }
 
@@ -51,9 +50,9 @@ const app = new Elysia()
 
       // Handle single string input
       return {
-        original: text,
-        moderated: moderatedText,
         containsProfanity: moderatedText !== text,
+        moderated: moderatedText,
+        original: text,
       }
     } catch (error) {
       return {
@@ -77,19 +76,17 @@ const app = new Elysia()
       if (Array.isArray(text)) {
         // Handle array input
         return {
-          original: text,
-          containsProfanity: (details as Array<{ isFlagged: boolean }>).some(
-            (item) => item.isFlagged,
-          ),
+          containsProfanity: (details as { isFlagged: boolean }[]).some((item) => item.isFlagged),
           details,
+          original: text,
         }
       }
 
       // Handle single string input
       return {
-        original: text,
         containsProfanity: (details as { isFlagged: boolean }).isFlagged,
         details,
+        original: text,
       }
     } catch (error) {
       return {

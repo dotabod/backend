@@ -1,12 +1,13 @@
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+
 import type { SocketClient } from '../types'
 import { chatClient } from './chatClient'
 
 // Maps for alt account detection
 const altAccountCache: Record<string, boolean> = {}
 const lastAltAccountMessageTimestamps: Record<string, number> = {}
-const ALT_ACCOUNT_COOLDOWN_MS = 300000 // 5 minutes
+const ALT_ACCOUNT_COOLDOWN_MS = 300_000 // 5 minutes
 
 const speak = true
 
@@ -17,16 +18,15 @@ export async function checkAltAccount(
   twitchChannelId: string,
   userInfo: { userId: string },
   messageId: string,
-  client: SocketClient,
+  client: SocketClient
 ) {
-  // If already cached as not an alt account, skip
-  if (altAccountCache[chattersUsername] === false) return
-
-  // If cached as alt account, check cooldown before sending message
-  if (altAccountCache[chattersUsername] === true) {
+  // If cached as an alt account, check cooldown before sending a message.
+  if (altAccountCache[chattersUsername]) {
     const now = Date.now()
     const lastTime = lastAltAccountMessageTimestamps[chattersUsername] || 0
-    if (now - lastTime < ALT_ACCOUNT_COOLDOWN_MS) return
+    if (now - lastTime < ALT_ACCOUNT_COOLDOWN_MS) {
+      return
+    }
 
     if (speak) {
       chatClient.say(
@@ -34,13 +34,17 @@ export async function checkAltAccount(
         t('altAccount', {
           emote: 'hesRight',
           emote2: 'PepeMods',
-          name: chattersUsername,
           lng: client.locale || 'en',
+          name: chattersUsername,
         }),
-        messageId,
+        messageId
       )
     }
     lastAltAccountMessageTimestamps[chattersUsername] = now
+    return
+  }
+
+  if (Object.hasOwn(altAccountCache, chattersUsername)) {
     return
   }
 
@@ -79,17 +83,17 @@ export async function checkAltAccount(
             t('altAccount', {
               emote: 'hesRight',
               emote2: 'PepeMods',
-              name: chattersUsername,
               lng: client.locale || 'en',
+              name: chattersUsername,
             }),
-            messageId,
+            messageId
           )
         }
         lastAltAccountMessageTimestamps[chattersUsername] = now
       }
     }
-  } catch (e) {
-    logger.error('Error checking alt account', { error: e, channel, user: chattersUsername })
+  } catch (error) {
+    logger.error('Error checking alt account', { channel, error, user: chattersUsername })
     altAccountCache[chattersUsername] = false // Don't retry on error
   }
 }

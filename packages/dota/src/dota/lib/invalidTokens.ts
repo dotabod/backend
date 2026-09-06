@@ -1,4 +1,5 @@
 import { logger, supabase } from '@dotabod/shared-utils'
+
 import { redisClient } from '../../db/redisInstance'
 
 // Stale tokens (deleted users, never-registered Twitch IDs) outlive process restarts,
@@ -31,7 +32,9 @@ export class InvalidTokensCache {
 
   has(value: unknown): boolean {
     const expiry = this.mem.get(value)
-    if (expiry === undefined) return false
+    if (expiry === undefined) {
+      return false
+    }
     if (Date.now() >= expiry) {
       this.mem.delete(value)
       return false
@@ -46,7 +49,7 @@ export class InvalidTokensCache {
       const client = this.getClient()
       if (client.isReady) {
         client.setEx(`${REDIS_KEY_PREFIX}${value}`, TTL_SECONDS, '1').catch((error) => {
-          logger.warn('[USER] invalidTokens redis setEx failed', { value, error })
+          logger.warn('[USER] invalidTokens redis setEx failed', { error, value })
         })
       }
     }
@@ -72,7 +75,7 @@ export class InvalidTokensCache {
         client.del(`${REDIS_KEY_PREFIX}${value}`).catch((error) => {
           // Surface the failure so a stale Redis tombstone doesn't silently
           // re-hydrate the user on the next deploy.
-          logger.warn('[USER] invalidTokens redis del failed', { value, error })
+          logger.warn('[USER] invalidTokens redis del failed', { error, value })
         })
       }
     }
@@ -96,13 +99,13 @@ export class InvalidTokensCache {
   }
 
   private seed(): void {
-    for (const v of SEED_VALUES) this.mem.set(v, NEVER_EXPIRES)
+    for (const v of SEED_VALUES) {
+      this.mem.set(v, NEVER_EXPIRES)
+    }
   }
 }
 
-export const invalidTokens = new InvalidTokensCache(
-  () => redisClient.client as unknown as RedisLike,
-)
+export const invalidTokens = new InvalidTokensCache(() => redisClient.client)
 
 /**
  * Boot-time hydration. Always runs both layers:
@@ -125,7 +128,7 @@ interface RedisScanLike {
 
 export async function hydrateInvalidTokensFromRedis(
   cache: InvalidTokensCache,
-  client: RedisScanLike,
+  client: RedisScanLike
 ): Promise<number> {
   // Gate on isReady: if the connection isn't up we can't scan. The caller
   // (setupRedisClient) currently awaits connectClient() before invoking us,
@@ -137,8 +140,8 @@ export async function hydrateInvalidTokensFromRedis(
   let count = 0
   try {
     for await (const key of client.scanIterator({
-      MATCH: `${REDIS_KEY_PREFIX}*`,
       COUNT: 500,
+      MATCH: `${REDIS_KEY_PREFIX}*`,
     })) {
       const token = key.slice(REDIS_KEY_PREFIX.length)
       if (token && !cache.has(token)) {

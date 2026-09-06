@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import type { DisableReason } from '../src/disableReason/types'
 import { resetUtilsState, utilsState } from './setupMocks.ts'
 
@@ -17,22 +18,22 @@ describe('trackDisableReason', () => {
   it('upserts the settings row and inserts a disable_notifications row', async () => {
     await trackDisableReason('user-1', 'someSetting', 'INVALID_TOKEN' satisfies DisableReason, {
       foo: 'bar',
-    } as any)
+    })
 
     expect(utilsState.upserts).toHaveLength(1)
     expect(utilsState.upserts[0].table).toBe('settings')
     expect(utilsState.upserts[0].values).toMatchObject({
-      userId: 'user-1',
-      key: 'someSetting',
-      value: false,
       disable_reason: 'INVALID_TOKEN',
+      key: 'someSetting',
+      userId: 'user-1',
+      value: false,
     })
     expect(utilsState.inserts).toHaveLength(1)
     expect(utilsState.inserts[0].table).toBe('disable_notifications')
     expect(utilsState.inserts[0].values).toMatchObject({
-      user_id: 'user-1',
-      setting_key: 'someSetting',
       reason: 'INVALID_TOKEN',
+      setting_key: 'someSetting',
+      user_id: 'user-1',
     })
   })
 
@@ -41,14 +42,14 @@ describe('trackDisableReason', () => {
       'user-1',
       'commandDisable',
       'MANUAL_DISABLE' satisfies DisableReason,
-      { disabled_by: 'mod1' } as any,
-      { disabledValue: true },
+      { disabled_by: 'mod1' },
+      { disabledValue: true }
     )
 
     expect(utilsState.upserts[0].values).toMatchObject({
+      disable_reason: 'MANUAL_DISABLE',
       key: 'commandDisable',
       value: true,
-      disable_reason: 'MANUAL_DISABLE',
     })
   })
 
@@ -65,22 +66,22 @@ describe('trackResolveReason', () => {
 
     const settingsUpdate = utilsState.updates.find((u) => u.table === 'settings')
     expect(settingsUpdate?.values).toMatchObject({
-      disable_reason: null,
       auto_disabled_at: null,
       auto_disabled_by: null,
+      disable_reason: null,
     })
-    expect(settingsUpdate?.filters).toEqual([
-      { method: 'eq', col: 'userId', val: 'user-1' },
-      { method: 'eq', col: 'key', val: 'someSetting' },
+    expect(settingsUpdate?.filters).toStrictEqual([
+      { col: 'userId', method: 'eq', val: 'user-1' },
+      { col: 'key', method: 'eq', val: 'someSetting' },
     ])
 
     const notifUpdate = utilsState.updates.find((u) => u.table === 'disable_notifications')
     expect(notifUpdate?.values).toMatchObject({ auto_resolved: false })
-    expect(notifUpdate?.filters.some((f) => f.method === 'is' && f.col === 'resolved_at')).toBe(
-      true,
-    )
+    expect(
+      notifUpdate?.filters.some((f) => f.method === 'is' && f.col === 'resolved_at')
+    ).toBeTruthy()
     // Without opts.reason, no reason filter is applied.
-    expect(notifUpdate?.filters.some((f) => f.col === 'reason')).toBe(false)
+    expect(notifUpdate?.filters.some((f) => f.col === 'reason')).toBeFalsy()
   })
 
   it('records auto_resolved=true when the flag is passed', async () => {
@@ -96,9 +97,9 @@ describe('trackResolveReason', () => {
     const notifUpdate = utilsState.updates.find((u) => u.table === 'disable_notifications')
     expect(
       notifUpdate?.filters.some(
-        (f) => f.method === 'eq' && f.col === 'reason' && f.val === 'ACCOUNT_SHARING',
-      ),
-    ).toBe(true)
+        (f) => f.method === 'eq' && f.col === 'reason' && f.val === 'ACCOUNT_SHARING'
+      )
+    ).toBeTruthy()
   })
 
   it('folds opts.enabledValue into the settings UPDATE (single write)', async () => {
@@ -131,7 +132,7 @@ describe('recordDisableNotification', () => {
       'user-1',
       'commandDisable',
       'ACCOUNT_SHARING' satisfies DisableReason,
-      { blocked_steam32_id: '12345' } as any,
+      { blocked_steam32_id: '12345' }
     )
 
     expect(utilsState.upserts).toHaveLength(0)
@@ -139,10 +140,10 @@ describe('recordDisableNotification', () => {
     expect(utilsState.inserts).toHaveLength(1)
     expect(utilsState.inserts[0].table).toBe('disable_notifications')
     expect(utilsState.inserts[0].values).toMatchObject({
-      user_id: 'user-1',
-      setting_key: 'commandDisable',
-      reason: 'ACCOUNT_SHARING',
       metadata: { blocked_steam32_id: '12345' },
+      reason: 'ACCOUNT_SHARING',
+      setting_key: 'commandDisable',
+      user_id: 'user-1',
     })
   })
 })
@@ -156,8 +157,8 @@ describe('resolveDisableNotifications', () => {
     expect(utilsState.updates[0].table).toBe('disable_notifications')
     expect(utilsState.updates[0].values).toMatchObject({ auto_resolved: false })
     expect(
-      utilsState.updates[0].filters.some((f) => f.method === 'is' && f.col === 'resolved_at'),
-    ).toBe(true)
+      utilsState.updates[0].filters.some((f) => f.method === 'is' && f.col === 'resolved_at')
+    ).toBeTruthy()
   })
 
   it('filters by reason when opts.reason is provided', async () => {
@@ -165,8 +166,8 @@ describe('resolveDisableNotifications', () => {
 
     expect(
       utilsState.updates[0].filters.some(
-        (f) => f.method === 'eq' && f.col === 'reason' && f.val === 'ACCOUNT_SHARING',
-      ),
-    ).toBe(true)
+        (f) => f.method === 'eq' && f.col === 'reason' && f.val === 'ACCOUNT_SHARING'
+      )
+    ).toBeTruthy()
   })
 })

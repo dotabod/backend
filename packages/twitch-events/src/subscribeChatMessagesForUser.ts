@@ -1,8 +1,9 @@
 import { checkBotStatus, getTwitchHeaders, logger } from '@dotabod/shared-utils'
+
 import { eventSubMap } from './chatSubIds'
 import type { TwitchEventSubResponse } from './interfaces'
-import type { TwitchEventTypes } from './TwitchEventTypes'
 import { revokeEvent } from './twitch/lib/revokeEvent'
+import type { TwitchEventTypes } from './TwitchEventTypes'
 import { rateLimiter } from './utils/rateLimiterCore'
 
 // Don't cache headers, we'll get fresh ones each time
@@ -23,7 +24,7 @@ export async function genericSubscribe(
   conduit_id: string,
   broadcaster_user_id: string,
   type: keyof TwitchEventTypes,
-  forceRefreshToken = false,
+  forceRefreshToken = false
 ): Promise<boolean> {
   // Don't subscribe to chat messages if the bot is banned
   // It will fail to subscribe anyway
@@ -37,27 +38,26 @@ export async function genericSubscribe(
   // Validate conduit_id to prevent unnecessary API calls
   if (!conduit_id) {
     logger.error('Missing conduit_id in genericSubscribe', {
-      conduit_id,
       broadcaster_user_id,
+      conduit_id,
       type,
     })
     return false
   }
 
-  return rateLimiter.schedule(async (): Promise<boolean> => {
+  return await rateLimiter.schedule(async (): Promise<boolean> => {
     // Get fresh headers with each request to avoid token expiration issues
     const headers = await getTwitchHeaders(undefined, forceRefreshToken)
 
     const baseBody = {
-      version: '1',
       transport: {
-        method: 'conduit',
         conduit_id,
+        method: 'conduit',
       },
+      version: '1',
     }
     const body = {
       ...baseBody,
-      type,
       condition: (() => {
         if (type === 'user.update') {
           return { user_id: broadcaster_user_id }
@@ -89,16 +89,17 @@ export async function genericSubscribe(
           user_id: botUserId,
         }
       })(),
+      type,
     }
 
     try {
       const subscribeReq = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
-        method: 'POST',
+        body: JSON.stringify(body),
         headers: {
           ...headers,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(body),
+        method: 'POST',
       })
 
       // Update rate limit info
@@ -122,15 +123,15 @@ export async function genericSubscribe(
           : { message: 'Unauthorized' }
 
         logger.error(`Authentication error: ${subscribeReq.status} ${errorData.message}`, {
-          type,
           broadcaster_user_id,
+          type,
         })
 
         // If this is our first attempt, try once more with a fresh token
         if (!forceRefreshToken) {
           logger.info('Retrying subscription with fresh token', {
-            type,
             broadcaster_user_id,
+            type,
           })
           return genericSubscribe(conduit_id, broadcaster_user_id, type, true)
         }
@@ -151,9 +152,9 @@ export async function genericSubscribe(
           : { message: 'Unknown error' }
 
         logger.error(`Failed to subscribe ${subscribeReq.status} ${responseText}`, {
-          type,
           broadcaster_user_id,
           error: errorData,
+          type,
         })
 
         // Handle specific error status codes
@@ -167,8 +168,8 @@ export async function genericSubscribe(
             errorData.message?.includes('scope')
           ) {
             logger.info(`Authorization issue detected, revoking user ${broadcaster_user_id}`, {
-              status: subscribeReq.status,
               message: errorData.message,
+              status: subscribeReq.status,
             })
             await revokeEvent({ providerAccountId: broadcaster_user_id })
           }
@@ -177,16 +178,16 @@ export async function genericSubscribe(
         if (subscribeReq.status === 400) {
           // Log configuration errors differently to make them more visible
           logger.error('Subscription configuration error', {
-            status: subscribeReq.status,
-            response: responseText,
             broadcaster_user_id,
-            type,
             conduit_id,
+            response: responseText,
+            status: subscribeReq.status,
+            type,
           })
         }
 
         throw new Error(
-          `Subscription failed with status ${subscribeReq.status}: ${errorData.message}`,
+          `Subscription failed with status ${subscribeReq.status}: ${errorData.message}`
         )
       }
 
@@ -216,39 +217,39 @@ export async function genericSubscribe(
       if (error instanceof Error) {
         throw error
       }
-      throw new Error(`Unknown error: ${String(error)}`)
+      throw new Error(`Unknown error: ${String(error)}`, { cause: error })
     }
   })
 }
 
 export async function subscribeToAuthGrantOrRevoke(conduit_id: string, client_id: string) {
   const subscribeToAuthEvent = async (
-    eventType: 'user.authorization.revoke' | 'user.authorization.grant',
-  ) => {
-    return rateLimiter.schedule(async (): Promise<boolean> => {
+    eventType: 'user.authorization.revoke' | 'user.authorization.grant'
+  ) =>
+    await rateLimiter.schedule(async (): Promise<boolean> => {
       // Get fresh headers for each request
       const headers = await getTwitchHeaders()
 
       const body = {
-        type: eventType,
-        version: '1',
         condition: {
           client_id,
         },
         transport: {
-          method: 'conduit',
           conduit_id,
+          method: 'conduit',
         },
+        type: eventType,
+        version: '1',
       }
 
       try {
         const subscribeReq = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
-          method: 'POST',
+          body: JSON.stringify(body),
           headers: {
             ...headers,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(body),
+          method: 'POST',
         })
 
         if (subscribeReq.status === 409) {
@@ -262,12 +263,12 @@ export async function subscribeToAuthGrantOrRevoke(conduit_id: string, client_id
           const freshHeaders = await getTwitchHeaders(undefined, true)
 
           const retryReq = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
-            method: 'POST',
+            body: JSON.stringify(body),
             headers: {
               ...freshHeaders,
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify(body),
+            method: 'POST',
           })
 
           if (retryReq.status === 409) {
@@ -281,7 +282,7 @@ export async function subscribeToAuthGrantOrRevoke(conduit_id: string, client_id
               `Failed to subscribe after token refresh: ${retryReq.status} ${errorText}`,
               {
                 type: eventType,
-              },
+              }
             )
             return false
           }
@@ -306,7 +307,6 @@ export async function subscribeToAuthGrantOrRevoke(conduit_id: string, client_id
         return false
       }
     })
-  }
 
   // Subscribe to both revoke and grant events
   const revokeResult = await subscribeToAuthEvent('user.authorization.revoke')

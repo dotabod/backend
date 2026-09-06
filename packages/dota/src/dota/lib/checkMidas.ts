@@ -26,7 +26,7 @@ export async function checkPassiveMidas(client: SocketClient) {
           lng: client.locale,
           seconds: isMidasPassive,
         }),
-        { chattersKey: 'midas' },
+        { chattersKey: 'midas' }
       )
     } else if (isMidasPassive) {
       say(client, t('chatters.midas', { emote: 'massivePIDAS', lng: client.locale }), {
@@ -40,15 +40,17 @@ async function checkMidasIterator(client: SocketClient) {
   const { token, gsi: data } = client
 
   // Find the midas in player's inventory
-  const midasItem = findItem({ itemName: 'item_hand_of_midas', searchStashAlso: true, data })
+  const midasItem = findItem({ data, itemName: 'item_hand_of_midas', searchStashAlso: true })
 
   // Check if player has a midas. findItem returns `Item[] | false`, so an
   // optional-chain shortcut here would skip narrowing on the `false` arm.
-  if (!midasItem || !midasItem[0]) return false
+  if (!midasItem || !midasItem[0]) {
+    return false
+  }
 
   // Get passive midas data from Redis
   const passiveMidasData = (await redisClient.getJson<PassiveMidasData>(
-    `${token}:passiveMidas`,
+    `${token}:passiveMidas`
   )) || {
     firstNoticedPassive: 0,
     told: 0,
@@ -56,7 +58,7 @@ async function checkMidasIterator(client: SocketClient) {
 
   const midasCharges = Number(midasItem[0].charges)
   const currentTime = Date.now()
-  const passiveMidasThreshold = 10000
+  const passiveMidasThreshold = 10_000
 
   // Hand of Midas has 2 charges since patch 7.38. Both charges full means player is not using it.
   if (midasCharges === 2 && !passiveMidasData.told && !passiveMidasData.firstNoticedPassive) {
@@ -82,7 +84,7 @@ async function checkMidasIterator(client: SocketClient) {
   if (midasCharges !== 2 && passiveMidasData.told) {
     // Calculate the time taken to use midas after being passive
     const secondsToUse = Math.round(
-      (Date.now() - passiveMidasData.told + passiveMidasThreshold) / 1000,
+      (Date.now() - passiveMidasData.told + passiveMidasThreshold) / 1000
     )
     // Reset passive midas data
     await resetPassiveTime(token)

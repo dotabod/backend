@@ -1,15 +1,15 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test'
-import {
-  type ClipScheduleDeps,
-  type ClipTaskPayload,
-  rearmWith,
-  scheduleClipWith,
-} from '../clipSchedule.ts'
+import { beforeEach, describe, expect, it } from 'vitest'
+
+import { rearmWith, scheduleClipWith } from '../clipSchedule.ts'
+import type { ClipScheduleDeps, ClipTaskPayload } from '../clipSchedule.ts'
 
 // Fully in-memory deps so the scheduling/re-arm logic is exercised offline with
 // no Twitch, Redis, real timers, or process-wide module mocks (which would leak
 // into sibling test files and break randomized ordering).
-type Captured = { delayMs: number; cb: () => void | Promise<void> }
+interface Captured {
+  delayMs: number
+  cb: () => void | Promise<void>
+}
 
 function makeDeps() {
   const zset = new Map<string, number>()
@@ -18,48 +18,48 @@ function makeDeps() {
   let now = 1_000_000
 
   const deps: ClipScheduleDeps = {
+    arm: (delayMs, cb) => {
+      armed.push({ cb, delayMs })
+    },
+    logger: {
+      error: () => {},
+      info: () => {},
+    },
+    now: () => now,
+    run: async () => {
+      runCalls += 1
+    },
     zAdd: async (member, score) => {
       zset.set(member, score)
       return 1
     },
-    zRem: async (member) => (zset.delete(member) ? 1 : 0),
     zRangeAll: async () => [...zset.entries()].sort((a, b) => a[1] - b[1]).map(([m]) => m),
-    arm: (delayMs, cb) => {
-      armed.push({ delayMs, cb })
-    },
-    run: async () => {
-      runCalls += 1
-    },
-    now: () => now,
-    logger: {
-      info: () => undefined,
-      error: () => undefined,
-    } as unknown as ClipScheduleDeps['logger'],
+    zRem: async (member) => (zset.delete(member) ? 1 : 0),
   }
 
   return {
-    deps,
-    zset,
     armed,
+    deps,
     getRunCalls: () => runCalls,
     setNow: (n: number) => {
       now = n
     },
+    zset,
   }
 }
 
 const PAYLOAD: ClipTaskPayload = {
   accountId: 'acct-1',
-  matchId: '8821246401',
   detectPath: 'detect',
-  opts: { maxAttempts: 1, pollAttempts: 1, pollIntervalMs: 1 },
+  logContext: { matchId: '8821246401', name: 'tester' },
   logPrefix: '[Clip]',
-  logContext: { name: 'tester', matchId: '8821246401' },
+  matchId: '8821246401',
+  opts: { maxAttempts: 1, pollAttempts: 1, pollIntervalMs: 1 },
 }
 
 // Build a persisted member exactly as scheduleClipWith would, for re-arm tests.
 const makeMember = (executeAt: number) =>
-  JSON.stringify({ id: `id-${executeAt}-${Math.random()}`, executeAt, ...PAYLOAD })
+  JSON.stringify({ executeAt, id: `id-${executeAt}-${Math.random()}`, ...PAYLOAD })
 
 describe('clipSchedule', () => {
   let h: ReturnType<typeof makeDeps>
@@ -107,8 +107,8 @@ describe('clipSchedule', () => {
   })
 
   it('fires a recently-passed task immediately on re-arm', async () => {
-    const member = makeMember(1_000_000 - 5_000) // 5s late, within staleness window
-    h.zset.set(member, 1_000_000 - 5_000)
+    const member = makeMember(1_000_000 - 5000) // 5s late, within staleness window
+    h.zset.set(member, 1_000_000 - 5000)
 
     await rearmWith(h.deps)
 

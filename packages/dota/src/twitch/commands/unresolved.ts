@@ -1,13 +1,14 @@
 import { t } from 'i18next'
+
 import { formatUnresolvedMatch, getUnresolvedMatches } from '../../dota/lib/unresolvedMatches'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chatClient'
-import commandHandler, { type MessageType } from '../lib/CommandHandler'
+import commandHandler from '../lib/CommandHandler'
+import type { MessageType } from '../lib/CommandHandler'
 
 commandHandler.registerCommand('unresolved', {
   aliases: ['pending'],
-  permission: 2, // Mods and broadcaster only
-  cooldown: 10000,
+  cooldown: 10_000,
   dbkey: DBSettings.commandWon, // Reuse the same setting as won/lost commands
   handler: async (message: MessageType) => {
     const {
@@ -23,7 +24,7 @@ commandHandler.registerCommand('unresolved', {
           emote: 'Okayeg',
           lng: client.locale,
         }),
-        message.user.messageId,
+        message.user.messageId
       )
       return
     }
@@ -35,11 +36,12 @@ commandHandler.registerCommand('unresolved', {
       channel,
       t('bets.unresolvedMatches', {
         count,
-        matchList,
         emote: 'PauseChamp',
         lng: client.locale,
+        matchList,
       }),
-      message.user.messageId,
+      message.user.messageId
     )
   },
+  permission: 2, // Mods and broadcaster only,
 })

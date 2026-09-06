@@ -6,11 +6,19 @@
 // through this single harness, otherwise competing factories for the same
 // module spec collide when the whole suite runs together (passes in isolation,
 // fails together). Import the SUTs from here, not from their real paths.
-import { vi } from 'vite-plus/test'
+import { vi } from 'vitest'
+
 import type { TwitchEventTypes } from '../TwitchEventTypes.ts'
 
-type LogCall = { message: string; meta: Record<string, unknown> }
-type SubscribeCall = { conduitId: string; userId: string; type: keyof TwitchEventTypes }
+interface LogCall {
+  message: string
+  meta: Record<string, unknown>
+}
+interface SubscribeCall {
+  conduitId: string
+  userId: string
+  type: keyof TwitchEventTypes
+}
 
 export const state: {
   conduitId: string
@@ -25,13 +33,13 @@ export const state: {
   // supabase: accounts.single() -> dbUser; settings.select -> dbSettings;
   // upserts/updates capture writes.
   dbUser: { userId: string } | null
-  dbSettings: Array<{ key: string; value: unknown }>
-  upserts: Array<{ table: string; values: Record<string, unknown> }>
-  updates: Array<{ table: string; values: Record<string, unknown> }>
-  commandDisableCalls: Array<
+  dbSettings: { key: string; value: unknown }[]
+  upserts: { table: string; values: Record<string, unknown> }[]
+  updates: { table: string; values: Record<string, unknown> }[]
+  commandDisableCalls: (
     | { kind: 'disable'; userId: string; reason: string; metadata?: Record<string, unknown> }
     | { kind: 'enable'; userId: string; opts?: { reason?: string; autoResolved?: boolean } }
-  >
+  )[]
   // botApi (handleNewUser) + getTwitchAPI moderation (ensureBotIsModerator).
   stream: { startDate: Date } | null
   streamer: { displayName: string; name: string } | null
@@ -47,7 +55,7 @@ export const state: {
   channelSubscribeStatuses: string[]
   // Callbacks passed to `.subscribe()`. Tests fire them with a non-SUBSCRIBED
   // status (CHANNEL_ERROR/CLOSED/TIMED_OUT) to drive the reconnect path.
-  channelSubscribeCallbacks: Array<(status: string, err?: Error) => void>
+  channelSubscribeCallbacks: ((status: string, err?: Error) => void)[]
   // Bumped each time the watcher calls `supabase.channel(...)`. Starts at 0;
   // setupAccountWatcher() bumps to 1, each reconnect bumps further.
   channelCreationCount: number
@@ -66,11 +74,11 @@ export const state: {
   // mocking — `findUserIdByProviderAccount` selects `userId`, the watcher's
   // UPDATE:users handler selects `providerAccountId`. Falls back to `dbUser`
   // (with error: null) when the queue is empty.
-  accountsLookupResults: Array<{ data: Record<string, unknown> | null; error: Error | null }>
+  accountsLookupResults: { data: Record<string, unknown> | null; error: Error | null }[]
   // Same shape as accountsLookupResults but consumed by `users.single()` calls
   // (e.g. handleNewUser's ban check). Falls back to `{ data: null, error: null }`
   // — benign for tests that don't care about ban status.
-  usersLookupResults: Array<{ data: Record<string, unknown> | null; error: Error | null }>
+  usersLookupResults: { data: Record<string, unknown> | null; error: Error | null }[]
   // When set, botApi.streams.getStreamByUserId throws this error. Lets tests
   // verify the handleNewUser path continues into subscription registration
   // even when the Twitch profile-fetch step fails.
@@ -82,34 +90,34 @@ export const state: {
   // call. Used to exercise the watcher's "channel setup threw" reconnect path.
   channelOnError: Error | null
 } = {
-  conduitId: 'conduit-1',
-  isBanned: false,
   accountIds: [],
-  subscribeResult: () => true,
-  subscribeCalls: [],
+  accountsLookupResults: [],
+  addModeratorCalls: [],
+  addModeratorError: null,
+  channelCreationCount: 0,
+  channelCreationError: null,
+  channelHandlers: new Map(),
+  channelOnError: null,
+  channelSubscribeCallbacks: [],
+  channelSubscribeStatuses: [],
+  commandDisableCalls: [],
+  conduitId: 'conduit-1',
+  dbSettings: [],
+  dbUser: { userId: 'user-1' },
+  isBanned: false,
+  logError: [],
   logInfo: [],
   logWarn: [],
-  logError: [],
-  dbUser: { userId: 'user-1' },
-  dbSettings: [],
-  upserts: [],
-  updates: [],
-  commandDisableCalls: [],
-  stream: null,
-  streamer: { displayName: 'Streamer', name: 'streamer' },
-  addModeratorError: null,
-  addModeratorCalls: [],
-  channelHandlers: new Map(),
-  channelSubscribeStatuses: [],
-  channelSubscribeCallbacks: [],
-  channelCreationCount: 0,
   removeChannelCount: 0,
   removeChannelRefiresClosed: false,
-  accountsLookupResults: [],
-  usersLookupResults: [],
+  stream: null,
   streamError: null,
-  channelCreationError: null,
-  channelOnError: null,
+  streamer: { displayName: 'Streamer', name: 'streamer' },
+  subscribeCalls: [],
+  subscribeResult: () => true,
+  updates: [],
+  upserts: [],
+  usersLookupResults: [],
 }
 
 export function resetState() {
@@ -159,21 +167,12 @@ function sbBuilder(table: string) {
   let mode: 'select' | 'update' | 'delete' = 'select'
   let values: Record<string, unknown> = {}
   const b: SbBuilder = {
-    select: () => b,
-    update: (v: Record<string, unknown>) => {
-      mode = 'update'
-      values = v
-      return b
-    },
     delete: () => {
       mode = 'delete'
       return b
     },
-    upsert: (v: Record<string, unknown>) => {
-      state.upserts.push({ table, values: v })
-      return Promise.resolve({ data: null, error: null })
-    },
     eq: () => b,
+    select: () => b,
     single: async () => {
       if (table === 'accounts') {
         if (state.accountsLookupResults.length > 0) {
@@ -191,10 +190,21 @@ function sbBuilder(table: string) {
       }
       return { data: null, error: null }
     },
-    then: (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => {
-      if (mode === 'update') state.updates.push({ table, values })
+    then: async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => {
+      if (mode === 'update') {
+        state.updates.push({ table, values })
+      }
       const data = mode === 'select' && table === 'settings' ? state.dbSettings : null
-      return Promise.resolve({ data, error: null }).then(onFulfilled)
+      return await Promise.resolve({ data, error: null }).then(onFulfilled)
+    },
+    update: (v: Record<string, unknown>) => {
+      mode = 'update'
+      values = v
+      return b
+    },
+    upsert: async (v: Record<string, unknown>) => {
+      state.upserts.push({ table, values: v })
+      return { data: null, error: null }
     },
   }
   return b
@@ -203,7 +213,7 @@ interface RealtimeChannelMock {
   on: (
     type: string,
     opts: { event: string; schema: string; table: string },
-    handler: (payload: { new?: Record<string, unknown>; old?: Record<string, unknown> }) => unknown,
+    handler: (payload: { new?: Record<string, unknown>; old?: Record<string, unknown> }) => unknown
   ) => RealtimeChannelMock
   subscribe: (cb?: (status: string, err?: Error) => void) => RealtimeChannelMock
 }
@@ -222,7 +232,9 @@ function realtimeChannelMock(): RealtimeChannelMock {
     },
     subscribe: (cb) => {
       state.channelSubscribeStatuses.push('SUBSCRIBED')
-      if (cb) state.channelSubscribeCallbacks.push(cb)
+      if (cb) {
+        state.channelSubscribeCallbacks.push(cb)
+      }
       cb?.('SUBSCRIBED')
       return channel
     },
@@ -231,12 +243,14 @@ function realtimeChannelMock(): RealtimeChannelMock {
 }
 
 const supabaseMock = {
-  from: (table: string) => sbBuilder(table),
   channel: () => {
     state.channelCreationCount++
-    if (state.channelCreationError) throw state.channelCreationError
+    if (state.channelCreationError) {
+      throw state.channelCreationError
+    }
     return realtimeChannelMock()
   },
+  from: (table: string) => sbBuilder(table),
   removeChannel: (_channel: unknown) => {
     state.removeChannelCount++
     // Real supabase-js tears the channel down synchronously and re-fires the
@@ -252,46 +266,50 @@ const supabaseMock = {
 }
 
 const logger = {
+  debug: () => {},
+  error: (message: string, meta?: Record<string, unknown>) =>
+    state.logError.push({ message, meta: meta ?? {} }),
   info: (message: string, meta?: Record<string, unknown>) =>
     state.logInfo.push({ message, meta: meta ?? {} }),
   warn: (message: string, meta?: Record<string, unknown>) =>
     state.logWarn.push({ message, meta: meta ?? {} }),
-  error: (message: string, meta?: Record<string, unknown>) =>
-    state.logError.push({ message, meta: meta ?? {} }),
-  debug: () => undefined,
 }
 
 vi.doMock('@dotabod/shared-utils', () => ({
-  logger,
-  supabase: supabaseMock,
-  default: supabaseMock,
-  commandDisable: {
-    disable: async (userId: string, reason: string, metadata?: Record<string, unknown>) => {
-      state.commandDisableCalls.push({ kind: 'disable', userId, reason, metadata })
-    },
-    enable: async (userId: string, opts?: { reason?: string; autoResolved?: boolean }) => {
-      state.commandDisableCalls.push({ kind: 'enable', userId, opts })
-    },
-  },
   botStatus: { isBanned: false },
   checkBotStatus: async () => state.isBanned,
+  commandDisable: {
+    disable: async (userId: string, reason: string, metadata?: Record<string, unknown>) => {
+      state.commandDisableCalls.push({ kind: 'disable', metadata, reason, userId })
+    },
+    enable: async (userId: string, opts?: { reason?: string; autoResolved?: boolean }) => {
+      state.commandDisableCalls.push({ kind: 'enable', opts, userId })
+    },
+  },
+  default: supabaseMock,
   fetchConduitId: async () => state.conduitId,
-  getTwitchHeaders: async () => ({}),
   getTwitchAPI: async () => ({
     moderation: {
       addModerator: async (broadcasterId: string) => {
         state.addModeratorCalls.push(broadcasterId)
-        if (state.addModeratorError) throw state.addModeratorError
+        if (state.addModeratorError) {
+          throw state.addModeratorError
+        }
       },
     },
   }),
+  getTwitchHeaders: async () => ({}),
+  logger,
+  supabase: supabaseMock,
 }))
 
 vi.doMock('../twitch/lib/BotApiSingleton', () => ({
   getBotInstance: () => ({
     streams: {
       getStreamByUserId: async () => {
-        if (state.streamError) throw state.streamError
+        if (state.streamError) {
+          throw state.streamError
+        }
         return state.stream
       },
     },
@@ -299,32 +317,32 @@ vi.doMock('../twitch/lib/BotApiSingleton', () => ({
   }),
 }))
 
-vi.doMock('../twitch/lib/getAccountIds', () => ({
+vi.doMock(import('../twitch/lib/getAccountIds'), () => ({
   getAccountIds: async () => state.accountIds,
   getAllAccountIds: async () => state.accountIds,
 }))
 
 vi.doMock('../subscribeChatMessagesForUser', () => ({
   genericSubscribe: async (conduitId: string, userId: string, type: keyof TwitchEventTypes) => {
-    state.subscribeCalls.push({ conduitId, userId, type })
-    return state.subscribeResult(userId, type)
+    state.subscribeCalls.push({ conduitId, type, userId })
+    return await state.subscribeResult(userId, type)
   },
-  subscribeToAuthGrantOrRevoke: async () => undefined,
+  subscribeToAuthGrantOrRevoke: async () => {},
 }))
 
 // Test-controlled fetch: each call shifts the next queued response.
-export const fetchState: { queue: Array<Record<string, unknown>>; calls: string[] } = {
-  queue: [],
+export const fetchState: { queue: Record<string, unknown>[]; calls: string[] } = {
   calls: [],
+  queue: [],
 }
 globalThis.fetch = (async (url: string) => {
   fetchState.calls.push(String(url))
-  const next = fetchState.queue.shift() ?? { status: 200, json: {} }
+  const next = fetchState.queue.shift() ?? { json: {}, status: 200 }
   return {
-    ok: ((next.status as number) ?? 200) >= 200 && ((next.status as number) ?? 200) < 300,
-    status: (next.status as number) ?? 200,
     headers: new Headers(),
     json: async () => next.json ?? {},
+    ok: ((next.status as number) ?? 200) >= 200 && ((next.status as number) ?? 200) < 300,
+    status: (next.status as number) ?? 200,
     text: async () => '',
   }
 }) as unknown as typeof fetch
@@ -345,10 +363,12 @@ export const { setupAccountWatcher } = await import('../watcher')
 
 export function seedSubscriptions(userId: string, types: readonly (keyof TwitchEventTypes)[]) {
   eventSubMap[userId] = Object.fromEntries(
-    types.map((type) => [type, { id: `${userId}-${type}`, status: 'enabled' }]),
+    types.map((type) => [type, { id: `${userId}-${type}`, status: 'enabled' }])
   ) as (typeof eventSubMap)[string]
 }
 
 export function clearSubscriptions() {
-  for (const key of Object.keys(eventSubMap)) delete eventSubMap[key]
+  for (const key of Object.keys(eventSubMap)) {
+    delete eventSubMap[key]
+  }
 }

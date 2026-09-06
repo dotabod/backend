@@ -14,13 +14,13 @@
     "docker:production": "node dist/index.js",
     "docker:development": "tsx watch src/index.ts",
     "prebuild": "rm -rf dist",
-    "build": "vp pack src/index.ts -f esm -d dist --sourcemap",
-    "test": "vp test",
+    "build": "tsdown --config ../../tsdown.config.ts src/index.ts -f esm -d dist --sourcemap",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@dotabod/shared-utils": "workspace:*",
-    "i18next": "^24.2.0",
+    "i18next": "^26.4.2",
     "i18next-fs-backend": "^2.6.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",

@@ -1,7 +1,8 @@
 import { t } from 'i18next'
 
 import { redisClient } from '../../../db/redisInstance'
-import { type BountyRunePickupEvent, DotaEventTypes } from '../../../types'
+import { DotaEventTypes } from '../../../types'
+import type { BountyRunePickupEvent } from '../../../types'
 import { is8500Plus } from '../../../utils/index'
 import { delayedQueue } from '../../lib/DelayedQueue'
 import { getHeroNameOrColor } from '../../lib/heroes'
@@ -12,22 +13,32 @@ import eventHandler from '../EventHandler'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
   handler: async (dotaClient, event: BountyRunePickupEvent) => {
-    if (!isPlayingMatch(dotaClient.client.gsi)) return
-    if (!dotaClient.client.stream_online) return
+    if (!isPlayingMatch(dotaClient.client.gsi)) {
+      return
+    }
+    if (!dotaClient.client.stream_online) {
+      return
+    }
     // Only announce bounty rune pickups during the initial spawn window (first 2 minutes).
     // Bounty runes also respawn periodically, but we only track the opening contest.
-    if (Number(dotaClient.client.gsi?.map?.clock_time) > 120) return
+    if (Number(dotaClient.client.gsi?.map?.clock_time) > 120) {
+      return
+    }
 
     const playingTeam =
       (await redisClient.client.get(`${dotaClient.client.token}:playingTeam`)) ??
       dotaClient.client.gsi?.player?.team_name
 
-    if (event.team !== playingTeam) return
+    if (event.team !== playingTeam) {
+      return
+    }
 
-    if (typeof event.player_id !== 'number') return
+    if (typeof event.player_id !== 'number') {
+      return
+    }
 
     const roster = await new MatchDataService(dotaClient.client).resolveRoster()
-    const players = roster.players
+    const { players } = roster
 
     const foundIndex = players.findIndex((p) => p.slot === event.player_id)
     const playerIdIndex = foundIndex === -1 ? event.player_id : foundIndex
@@ -37,7 +48,9 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
     // No heroId (sub-8500 rosterSize-1 fallback for a non-streamer slot) → skip.
     // 8500+ unmatched → raw event.player_id is unreliable (reshuffle), skip rather
     // than guess a wrong hero in chat. See event.aegis_picked_up for the pattern.
-    if (typeof heroId !== 'number' || (high && foundIndex === -1)) return
+    if (typeof heroId !== 'number' || (high && foundIndex === -1)) {
+      return
+    }
 
     if (dotaClient.bountyTaskId) {
       delayedQueue.removeTask(dotaClient.bountyTaskId)
@@ -57,7 +70,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
         }
         return acc
       },
-      {},
+      {}
     )
 
     const bountyHeroNamesString = Object.keys(bountyHeroNames)
@@ -75,18 +88,18 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
         return `${acc}, ${heroName}`
       })
 
-    dotaClient.bountyTaskId = delayedQueue.addTask(15000, () => {
+    dotaClient.bountyTaskId = delayedQueue.addTask(15_000, () => {
       say(
         dotaClient.client,
         t('bounties.pickup', {
+          bountyValue: event.bounty_value * dotaClient.bountyHeroNames.length,
           emote: 'EZ Clap',
           emote2: 'SeemsGood',
-          lng: dotaClient.client.locale,
-          bountyValue: event.bounty_value * dotaClient.bountyHeroNames.length,
-          totalBounties: dotaClient.bountyHeroNames.length,
           heroNames: bountyHeroNamesString,
+          lng: dotaClient.client.locale,
+          totalBounties: dotaClient.bountyHeroNames.length,
         }),
-        { chattersKey: 'bounties' },
+        { chattersKey: 'bounties' }
       )
       dotaClient.bountyHeroNames = []
     })

@@ -3,13 +3,13 @@ import { Server } from 'socket.io'
 
 // Socket.io server instance with improved connection handling
 export const io = new Server(5005, {
-  pingTimeout: 60000, // Increase ping timeout
-  pingInterval: 25000, // Decrease ping interval for faster detection of disconnections
-  connectTimeout: 45000, // Increase connection timeout
+  connectTimeout: 45_000, // Increase connection timeout
   cors: {
-    origin: '*', // Allow all origins
     methods: ['GET', 'POST'],
+    origin: '*', // Allow all origins,
   },
+  pingInterval: 25_000, // Decrease ping interval for faster detection of disconnections
+  pingTimeout: 60_000, // Increase ping timeout
   transports: ['websocket', 'polling'], // Support both WebSocket and polling
 })
 
@@ -47,7 +47,7 @@ export function emitChatMessage(
       userId: string
     }
     messageId: string
-  },
+  }
 ): void {
   io.to('twitch-chat-messages').emit('msg', broadcasterLogin, chatterLogin, text, metadata)
 }
@@ -71,8 +71,8 @@ export function setupSocketServer(): void {
       void socket.join('twitch-chat-messages')
       // Track this specific socket
       addSocket(socket.id)
-    } catch (e) {
-      logger.error('Could not join twitch-chat-messages socket', e)
+    } catch (error) {
+      logger.error('Could not join twitch-chat-messages socket', error)
       return
     }
 

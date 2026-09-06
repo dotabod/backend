@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 // Route through the shared harness so `ws` and `@dotabod/shared-utils` are
 // mocked once, process-wide, without competing factories.
 import { EventsubSocket, FakeWebSocket, isEventsubConnected } from './sharedMocks.ts'
@@ -19,13 +20,17 @@ afterEach(() => {
 })
 
 describe('EventsubSocket lifecycle', () => {
+  it('throws when no fake websocket has been created', () => {
+    expect(() => FakeWebSocket.latest()).toThrow('No fake WebSocket instance exists')
+  })
+
   it('connects on construction and reports connected after session_welcome', () => {
     const sock = new EventsubSocket()
     expect(FakeWebSocket.instances).toHaveLength(1)
 
     FakeWebSocket.latest().open()
     FakeWebSocket.latest().message(welcomeMsg())
-    expect(isEventsubConnected()).toBe(true)
+    expect(isEventsubConnected()).toBeTruthy()
 
     sock.dispose()
   })
@@ -34,11 +39,11 @@ describe('EventsubSocket lifecycle', () => {
     const sock = new EventsubSocket()
     FakeWebSocket.latest().open()
     FakeWebSocket.latest().message(welcomeMsg())
-    expect(isEventsubConnected()).toBe(true)
+    expect(isEventsubConnected()).toBeTruthy()
 
     const ws = FakeWebSocket.latest()
     sock.dispose()
-    expect(sock.isDisposed).toBe(true)
+    expect(sock.isDisposed).toBeTruthy()
 
     // The leak that caused the storm: a retired socket that still reacts to
     // closes (reconnecting) and writes the shared flag. After dispose, neither
@@ -46,7 +51,7 @@ describe('EventsubSocket lifecycle', () => {
     ws.serverClose(1006)
     await vi.advanceTimersByTimeAsync(60_000)
 
-    expect(isEventsubConnected()).toBe(true) // unchanged by the disposed socket
+    expect(isEventsubConnected()).toBeTruthy() // unchanged by the disposed socket
     expect(FakeWebSocket.instances).toHaveLength(1) // no reconnect
   })
 
@@ -64,7 +69,7 @@ describe('EventsubSocket lifecycle', () => {
     // process; dispose() must leave a sink so advancing the timer is harmless.
     await vi.advanceTimersByTimeAsync(0)
 
-    expect(sock.isDisposed).toBe(true)
+    expect(sock.isDisposed).toBeTruthy()
     expect(FakeWebSocket.instances).toHaveLength(1) // no reconnect
   })
 
@@ -126,7 +131,7 @@ describe('EventsubSocket lifecycle', () => {
     const sock = new EventsubSocket()
     FakeWebSocket.latest().open()
     FakeWebSocket.latest().message(welcomeMsg('sess-1', 10)) // silence window = 11s
-    expect(isEventsubConnected()).toBe(true)
+    expect(isEventsubConnected()).toBeTruthy()
 
     let silenced = 0
     sock.on('session_silenced', () => {
@@ -136,7 +141,7 @@ describe('EventsubSocket lifecycle', () => {
     const ws = FakeWebSocket.latest()
     await vi.advanceTimersByTimeAsync(11_000)
     expect(silenced).toBe(1)
-    expect(isEventsubConnected()).toBe(false)
+    expect(isEventsubConnected()).toBeFalsy()
 
     // The silenced socket disabled its own reconnect (the conduitSetup backstop
     // owns recovery), so a subsequent close must NOT spin up a competing socket.
@@ -157,7 +162,7 @@ describe('EventsubSocket lifecycle', () => {
     FakeWebSocket.latest().message(keepaliveMsg())
     // 20s total elapsed, but the timer was rearmed at 10s, so no silence yet.
     await vi.advanceTimersByTimeAsync(10_000)
-    expect(isEventsubConnected()).toBe(true)
+    expect(isEventsubConnected()).toBeTruthy()
 
     sock.dispose()
   })

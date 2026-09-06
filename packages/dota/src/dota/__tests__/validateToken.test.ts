@@ -1,18 +1,18 @@
 import type { NextFunction, Request, Response } from 'express'
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const getDBUserMock = vi.fn()
 const recordGsiActivityMock = vi.fn()
 
-vi.doMock('@dotabod/shared-utils', () => ({
+vi.doMock(import('@dotabod/shared-utils'), () => ({
   logger: { info: vi.fn() },
 }))
 
-vi.doMock('../../db/getDBUser', () => ({
+vi.doMock(import('../../db/getDBUser'), () => ({
   default: getDBUserMock,
 }))
 
-vi.doMock('../setupSignals', () => ({
+vi.doMock(import('../setupSignals'), () => ({
   recordGsiActivity: recordGsiActivityMock,
 }))
 
@@ -35,26 +35,26 @@ function makeResponse(): {
   const statusCalls: number[] = []
   const jsonCalls: unknown[] = []
   const response = {
-    status(code: number) {
-      statusCalls.push(code)
-      return response
-    },
     json(value: unknown) {
       jsonCalls.push(value)
       return response
     },
+    status(code: number) {
+      statusCalls.push(code)
+      return response
+    },
   } as Response
-  return { response, statusCalls, jsonCalls }
+  return { jsonCalls, response, statusCalls }
 }
 
 function makeClient(token = 'token-1', streamOnline = true) {
   return {
-    token,
-    stream_online: streamOnline,
     gsi: undefined,
     gsiUpdatedAt: undefined as number | undefined,
     pendingGsi: undefined,
     pendingGsiUpdatedAt: undefined as number | undefined,
+    stream_online: streamOnline,
+    token,
   }
 }
 
@@ -65,7 +65,7 @@ function deferred<T>() {
     resolve = res
     reject = rej
   })
-  return { promise, resolve, reject }
+  return { promise, reject, resolve }
 }
 
 beforeEach(() => {
@@ -94,8 +94,8 @@ describe('validateToken cleanup', () => {
     expect(client.pendingGsiUpdatedAt).toBeUndefined()
     expect(recordGsiActivityMock).toHaveBeenCalledWith('token-1')
     expect(next).toHaveBeenCalledOnce()
-    expect(jsonCalls).toEqual([])
-    expect(pendingCheckAuth.has('token-1')).toBe(false)
+    expect(jsonCalls).toStrictEqual([])
+    expect(pendingCheckAuth.has('token-1')).toBeFalsy()
     vi.useRealTimers()
   })
 
@@ -110,14 +110,14 @@ describe('validateToken cleanup', () => {
 
     await validateToken(request, response, next as NextFunction)
 
-    expect(statusCalls).toEqual([200])
-    expect(jsonCalls).toEqual([{ error: 'Stream offline' }])
+    expect(statusCalls).toStrictEqual([200])
+    expect(jsonCalls).toStrictEqual([{ error: 'Stream offline' }])
     expect(client.pendingGsi).toBe(request.body)
     expect(client.pendingGsiUpdatedAt).toBe(Date.now())
     expect(client.gsi).toBeUndefined()
     expect(client.gsiUpdatedAt).toBeUndefined()
     expect(next).not.toHaveBeenCalled()
-    expect(pendingCheckAuth.has('token-1')).toBe(false)
+    expect(pendingCheckAuth.has('token-1')).toBeFalsy()
     vi.useRealTimers()
   })
 
@@ -128,10 +128,10 @@ describe('validateToken cleanup', () => {
 
     await validateToken(request, response, vi.fn() as NextFunction)
 
-    expect(statusCalls).toEqual([200])
-    expect(jsonCalls).toEqual([{ error: 'Invalid token, skipping auth check' }])
-    expect(invalidTokens.has('token-1')).toBe(true)
-    expect(pendingCheckAuth.has('token-1')).toBe(false)
+    expect(statusCalls).toStrictEqual([200])
+    expect(jsonCalls).toStrictEqual([{ error: 'Invalid token, skipping auth check' }])
+    expect(invalidTokens.has('token-1')).toBeTruthy()
+    expect(pendingCheckAuth.has('token-1')).toBeFalsy()
   })
 
   it('caches a rejected lookup and releases pending auth', async () => {
@@ -141,10 +141,10 @@ describe('validateToken cleanup', () => {
 
     await validateToken(request, response, vi.fn() as NextFunction)
 
-    expect(statusCalls).toEqual([200])
-    expect(jsonCalls).toEqual([{ error: 'Invalid token, skipping auth check' }])
-    expect(invalidTokens.has('token-1')).toBe(true)
-    expect(pendingCheckAuth.has('token-1')).toBe(false)
+    expect(statusCalls).toStrictEqual([200])
+    expect(jsonCalls).toStrictEqual([{ error: 'Invalid token, skipping auth check' }])
+    expect(invalidTokens.has('token-1')).toBeTruthy()
+    expect(pendingCheckAuth.has('token-1')).toBeFalsy()
   })
 
   it('rejects a concurrent request while retaining the lock until the first lookup finishes', async () => {
@@ -157,24 +157,24 @@ describe('validateToken cleanup', () => {
     const firstValidation = validateToken(
       firstRequest,
       firstResponse.response,
-      firstNext as NextFunction,
+      firstNext as NextFunction
     )
-    expect(pendingCheckAuth.has('token-1')).toBe(true)
+    expect(pendingCheckAuth.has('token-1')).toBeTruthy()
 
     const secondResponse = makeResponse()
     await validateToken(makeRequest(), secondResponse.response, vi.fn() as NextFunction)
 
     expect(getDBUserMock).toHaveBeenCalledOnce()
-    expect(secondResponse.statusCalls).toEqual([200])
-    expect(secondResponse.jsonCalls).toEqual([
+    expect(secondResponse.statusCalls).toStrictEqual([200])
+    expect(secondResponse.jsonCalls).toStrictEqual([
       { error: 'Still validating token, skipping requests until auth' },
     ])
-    expect(pendingCheckAuth.has('token-1')).toBe(true)
+    expect(pendingCheckAuth.has('token-1')).toBeTruthy()
 
     lookup.resolve({ result: makeClient() })
     await firstValidation
 
     expect(firstNext).toHaveBeenCalledOnce()
-    expect(pendingCheckAuth.has('token-1')).toBe(false)
+    expect(pendingCheckAuth.has('token-1')).toBeFalsy()
   })
 })
