@@ -543,7 +543,7 @@ class SetupSupabase {
           }
 
           // replace the new setting with the one we have saved in cache
-          logger.info('[WATCHER SETTING] Updating setting for', {
+          logger.debug('[WATCHER SETTING] Updating setting for', {
             name: client.name,
             newObj,
           })

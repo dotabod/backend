@@ -150,6 +150,20 @@ describe(sendTwitchChatMessage, () => {
     expect(state.fetchCalls).toHaveLength(2)
   })
 
+  it('treats a null reply parent message id as an unthreaded message', async () => {
+    const res = await sendTwitchChatMessage({
+      broadcaster_id: 'b-null-reply',
+      message: 'null reply case',
+      reply_parent_message_id: null,
+      sender_id: 's1',
+    })
+
+    expect(res.data[0].is_sent).toBeTruthy()
+    expect(state.fetchCalls[0].options?.body).toBe(
+      '{"broadcaster_id":"b-null-reply","message":"null reply case","sender_id":"s1"}'
+    )
+  })
+
   it('sends identical replies to different chat messages', async () => {
     const base = { broadcaster_id: 'b-replies', message: 'Game was not found', sender_id: 's1' }
 

@@ -115,13 +115,28 @@ interface SendChatMessageParams {
   /** Message text to send (max 500 chars, can include emote names without colons) */
   message: string
   /** Optional ID of message being replied to */
-  reply_parent_message_id?: string
+  reply_parent_message_id?: string | null
+}
+
+const normalizeSendChatRequest = function normalizeSendChatRequest(
+  params: SendChatMessageParams,
+  message: string
+) {
+  const { reply_parent_message_id: rawReplyParentMessageId, ...requiredParams } = params
+  const replyParentMessageId = rawReplyParentMessageId ?? undefined
+  const requestBody =
+    replyParentMessageId === undefined || replyParentMessageId.length === 0
+      ? { ...requiredParams, message }
+      : { ...requiredParams, message, reply_parent_message_id: replyParentMessageId }
+
+  return { replyParentMessageId, requestBody }
 }
 
 export const sendTwitchChatMessage = async function sendTwitchChatMessage(
   params: SendChatMessageParams
 ): Promise<TwitchChatMessageResponse> {
   const message = fitTwitchChatMessage(params.message)
+  const { replyParentMessageId, requestBody } = normalizeSendChatRequest(params, message)
 
   // Check if this broadcaster is currently being disabled to prevent race condition
   if (isBroadcasterBeingDisabled(params.broadcaster_id)) {
@@ -149,8 +164,8 @@ export const sendTwitchChatMessage = async function sendTwitchChatMessage(
   // that two sends came from the same command event; unthreaded messages must not be collapsed
   // merely because their text matches.
   const dedupeKey =
-    params.reply_parent_message_id !== undefined && params.reply_parent_message_id.length > 0
-      ? `${params.broadcaster_id}:${params.reply_parent_message_id}:${params.message}`
+    replyParentMessageId !== undefined && replyParentMessageId.length > 0
+      ? `${params.broadcaster_id}:${replyParentMessageId}:${params.message}`
       : undefined
   const now = Date.now()
   const lastSent = dedupeKey === undefined ? undefined : messageDedupeCache.get(dedupeKey)
@@ -186,7 +201,7 @@ export const sendTwitchChatMessage = async function sendTwitchChatMessage(
   // Or a user with "user:bot" scope
   const headers = await getTwitchHeaders(params.sender_id)
   const options = {
-    body: JSON.stringify({ ...params, message }),
+    body: JSON.stringify(requestBody),
     headers: { ...headers, 'Content-Type': 'application/json' },
     method: 'POST',
   }
@@ -241,7 +256,7 @@ export const sendTwitchChatMessage = async function sendTwitchChatMessage(
 
     const retryResponse = await fetch(url, {
       ...options,
-      body: JSON.stringify({ ...params, message: distinctMessage }),
+      body: JSON.stringify({ ...requestBody, message: distinctMessage }),
     })
     if (!retryResponse.ok) {
       return {

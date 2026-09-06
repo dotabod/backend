@@ -236,6 +236,18 @@ describe('dota watcher: DELETE:users', () => {
 })
 
 describe('dota watcher: settings', () => {
+  it('keeps high-frequency activity updates out of info logs', async () => {
+    seedClient({ userId: 'u-heartbeat' })
+
+    await fire('*', 'settings', {
+      new: { key: 'gsi_last_seen_at', userId: 'u-heartbeat', value: true },
+    })
+
+    expect(
+      watcherState.loggerInfoCalls.filter(({ message }) => message.startsWith('[WATCHER SETTING]'))
+    ).toHaveLength(0)
+  })
+
   it('recomputes the overlay when the WL stats window changes', async () => {
     const { client, handler } = seedClient({ userId: 'u-wl' })
 
