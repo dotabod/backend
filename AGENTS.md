@@ -1,14 +1,23 @@
-# CLAUDE.md
+# Dotabod backend agent guidance
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This repository contains the Dotabod backend monorepo, including shared packages and the Dota, Steam, Twitch chat, and Twitch events services.
 
-## Build & Project Commands
+## Commands
 
-- Install: `pnpm install`
-- Build: `pnpm run build:all` or per package: `pnpm --filter @dotabod/{package} run build`
-- Lint + format + typecheck + dead-code analysis: `pnpm run quality` (auto-fix: `pnpm run check:fix`)
-- Test: `pnpm test` for the whole workspace, or a specific path: `pnpm exec vitest run packages/path/to/file.test.ts`
-- Runtime: services are Node 24; dev with `tsx watch src/index.ts`, prod with `node dist/index.js`
+- Lightweight formatting: `pnpm exec oxfmt --config oxfmt.config.ts <edited files>`
+- GitHub CI workflow: `.github/workflows/ci.yml`
+- Manually dispatch CI for a pushed branch: `gh workflow run ci.yml --ref <branch>`
+- Watch the dispatched run: `gh run watch --exit-status`
+
+## Production-host resource policy
+
+This checkout shares a host with production services. Builds and repository-wide checks must run only on GitHub-hosted runners.
+
+- Never run `pnpm install`, `pnpm run build:all`, package builds, `pnpm test`, `pnpm run quality`, `pnpm run check`, full-project lint/typecheck, coverage, generators, development servers, Docker builds, or service runners on this host.
+- Do not substitute a similar local build, test, runtime, coverage, or static-analysis command. If GitHub Actions is unavailable, report verification as blocked.
+- Local work is limited to inspection, editing, targeted formatting, `git diff --check`, and other negligible-cost operations.
+- Commit with `--no-verify` if an older checkout still has resource-intensive hooks.
+- For pre-merge verification, push a feature branch, dispatch `ci.yml` for that branch, and wait for a successful conclusion. Do not merge or push the change to `master` until remote CI passes.
 
 ## Code Style
 
@@ -69,4 +78,4 @@ Debugging tools live in `scripts/clip-debug/` (`query_match.sh` for a match's fu
 
 ## Quality tooling
 
-Use standalone tools: Oxfmt, Oxlint with Ultracite anti-slop presets, TypeScript 7, Knip, Vitest 5, and tsdown. Run `pnpm run quality` and `pnpm test` before handing off a change. The quality gate intentionally treats warnings as errors; keep a rule enabled and fix the source instead of adding broad ignores or suppressions.
+Use standalone tools: Oxfmt, Oxlint with Ultracite anti-slop presets, TypeScript 7, Knip, Vitest 5, and tsdown. Put focused regression coverage in the change, but execute it through GitHub Actions rather than on this host. Before PR readiness, require the GitHub `CI` workflow to pass its quality, test, and full-build steps. The quality gate intentionally treats warnings as errors; keep a rule enabled and fix the source instead of adding broad ignores or suppressions.

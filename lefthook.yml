@@ -1,6 +1,10 @@
 pre-commit:
+  piped: true
   commands:
-    check:
-      run: pnpm run quality
-    test:
-      run: pnpm exec vitest run
+    fmt:
+      glob: '*.{js,jsx,ts,tsx,mjs,cjs,json,md,yml,yaml,css}'
+      run: |
+        pnpm exec oxfmt --config oxfmt.config.ts {staged_files} \
+          && git add -f -- {staged_files}
+    # Full lint, typecheck, tests, and builds are intentionally GitHub-only.
+    # This checkout may share its host with production services.

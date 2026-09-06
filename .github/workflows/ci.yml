@@ -5,6 +5,7 @@ on:
     branches:
       - master
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -18,6 +19,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -53,3 +55,5 @@ jobs:
         run: pnpm run quality
       - name: Run tests
         run: pnpm exec vitest run
+      - name: Build all packages
+        run: pnpm run build:all
