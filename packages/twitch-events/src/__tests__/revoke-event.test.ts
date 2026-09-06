@@ -1,82 +1,91 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
   clearSubscriptions,
   eventSubMap,
+  executeRevoke,
   fetchState,
   resetState,
-  revokeEvent,
   seedSubscriptions,
   state,
   stopUserSubscriptions,
 } from './shared-mocks.ts'
 
-const realSetTimeout = globalThis.setTimeout
-
-beforeEach(() => {
-  resetState()
-  clearSubscriptions()
-  fetchState.queue = []
-  fetchState.calls = []
-})
-afterEach(() => {
-  globalThis.setTimeout = realSetTimeout
-})
-
 describe(stopUserSubscriptions, () => {
+  beforeEach(() => {
+    resetState()
+    clearSubscriptions()
+    fetchState.queue = []
+    fetchState.calls = []
+  })
+
   it('deletes each subscription via the API and clears the map entry', async () => {
     seedSubscriptions('111', ['stream.online', 'stream.offline'])
+
     await stopUserSubscriptions('111')
-    expect(fetchState.calls.filter((u) => u.includes('eventsub/subscriptions'))).toHaveLength(2)
-    expect(eventSubMap['111']).toBeUndefined()
+
+    expect({
+      deleteCalls: fetchState.calls.filter((url) => url.includes('eventsub/subscriptions')).length,
+      subscriptionsRemain: eventSubMap.has('111'),
+    }).toStrictEqual({ deleteCalls: 2, subscriptionsRemain: false })
   })
 
   it('is a no-op when the user has no subscriptions', async () => {
     await stopUserSubscriptions('999')
-    expect(fetchState.calls).toHaveLength(0)
+
+    expect(fetchState.calls).toStrictEqual([])
   })
 })
 
-describe(revokeEvent, () => {
-  // The handler debounces with setTimeout(..., 3000); fire it immediately.
+describe(executeRevoke, () => {
   beforeEach(() => {
-    globalThis.setTimeout = ((cb: () => void) => {
-      cb()
-      return 0 as unknown as ReturnType<typeof setTimeout>
-    }) as typeof setTimeout
+    resetState()
+    clearSubscriptions()
+    fetchState.queue = []
+    fetchState.calls = []
   })
 
-  it('flags the account for refresh and disables the channel after debounce', async () => {
+  it('flags the account for refresh and disables the channel', async () => {
     state.dbUser = { userId: 'user-1' }
     state.dbSettings = []
     seedSubscriptions('222', ['stream.online'])
 
-    await revokeEvent({ providerAccountId: '222' })
-    await new Promise((r) => realSetTimeout(r, 5))
+    await executeRevoke('222')
 
-    expect(
-      state.updates.some((u) => u.table === 'accounts' && u.values.requires_refresh === true)
-    ).toBeTruthy()
-    // Routes through commandDisable.disable — single audited write,
-    // no separate settings upsert (avoids watcher double-fire).
-    expect(state.commandDisableCalls).toHaveLength(1)
-    expect(state.commandDisableCalls[0]).toMatchObject({
-      kind: 'disable',
-      reason: 'TOKEN_REVOKED',
+    expect({
+      commandDisableCalls: state.commandDisableCalls,
+      refreshUpdates: state.updates.filter(
+        (update) => update.table === 'accounts' && update.values.requires_refresh === true
+      ).length,
+      settingsUpserts: state.upserts.filter(
+        (upsert) => upsert.table === 'settings' && upsert.values.key === 'commandDisable'
+      ).length,
+    }).toStrictEqual({
+      commandDisableCalls: [
+        {
+          kind: 'disable',
+          metadata: {
+            additional_info: 'User revoked app permissions on Twitch',
+            requires_reauth: true,
+          },
+          reason: 'TOKEN_REVOKED',
+          userId: 'user-1',
+        },
+      ],
+      refreshUpdates: 1,
+      settingsUpserts: 0,
     })
-    expect(
-      state.upserts.some((u) => u.table === 'settings' && u.values.key === 'commandDisable')
-    ).toBeFalsy()
   })
 
   it('does not re-disable a channel that is already disabled', async () => {
     state.dbUser = { userId: 'user-1' }
     state.dbSettings = [{ key: 'commandDisable', value: true }]
 
-    await revokeEvent({ providerAccountId: '333' })
-    await new Promise((r) => realSetTimeout(r, 5))
+    await executeRevoke('333')
 
-    expect(state.upserts).toHaveLength(0)
-    expect(state.commandDisableCalls).toHaveLength(0)
+    expect({
+      commandDisableCalls: state.commandDisableCalls,
+      settingsUpserts: state.upserts,
+    }).toStrictEqual({ commandDisableCalls: [], settingsUpserts: [] })
   })
 })

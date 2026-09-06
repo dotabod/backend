@@ -24,23 +24,23 @@ export const checkPassiveTp = async function checkPassiveTp(client: SocketClient
     return
   }
 
-  const passiveTpData = (await redisClient.getJson<PassiveTpData>(`${client.token}:passiveTp`)) || {
+  const passiveTpData = (await redisClient.getJson<PassiveTpData>(`${client.token}:passiveTp`)) ?? {
     firstNoticedPassive: 0,
     told: 0,
   }
 
   const tp = client.gsi?.items?.teleport0
-  const hasTp = tp && tp.name !== 'empty'
+  const hasTp = tp !== undefined && tp.name !== 'empty'
   const deadge = client.gsi?.hero?.alive === false
   if (hasTp) {
     // they got a tp within 30s so no scolding
-    if (passiveTpData.firstNoticedPassive && !passiveTpData.told) {
+    if (passiveTpData.firstNoticedPassive !== 0 && passiveTpData.told === 0) {
       await resetPassiveTime(client.token)
       return
     }
 
     // they got a tp after 30s so tell how long its been
-    if (passiveTpData.told) {
+    if (passiveTpData.told !== 0) {
       const seconds = Math.round(
         (Date.now() - passiveTpData.told + PASSIVE_THRESHOLD_SECONDS) / 1000
       )
@@ -77,7 +77,7 @@ export const checkPassiveTp = async function checkPassiveTp(client: SocketClient
   }
 
   const currentTime = Date.now()
-  if (!hasTp && !passiveTpData.told && !passiveTpData.firstNoticedPassive) {
+  if (!hasTp && passiveTpData.told === 0 && passiveTpData.firstNoticedPassive === 0) {
     // Set the time when passive midas was first noticed
     await redisClient.setJson(`${client.token}:passiveTp`, {
       ...passiveTpData,
@@ -88,7 +88,7 @@ export const checkPassiveTp = async function checkPassiveTp(client: SocketClient
   if (
     !hasTp &&
     currentTime - passiveTpData.firstNoticedPassive > PASSIVE_THRESHOLD_SECONDS &&
-    !passiveTpData.told
+    passiveTpData.told === 0
   ) {
     await redisClient.setJson(`${client.token}:passiveTp`, {
       ...passiveTpData,

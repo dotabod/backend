@@ -16,13 +16,13 @@ eventHandler.registerEvent('map:paused', {
       return
     }
 
-    const tellChatPause = getValueOrDefault(
+    const chatterSettings = getValueOrDefault(
       DBSettings.chatters,
       dotaClient.client.settings,
       dotaClient.client.subscription,
       'pause'
     )
-    if (!tellChatPause) {
+    if (!chatterSettings.pause.enabled) {
       return
     }
 

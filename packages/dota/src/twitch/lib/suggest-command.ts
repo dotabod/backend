@@ -1,11 +1,10 @@
 import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../settings'
-import commandHandler from './command-handler'
-import type { MessageType } from './command-handler'
-import { suggestionContext } from './suggestion-context'
+import type { SettingKeys } from '../../settings'
+import type { SocketClient } from '../../types'
 
-export { suggestionContext }
+export { suggestionContext } from './suggestion-context'
 
 // The declarative API: group related commands together. Each command's
 // suggestions are the other members of any cluster it appears in.
@@ -46,23 +45,43 @@ const REPEAT_WINDOW_MS = 30 * 60 * 1000
 const invocationCount = new Map<string, number>()
 const lastSuggested = new Map<string, { cmd: string; ts: number }>()
 
+interface SuggestionCommandOptions {
+  dbkey?: SettingKeys
+}
+
+interface SuggestionMessage {
+  channel: {
+    client: Pick<SocketClient, 'locale' | 'subscription'>
+    id: string
+    settings: SocketClient['settings']
+  }
+}
+
+const isCandidateEnabled = function isCandidateEnabled(
+  candidate: string,
+  commands: ReadonlyMap<string, SuggestionCommandOptions>,
+  settings: SuggestionMessage['channel']['settings'],
+  subscription: SuggestionMessage['channel']['client']['subscription']
+): boolean {
+  const dbkey = commands.get(candidate)?.dbkey
+  return dbkey === undefined || Boolean(getValueOrDefault(dbkey, settings, subscription))
+}
+
 const pickCandidate = function pickCandidate(
   channelId: string,
   candidates: readonly string[],
-  settings: MessageType['channel']['settings'],
-  subscription: MessageType['channel']['client']['subscription']
+  commands: ReadonlyMap<string, SuggestionCommandOptions>,
+  settings: SuggestionMessage['channel']['settings'],
+  subscription: SuggestionMessage['channel']['client']['subscription']
 ): string | null {
   const recent = lastSuggested.get(channelId)
   const now = Date.now()
   for (const candidate of candidates) {
-    if (recent && recent.cmd === candidate && now - recent.ts < REPEAT_WINDOW_MS) {
-      continue
+    const wasRecentlySuggested =
+      recent !== undefined && recent.cmd === candidate && now - recent.ts < REPEAT_WINDOW_MS
+    if (!wasRecentlySuggested && isCandidateEnabled(candidate, commands, settings, subscription)) {
+      return candidate
     }
-    const dbkey = commandHandler.commands.get(candidate)?.dbkey
-    if (dbkey && !getValueOrDefault(dbkey, settings, subscription)) {
-      continue
-    }
-    return candidate
   }
   return null
 }
@@ -73,10 +92,11 @@ const pickCandidate = function pickCandidate(
 // so chatClient.say can consume it.
 export const prepareSuggestionSuffix = function prepareSuggestionSuffix(
   commandName: string,
-  message: MessageType
+  message: SuggestionMessage,
+  commands: ReadonlyMap<string, SuggestionCommandOptions>
 ): string | null {
   const candidates = relatedIndex.get(commandName)
-  if (!candidates?.length) {
+  if (candidates === undefined || candidates.length === 0) {
     return null
   }
 
@@ -99,10 +119,11 @@ export const prepareSuggestionSuffix = function prepareSuggestionSuffix(
   const candidate = pickCandidate(
     channel.id,
     candidates,
+    commands,
     channel.settings,
     channel.client.subscription
   )
-  if (!candidate) {
+  if (candidate === null || candidate.length === 0) {
     return null
   }
 

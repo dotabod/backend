@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { flushAsync } from '../../../../__tests__/shared-mocks.ts'
+import { createPacketStub, flushAsync } from '../../../../__tests__/shared-mocks.ts'
 import {
   events,
   gsiHandlers,
@@ -48,13 +48,13 @@ describe('player:deaths', () => {
 
   it('chats the first-blood-death message when the player died for first blood', async () => {
     const handler = makeGsiHandler()
-    handler.client.gsi.map = {
+    Object.assign(handler.client.gsi.map, {
       clock_time: 600,
       dire_score: 1,
       game_time: 600,
       matchid: '7777777777',
       radiant_score: 0,
-    } as any
+    })
     handler.client.gsi.player.team_name = 'radiant'
     registerHandler(handler)
 
@@ -69,16 +69,16 @@ describe('player:deaths', () => {
 
   it('chats the passive-death message when a castable lifesaving item was held', async () => {
     const handler = makeGsiHandler()
-    handler.client.gsi.map = {
+    Object.assign(handler.client.gsi.map, {
       clock_time: 600,
       dire_score: 3,
       game_time: 600,
       matchid: '7777777777',
       radiant_score: 3,
-    } as any
-    handler.client.gsi.items = inventory([
-      { can_cast: true, cooldown: 0, name: 'item_faerie_fire' },
-    ]) as any
+    })
+    handler.client.gsi.items = createPacketStub({
+      items: inventory([{ can_cast: true, cooldown: 0, name: 'item_faerie_fire' }]),
+    }).items
     registerHandler(handler)
 
     events.emit('player:deaths', 1, handler.getToken())

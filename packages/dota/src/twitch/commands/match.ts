@@ -7,13 +7,13 @@ import type { MessageType } from '../lib/command-handler'
 
 commandHandler.registerCommand('match', {
   aliases: ['matchid'],
-  handler: (message: MessageType, _args: string[]) => {
+  handler: (message: MessageType) => {
     const {
       channel: { name: channel, client },
     } = message
     const matchId = getCurrentRosterMatchId(client)
 
-    if (!matchId) {
+    if (matchId === undefined || matchId.length === 0) {
       chatClient.say(
         channel,
         t(isCurrentCustomGame(client) ? 'customGameNoMatchId' : 'currentMatchIdNotFound', {

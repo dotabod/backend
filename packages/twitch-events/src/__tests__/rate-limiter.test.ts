@@ -2,13 +2,13 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { checkAndFixUserSubscriptions, fetchState, resetState } from './shared-mocks.ts'
 
-beforeEach(() => {
-  resetState()
-  fetchState.queue = []
-  fetchState.calls = []
-})
-
 describe(checkAndFixUserSubscriptions, () => {
+  beforeEach(() => {
+    resetState()
+    fetchState.queue = []
+    fetchState.calls = []
+  })
+
   it('fetches the broadcaster subscriptions on the happy path', async () => {
     fetchState.queue = [{ json: { data: [{ id: 's1' }], total: 1 }, status: 200 }]
     await checkAndFixUserSubscriptions('111')

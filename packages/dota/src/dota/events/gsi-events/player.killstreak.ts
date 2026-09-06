@@ -26,7 +26,7 @@ eventHandler.registerEvent('player:kill_streak', {
     const previousStreak = Number(dotaClient.client.gsi?.previously?.player?.kill_streak)
     const lostStreak = previousStreak >= 3 && !streak
     if (lostStreak) {
-      if (dotaClient.killstreakTaskId) {
+      if (dotaClient.killstreakTaskId !== undefined && dotaClient.killstreakTaskId.length > 0) {
         delayedQueue.removeTask(dotaClient.killstreakTaskId)
         dotaClient.killstreakTaskId = undefined
       }
@@ -48,7 +48,7 @@ eventHandler.registerEvent('player:kill_streak', {
       return
     }
 
-    if (dotaClient.killstreakTaskId) {
+    if (dotaClient.killstreakTaskId !== undefined && dotaClient.killstreakTaskId.length > 0) {
       delayedQueue.removeTask(dotaClient.killstreakTaskId)
     }
     dotaClient.killstreakTaskId = delayedQueue.addTask(15_000, () => {

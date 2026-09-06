@@ -1,7 +1,6 @@
 import { t } from 'i18next'
 
 import getHero from '../../dota/lib/get-hero'
-import type { HeroNames } from '../../dota/lib/get-hero'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
 import commandHandler from '../lib/command-handler'
@@ -34,7 +33,7 @@ commandHandler.registerCommand('recent', {
 
     const matchList = matches
       .map((m) => {
-        const hero = getHero(m.hero_name as HeroNames)
+        const hero = getHero(m.hero_name)
         const heroName = hero?.localized_name ?? m.hero_name ?? 'Unknown'
         const result = m.won ? 'W' : 'L'
         return `${m.matchId} ${result} (${heroName})`

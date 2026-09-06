@@ -65,7 +65,7 @@ const isRefreshTokenExpired = function isRefreshTokenExpired(token: string): boo
     const claims = JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8')) as {
       exp?: number
     }
-    if (!claims.exp) {
+    if (claims.exp === undefined || claims.exp === 0) {
       return false
     }
     // Treat tokens within 1h of expiry as expired to avoid mid-session lapses.
@@ -88,11 +88,12 @@ const fetchDataFromMongo = async (match_id: string) => {
 }
 // Constructs the API URL
 const getApiUrl = (steam_server_id: string) => {
-  if (!process.env.STEAM_WEB_API) {
+  const apiKey = process.env.STEAM_WEB_API
+  if (apiKey === undefined || apiKey.length === 0) {
     throw new CustomError('STEAM_WEB_API not set')
   }
 
-  return `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${process.env.STEAM_WEB_API}&server_steam_id=${steam_server_id}`
+  return `https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/?key=${apiKey}&server_steam_id=${steam_server_id}`
 }
 
 // Writer #1 of the `delayedGames` collection: the `teams[]` shape, from the on-demand
@@ -139,7 +140,7 @@ const saveMatch = async ({
 }
 
 const sortPlayersBySlot = function sortPlayersBySlot(game: DelayedGames) {
-  if (!game.teams || !Array.isArray(game.teams) || game.teams.length !== 2) {
+  if (game.teams.length !== 2) {
     return
   }
   if (!Array.isArray(game.teams[0].players) || !Array.isArray(game.teams[1].players)) {
@@ -153,7 +154,7 @@ const sortPlayersBySlot = function sortPlayersBySlot(game: DelayedGames) {
 
 class Dota {
   private interval: NodeJS.Timeout | undefined
-  private static instance: Dota
+  private static instance: Dota | undefined
   private readonly cache = new Map<number, CacheEntry>()
   private readonly user: SteamUserClient
   private readonly playerSummaries: SteamPlayerSummaryService
@@ -282,7 +283,7 @@ class Dota {
     return Boolean(this.user.loggedOn)
   }
 
-  private readonly checkAccounts = async () => {
+  private readonly checkAccounts = () => {
     if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {
       return
     }
@@ -405,12 +406,10 @@ class Dota {
 
   // Filter unique games based on lobby_id
   private filterUniqueGames(games: SteamMatchDetails[]): SteamMatchDetails[] {
-    return games.filter((game, index, self) => {
-      if (!game?.lobby_id) {
-        return false
-      }
-      return index === self.findIndex((g) => g?.lobby_id?.equals(game.lobby_id))
-    })
+    return games.filter(
+      (game, index, self) =>
+        index === self.findIndex((candidate) => candidate.lobby_id.equals(game.lobby_id))
+    )
   }
 
   // Get unique games and map them to the required structure
@@ -424,10 +423,10 @@ class Dota {
         match_id: new Long(match.match_id.low, match.match_id.high).toString(),
         players:
           // Removing underscores to save to db, so its in the same format as steam web api delayed games
-          match.players?.map((player) => ({
+          match.players.map((player) => ({
             accountid: player.account_id,
             heroid: player.hero_id,
-          })) || [],
+          })),
         server_steam_id: new Long(match.server_steam_id.low, match.server_steam_id.high).toString(),
         spectators: match.spectators,
       }))
@@ -452,7 +451,7 @@ class Dota {
   // steam-user exchanges for a fresh refresh token via the modern flow.
   private getLogOnDetails(): SteamLogOnDetails {
     const refreshToken = this.loadRefreshToken()
-    if (refreshToken) {
+    if (refreshToken !== undefined && refreshToken.length > 0) {
       logger.info('[STEAM] Logging on with saved refresh token')
       return { refreshToken }
     }
@@ -467,8 +466,12 @@ class Dota {
   }
 
   private loadRefreshToken(): string | undefined {
-    const token = process.env.STEAM_REFRESH_TOKEN?.trim() || this.readTokenFile()
-    if (token && isRefreshTokenExpired(token)) {
+    const environmentToken = process.env.STEAM_REFRESH_TOKEN?.trim()
+    const token =
+      environmentToken === undefined || environmentToken.length === 0
+        ? this.readTokenFile()
+        : environmentToken
+    if (token !== undefined && token.length > 0 && isRefreshTokenExpired(token)) {
       logger.info('[STEAM] Saved refresh token expired; using password login')
       return undefined
     }
@@ -477,7 +480,8 @@ class Dota {
 
   private readTokenFile(): string | undefined {
     try {
-      return fs.readFileSync(REFRESH_TOKEN_PATH, 'utf-8').trim() || undefined
+      const token = fs.readFileSync(REFRESH_TOKEN_PATH, 'utf-8').trim()
+      return token.length === 0 ? undefined : token
     } catch {
       return undefined
     }
@@ -541,7 +545,7 @@ class Dota {
     this.user.loggedOn = false
     const eresult = error?.eresult
     logger.info('[STEAM] steam error', { eresult, message: error?.message })
-    if (eresult) {
+    if (eresult !== undefined && eresult !== 0) {
       this.logSteamError(eresult)
     }
 
@@ -615,7 +619,7 @@ class Dota {
         reject(new CustomError('Not connected to Dota 2 GC'))
       } else {
         this.dota2.requestMatchDetails(matchIds, (err: unknown, data: unknown) => {
-          if (err) {
+          if (err !== null && err !== undefined) {
             reject(err)
           }
           resolve(data)
@@ -672,16 +676,22 @@ class Dota {
       operation.attempt(() => {
         this.dota2.spectateFriendGame(
           { steam_id },
-          (response: { server_steamid?: { toString(): string } } | undefined, err?: unknown) => {
+          (
+            response: { server_steamid?: { toString: () => string } } | undefined,
+            err?: unknown
+          ) => {
             const theID = response?.server_steamid?.toString()
             logger.info('[STEAM] Got user steam server', { err, response, steam_id, theID })
 
-            const shouldRetry = theID ? undefined : new Error('No ID yet, will keep trying.')
+            const shouldRetry =
+              theID === undefined || theID.length === 0
+                ? new Error('No ID yet, will keep trying.')
+                : undefined
             if (operation.retry(shouldRetry)) {
               return
             }
 
-            if (theID) {
+            if (theID !== undefined && theID.length > 0) {
               resolve(theID)
             } else {
               reject('No spectator match found')
@@ -738,7 +748,7 @@ class Dota {
         reject(new CustomError('Error getting medal'))
       } else {
         this.dota2.requestProfileCard(account, (err: unknown, card: Cards) => {
-          if (err) {
+          if (err !== null && err !== undefined) {
             logger.error('[STEAM] Error getting medal', { account, err })
             reject(err)
           }
@@ -810,10 +820,10 @@ class Dota {
   private evictExtraCacheEntries() {
     while (this.cache.size > MAX_CACHE_SIZE) {
       const oldestKey = [...this.cache.entries()].reduce<number | null>((oldest, [key, entry]) => {
-        if (!oldest) {
+        if (oldest === null || oldest === 0) {
           return key
         }
-        return entry.timestamp < (this.cache.get(oldest)?.timestamp || 0) ? key : oldest
+        return entry.timestamp < (this.cache.get(oldest)?.timestamp ?? 0) ? key : oldest
       }, null)
 
       if (oldestKey !== null) {
@@ -863,7 +873,7 @@ class Dota {
         this.dota2.requestMatchMinimalDetails(
           matchIds,
           (err: unknown, data: MatchMinimalDetailsResponse) => {
-            if (err) {
+            if (err !== null && err !== undefined) {
               reject(err)
             }
             resolve(data)
@@ -873,7 +883,7 @@ class Dota {
     })
 
   public static getInstance(): Dota {
-    if (!Dota.instance) {
+    if (Dota.instance === undefined) {
       Dota.instance = new Dota()
     }
     return Dota.instance
@@ -1013,7 +1023,7 @@ export const GetRealTimeStats = async ({
       }
       const { hasAccountIds, hasHeroes } = hasSteamData(game)
       // needs account ids
-      const retryAttempt = !hasAccountIds || !game ? new Error() : undefined
+      const retryAttempt = hasAccountIds ? undefined : new Error()
       if (operation.retry(retryAttempt)) {
         return
       }
@@ -1068,11 +1078,7 @@ export const GetRealTimeStats = async ({
 
   // Add a cleanup in case of errors to prevent memory leaks
   requestPromise.catch(() => {
-    // Only remove from activeRequests if it's not a rate limit error
-    // Rate limit errors are handled separately with timeouts
-    if (!(requestPromise as { __isRateLimited?: boolean }).__isRateLimited) {
-      activeRequests.delete(match_id)
-    }
+    activeRequests.delete(match_id)
   })
 
   return await requestPromise

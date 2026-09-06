@@ -28,13 +28,15 @@ const makeDeps = function makeDeps() {
     now: () => now,
     run: async () => {
       runCalls += 1
+      await Promise.resolve()
     },
     zAdd: async (member, score) => {
       zset.set(member, score)
-      return 1
+      return await Promise.resolve(1)
     },
-    zRangeAll: async () => [...zset.entries()].sort((a, b) => a[1] - b[1]).map(([m]) => m),
-    zRem: async (member) => (zset.delete(member) ? 1 : 0),
+    zRangeAll: async () =>
+      await Promise.resolve([...zset.entries()].sort((a, b) => a[1] - b[1]).map(([m]) => m)),
+    zRem: async (member) => await Promise.resolve(zset.delete(member) ? 1 : 0),
   }
 
   return {
@@ -51,7 +53,7 @@ const makeDeps = function makeDeps() {
 const PAYLOAD: ClipTaskPayload = {
   accountId: 'acct-1',
   detectPath: 'detect',
-  logContext: { matchId: '8821246401', name: 'tester' },
+  logContext: { matchId: '8821246401', name: 'tester', state: 'strategy' },
   logPrefix: '[Clip]',
   matchId: '8821246401',
   opts: { maxAttempts: 1, pollAttempts: 1, pollIntervalMs: 1 },

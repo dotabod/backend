@@ -42,7 +42,8 @@ export const getHeroWinLoss = async function getHeroWinLoss({
       if (accountError || !steamAccount?.userId) {
         return { lose: 0, win: 0 }
       }
-      userId = steamAccount.userId
+      const { userId: accountUserId } = steamAccount
+      userId = accountUserId
     }
 
     const { data: matches, error } = await supabase
@@ -62,18 +63,15 @@ export const getHeroWinLoss = async function getHeroWinLoss({
       return null
     }
 
-    return (matches ?? []).reduce<HeroWinLoss>(
-      (record, match) => {
-        if (match.won === true) {
-          record.win += 1
-        }
-        if (match.won === false) {
-          record.lose += 1
-        }
-        return record
-      },
-      { lose: 0, win: 0 }
-    )
+    const record: HeroWinLoss = { lose: 0, win: 0 }
+    for (const match of matches ?? []) {
+      if (match.won) {
+        record.win += 1
+      } else {
+        record.lose += 1
+      }
+    }
+    return record
   } catch (error) {
     logger.error('[HERO] Failed to read tracked hero stats', {
       error,

@@ -44,7 +44,11 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
     // wrong side). For <8500 we keep the existing behavior — hero from the
     // index fallback if the roster carries one, otherwise the slot color.
     const heroName = high
-      ? foundIndex !== -1 && heroId
+      ? foundIndex !== -1 &&
+        heroId !== null &&
+        heroId !== undefined &&
+        heroId !== 0 &&
+        !Number.isNaN(heroId)
         ? getHeroNameOrColor(heroId, playerIdIndex)
         : null
       : getHeroNameOrColor(heroId ?? 0, playerIdIndex)

@@ -10,7 +10,7 @@ import type { MessageType } from '../lib/command-handler'
 
 commandHandler.registerCommand('resetwl', {
   cooldown: 0,
-  handler: (message: MessageType, _args: string[]) => {
+  handler: (message: MessageType) => {
     const handler = async function handler() {
       const {
         channel: { name: channel, client },
@@ -40,9 +40,7 @@ commandHandler.registerCommand('resetwl', {
         t('refresh', { lng: message.channel.client.locale }),
         message.user.messageId
       )
-      if (server?.io) {
-        server.io.to(client.token).emit('refresh')
-      }
+      server.io.to(client.token).emit('refresh')
 
       chatClient.say(
         message.channel.name,

@@ -1,12 +1,12 @@
 import { logger } from '@dotabod/shared-utils'
-import express from 'express'
 
-import { eventsIOConnected } from './socket-utils'
+import { createHealthApp } from './health-app'
+import { isEventsIOConnected } from './socket-utils'
 
 // Preserve the module-load env guard that lived in the deleted webhookUtils.ts.
 // BotApiSingleton silently falls back to `?? ''` if this is unset, which masks
 // a misconfigured deploy until the first real Twitch API call returns 401.
-if (!process.env.TWITCH_CLIENT_ID) {
+if (process.env.TWITCH_CLIENT_ID === undefined || process.env.TWITCH_CLIENT_ID.length === 0) {
   throw new Error('TWITCH_CLIENT_ID is not defined')
 }
 
@@ -20,14 +20,7 @@ if (!process.env.TWITCH_CLIENT_ID) {
 // Keeping the path `/webhook` for backwards compatibility with existing
 // monitor configurations.
 export const setupHealthServer = (): void => {
-  const app = express()
-
-  app.get('/webhook', (_req, res) => {
-    res.status(200).json({
-      eventsConnected: eventsIOConnected,
-      status: 'ok',
-    })
-  })
+  const app = createHealthApp(isEventsIOConnected)
 
   const server = app.listen(5011, () => {
     logger.info('[TWITCHEVENTS] Health server listening on port 5011')

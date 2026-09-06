@@ -5,7 +5,10 @@ import type { UpdateMmrParams } from '../../dota/lib/update-mmr'
 import { chatClient } from '../chat-client'
 import commandHandler from '../lib/command-handler'
 
-const isNumberValid = (num: string) => num && Number(num) >= 0 && Number(num) <= 20_000
+const isNumberValid = (num: string): boolean => {
+  const value = Number(num)
+  return num.length > 0 && !Number.isNaN(value) && value >= 0 && value <= 20_000
+}
 
 const sendMessage = (
   channel: string,
@@ -19,6 +22,19 @@ const sendMessage = (
 
 const performMmrUpdate = async (params: UpdateMmrParams) => {
   await updateMmr({ ...params, force: true, tellChat: true })
+}
+
+const getAccountPromptKey = function getAccountPromptKey(
+  steam32Id: number | null,
+  multiAccount: number | undefined
+): 'updateMmrMulti' | 'multiAccount' | 'unknownSteam' {
+  if (steam32Id !== null && steam32Id !== 0) {
+    return 'updateMmrMulti'
+  }
+  if (multiAccount !== undefined && multiAccount !== 0) {
+    return 'multiAccount'
+  }
+  return 'unknownSteam'
 }
 
 commandHandler.registerCommand('setmmr', {
@@ -50,17 +66,13 @@ commandHandler.registerCommand('setmmr', {
         return
       }
 
-      const key = Number(client.steam32Id)
-        ? 'updateMmrMulti'
-        : client.multiAccount
-          ? 'multiAccount'
-          : 'unknownSteam'
+      const key = getAccountPromptKey(client.steam32Id, client.multiAccount)
       sendMessage(channel, locale, key, message.user.messageId, {
         steamId: Number(client.steam32Id),
         url: 'dotabod.com/dashboard/features',
       })
 
-      if (Number(client.steam32Id)) {
+      if (client.steam32Id !== null && client.steam32Id !== 0) {
         await performMmrUpdate({
           channel,
           currentMmr: client.mmr,
@@ -73,8 +85,11 @@ commandHandler.registerCommand('setmmr', {
     }
 
     const accountFromArg = accounts.find((a) => a.steam32Id === Number(steam32FromArg))
-    if (!Number(steam32FromArg) || !accountFromArg) {
-      const key = client.multiAccount ? 'multiAccount' : 'unknownSteam'
+    if (Number(steam32FromArg) === 0 || Number.isNaN(Number(steam32FromArg)) || !accountFromArg) {
+      const key =
+        client.multiAccount !== undefined && client.multiAccount !== 0
+          ? 'multiAccount'
+          : 'unknownSteam'
       sendMessage(channel, locale, key, message.user.messageId, {
         url: 'dotabod.com/dashboard/features',
       })

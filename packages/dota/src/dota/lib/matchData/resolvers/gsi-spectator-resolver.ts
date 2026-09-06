@@ -8,14 +8,14 @@ import type { RawRoster, ResolverContext } from './roster-resolver'
 export class GsiSpectatorResolver extends RosterResolver {
   readonly name = 'gsi-spectator' as const
 
-  async resolve({ gsi }: ResolverContext): Promise<RawRoster | null> {
+  resolve = async ({ gsi }: ResolverContext): Promise<RawRoster | null> => {
     if (!gsi || !isSpectator(gsi)) {
-      return null
+      return await Promise.resolve(null)
     }
     const players = getSpectatorPlayers(gsi)
     if (!Array.isArray(players) || players.length === 0) {
-      return null
+      return await Promise.resolve(null)
     }
-    return { matchPlayers: players, source: 'gsi-spectator' }
+    return await Promise.resolve({ matchPlayers: players, source: this.name })
   }
 }

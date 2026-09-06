@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock } from '../../../../__tests__/shared-mocks.ts'
+import {
+  buildSharedUtilsMock,
+  createPacketStub,
+  createSocketClientStub,
+} from '../../../../__tests__/shared-mocks.ts'
+import type { Packet, SocketClient } from '../../../../types.ts'
 
 const noopLogger = {
   debug: () => {},
@@ -17,19 +22,19 @@ const supabaseStub = {
     if (table === 'matches') {
       return {
         select: () => ({
-          eq: async () => ({ data: matchesRows }),
+          eq: async () => await Promise.resolve({ data: matchesRows }),
         }),
       }
     }
     return {
       select: () => ({
-        in: async () => ({ data: steamAccountsRows }),
+        in: async () => await Promise.resolve({ data: steamAccountsRows }),
       }),
     }
   },
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () =>
+vi.doMock('@dotabod/shared-utils', () =>
   buildSharedUtilsMock({ logger: noopLogger, supabase: supabaseStub })
 )
 
@@ -44,40 +49,42 @@ let mongoCallCount = 0
 // to fall back to the steady-state mock.
 let mongoFindOneOverride: (() => Promise<unknown>) | null = null
 
-vi.doMock(import('../../../../steam/mongo-db-singleton'), () => ({
+vi.doMock('../../../../steam/mongo-db-singleton', () => ({
   default: {
-    close: async () => {},
-    connect: async () => ({
-      collection: () => ({
-        findOne: async () => {
-          if (mongoFindOneOverride) {
-            const override = mongoFindOneOverride
-            return await override()
-          }
-          mongoCallCount += 1
-          return mongoDoc
-        },
+    close: async () => await Promise.resolve(),
+    connect: async () =>
+      await Promise.resolve({
+        collection: () => ({
+          findOne: async () => {
+            if (mongoFindOneOverride) {
+              const override = mongoFindOneOverride
+              return await override()
+            }
+            mongoCallCount += 1
+            return mongoDoc
+          },
+        }),
       }),
-    }),
   },
 }))
 
-let cardsResponse: Record<string, unknown>[] = []
+let cardsResponse: unknown = []
+let socketError: Error | null = null
 let socketCallCount = 0
 let socketLastIds: number[] = []
 
-vi.doMock(import('../../../../steam/ws'), () => ({
+vi.doMock('../../../../steam/ws', () => ({
   steamSocket: {
-    emit: (
-      _event: string,
-      ids: number[],
-      _refetch: boolean,
-      cb: (err: unknown, cards: unknown) => void
-    ) => {
-      socketCallCount += 1
-      socketLastIds = ids
-      cb(null, cardsResponse)
-    },
+    timeout: () => ({
+      emitWithAck: async (_event: string, ids: number[]) => {
+        socketCallCount += 1
+        socketLastIds = ids
+        if (socketError) {
+          throw socketError
+        }
+        return await Promise.resolve(cardsResponse)
+      },
+    }),
   },
   twitchChat: { on: () => {} },
 }))
@@ -89,7 +96,15 @@ const realFetch = globalThis.fetch
 const origVisionHost = process.env.VISION_API_HOST
 const origVisionKey = process.env.VISION_API_KEY
 const mockVision = function mockVision(payload: unknown, ok = true) {
-  globalThis.fetch = (async () => ({ json: async () => payload, ok })) as unknown as typeof fetch
+  globalThis.fetch = vi.fn<typeof fetch>(
+    async () =>
+      await Promise.resolve(
+        new Response(JSON.stringify(payload), {
+          headers: { 'content-type': 'application/json' },
+          status: ok ? 200 : 500,
+        })
+      )
+  )
 }
 const noVisionHost = function noVisionHost() {
   delete process.env.VISION_API_HOST
@@ -121,27 +136,29 @@ interface ClientOverrides {
   mmr?: number
   leaderboard_rank?: number | null
   stream_online?: boolean
-  gsi?: any
+  gsi?: Packet
   disableAutoClipping?: boolean
   ownAccountId?: string | undefined
   ownHeroId?: number | undefined
 }
 
-const makeClient = function makeClient(o: ClientOverrides = {}): any {
+const makeClient = function makeClient(o: ClientOverrides = {}): SocketClient {
   const matchid = o.matchid === undefined ? '8800000001' : o.matchid
   const ownAccountId = o.ownAccountId ?? '111'
-  const baseGsi = matchid
-    ? {
-        hero: o.ownHeroId === undefined ? undefined : { id: o.ownHeroId },
-        map: { customgamename: '', matchid, win_team: 'none' },
-        player: { accountid: ownAccountId, team_name: 'radiant' },
-      }
-    : {
-        hero: undefined,
-        map: { customgamename: '' },
-        player: { accountid: ownAccountId, team_name: 'radiant' },
-      }
-  return {
+  const baseGsi = createPacketStub(
+    matchid
+      ? {
+          hero: o.ownHeroId === undefined ? undefined : { id: o.ownHeroId },
+          map: { customgamename: '', matchid, win_team: 'none' },
+          player: { accountid: ownAccountId, team_name: 'radiant' },
+        }
+      : {
+          hero: undefined,
+          map: { customgamename: '' },
+          player: { accountid: ownAccountId, team_name: 'radiant' },
+        }
+  )
+  return createSocketClientStub({
     SteamAccount: [
       {
         leaderboard_rank: o.leaderboard_rank ?? null,
@@ -154,12 +171,12 @@ const makeClient = function makeClient(o: ClientOverrides = {}): any {
     locale: 'en',
     mmr: o.mmr ?? 4000,
     name: 'channel',
-    settings: o.disableAutoClipping ? [{ key: 'disableAutoClipping', value: true }] : [],
+    settings: o.disableAutoClipping === true ? [{ key: 'disableAutoClipping', value: true }] : [],
     steam32Id: o.steam32Id === undefined ? 111 : o.steam32Id,
     stream_online: o.stream_online ?? true,
-    subscription: { isGift: false, status: 'ACTIVE', tier: 'PRO' },
+    subscription: { id: 'sub-1', isGift: false, status: 'ACTIVE', tier: 'PRO' },
     token: 'broadcaster',
-  }
+  })
 }
 
 const sourceTvDoc = function sourceTvDoc(opts: { partialHeroes?: boolean } = {}) {
@@ -168,7 +185,7 @@ const sourceTvDoc = function sourceTvDoc(opts: { partialHeroes?: boolean } = {})
     match: { game_mode: 22, lobby_type: 7, match_id: '8800000001' },
     players: Array.from({ length: 10 }, (_, i) => ({
       accountid: 1000 + i,
-      heroid: opts.partialHeroes && i >= 7 ? 0 : i + 1,
+      heroid: opts.partialHeroes === true && i >= 7 ? 0 : i + 1,
     })),
     spectators: 3,
   }
@@ -204,7 +221,7 @@ const visionDraftPayload = function visionDraftPayload(
   }
 }
 
-const gsiSpectatorClient = function gsiSpectatorClient(o: ClientOverrides = {}): any {
+const gsiSpectatorClient = function gsiSpectatorClient(o: ClientOverrides = {}) {
   const team2 = Object.fromEntries(
     [0, 1, 2, 3, 4].map((i) => [`player${i}`, { id: i + 1, selected_unit: false }])
   )
@@ -217,25 +234,24 @@ const gsiSpectatorClient = function gsiSpectatorClient(o: ClientOverrides = {}):
   const team3Players = Object.fromEntries(
     [5, 6, 7, 8, 9].map((i) => [`player${i}`, { accountid: 2000 + i, name: `P${i}` }])
   )
-  return makeClient({
-    ...o,
-    gsi: {
-      hero: { team2, team3 },
-      map: { customgamename: '', matchid: '8800000001', win_team: 'none' },
-      player: {
-        accountid: '111',
-        team2: team2Players,
-        team3: team3Players,
-        team_name: 'spectator',
-      },
+  const gsi = Object.assign(createPacketStub(), {
+    hero: { team2, team3 },
+    map: { customgamename: '', matchid: '8800000001', win_team: 'none' },
+    player: {
+      accountid: '111',
+      team2: team2Players,
+      team3: team3Players,
+      team_name: 'spectator',
     },
   })
+  return Object.assign(makeClient({ ...o, gsi }), { gsi })
 }
 
 beforeEach(() => {
   mongoDoc = null
   mongoCallCount = 0
   cardsResponse = []
+  socketError = null
   socketCallCount = 0
   socketLastIds = []
   matchesRows = []
@@ -274,7 +290,10 @@ describe('MatchDataService — sync getters', () => {
 
   it('isArcade reflects gsi customgamename', () => {
     const arcadeClient = makeClient({
-      gsi: { map: { customgamename: 'overthrow', matchid: '1' }, player: { accountid: '111' } },
+      gsi: createPacketStub({
+        map: { customgamename: 'overthrow', matchid: '1' },
+        player: { accountid: '111' },
+      }),
     })
     expect(new MatchDataService(arcadeClient).isArcade).toBeTruthy()
     expect(new MatchDataService(makeClient()).isArcade).toBeFalsy()
@@ -282,7 +301,7 @@ describe('MatchDataService — sync getters', () => {
 
   it('hasWinTeam true when win_team is radiant/dire, false for "none"', () => {
     const winning = makeClient({
-      gsi: { map: { customgamename: '', matchid: '1', win_team: 'radiant' } },
+      gsi: createPacketStub({ map: { customgamename: '', matchid: '1', win_team: 'radiant' } }),
     })
     expect(new MatchDataService(winning).hasWinTeam).toBeTruthy()
     expect(new MatchDataService(makeClient()).hasWinTeam).toBeFalsy()
@@ -382,6 +401,30 @@ describe('MatchDataService — resolveRoster source/stage/completeness', () => {
     expect(r.players).toHaveLength(1)
   })
 
+  it('falls back to gsi-self when Vision returns a malformed hero', async () => {
+    mongoDoc = null
+    withVisionHost()
+    mockVision({
+      heroes: [
+        {
+          hero_id: 'not-a-number',
+          hero_localized_name: 'Invalid',
+          hero_name: 'invalid',
+          match_score: 1,
+          position: 0,
+          team: 'radiant',
+          variant: '',
+        },
+      ],
+      match_id: '8800000001',
+    })
+
+    const roster = await new MatchDataService(makeClient({ ownHeroId: 14 })).resolveRoster()
+
+    expect(roster.source).toBe('gsi-self')
+    expect(roster.players[0]?.heroId).toBe(14)
+  })
+
   it('gsi-spectator: derives team from slot', async () => {
     const r = await new MatchDataService(gsiSpectatorClient()).resolveRoster()
     expect(r.source).toBe('gsi-spectator')
@@ -422,10 +465,15 @@ describe('MatchDataService — account-linked roster names', () => {
     mongoDoc = sourceTvDoc()
     withVisionHost()
     let fetchCalled = false
-    globalThis.fetch = (async () => {
+    globalThis.fetch = vi.fn<typeof fetch>(async () => {
       fetchCalled = true
-      return { json: async () => visionHeroesPayload(), ok: true }
-    }) as unknown as typeof fetch
+      return await Promise.resolve(
+        new Response(JSON.stringify(visionHeroesPayload()), {
+          headers: { 'content-type': 'application/json' },
+          status: 200,
+        })
+      )
+    })
     const r = await new MatchDataService(makeClient()).resolveRoster()
 
     expect(r.source).toBe('sourcetv')
@@ -457,10 +505,15 @@ describe('MatchDataService — account-linked roster names', () => {
     }
     withVisionHost()
     let fetchCalled = false
-    globalThis.fetch = (async () => {
+    globalThis.fetch = vi.fn<typeof fetch>(async () => {
       fetchCalled = true
-      return { json: async () => visionHeroesPayload(), ok: true }
-    }) as unknown as typeof fetch
+      return await Promise.resolve(
+        new Response(JSON.stringify(visionHeroesPayload()), {
+          headers: { 'content-type': 'application/json' },
+          status: 200,
+        })
+      )
+    })
     await new MatchDataService(makeClient()).resolveRoster()
     expect(fetchCalled).toBeFalsy()
   })
@@ -568,7 +621,15 @@ describe('MatchDataService — memoization', () => {
   it('getCards emits steam socket at most once with the normalized accountIds', async () => {
     mongoDoc = sourceTvDoc()
     noVisionHost()
-    cardsResponse = [{ account_id: 1000, leaderboard_rank: 0, rank_tier: 70 }]
+    cardsResponse = [
+      {
+        account_id: 1000,
+        createdAt: new Date(0),
+        leaderboard_rank: 0,
+        lifetime_games: 1,
+        rank_tier: 70,
+      },
+    ]
     const svc = new MatchDataService(makeClient())
     await svc.getCards()
     await svc.getCards()
@@ -604,16 +665,7 @@ describe('MatchDataService — memoization', () => {
   it('getCards REJECTS on socket error (preserves the error signal)', async () => {
     mongoDoc = sourceTvDoc()
     noVisionHost()
-    const ws = await import('../../../../steam/ws')
-    const realEmit = ws.steamSocket.emit.bind(ws.steamSocket)
-    ws.steamSocket.emit = ((
-      _event: string,
-      _ids: number[],
-      _refetch: boolean,
-      cb: (err: unknown, cards: unknown) => void
-    ) => {
-      cb(new Error('socket boom'), null)
-    }) as typeof ws.steamSocket.emit
+    socketError = new Error('socket boom')
     let caught: unknown = null
     try {
       await new MatchDataService(makeClient()).getCards()
@@ -621,8 +673,26 @@ describe('MatchDataService — memoization', () => {
       caught = error
     }
     expect(caught).toBeInstanceOf(Error)
-    expect((caught as Error).message).toContain('socket boom')
-    ws.steamSocket.emit = realEmit
+    if (!(caught instanceof Error)) {
+      throw new Error('expected getCards to reject with an Error')
+    }
+    expect(caught.message).toContain('socket boom')
+  })
+
+  it('getCards rejects malformed Steam card payloads', async () => {
+    mongoDoc = sourceTvDoc()
+    noVisionHost()
+    cardsResponse = [
+      {
+        account_id: 'not-a-number',
+        createdAt: new Date(0),
+        leaderboard_rank: 0,
+        lifetime_games: 1,
+        rank_tier: 70,
+      },
+    ]
+
+    await expect(new MatchDataService(makeClient()).getCards()).rejects.toThrow()
   })
 
   it('rejected memoization clears the slot — retry can succeed', async () => {
@@ -630,9 +700,9 @@ describe('MatchDataService — memoization', () => {
     mongoFindOneOverride = async () => {
       calls += 1
       if (calls === 1) {
-        throw new Error('transient mongo')
+        return await Promise.reject(new Error('transient mongo'))
       }
-      return sourceTvDoc()
+      return await Promise.resolve(sourceTvDoc())
     }
     noVisionHost()
     const svc = new MatchDataService(makeClient())

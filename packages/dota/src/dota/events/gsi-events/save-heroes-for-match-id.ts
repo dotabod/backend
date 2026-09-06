@@ -9,7 +9,7 @@ import eventHandler from '../event-handler'
 eventHandler.registerEvent('saveHeroesForMatchId', {
   handler: async (dotaClient, { matchId }: { matchId: string }) => {
     const playingMatchId = await redisClient.client.get(`${dotaClient.getToken()}:matchId`)
-    if (playingMatchId && playingMatchId === matchId) {
+    if (playingMatchId !== null && playingMatchId.length > 0 && playingMatchId === matchId) {
       await dotaClient.emitNotablePlayers()
     }
   },

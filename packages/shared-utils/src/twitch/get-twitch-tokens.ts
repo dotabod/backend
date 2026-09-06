@@ -16,11 +16,10 @@ export interface TwitchTokens {
  * @returns TwitchTokens or null if not found
  */
 export const getTwitchTokens = async (lookupTwitchId?: string): Promise<TwitchTokens | null> => {
-  let twitchId = lookupTwitchId
-  // if no twitchId, use the bot providerId
-  if (!twitchId) {
-    twitchId = process.env.TWITCH_BOT_PROVIDERID!
-  }
+  const twitchId =
+    lookupTwitchId !== undefined && lookupTwitchId.length > 0
+      ? lookupTwitchId
+      : (process.env.TWITCH_BOT_PROVIDERID ?? '')
 
   try {
     const supabase = getSupabaseClient()

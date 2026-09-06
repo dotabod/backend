@@ -14,10 +14,11 @@ commandHandler.registerCommand('smurfs', {
       channel: { client },
     } = message
 
-    if (!message.channel.client.steam32Id) {
+    if (message.channel.client.steam32Id === null || message.channel.client.steam32Id === 0) {
       chatClient.say(
         message.channel.name,
-        message.channel.client.multiAccount
+        message.channel.client.multiAccount !== undefined &&
+          message.channel.client.multiAccount !== 0
           ? t('multiAccount', {
               lng: message.channel.client.locale,
               url: 'dotabod.com/dashboard/features',
@@ -30,17 +31,22 @@ commandHandler.registerCommand('smurfs', {
 
     const roster = await new MatchDataService(client).resolveRoster()
 
-    smurfs(client.locale, message.channel.client.gsi?.map?.matchid, roster.players)
-      .then((desc) => {
-        chatClient.say(message.channel.name, desc, message.user.messageId)
-      })
-      .catch((error) => {
-        chatClient.say(
-          message.channel.name,
-          error?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-          message.user.messageId
-        )
-      })
+    try {
+      const description = await smurfs(
+        client.locale,
+        message.channel.client.gsi?.map?.matchid,
+        roster.players
+      )
+      chatClient.say(message.channel.name, description, message.user.messageId)
+    } catch (error) {
+      chatClient.say(
+        message.channel.name,
+        error instanceof Error
+          ? error.message
+          : t('gameNotFound', { lng: message.channel.client.locale }),
+        message.user.messageId
+      )
+    }
   },
   onlyOnline: true,
 })

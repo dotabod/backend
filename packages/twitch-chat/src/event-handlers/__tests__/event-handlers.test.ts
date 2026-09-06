@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   flushMacrotasks,
@@ -13,8 +13,6 @@ import type { TwitchOfflineEvent } from '../offline-event.ts'
 import type { TwitchOnlineEvent } from '../online-event.ts'
 import type { TwitchUserUpdateEvent } from '../update-user-event.ts'
 
-const realSetTimeout = globalThis.setTimeout
-
 beforeEach(() => {
   resetState()
   onlineEvents.clear()
@@ -22,7 +20,16 @@ beforeEach(() => {
 
 describe(onlineEvent, () => {
   const evt = (id = 'b1', started_at = '2026-05-20T00:00:00.000Z') => ({
-    payload: { event: { broadcaster_user_id: id, started_at } as TwitchOnlineEvent },
+    payload: {
+      event: {
+        broadcaster_user_id: id,
+        broadcaster_user_login: 'streamer',
+        broadcaster_user_name: 'Streamer',
+        id: 'stream-1',
+        started_at,
+        type: 'live',
+      } satisfies TwitchOnlineEvent,
+    },
   })
 
   it('records the online timestamp and marks the user online', async () => {
@@ -47,23 +54,24 @@ describe(onlineEvent, () => {
 
 describe(offlineEvent, () => {
   const evt = (id = 'b1') => ({
-    payload: { event: { broadcaster_user_id: id } as TwitchOfflineEvent },
+    payload: {
+      event: {
+        broadcaster_user_id: id,
+        broadcaster_user_login: 'streamer',
+        broadcaster_user_name: 'Streamer',
+      } satisfies TwitchOfflineEvent,
+    },
   })
 
-  // offlineEvent debounces with a real setTimeout(..., 10000); fire it instantly.
   beforeEach(() => {
-    globalThis.setTimeout = ((cb: () => void) => {
-      cb()
-      return 0 as unknown as ReturnType<typeof setTimeout>
-    }) as typeof setTimeout
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
   })
   afterEach(() => {
-    globalThis.setTimeout = realSetTimeout
+    vi.useRealTimers()
   })
 
-  // Drain the async handler's microtasks via the real timer.
   const drain = async () => {
-    await new Promise<void>((r) => realSetTimeout(r, 5))
+    await vi.runAllTimersAsync()
   }
 
   it('marks the user offline when there was no recent online event', async () => {
@@ -87,16 +95,19 @@ describe(offlineEvent, () => {
 })
 
 describe(updateUserEvent, () => {
-  it('updates name/displayName, filtering out falsy fields', async () => {
-    updateUserEvent({
-      payload: {
-        event: {
-          user_id: 'b1',
-          user_login: 'newname',
-          user_name: 'NewName',
-        } as TwitchUserUpdateEvent,
+  const evt = (): { payload: { event: TwitchUserUpdateEvent } } => ({
+    payload: {
+      event: {
+        description: '',
+        user_id: 'b1',
+        user_login: 'newname',
+        user_name: 'NewName',
       },
-    })
+    },
+  })
+
+  it('updates name/displayName, filtering out falsy fields', async () => {
+    updateUserEvent(evt())
     await flushMacrotasks()
     expect(state.userUpdates).toHaveLength(1)
     expect(state.userUpdates[0].values).toStrictEqual({ displayName: 'NewName', name: 'newname' })
@@ -104,15 +115,7 @@ describe(updateUserEvent, () => {
 
   it('does not update when the account is not found', async () => {
     state.dbAccount = null
-    updateUserEvent({
-      payload: {
-        event: {
-          user_id: 'b1',
-          user_login: 'newname',
-          user_name: 'NewName',
-        } as TwitchUserUpdateEvent,
-      },
-    })
+    updateUserEvent(evt())
     await flushMacrotasks()
     expect(state.userUpdates).toHaveLength(0)
   })

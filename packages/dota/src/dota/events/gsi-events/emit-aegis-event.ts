@@ -10,10 +10,6 @@ export const emitAegisEvent = function emitAegisEvent(
   token: string,
   client: SocketClient
 ) {
-  if (!res?.expireDate) {
-    return
-  }
-
   res = getNewAegisTime(res)
   if (res.expireS <= 0) {
     return

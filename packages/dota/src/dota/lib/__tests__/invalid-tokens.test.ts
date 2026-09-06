@@ -32,18 +32,18 @@ const makeFakeRedis = function makeFakeRedis(
   const client = {
     del: async (key: string) => {
       calls.push({ key, op: 'del' })
-      if (opts.delThrows) {
+      if (opts.delThrows === true) {
         throw new Error('del failed')
       }
-      return 1
+      return await Promise.resolve(1)
     },
     isReady: opts.isReady ?? true,
     setEx: async (key: string, ttl: number, value: string) => {
       calls.push({ key, op: 'setEx', ttl, value })
-      if (opts.setExThrows) {
+      if (opts.setExThrows === true) {
         throw new Error('setEx failed')
       }
-      return 'OK'
+      return await Promise.resolve('OK')
     },
   } as unknown as RedisLike
   return { calls, client }
@@ -339,7 +339,7 @@ describe('InvalidTokensCache → Redis side effects', () => {
     // Track calls on whichever client is currently active.
     activeClient.setEx = async (key: string, ttl: number, value: string) => {
       activeCalls.push({ key, op: 'setEx', ttl, value })
-      return 'OK'
+      return await Promise.resolve('OK')
     }
     const cache = new InvalidTokensCache(() => activeClient)
 
@@ -352,7 +352,7 @@ describe('InvalidTokensCache → Redis side effects', () => {
     const swappedCalls: RedisCall[] = []
     swapped.setEx = async (key: string, ttl: number, value: string) => {
       swappedCalls.push({ key, op: 'setEx', ttl, value })
-      return 'OK'
+      return await Promise.resolve('OK')
     }
     activeClient = swapped
     activeCalls = []
@@ -382,7 +382,7 @@ describe('hydrateInvalidTokensFromRedis', () => {
   ) {
     return {
       async *scanIterator() {
-        if (opts.throws) {
+        if (opts.throws === true) {
           throw new Error('scan exploded')
         }
         for (const k of keys) {
@@ -464,7 +464,7 @@ describe('hydrateInvalidTokensFromRedis', () => {
         [Symbol.asyncIterator]() {
           return {
             next: async () => {
-              throw new Error('scan exploded')
+              return await Promise.reject(new Error('scan exploded'))
             },
           }
         },

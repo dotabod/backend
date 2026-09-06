@@ -35,7 +35,7 @@ export const resolveCosmetics = function resolveCosmetics(
     }
 
     const meta = cosmetics[String(defindex)]
-    if (!meta) {
+    if (!Object.hasOwn(cosmetics, String(defindex))) {
       continue
     }
 

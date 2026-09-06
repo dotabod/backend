@@ -21,7 +21,7 @@ export const checkBotStatus = async function checkBotStatus() {
     // Try to check the bot's validation status
     const tokens = await getTwitchTokens(process.env.TWITCH_BOT_PROVIDERID)
 
-    if (!tokens || tokens.requires_refresh) {
+    if (tokens === null || tokens.requires_refresh === true) {
       logger.info('[TWITCH] Bot is banned, tokens are invalid')
       botStatus.isBanned = true
       return botStatus.isBanned

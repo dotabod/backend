@@ -16,35 +16,32 @@ const pluckProviderIds = function pluckProviderIds(rows: AccountRow[] | null): s
 // Page through with .range() so every account is covered.
 const PAGE_SIZE = 1000
 
+const fetchAccountPage = async function fetchAccountPage(from: number): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('accounts')
+    .select('providerAccountId, users!inner(followers)')
+    .eq('provider', 'twitch')
+    .neq('requires_refresh', true)
+    .ilike('scope', '%channel:bot%')
+    .order('followers', { ascending: false, nullsFirst: false, referencedTable: 'users' })
+    .order('providerAccountId', { ascending: true })
+    .range(from, from + PAGE_SIZE - 1)
+
+  if (error !== null) {
+    logger.error('[TWITCHEVENTS] getAccountIds query failed', { error: error.message })
+    throw error
+  }
+
+  const providerIds = pluckProviderIds(data)
+  if (data.length < PAGE_SIZE) {
+    return providerIds
+  }
+  return [...providerIds, ...(await fetchAccountPage(from + PAGE_SIZE))]
+}
+
 export const getAccountIds = async function getAccountIds(): Promise<string[]> {
   logger.info('[TWITCHSETUP] Running getAccountIds')
-
-  const providerIds: string[] = []
-  let from = 0
-
-  while (true) {
-    const { data, error } = await supabase
-      .from('accounts')
-      .select('providerAccountId, users!inner(followers)')
-      .eq('provider', 'twitch')
-      .neq('requires_refresh', true)
-      .ilike('scope', '%channel:bot%')
-      .order('followers', { ascending: false, nullsFirst: false, referencedTable: 'users' })
-      .order('providerAccountId', { ascending: true })
-      .range(from, from + PAGE_SIZE - 1)
-
-    if (error) {
-      logger.error('[TWITCHEVENTS] getAccountIds query failed', { error: error.message })
-      throw error
-    }
-
-    providerIds.push(...pluckProviderIds(data))
-
-    if (!data || data.length < PAGE_SIZE) {
-      break
-    }
-    from += PAGE_SIZE
-  }
+  const providerIds = await fetchAccountPage(0)
 
   if (providerIds.length < 10) {
     logger.info(`[TWITCHEVENTS] joining ${providerIds.length} channels`, { providerIds })

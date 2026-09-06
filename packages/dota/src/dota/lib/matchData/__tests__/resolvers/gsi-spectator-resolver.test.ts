@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { GsiSpectatorResolver } from '../../resolvers/gsi-spectator-resolver'
 
-const ctx = (gsi: unknown) => ({ gsi: gsi as never, matchId: '12345' })
+const ctx = (gsi?: unknown) => ({ gsi: gsi as never, matchId: '12345' })
 
 const spectatorGsi = function spectatorGsi() {
   const team2 = Object.fromEntries(

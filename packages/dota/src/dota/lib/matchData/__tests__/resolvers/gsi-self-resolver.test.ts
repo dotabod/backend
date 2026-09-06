@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { GsiSelfResolver } from '../../resolvers/gsi-self-resolver'
 
-const ctx = (gsi: unknown) => ({ gsi: gsi as never, matchId: '12345' })
+const ctx = (gsi?: unknown) => ({ gsi: gsi as never, matchId: '12345' })
 
 describe(GsiSelfResolver, () => {
   const r = new GsiSelfResolver()

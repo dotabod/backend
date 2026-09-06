@@ -16,7 +16,7 @@ export const captureCosmetics = async function captureCosmetics(
 ): Promise<ResolvedCosmetic[]> {
   const heroId = client.gsi?.hero?.id
   const matchId = client.gsi?.map?.matchid
-  if (!matchId || !heroId || heroId <= 0) {
+  if (matchId === undefined || matchId.length === 0 || heroId === undefined || heroId <= 0) {
     return []
   }
 

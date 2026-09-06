@@ -36,10 +36,11 @@ commandHandler.registerCommand('profile', {
         locale: client.locale,
       })
 
-      const url = player?.accountid
-        ? await getDotabodProfileUrl(client, Number(player.accountid))
-        : null
-      if (!url) {
+      const url =
+        player?.accountid !== null && player?.accountid !== undefined && player.accountid !== 0
+          ? await getDotabodProfileUrl(client, Number(player.accountid))
+          : null
+      if (url === null || url.length === 0) {
         chatClient.say(
           message.channel.name,
           t('dotabodProfileNotFound', {
@@ -64,7 +65,9 @@ commandHandler.registerCommand('profile', {
     } catch (error) {
       chatClient.say(
         message.channel.name,
-        (error as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        error instanceof Error
+          ? error.message
+          : t('gameNotFound', { lng: message.channel.client.locale }),
         message.user.messageId
       )
     }

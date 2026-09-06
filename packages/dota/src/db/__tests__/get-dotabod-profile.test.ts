@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { createSocketClientStub } from '../../__tests__/shared-mocks'
 import { dbState, resetDbState } from './db-mocks.ts'
 
 const { getDotabodProfileUrl } = await import('../../twitch/lib/get-dotabod-profile')
 
-const client = {
-  SteamAccount: [{ steam32Id: 99_999 }],
+const client = createSocketClientStub({
+  SteamAccount: [{ leaderboard_rank: null, mmr: 0, name: null, steam32Id: 99_999 }],
   name: '#Streamer',
   steam32Id: 99_999,
-} as any
+})
 
 describe('getDotabodProfileUrl', () => {
   beforeEach(() => {

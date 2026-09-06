@@ -32,7 +32,9 @@ export const getDotabodProfileUrl = async function getDotabodProfileUrl(
     const relation = data?.users as ProfileRelation | ProfileRelation[] | null | undefined
     const profile = Array.isArray(relation) ? relation[0] : relation
 
-    return profile?.name ? dotabodProfileUrl(profile.name) : null
+    return profile?.name !== null && profile?.name !== undefined && profile.name.length > 0
+      ? dotabodProfileUrl(profile.name)
+      : null
   } catch (error) {
     logger.error('[PROFILE] Failed to resolve tracked Dotabod profile', { error, steam32Id })
     return null

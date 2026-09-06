@@ -47,7 +47,9 @@ describe('!toggle', () => {
   it('routes to commandDisable.enable when currently disabled', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        clientOverrides: { settings: [{ key: DBSettings.commandDisable, value: true }] },
+        clientOverrides: {
+          settings: [{ key: DBSettings.commandDisable, value: true }],
+        },
         content: '!toggle',
       })
     )
@@ -55,7 +57,11 @@ describe('!toggle', () => {
     expect(state.chatSayCalls).toHaveLength(0)
     expect(state.commandDisableCalls).toHaveLength(1)
     expect(state.commandDisableCalls[0]).toMatchObject({ kind: 'enable' })
-    expect((state.commandDisableCalls[0] as { opts?: unknown }).opts).toBeUndefined()
+    const call = state.commandDisableCalls[0]
+    expect(call.kind).toBe('enable')
+    if (call.kind === 'enable') {
+      expect(call.opts).toBeUndefined()
+    }
   })
 
   it('blocks viewers (permission below mod)', async () => {
@@ -79,7 +85,7 @@ describe('!today', () => {
   it('reports the multiAccount message when no steam id and multiAccount is set', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        clientOverrides: { multiAccount: true, steam32Id: null } as any,
+        clientOverrides: { multiAccount: 440_614_454, steam32Id: null },
         content: '!today',
       })
     )
@@ -91,10 +97,10 @@ describe('!today', () => {
 
   it('groups today matches into per-hero win/loss records', async () => {
     state.recentList = [
-      { hero_name: 'npc_dota_hero_antimage', won: true },
-      { hero_name: 'npc_dota_hero_antimage', won: false },
-      { hero_name: 'npc_dota_hero_axe', won: true },
-    ] as any
+      { hero_name: 'npc_dota_hero_antimage', matchId: '1', won: true },
+      { hero_name: 'npc_dota_hero_antimage', matchId: '2', won: false },
+      { hero_name: 'npc_dota_hero_axe', matchId: '3', won: true },
+    ]
     await commandHandler.handleMessage(makeMessage({ content: '!today' }))
     expect(state.chatSayCalls).toHaveLength(1)
     const msg = state.chatSayCalls[0].message

@@ -29,7 +29,7 @@ const togglePartyMmr = function togglePartyMmr({
 commandHandler.registerCommand('fixparty', {
   aliases: ['fixsolo'],
   cooldown: 0,
-  handler: async (message, _args) => {
+  handler: async (message) => {
     const { data } = await supabase
       .from('matches')
       .select('won, is_party, id, is_doubledown')
@@ -63,7 +63,7 @@ commandHandler.registerCommand('fixparty', {
       currentMmr: message.channel.client.mmr,
       newMmr: togglePartyMmr({
         currentMmr: message.channel.client.mmr,
-        didWin: !!bet.won,
+        didWin: bet.won,
         isDoubledown: bet.is_doubledown,
         wasParty: bet.is_party,
       }),

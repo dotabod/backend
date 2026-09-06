@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
+import {
+  createGsiHandlerStub,
+  createPacketStub,
+  createSocketClientStub,
+} from '../../../__tests__/shared-mocks.ts'
 import { DBSettings } from '../../../settings.ts'
 import {
   findGSIHandlerByTwitchId,
@@ -16,7 +21,7 @@ import { isSpectator } from '../is-spectator.ts'
 
 describe(findItem, () => {
   const inv = (names: string[]) =>
-    Object.fromEntries(names.map((name, i) => [`slot${i}`, { name }])) as any
+    Object.fromEntries(names.map((name, i) => [`slot${i}`, { name, passive: false }]))
 
   it('returns false when there is no item data', () => {
     expect(findItem({ data: undefined, itemName: 'item_blink' })).toBeFalsy()
@@ -24,61 +29,63 @@ describe(findItem, () => {
 
   it('returns false when the inventory is not a full 17 slots', () => {
     expect(
-      findItem({ data: { items: inv(['item_blink']) } as any, itemName: 'item_blink' })
+      findItem({ data: createPacketStub({ items: inv(['item_blink']) }), itemName: 'item_blink' })
     ).toBeFalsy()
   })
 
   it('finds a matching item in the first 6 backpack slots', () => {
     const names = Array.from({ length: 17 }, (_, i) => (i === 2 ? 'item_blink' : 'empty'))
-    expect(findItem({ data: { items: inv(names) } as any, itemName: 'item_blink' })).toStrictEqual([
-      { name: 'item_blink' },
-    ])
+    expect(
+      findItem({ data: createPacketStub({ items: inv(names) }), itemName: 'item_blink' })
+    ).toStrictEqual([{ name: 'item_blink', passive: false }])
   })
 
   it('ignores items beyond slot 6 unless searchStashAlso is set', () => {
     const names = Array.from({ length: 17 }, (_, i) => (i === 7 ? 'item_blink' : 'empty'))
-    expect(findItem({ data: { items: inv(names) } as any, itemName: 'item_blink' })).toBeFalsy()
+    expect(
+      findItem({ data: createPacketStub({ items: inv(names) }), itemName: 'item_blink' })
+    ).toBeFalsy()
     expect(
       findItem({
-        data: { items: inv(names) } as any,
+        data: createPacketStub({ items: inv(names) }),
         itemName: 'item_blink',
         searchStashAlso: true,
       })
-    ).toStrictEqual([{ name: 'item_blink' }])
+    ).toStrictEqual([{ name: 'item_blink', passive: false }])
   })
 })
 
 describe(isArcade, () => {
   it('is false without gsi or custom game name', () => {
     expect(isArcade()).toBeFalsy()
-    expect(isArcade({ map: { customgamename: '' } } as any)).toBeFalsy()
+    expect(isArcade(createPacketStub({ map: { customgamename: '' } }))).toBeFalsy()
   })
 
   it('is true for a custom game', () => {
-    expect(isArcade({ map: { customgamename: 'overthrow' } } as any)).toBeTruthy()
+    expect(isArcade(createPacketStub({ map: { customgamename: 'overthrow' } }))).toBeTruthy()
   })
 })
 
 describe(isSpectator, () => {
   it('is false for a normal player packet', () => {
     expect(isSpectator()).toBeFalsy()
-    expect(isSpectator({ player: { team_name: 'radiant' } } as any)).toBeFalsy()
+    expect(isSpectator(createPacketStub({ player: { team_name: 'radiant' } }))).toBeFalsy()
   })
 
   it('is true when spectating (team_name or team2 structure)', () => {
-    expect(isSpectator({ player: { team_name: 'spectator' } } as any)).toBeTruthy()
-    expect(isSpectator({ player: { team2: {} } } as any)).toBeTruthy()
+    expect(isSpectator(createPacketStub({ player: { team_name: 'spectator' } }))).toBeTruthy()
+    expect(isSpectator(createPacketStub({ player: { team2: {} } }))).toBeTruthy()
   })
 })
 
 describe(getSpectatorPlayers, () => {
   it('returns [] without spectator team data', () => {
     expect(getSpectatorPlayers()).toStrictEqual([])
-    expect(getSpectatorPlayers({ hero: {} } as any)).toStrictEqual([])
+    expect(getSpectatorPlayers(createPacketStub({ hero: {} }))).toStrictEqual([])
   })
 
   it('flattens team2 + team3 hero/player data with a selected flag', () => {
-    const gsi = {
+    const gsi = createPacketStub({
       hero: {
         team2: { player0: { id: 1, selected_unit: true } },
         team3: { player5: { id: 2 } },
@@ -87,7 +94,7 @@ describe(getSpectatorPlayers, () => {
         team2: { player0: { accountid: '111' } },
         team3: { player5: { accountid: '222' } },
       },
-    } as any
+    })
 
     const players = getSpectatorPlayers(gsi)
     expect(players).toHaveLength(2)
@@ -97,7 +104,7 @@ describe(getSpectatorPlayers, () => {
   })
 })
 
-describe(DelayedCommands, () => {
+describe('DelayedCommands', () => {
   it('maps specific chat triggers to their settings keys', () => {
     expect(DelayedCommands).toContainEqual({ command: '!np', key: DBSettings.commandNP })
     expect(DelayedCommands).toContainEqual({ command: '!gm', key: DBSettings.commandGM })
@@ -135,8 +142,8 @@ describe('connectedStreamers lookups', () => {
     // Mapping present but no handler yet -> still null.
     expect(getTokenFromTwitchId(TWITCH_ID)).toBeNull()
 
-    const client = { name: NAME } as any
-    gsiHandlers.set(TOKEN, { client } as any)
+    const client = createSocketClientStub({ name: NAME, token: TOKEN })
+    gsiHandlers.set(TOKEN, createGsiHandlerStub(client))
     twitchNameToToken.set(NAME, TOKEN)
 
     expect(getTokenFromTwitchId(TWITCH_ID)).toBe(TOKEN)

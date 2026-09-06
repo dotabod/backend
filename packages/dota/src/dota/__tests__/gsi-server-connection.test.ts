@@ -1,21 +1,49 @@
+import type { Server, Socket } from 'socket.io'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import {
+  createGsiHandlerStub,
+  createPacketStub,
+  createSocketClientStub,
+  createTwitchAccountStub,
+} from '../../__tests__/shared-mocks'
+import type { GSIHandlerType } from '../gsi-handler-types'
+
+type ServerConnectionHandler = Parameters<Server['on']>[1]
+type SocketEventHandler = Parameters<Socket['on']>[1]
+interface MiddlewareSocket {
+  data: {
+    clientType?: string
+    dotabodClient?: unknown
+  }
+  disconnect: (close?: boolean) => unknown
+  emit: (event: string, ...args: unknown[]) => unknown
+  handshake: {
+    auth: {
+      client?: string
+      token?: string
+      twitchId?: string
+    }
+  }
+}
+type SocketMiddleware = (socket: MiddlewareSocket, next: () => void) => void
 
 const socketState = vi.hoisted(() => ({
   emits: [] as { room: string; event: string; payload: unknown }[],
-  handlers: new Map<string, (...args: any[]) => any>(),
-  middleware: null as ((socket: any, next: (error?: Error) => void) => void) | null,
-  requestHandlers: new Map<string, (...args: any[]) => any>(),
+  handlers: new Map<string, ServerConnectionHandler>(),
+  middleware: null as SocketMiddleware | null,
+  requestHandlers: new Map<string, SocketEventHandler>(),
 }))
 
 const gsiState = vi.hoisted(() => ({
-  handlers: new Map<string, any>(),
+  handlers: new Map<string, GSIHandlerType>(),
 }))
 
 const getWL = vi.hoisted(() => vi.fn())
 const getDBUser = vi.hoisted(() => vi.fn())
 const recordOverlaySocketActivity = vi.hoisted(() => vi.fn())
 
-vi.mock(import('node:http'), () => ({
+vi.mock('node:http', () => ({
   default: {
     createServer: () => ({
       listen: (_port: number, callback: () => void) => {
@@ -25,13 +53,13 @@ vi.mock(import('node:http'), () => ({
   },
 }))
 
-vi.mock(import('socket.io'), () => ({
+vi.mock('socket.io', () => ({
   Server: class {
-    use(handler: (socket: any, next: (error?: Error) => void) => void) {
+    use(handler: SocketMiddleware) {
       socketState.middleware = handler
     }
 
-    on(event: string, handler: (...args: any[]) => any) {
+    on(event: string, handler: ServerConnectionHandler) {
       socketState.handlers.set(event, handler)
     }
 
@@ -45,7 +73,7 @@ vi.mock(import('socket.io'), () => ({
   },
 }))
 
-vi.mock(import('@dotabod/shared-utils'), () => ({
+vi.mock('@dotabod/shared-utils', () => ({
   getTwitchAPI: vi.fn(),
   logger: {
     debug: vi.fn(),
@@ -56,25 +84,25 @@ vi.mock(import('@dotabod/shared-utils'), () => ({
   supabase: {},
 }))
 
-vi.mock(import('../../db/get-db-user'), () => ({ default: getDBUser }))
-vi.mock(import('../../db/get-wl'), () => ({ getWL }))
-vi.mock(import('../../twitch/index'), () => ({ twitchEvent: { emit: vi.fn() } }))
-vi.mock(import('../dota-patch-checker'), () => ({ initDotaPatchChecker: vi.fn() }))
-vi.mock(import('../gsi-handler'), () => ({ emitMinimapBlockerStatus: vi.fn() }))
-vi.mock(import('../global-event-emitter'), () => ({
+vi.mock('../../db/get-db-user', () => ({ default: getDBUser }))
+vi.mock('../../db/get-wl', () => ({ getWL }))
+vi.mock('../../twitch/index', () => ({ twitchEvent: { emit: vi.fn() } }))
+vi.mock('../dota-patch-checker', () => ({ initDotaPatchChecker: vi.fn() }))
+vi.mock('../gsi-handler', () => ({ emitMinimapBlockerStatus: vi.fn() }))
+vi.mock('../global-event-emitter', () => ({
   newData: vi.fn(),
   processChanges: () => vi.fn(),
   processUnmarkedKillListChanges: vi.fn(),
   recoverMultiAccount: vi.fn(),
 }))
-vi.mock(import('../lib/consts'), () => ({ gsiHandlers: gsiState.handlers }))
-vi.mock(import('../lib/matchData'), () => ({ MatchDataService: class {} }))
-vi.mock(import('../lib/remind-unresolved-matches'), () => ({
-  remindUnresolvedMatches: vi.fn().mockResolvedValue(),
+vi.mock('../lib/consts', () => ({ gsiHandlers: gsiState.handlers }))
+vi.mock('../lib/matchData', () => ({ MatchDataService: class {} }))
+vi.mock('../lib/remind-unresolved-matches', () => ({
+  remindUnresolvedMatches: vi.fn().mockResolvedValue(undefined),
 }))
-vi.mock(import('../lib/twitch-utils'), () => ({ deleteClipsBatch: vi.fn() }))
-vi.mock(import('../setup-signals'), () => ({ recordOverlaySocketActivity }))
-vi.mock(import('../validate-token'), () => ({ validateToken: vi.fn() }))
+vi.mock('../lib/twitch-utils', () => ({ deleteClipsBatch: vi.fn() }))
+vi.mock('../setup-signals', () => ({ recordOverlaySocketActivity }))
+vi.mock('../validate-token', () => ({ validateToken: vi.fn() }))
 
 const { default: GSIServer } = await import('../gsi-server')
 
@@ -178,33 +206,37 @@ describe('overlay socket connection state', () => {
 
   it('immediately sends the current hero-demo blocker instead of waiting for another GSI tick', async () => {
     const server = new GSIServer()
-    const setupOBSBlockers = vi.fn().mockResolvedValue()
-    gsiState.handlers.set('overlay-token', {
-      blockCache: null,
-      client: {
-        beta_tester: false,
-        gsi: {
-          map: {
-            customgamename: 'hero_demo',
-            game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
-            matchid: '0',
-          },
+    const setupOBSBlockers = vi.fn().mockResolvedValue(undefined)
+    const client = createSocketClientStub({
+      beta_tester: false,
+      gsi: createPacketStub({
+        map: {
+          customgamename: 'hero_demo',
+          game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+          matchid: '0',
         },
-        gsiUpdatedAt: Date.now(),
-        stream_online: true,
-      },
-      disabled: false,
-      emitBadgeUpdate: vi.fn(),
-      emitWLUpdate: vi.fn(),
-      setupOBSBlockers,
+      }),
+      gsiUpdatedAt: Date.now(),
+      stream_online: true,
+      token: 'overlay-token',
     })
+    gsiState.handlers.set(
+      'overlay-token',
+      createGsiHandlerStub(client, {
+        blockCache: null,
+        disabled: false,
+        emitBadgeUpdate: vi.fn(),
+        emitWLUpdate: vi.fn(),
+        setupOBSBlockers,
+      })
+    )
 
     const connectionHandler = socketState.handlers.get('connection')
     expect(connectionHandler).toBeDefined()
 
     await connectionHandler?.({
       handshake: { auth: { token: 'overlay-token' } },
-      join: vi.fn().mockResolvedValue(),
+      join: vi.fn().mockResolvedValue(undefined),
       on: vi.fn(),
     })
 
@@ -214,26 +246,28 @@ describe('overlay socket connection state', () => {
 
   it('clears a spectator overlay after GSI stops arriving', async () => {
     new GSIServer()
-    gsiState.handlers.set('stale-overlay-token', {
-      blockCache: 'spectator',
-      client: {
-        beta_tester: false,
-        gsi: {
-          map: {
-            game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
-            matchid: '8980144969',
-          },
-          player: { activity: 'watching', team_name: 'spectator' },
+    const client = createSocketClientStub({
+      gsi: createPacketStub({
+        map: {
+          game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+          matchid: '8980144969',
         },
-        gsiUpdatedAt: Date.now() - 76_000,
-        stream_online: true,
-        token: 'stale-overlay-token',
-      },
-      disabled: false,
-      emitBadgeUpdate: vi.fn(),
-      emitWLUpdate: vi.fn(),
-      setupOBSBlockers: vi.fn(),
+        player: { activity: 'watching', team_name: 'spectator' },
+      }),
+      gsiUpdatedAt: Date.now() - 76_000,
+      stream_online: true,
+      token: 'stale-overlay-token',
     })
+    gsiState.handlers.set(
+      'stale-overlay-token',
+      createGsiHandlerStub(client, {
+        blockCache: 'spectator',
+        disabled: false,
+        emitBadgeUpdate: vi.fn(),
+        emitWLUpdate: vi.fn(),
+        setupOBSBlockers: vi.fn(),
+      })
+    )
 
     await vi.advanceTimersByTimeAsync(15_000)
 
@@ -261,28 +295,31 @@ describe('overlay socket connection state', () => {
       statsDays: 14,
       statsDaysTotal: 30,
     })
-    gsiState.handlers.set('profile-token', {
-      client: {
-        Account: { providerAccountId: 'channel-1' },
-        locale: 'en',
-        settings: [{ key: 'wlStatsDays', value: 7 }],
-        stream_online: false,
-        stream_start_date: null,
-        subscription: undefined,
-        token: 'profile-token',
-      },
-      disabled: true,
+    const client = createSocketClientStub({
+      Account: createTwitchAccountStub({ providerAccountId: 'channel-1' }),
+      locale: 'en',
+      settings: [{ key: 'wlStatsDays', value: 7 }],
+      stream_online: false,
+      stream_start_date: null,
+      subscription: undefined,
+      token: 'profile-token',
     })
+    gsiState.handlers.set(
+      'profile-token',
+      createGsiHandlerStub(client, {
+        disabled: true,
+      })
+    )
 
     const connectionHandler = socketState.handlers.get('connection')
     await connectionHandler?.({
       data: {
         clientType: 'win-loss',
-        dotabodClient: gsiState.handlers.get('profile-token').client,
+        dotabodClient: gsiState.handlers.get('profile-token')?.client,
       },
       handshake: { auth: { client: 'win-loss', token: 'profile-token' } },
-      join: vi.fn().mockResolvedValue(),
-      on: (event: string, handler: (...args: any[]) => any) => {
+      join: vi.fn().mockResolvedValue(undefined),
+      on: (event: string, handler: SocketEventHandler) => {
         socketState.requestHandlers.set(event, handler)
       },
     })
@@ -313,26 +350,27 @@ describe('overlay socket connection state', () => {
 
   it('joins public profiles to the WL-only room', async () => {
     new GSIServer()
-    const join = vi.fn().mockResolvedValue()
-    gsiState.handlers.set('profile-token', {
-      client: {
-        Account: { providerAccountId: 'channel-1' },
-        locale: 'en',
-        settings: [],
-        stream_online: true,
-        stream_start_date: new Date('2026-09-04T08:00:00.000Z'),
-        token: 'profile-token',
-      },
-      disabled: false,
-      emitBadgeUpdate: vi.fn(),
-      emitWLUpdate: vi.fn(),
-      setupOBSBlockers: vi.fn(),
+    const join = vi.fn().mockResolvedValue(undefined)
+    const client = createSocketClientStub({
+      Account: createTwitchAccountStub({ providerAccountId: 'channel-1' }),
+      stream_online: true,
+      stream_start_date: new Date('2026-09-04T08:00:00.000Z'),
+      token: 'profile-token',
     })
+    gsiState.handlers.set(
+      'profile-token',
+      createGsiHandlerStub(client, {
+        disabled: false,
+        emitBadgeUpdate: vi.fn(),
+        emitWLUpdate: vi.fn(),
+        setupOBSBlockers: vi.fn(),
+      })
+    )
 
     await socketState.handlers.get('connection')?.({
       data: {
         clientType: 'profile-wl',
-        dotabodClient: gsiState.handlers.get('profile-token').client,
+        dotabodClient: gsiState.handlers.get('profile-token')?.client,
       },
       handshake: { auth: { client: 'profile-wl', twitchId: 'channel-1' } },
       join,
@@ -341,13 +379,13 @@ describe('overlay socket connection state', () => {
 
     expect(join).toHaveBeenCalledWith('profile-wl:channel-1')
     expect(join).not.toHaveBeenCalledWith('profile-token')
-    expect(gsiState.handlers.get('profile-token').emitBadgeUpdate).not.toHaveBeenCalled()
+    expect(gsiState.handlers.get('profile-token')?.emitBadgeUpdate).not.toHaveBeenCalled()
     expect(recordOverlaySocketActivity).not.toHaveBeenCalled()
   })
 
   it('joins the private dashboard preview to the WL-only room for correction updates', async () => {
     new GSIServer()
-    const join = vi.fn().mockResolvedValue()
+    const join = vi.fn().mockResolvedValue(undefined)
     const client = {
       Account: { providerAccountId: 'channel-1' },
       locale: 'en',
@@ -382,8 +420,8 @@ describe('overlay socket connection state', () => {
     await socketState.handlers.get('connection')?.({
       data: { clientType: 'profile-wl', dotabodClient: client },
       handshake: { auth: { client: 'profile-wl', twitchId: 'channel-1' } },
-      join: vi.fn().mockResolvedValue(),
-      on: (event: string, handler: (...args: any[]) => any) => {
+      join: vi.fn().mockResolvedValue(undefined),
+      on: (event: string, handler: SocketEventHandler) => {
         socketState.requestHandlers.set(event, handler)
       },
     })
@@ -399,26 +437,27 @@ describe('overlay socket connection state', () => {
 
   it('rejects an invalid WL preview window before querying the database', async () => {
     new GSIServer()
-    gsiState.handlers.set('profile-token', {
-      client: {
-        Account: { providerAccountId: 'channel-1' },
-        locale: 'en',
-        settings: [],
-        stream_online: false,
-        stream_start_date: null,
-        token: 'profile-token',
-      },
-      disabled: true,
+    const client = createSocketClientStub({
+      Account: createTwitchAccountStub({ providerAccountId: 'channel-1' }),
+      stream_online: false,
+      stream_start_date: null,
+      token: 'profile-token',
     })
+    gsiState.handlers.set(
+      'profile-token',
+      createGsiHandlerStub(client, {
+        disabled: true,
+      })
+    )
 
     await socketState.handlers.get('connection')?.({
       data: {
         clientType: 'win-loss',
-        dotabodClient: gsiState.handlers.get('profile-token').client,
+        dotabodClient: gsiState.handlers.get('profile-token')?.client,
       },
       handshake: { auth: { client: 'win-loss', token: 'profile-token' } },
-      join: vi.fn().mockResolvedValue(),
-      on: (event: string, handler: (...args: any[]) => any) => {
+      join: vi.fn().mockResolvedValue(undefined),
+      on: (event: string, handler: SocketEventHandler) => {
         socketState.requestHandlers.set(event, handler)
       },
     })
@@ -432,26 +471,27 @@ describe('overlay socket connection state', () => {
 
   it('rejects an impossible WL challenge start date before querying the database', async () => {
     new GSIServer()
-    gsiState.handlers.set('profile-token', {
-      client: {
-        Account: { providerAccountId: 'channel-1' },
-        locale: 'en',
-        settings: [],
-        stream_online: false,
-        stream_start_date: null,
-        token: 'profile-token',
-      },
-      disabled: true,
+    const client = createSocketClientStub({
+      Account: createTwitchAccountStub({ providerAccountId: 'channel-1' }),
+      stream_online: false,
+      stream_start_date: null,
+      token: 'profile-token',
     })
+    gsiState.handlers.set(
+      'profile-token',
+      createGsiHandlerStub(client, {
+        disabled: true,
+      })
+    )
 
     await socketState.handlers.get('connection')?.({
       data: {
         clientType: 'win-loss',
-        dotabodClient: gsiState.handlers.get('profile-token').client,
+        dotabodClient: gsiState.handlers.get('profile-token')?.client,
       },
       handshake: { auth: { client: 'win-loss', token: 'profile-token' } },
-      join: vi.fn().mockResolvedValue(),
-      on: (event: string, handler: (...args: any[]) => any) => {
+      join: vi.fn().mockResolvedValue(undefined),
+      on: (event: string, handler: SocketEventHandler) => {
         socketState.requestHandlers.set(event, handler)
       },
     })

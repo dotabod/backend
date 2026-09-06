@@ -49,7 +49,7 @@ const chatterMatchFound = async function chatterMatchFound(client: SocketClient)
     getValueOrDefault(cmd.key, client.settings, client.subscription)
   )
 
-  if (commands.length) {
+  if (commands.length > 0) {
     say(
       client,
       t('matchFound', {
@@ -69,20 +69,20 @@ const chatterMatchFound = async function chatterMatchFound(client: SocketClient)
       DBSettings.autoCommandsOnMatchStart,
       client.settings,
       client.subscription
-    ) as string[]
+    )
 
     logger.info('[AUTO_COMMANDS] Processing auto commands', {
       autoCommands,
-      hasCommands: autoCommands && autoCommands.length > 0,
+      hasCommands: autoCommands.length > 0,
       token: client.token,
     })
 
-    if (autoCommands && autoCommands.length > 0) {
+    if (autoCommands.length > 0) {
       for (const commandKey of autoCommands) {
         // Find the command in DelayedCommands that matches this key
         const commandInfo = DelayedCommands.find((cmd) => cmd.key === commandKey)
 
-        if (commandInfo) {
+        if (commandInfo !== undefined) {
           logger.info('[AUTO_COMMANDS] Executing auto command', {
             command: commandInfo.command,
             commandKey,
@@ -94,7 +94,7 @@ const chatterMatchFound = async function chatterMatchFound(client: SocketClient)
             .handleMessage({
               channel: {
                 client,
-                id: client.Account?.providerAccountId || '',
+                id: client.Account?.providerAccountId ?? '',
                 name: client.name.startsWith('#') ? client.name : `#${client.name}`,
                 settings: client.settings,
               },
@@ -104,7 +104,7 @@ const chatterMatchFound = async function chatterMatchFound(client: SocketClient)
                 name: client.name,
                 // Broadcaster permission
                 permission: 3,
-                userId: client.Account?.providerAccountId || '',
+                userId: client.Account?.providerAccountId ?? '',
               },
             })
             .catch((error: unknown) => {
@@ -165,11 +165,16 @@ const saveMatchData = async function saveMatchData(client: SocketClient) {
   // Since match data is delayed it will run far fewer than before, when checking actual match id of an ingame match
   // the matchid is saved when the hero is selected
   const matchId = await redisClient.client.get(`${client.token}:matchId`)
-  if (!matchId || !Number(matchId)) {
+  if (
+    matchId === null ||
+    matchId.length === 0 ||
+    Number(matchId) === 0 ||
+    Number.isNaN(Number(matchId))
+  ) {
     return
   }
 
-  if (!client.steam32Id) {
+  if (client.steam32Id === null || client.steam32Id === 0) {
     return
   }
 
@@ -187,7 +192,11 @@ const saveMatchData = async function saveMatchData(client: SocketClient) {
   if (cachedData) {
     // If cache is still valid, use cached data and return
     if (Date.now() - cachedData.timestamp < CACHE_EXPIRATION) {
-      if (cachedData.steamServerId && cachedData.lobbyType !== null) {
+      if (
+        cachedData.steamServerId !== null &&
+        cachedData.steamServerId.length > 0 &&
+        cachedData.lobbyType !== null
+      ) {
         return
       }
     } else {
@@ -224,12 +233,12 @@ const saveMatchData = async function saveMatchData(client: SocketClient) {
 
     // Update cache with Redis data
     matchDataCache.set(cacheKey, {
-      lobbyType: lobbyType ? String(lobbyType) : null,
-      steamServerId: steamServerId ? String(steamServerId) : null,
+      lobbyType: lobbyType === null || lobbyType === '' ? null : String(lobbyType),
+      steamServerId: steamServerId === null || steamServerId === '' ? null : String(steamServerId),
       timestamp: now,
     })
 
-    if (steamServerId && lobbyType !== null) {
+    if (steamServerId !== null && steamServerId !== '' && lobbyType !== null) {
       return
     }
 
@@ -238,7 +247,7 @@ const saveMatchData = async function saveMatchData(client: SocketClient) {
     // commands instead use the server_steam_id already present in delayedGames. This lookup stays
     // gated pending bot-friend management at scale; see memory `keep-spectate-friend-path`.
     if (
-      !steamServerId &&
+      (steamServerId === null || steamServerId === '') &&
       lobbyType === null &&
       !is8500Plus(client) &&
       ENABLE_SPECTATE_FRIEND_GAME
@@ -263,7 +272,7 @@ const saveMatchData = async function saveMatchData(client: SocketClient) {
             client.steam32Id,
             (err: unknown, cards: string) => {
               clearTimeout(timeoutId)
-              if (err) {
+              if (err !== null && err !== undefined) {
                 reject(err)
               } else {
                 resolve(cards)
@@ -274,7 +283,7 @@ const saveMatchData = async function saveMatchData(client: SocketClient) {
 
         const steamServerId = await getDelayedDataPromise
 
-        if (steamServerId) {
+        if (steamServerId.length > 0) {
           await redisClient.client.set(
             `${matchId}:${client.token}:steamServerId`,
             steamServerId.toString()
@@ -297,15 +306,15 @@ const saveMatchData = async function saveMatchData(client: SocketClient) {
     }
 
     // Re-check steamServerId from cache first, then Redis if needed
-    let currentSteamServerId = matchDataCache.get(cacheKey)?.steamServerId || null
-    if (!currentSteamServerId) {
+    let currentSteamServerId = matchDataCache.get(cacheKey)?.steamServerId ?? null
+    if (currentSteamServerId === null || currentSteamServerId.length === 0) {
       currentSteamServerId = await redisClient.client.get(
         `${matchId}:${client.token}:steamServerId`
       )
 
       // Update cache if we found it in Redis
-      if (currentSteamServerId) {
-        const currentCache = matchDataCache.get(cacheKey) || {
+      if (currentSteamServerId !== null && currentSteamServerId.length > 0) {
+        const currentCache = matchDataCache.get(cacheKey) ?? {
           lobbyType: null,
           steamServerId: null,
           timestamp: now,
@@ -318,7 +327,12 @@ const saveMatchData = async function saveMatchData(client: SocketClient) {
       }
     }
 
-    if (currentSteamServerId && lobbyType === null && !is8500Plus(client)) {
+    if (
+      currentSteamServerId !== null &&
+      currentSteamServerId.length > 0 &&
+      lobbyType === null &&
+      !is8500Plus(client)
+    ) {
       // Fix: Check if we're already looking up this match to prevent race conditions
       if (steamDelayDataLookupMap.has(matchId)) {
         return
@@ -343,7 +357,7 @@ const saveMatchData = async function saveMatchData(client: SocketClient) {
             },
             (err: unknown, data: DelayedGames) => {
               clearTimeout(timeoutId)
-              if (err) {
+              if (err !== null && err !== undefined) {
                 reject(err)
               } else {
                 resolve(data)
@@ -354,7 +368,7 @@ const saveMatchData = async function saveMatchData(client: SocketClient) {
 
         const delayedData = await getDelayedDataPromise
 
-        if (delayedData?.match && delayedData.match.lobby_type !== undefined) {
+        if (delayedData.match.lobby_type !== undefined) {
           await Promise.all([
             redisClient.client.set(
               `${matchId}:${client.token}:lobbyType`,
@@ -446,7 +460,7 @@ export const checkAccountSharing = async function checkAccountSharing(
   client: SocketClient,
   matchId: string
 ): Promise<boolean> {
-  if (!client.steam32Id || !matchId) {
+  if (client.steam32Id === null || client.steam32Id === 0 || matchId.length === 0) {
     return false
   }
 
@@ -462,7 +476,7 @@ export const checkAccountSharing = async function checkAccountSharing(
     const existingSteamIds = await redisClient.client.get(redisKey)
     let activeSteamIds: string[] = []
 
-    if (existingSteamIds) {
+    if (existingSteamIds !== null && existingSteamIds.length > 0) {
       activeSteamIds = JSON.parse(existingSteamIds)
     }
 
@@ -487,11 +501,14 @@ export const checkAccountSharing = async function checkAccountSharing(
         // This is the first/primary Steam account - allow processing
         return false
       }
+      const playerName = client.gsi?.player?.name
+      const accountName =
+        playerName === undefined || playerName.length === 0 ? 'Unknown' : playerName
       // This is an additional Steam account - block processing
       logger.warn(
         '[ACCOUNT_SHARING] Multiple Steam accounts detected for token - blocking additional account',
         {
-          accountName: client.gsi?.player?.name || 'Unknown',
+          accountName,
           allActiveSteamIds: activeSteamIds,
           blockedSteam32Id: steam32Id,
           primarySteam32Id: activeSteamIds[0],
@@ -503,9 +520,13 @@ export const checkAccountSharing = async function checkAccountSharing(
       const logCacheKey = `${currentToken}:${steam32Id}`
       const lastLogged = accountSharingLogCache.get(logCacheKey)
 
-      if (!lastLogged || currentTime - lastLogged > ACCOUNT_SHARING_LOG_INTERVAL) {
+      if (
+        lastLogged === undefined ||
+        lastLogged === 0 ||
+        currentTime - lastLogged > ACCOUNT_SHARING_LOG_INTERVAL
+      ) {
         await commandDisable.recordNotification(currentToken, 'ACCOUNT_SHARING', {
-          account_name: client.gsi?.player?.name || 'Unknown',
+          account_name: accountName,
           all_active_steam_ids: activeSteamIds,
           block_reason: 'Multiple Steam accounts sending GSI data to same token',
           blocked_steam32_id: steam32Id.toString(),
@@ -518,7 +539,6 @@ export const checkAccountSharing = async function checkAccountSharing(
       }
 
       // Send warning message to blocked account
-      const accountName = client.gsi?.player?.name || 'Unknown'
       say(
         client,
         t('accountSharing.blocked', {
@@ -564,12 +584,12 @@ const _saveMatchDataDump = async (dotaClient: GSIHandlerType) => {
   }
 
   const matchId = dotaClient.client.gsi?.map?.matchid
-  if (!matchId) {
+  if (matchId === undefined || matchId.length === 0) {
     return
   }
 
   const now = Date.now()
-  const lastSaveTime = lastSaveTimeByMatch.get(matchId) || 0
+  const lastSaveTime = lastSaveTimeByMatch.get(matchId) ?? 0
   const winTeam = dotaClient.client.gsi?.map?.win_team
 
   // Only save if it's been at least 1 minute since the last save for this match
@@ -603,8 +623,9 @@ const _saveMatchDataDump = async (dotaClient: GSIHandlerType) => {
   ] as const
   const dumpData: Record<string, unknown> = {}
   for (const key of keysToSave) {
-    if (dotaClient.client.gsi?.[key]) {
-      dumpData[key] = dotaClient.client.gsi[key as keyof Packet]
+    const packetValue = dotaClient.client.gsi?.[key]
+    if (packetValue !== undefined) {
+      dumpData[key] = packetValue
     }
   }
 
@@ -653,7 +674,7 @@ const _maybeSendTooltipData = async (dotaClient: GSIHandlerType) => {
     abilities = dotaClient.client.gsi?.abilities
   }
 
-  if (!hero || !items || !abilities) {
+  if (hero === undefined || items === undefined || abilities === undefined) {
     return
   }
 
@@ -662,8 +683,8 @@ const _maybeSendTooltipData = async (dotaClient: GSIHandlerType) => {
   const roster = await new MatchDataService(dotaClient.client).resolveRoster()
 
   const messageToSend = {
-    abilities: abilities ? Object.values(abilities).map((ability: Ability) => ability.name) : [],
-    hero: hero?.id,
+    abilities: Object.values(abilities).map((ability: Ability) => ability.name),
+    hero: hero.id,
     heroes: roster.players.map((p) => p.heroId),
     items: backpackItems.map((item) => item.name),
     neutral: items?.neutral0?.name,
@@ -676,11 +697,12 @@ eventHandler.registerEvent('newdata', {
   allowMultiAccount: true,
   handler: async (dotaClient, data: Packet) => {
     const recoveryAttemptedBeforeDispatch = consumeMultiAccountRecovery(data)
-    const wasMultiAccountBlocked = !!dotaClient.client.multiAccount
+    const wasMultiAccountBlocked =
+      dotaClient.client.multiAccount !== undefined && dotaClient.client.multiAccount !== 0
     if (wasMultiAccountBlocked && !recoveryAttemptedBeforeDispatch) {
       await dotaClient.updateSteam32Id()
     }
-    if (dotaClient.client.multiAccount) {
+    if (dotaClient.client.multiAccount !== undefined && dotaClient.client.multiAccount !== 0) {
       return
     }
 
@@ -696,12 +718,14 @@ eventHandler.registerEvent('newdata', {
 
     // Workaround: Add draft start map check, since its not handled in previously/added
     // Its the first time gsi sends map data for a match, so we need to handle it here in newdata
+    const currentMatchId = dotaClient.client.gsi?.map?.matchid ?? ''
     if (
       isPlayingMatch(dotaClient.client.gsi, false) &&
       data.map?.game_state === 'DOTA_GAMERULES_STATE_PLAYER_DRAFT' &&
-      !draftStartByMatchId.get(dotaClient.client.gsi?.map?.matchid || '')
+      currentMatchId.length > 0 &&
+      draftStartByMatchId.get(currentMatchId) !== true
     ) {
-      draftStartByMatchId.set(dotaClient.client.gsi?.map?.matchid || '', true)
+      draftStartByMatchId.set(currentMatchId, true)
       events.emit('map:game_state', 'DOTA_GAMERULES_STATE_PLAYER_DRAFT', dotaClient.client.token)
     }
 
@@ -711,8 +735,8 @@ eventHandler.registerEvent('newdata', {
     }
 
     // Everything below here requires an ongoing match, not a finished match
-    const hasWon =
-      dotaClient.client.gsi?.map?.win_team && dotaClient.client.gsi.map.win_team !== 'none'
+    const winTeam = dotaClient.client.gsi?.map?.win_team
+    const hasWon = winTeam !== undefined && winTeam.length > 0 && winTeam !== 'none'
     if (hasWon) {
       return
     }
@@ -749,7 +773,7 @@ eventHandler.registerEvent('newdata', {
         // steamServerId/lobbyType chain above, it doesn't depend on the (permanently
         // disabled) ENABLE_SPECTATE_FRIEND_GAME flow. The .catch keeps a failure here from
         // rejecting this Promise.all and blocking the cache update below.
-        dotaClient.client.steam32Id
+        dotaClient.client.steam32Id !== null && dotaClient.client.steam32Id !== 0
           ? chatterMatchFound(dotaClient.client).catch((error) => {
               logger.error('[AUTO_COMMANDS] Error triggering chatterMatchFound', { error })
             })
@@ -811,7 +835,7 @@ const handleNewEvents = function handleNewEvents(data: Packet, dotaClient: GSIHa
   // Deduped against already-seen events by `${game_time}-${event_type}`.
   const newEvents = selectNewEvents(dotaClient.events, data.events)
 
-  if (newEvents.length) {
+  if (newEvents.length > 0) {
     // Merge new and existing events
     dotaClient.events = [...dotaClient.events, ...newEvents]
 
@@ -819,7 +843,6 @@ const handleNewEvents = function handleNewEvents(data: Packet, dotaClient: GSIHa
     newEvents.forEach((event) => {
       const rawData = event.data
       let dataType: string | undefined
-      let dataWasObject = false
       let dataWasJsonParsed = false
 
       if (typeof rawData === 'string') {
@@ -831,13 +854,6 @@ const handleNewEvents = function handleNewEvents(data: Packet, dotaClient: GSIHa
           dataWasJsonParsed = true
         } catch {
           // Ignore malformed data payloads
-        }
-      } else if (rawData && typeof rawData === 'object') {
-        dataWasObject = true
-        // Use type assertion to allow access to 'type' property safely
-        const potentialType = (rawData as { type?: unknown }).type
-        if (typeof potentialType === 'string') {
-          dataType = potentialType
         }
       }
 
@@ -856,7 +872,6 @@ const handleNewEvents = function handleNewEvents(data: Packet, dotaClient: GSIHa
       if (shouldLogDiagnostic) {
         logger.info('[NEWEVENT]', {
           dataWasJsonParsed,
-          dataWasObject,
           event,
           unknownDiagnosticKeys,
         })

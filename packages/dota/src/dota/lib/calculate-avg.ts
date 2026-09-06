@@ -54,7 +54,8 @@ export const calculateAvg = async function calculateAvg({
 
   const avg = calculateAverage(mmrs)
   const avgLeader = calculateAverage(leaderranks)
-  const averageMmrPostfix = average_mmr ? ` · ${average_mmr} MMR` : ''
+  const averageMmrPostfix =
+    average_mmr !== undefined && average_mmr !== 0 ? ` · ${average_mmr} MMR` : ''
 
   return await getRankTitle(avg, avgLeader, averageMmrPostfix)
 }

@@ -753,6 +753,7 @@ export type Players = {
   playerid: number | null
   rank?: number
   player_name?: string
+  selected?: boolean
 }[]
 
 // Set when only a draft clip has been processed for a match: player names are
@@ -810,6 +811,18 @@ interface MatchMinimal {
 export interface MatchMinimalDetailsResponse {
   matches: MatchMinimal[]
   last_match: unknown
+}
+
+export interface MatchClosingDetailsResponse {
+  matches: {
+    dire_score: number
+    match_id: MatchMinimal['match_id']
+    players: Pick<
+      MatchPlayer,
+      'account_id' | 'assists' | 'deaths' | 'hero_id' | 'kills' | 'player_slot' | 'team_number'
+    >[]
+    radiant_score: number
+  }[]
 }
 
 export enum DotaGcTeam {

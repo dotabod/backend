@@ -11,6 +11,13 @@ const DEDUPE_WINDOW_MS = 5000
 const TWITCH_CHAT_MESSAGE_LIMIT = 500
 const DUPLICATE_DISAMBIGUATOR = ' \u034F'
 
+const nonEmptyTextOr = function nonEmptyTextOr(
+  value: string | null | undefined,
+  fallback: string
+): string {
+  return value === null || value === undefined || value.length === 0 ? fallback : value
+}
+
 const fitTwitchChatMessage = function fitTwitchChatMessage(message: string): string {
   if (message.length <= TWITCH_CHAT_MESSAGE_LIMIT) {
     return message
@@ -141,13 +148,14 @@ export const sendTwitchChatMessage = async function sendTwitchChatMessage(
   // Check for duplicate replies within the dedupe window. The parent message is the only proof
   // that two sends came from the same command event; unthreaded messages must not be collapsed
   // merely because their text matches.
-  const dedupeKey = params.reply_parent_message_id
-    ? `${params.broadcaster_id}:${params.reply_parent_message_id}:${params.message}`
-    : undefined
+  const dedupeKey =
+    params.reply_parent_message_id !== undefined && params.reply_parent_message_id.length > 0
+      ? `${params.broadcaster_id}:${params.reply_parent_message_id}:${params.message}`
+      : undefined
   const now = Date.now()
-  const lastSent = dedupeKey ? messageDedupeCache.get(dedupeKey) : undefined
+  const lastSent = dedupeKey === undefined ? undefined : messageDedupeCache.get(dedupeKey)
 
-  if (lastSent && now - lastSent < DEDUPE_WINDOW_MS) {
+  if (lastSent !== undefined && lastSent !== 0 && now - lastSent < DEDUPE_WINDOW_MS) {
     logger.info('[DEDUPE] Dropping duplicate chat message', {
       broadcaster_id: params.broadcaster_id,
       last_sent_ms_ago: now - lastSent,
@@ -169,7 +177,7 @@ export const sendTwitchChatMessage = async function sendTwitchChatMessage(
   }
 
   // Record this message in the cache
-  if (dedupeKey) {
+  if (dedupeKey !== undefined) {
     messageDedupeCache.set(dedupeKey, now)
   }
 
@@ -323,17 +331,18 @@ export const handleChatMessage = async function handleChatMessage(
   }
 
   const userInfo = extractUserInfo(badges, channelId, chatter_user_id)
+  const replyMessageId = nonEmptyTextOr(reply?.parent_message_id, message_id)
 
   if (hasDotabodSocket()) {
     emitChatMessage(broadcaster_user_login, chatter_user_login, messageText, {
       channelId,
-      messageId: reply?.parent_message_id || message_id,
+      messageId: replyMessageId,
       userInfo,
     })
     return
   }
 
-  await dotabodOfflineHandler(messageText, channelId, reply?.parent_message_id || message_id)
+  await dotabodOfflineHandler(messageText, channelId, replyMessageId)
 }
 
 const dotabodOfflineHandler = async function dotabodOfflineHandler(
@@ -352,7 +361,7 @@ const dotabodOfflineHandler = async function dotabodOfflineHandler(
         broadcaster_id: channelId,
         message: t('rebooting', { emote: 'PauseChamp', lng: 'en' }),
         reply_parent_message_id,
-        sender_id: process.env.TWITCH_BOT_PROVIDERID || '',
+        sender_id: process.env.TWITCH_BOT_PROVIDERID ?? '',
       })
     } catch (error) {
       logger.error('Could not send rebooting message', { error })

@@ -7,7 +7,10 @@ import { commandHandler, liveGsi, makeMessage, resetState, state } from './setup
 // early steam32Id guard, so we cover that collision-safe guard branch here.
 // geo short-circuits to the Valve-disabled message before the roster lookup,
 // so its reachable paths are fully covered.
-const multiAccount = t('multiAccount', { lng: 'en', url: 'dotabod.com/dashboard/features' })
+const multiAccount = t('multiAccount', {
+  lng: 'en',
+  url: 'dotabod.com/dashboard/features',
+})
 const notPlaying = t('notPlaying', { emote: 'PauseChamp', lng: 'en' })
 
 beforeEach(() => {
@@ -19,7 +22,10 @@ for (const cmd of ['gm', 'np', 'smurfs', 'lg']) {
   describe(`!${cmd}`, () => {
     it('reports unknownSteam when there is no steam id', async () => {
       await commandHandler.handleMessage(
-        makeMessage({ clientOverrides: { steam32Id: null }, content: `!${cmd}` })
+        makeMessage({
+          clientOverrides: { steam32Id: null },
+          content: `!${cmd}`,
+        })
       )
       expect(state.chatSayCalls).toHaveLength(1)
       expect(state.chatSayCalls[0].message).toBe(t('unknownSteam', { lng: 'en' }))
@@ -28,7 +34,7 @@ for (const cmd of ['gm', 'np', 'smurfs', 'lg']) {
     it('reports the multiAccount message when no steam id and multiAccount is set', async () => {
       await commandHandler.handleMessage(
         makeMessage({
-          clientOverrides: { multiAccount: true, steam32Id: null } as any,
+          clientOverrides: { multiAccount: 440_614_454, steam32Id: null },
           content: `!${cmd}`,
         })
       )

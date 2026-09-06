@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { flushAsync } from '../../../../__tests__/shared-mocks.ts'
+import { createPacketStub, flushAsync } from '../../../../__tests__/shared-mocks.ts'
 import { getHeroNameOrColor } from '../../../lib/heroes.ts'
 import {
   events,
@@ -638,7 +638,7 @@ describe('event:bounty_rune_pickup', () => {
     handler.client.gsi.map.clock_time = 60
     registerHandler(handler)
     // roster present but the slot has no heroid (delayedGames is heroless now)
-    gsiState.matchPlayers = [{ accountid: 11, heroid: undefined as unknown as number, playerid: 0 }]
+    gsiState.matchPlayers = [{ accountid: 11, heroid: undefined, playerid: 0 }]
     gsiState.redisGet[`${handler.client.token}:playingTeam`] = 'radiant'
 
     events.emit(
@@ -748,7 +748,12 @@ describe('event:generic_event - smoke activated', () => {
   it('sends one message — roasts the streamer — when the team smokes without them', async () => {
     const handler = makeGsiHandler()
     handler.client.gsi.player.team_name = 'radiant'
-    handler.client.gsi.hero = { alive: true, name: 'npc_dota_hero_lina', smoked: false }
+    handler.client.gsi.hero = {
+      alive: true,
+      id: 25,
+      name: 'npc_dota_hero_lina',
+      smoked: false,
+    }
     registerHandler(handler)
     // Teammate in slot 0 casts it; the streamer is slot 1 and never got the buff.
     gsiState.matchPlayers = [{ accountid: 99_999, heroid: 5, playerid: 0 }]
@@ -764,7 +769,12 @@ describe('event:generic_event - smoke activated', () => {
   it('stays silent when the streamer is in the smoke (hero:smoked announces instead)', async () => {
     const handler = makeGsiHandler()
     handler.client.gsi.player.team_name = 'radiant'
-    handler.client.gsi.hero = { alive: true, name: 'npc_dota_hero_lina', smoked: true }
+    handler.client.gsi.hero = {
+      alive: true,
+      id: 25,
+      name: 'npc_dota_hero_lina',
+      smoked: true,
+    }
     registerHandler(handler)
     gsiState.matchPlayers = [{ accountid: 99_999, heroid: 5, playerid: 0 }]
     gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '1'
@@ -780,7 +790,12 @@ describe('event:generic_event - smoke activated', () => {
   it('stays silent when the streamer cast the smoke themselves', async () => {
     const handler = makeGsiHandler()
     handler.client.gsi.player.team_name = 'radiant'
-    handler.client.gsi.hero = { alive: true, name: 'npc_dota_hero_lina', smoked: false }
+    handler.client.gsi.hero = {
+      alive: true,
+      id: 25,
+      name: 'npc_dota_hero_lina',
+      smoked: false,
+    }
     registerHandler(handler)
     gsiState.matchPlayers = [{ accountid: 99_999, heroid: 5, playerid: 0 }]
     gsiState.redisGet[`${handler.getToken()}:playingHeroSlot`] = '0'
@@ -795,7 +810,12 @@ describe('event:generic_event - smoke activated', () => {
   it('stays silent when the streamer is dead (not "caught out")', async () => {
     const handler = makeGsiHandler()
     handler.client.gsi.player.team_name = 'radiant'
-    handler.client.gsi.hero = { alive: false, name: 'npc_dota_hero_lina', smoked: false }
+    handler.client.gsi.hero = {
+      alive: false,
+      id: 25,
+      name: 'npc_dota_hero_lina',
+      smoked: false,
+    }
     registerHandler(handler)
     // Teammate smoked while the streamer is dead — a dead player wasn't left behind and
     // never gets the buff, so neither path has anything to say.
@@ -825,7 +845,12 @@ describe('event:generic_event - smoke activated', () => {
   it('does not double-post when a teammate smokes the streamer (hero:smoked + team event)', async () => {
     const handler = makeGsiHandler()
     handler.client.gsi.player.team_name = 'radiant'
-    handler.client.gsi.hero = { alive: true, name: 'npc_dota_hero_lina', smoked: true }
+    handler.client.gsi.hero = {
+      alive: true,
+      id: 25,
+      name: 'npc_dota_hero_lina',
+      smoked: true,
+    }
     registerHandler(handler)
     gsiState.redisGet[`${handler.getToken()}:playingHero`] = 'npc_dota_hero_lina'
     // Teammate in slot 0 popped it; the streamer (slot 1) is in the smoke.
@@ -860,7 +885,10 @@ describe('player:kill_streak', () => {
 
   it('chats killstreak.lost when the previous streak was >= 3 and current is 0', async () => {
     const handler = makeGsiHandler()
-    handler.client.gsi.previously = { player: { kill_streak: 5 } }
+    handler.client.gsi.previously = Object.assign(
+      createPacketStub({ map: handler.client.gsi.map }),
+      { player: { kill_streak: 5 } }
+    )
     registerHandler(handler)
 
     events.emit('player:kill_streak', 0, handler.getToken())

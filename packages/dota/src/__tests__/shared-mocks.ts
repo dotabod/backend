@@ -1,3 +1,20 @@
+import { setTimeout as sleep } from 'node:timers/promises'
+
+import type {
+  Json,
+  checkBotStatus,
+  commandDisable,
+  recordDisableNotification,
+  resolveDisableNotifications,
+  trackDisableReason,
+  trackResolveReason,
+} from '@dotabod/shared-utils'
+
+import type { GSIHandlerType } from '../dota/gsi-handler-types'
+import type { Packet, SocketClient } from '../types'
+
+type TwitchAccount = NonNullable<SocketClient['Account']>
+
 // Helpers shared across the package's test harnesses. Filename intentionally
 // not `.test.ts` so bun's runner ignores it.
 //
@@ -8,72 +25,186 @@
 // with "Export named X not found". Centralizing the surface here keeps the
 // two harnesses in lockstep without copy/paste drift.
 
-type SupabaseLike = unknown
 // Loose function signature so callers can supply any of the typical logger
 // shapes (message + optional meta, variadic args, etc.) without TS contravariance
 // rejecting them. Tests just care that the methods exist and capture calls.
+type LoggerMetadata = Record<string, Date | Error | Json | undefined>
+
 interface LoggerLike {
-  info: (...args: any[]) => void
-  error: (...args: any[]) => void
-  warn: (...args: any[]) => void
-  debug: (...args: any[]) => void
+  info: (message: string, meta?: LoggerMetadata) => void
+  error: (message: string, meta?: LoggerMetadata) => void
+  warn: (message: string, meta?: LoggerMetadata) => void
+  debug: (message: string, meta?: LoggerMetadata) => void
 }
 
-export const buildSharedUtilsMock = function buildSharedUtilsMock(opts: {
-  supabase: SupabaseLike
-  logger: LoggerLike
-  getTwitchAPI?: () => Promise<unknown>
-  getAuthProvider?: () => unknown
-  checkBotStatus?: () => Promise<boolean>
-  trackDisableReason?: (
-    userId: string,
-    settingKey: string,
-    reason: string,
-    metadata?: Record<string, unknown>,
-    opts?: { disabledValue?: boolean }
-  ) => Promise<void>
-  trackResolveReason?: (
-    userId: string,
-    settingKey: string,
-    autoResolved?: boolean,
-    opts?: { reason?: string; enabledValue?: boolean }
-  ) => Promise<void>
-  recordDisableNotification?: (
-    userId: string,
-    settingKey: string,
-    reason: string,
-    metadata?: Record<string, unknown>
-  ) => Promise<void>
-  resolveDisableNotifications?: (
-    userId: string,
-    settingKey: string,
-    opts?: { reason?: string; autoResolved?: boolean }
-  ) => Promise<void>
-  commandDisable?: {
-    disable: (userId: string, reason: string, metadata?: Record<string, unknown>) => Promise<void>
-    enable: (userId: string, opts?: { reason?: string; autoResolved?: boolean }) => Promise<void>
-    recordNotification: (
-      userId: string,
-      reason: string,
-      metadata?: Record<string, unknown>
-    ) => Promise<void>
+type DeepPartial<Owner> = Owner extends Date
+  ? Owner
+  : Owner extends readonly (infer Entry)[]
+    ? DeepPartial<Entry>[]
+    : Owner extends object
+      ? { [Key in keyof Owner]?: DeepPartial<Owner[Key]> }
+      : Owner
+
+type PacketOverride = DeepPartial<Packet>
+
+const createEntityData = function createEntityData() {
+  return { data: [], lastUpdate: 0, timeout: 0 }
+}
+
+export function createSocketClientStub(): SocketClient
+export function createSocketClientStub<T extends Partial<SocketClient>>(
+  overrides: T
+): SocketClient & T
+export function createSocketClientStub(overrides: Partial<SocketClient> = {}): SocketClient {
+  const client: SocketClient = {
+    Account: null,
+    SteamAccount: [],
+    beta_tester: false,
+    locale: 'en',
+    mmr: 0,
+    name: 'test-user',
+    settings: [],
+    steam32Id: null,
+    stream_online: false,
+    stream_start_date: null,
+    token: 'test-token',
   }
-}) {
+  return Object.assign(client, overrides)
+}
+
+export const createTwitchAccountStub = function createTwitchAccountStub(
+  overrides: Partial<TwitchAccount> = {}
+): TwitchAccount {
+  return {
+    access_token: '',
+    expires_at: null,
+    expires_in: null,
+    obtainment_timestamp: null,
+    providerAccountId: 'test-channel',
+    refresh_token: '',
+    requires_refresh: false,
+    scope: null,
+    ...overrides,
+  }
+}
+
+export function createPacketStub(): Packet
+export function createPacketStub<T extends PacketOverride>(overrides: T): Packet & T
+export function createPacketStub(overrides: PacketOverride = {}): Packet {
+  const packet: Packet = {
+    provider: { appid: 570, name: 'Dota 2', timestamp: 0, version: 1 },
+  }
+  return Object.assign(packet, overrides)
+}
+
+export const createGsiHandlerStub = function createGsiHandlerStub(
+  client: SocketClient,
+  overrides: Partial<GSIHandlerType> = {}
+): GSIHandlerType {
+  const completed = Promise.resolve()
+
+  return {
+    addSecondsToNow: (seconds) => new Date(Date.now() + seconds * 1000),
+    blockCache: null,
+    bountyHeroNames: [],
+    checkingEarlyDCWinner: false,
+    client,
+    closeBets: async () => {
+      await completed
+    },
+    creatingSteamAccount: false,
+    disable: () => {},
+    disabled: false,
+    emitBadgeUpdate: () => {},
+    emitNotablePlayers: async () => {
+      await completed
+    },
+    emitStreamersInMatch: async () => {
+      await completed
+    },
+    emitWLUpdate: () => {},
+    enable: () => {},
+    endingBets: false,
+    events: [],
+    getChannelId: () => client.Account?.providerAccountId ?? '',
+    getMmr: () => client.mmr,
+    getSteam32: () => client.steam32Id,
+    getToken: () => client.token,
+    mapBlocker: {
+      minimap: {
+        buildings: createEntityData(),
+        couriers: createEntityData(),
+        creeps: createEntityData(),
+        hero_units: createEntityData(),
+        heroes: createEntityData(),
+        scan: createEntityData(),
+        tp: createEntityData(),
+      },
+      resetData: () => {},
+      sendData: () => {},
+      token: client.token,
+    },
+    neutralItemTimer: {
+      checkNeutralItems: async () => {
+        await completed
+      },
+      reset: () => {},
+    },
+    noTpChatter: {},
+    openBets: async () => {
+      await completed
+    },
+    openTheBet: async () => {
+      await completed
+    },
+    openingBets: false,
+    resetClientState: async () => {
+      await completed
+    },
+    setupOBSBlockers: async () => {
+      await completed
+    },
+    treadsData: { manaAtLastToggle: 0, manaSaved: 0, treadToggles: 0 },
+    updateSteam32Id: async () => {
+      await completed
+    },
+    ...overrides,
+  }
+}
+
+interface SharedUtilsMockOptions<Supabase, TwitchApi, AuthProvider> {
+  supabase: Supabase
+  logger: LoggerLike
+  getTwitchAPI?: () => Promise<TwitchApi>
+  getAuthProvider?: () => AuthProvider
+  checkBotStatus?: typeof checkBotStatus
+  trackDisableReason?: typeof trackDisableReason
+  trackResolveReason?: typeof trackResolveReason
+  recordDisableNotification?: typeof recordDisableNotification
+  resolveDisableNotifications?: typeof resolveDisableNotifications
+  commandDisable?: typeof commandDisable
+}
+
+export const buildSharedUtilsMock = function buildSharedUtilsMock<
+  Supabase,
+  TwitchApi = Record<never, never>,
+  AuthProvider = Record<never, never>,
+>(opts: SharedUtilsMockOptions<Supabase, TwitchApi, AuthProvider>) {
   return {
     botStatus: { isBanned: false },
-    checkBotStatus: opts.checkBotStatus ?? (async () => false),
+    checkBotStatus: opts.checkBotStatus ?? (async () => await Promise.resolve(false)),
     commandDisable: opts.commandDisable ?? {
       disable: async () => {},
       enable: async () => {},
       recordNotification: async () => {},
     },
     default: opts.supabase,
-    fetchConduitId: async () => '',
+    fetchConduitId: async () => await Promise.resolve(''),
     getAuthProvider: opts.getAuthProvider ?? (() => ({})),
     getSupabaseClient: () => opts.supabase,
-    getTwitchAPI: opts.getTwitchAPI ?? (async () => ({})),
+    getTwitchAPI: opts.getTwitchAPI ?? (async () => await Promise.resolve({})),
     getTwitchHeaders: () => ({}),
-    getTwitchTokens: async () => ({ access_token: '', refresh_token: '' }),
+    getTwitchTokens: async () => await Promise.resolve({ access_token: '', refresh_token: '' }),
     hasTokens: () => true,
     logger: opts.logger,
     recordDisableNotification: opts.recordDisableNotification ?? (async () => {}),
@@ -89,12 +220,14 @@ export const buildSharedUtilsMock = function buildSharedUtilsMock(opts: {
 // call `t()` emit real strings (not the key) in test output. Idempotent so
 // multiple harnesses can call this safely.
 export const initTestI18n = async function initTestI18n() {
-  const i18next = (await import('i18next')).default
-  const enTranslation = (await import('../../locales/en/translation.json')).default
+  const i18nextModule = await import('i18next')
+  const translationModule = await import('../../locales/en/translation.json')
+  const i18next = i18nextModule.default
+  const enTranslation = translationModule.default
   if (!i18next.isInitialized) {
     await i18next.init({
-      lng: 'en',
       fallbackLng: 'en',
+      lng: 'en',
       // Mirror the production runtime config (dota/src/dota/index.ts). With
       // returnEmptyString:false an empty i18next plural variant falls back to
       // the base key instead of resolving to "". This matters because the
@@ -103,9 +236,9 @@ export const initTestI18n = async function initTestI18n() {
       // every locale on each sync — keyed off `t('cosmetics.list', { count })`.
       // Prod tolerates those via this flag; the harness must too, or
       // `t()` on a counted key returns "" and diverges from real behavior.
+      resources: { en: { translation: enTranslation } },
       returnEmptyString: false,
       returnNull: false,
-      resources: { en: { translation: enTranslation } },
     })
     return
   }
@@ -124,11 +257,16 @@ export const initTestI18n = async function initTestI18n() {
 // A Pro subscription bypasses `canAccessFeature` gates everywhere settings/
 // chatters are checked. Tests that want to focus on dispatch/handler logic
 // (not billing) attach this to `client.subscription`.
-export const PRO_SUB = { id: 'sub-1', isGift: false, status: 'ACTIVE', tier: 'PRO' } as any
+export const PRO_SUB = {
+  id: 'sub-1',
+  isGift: false,
+  status: 'ACTIVE',
+  tier: 'PRO',
+} satisfies NonNullable<SocketClient['subscription']>
 
 // Drain microtasks queued by fire-and-forget async handlers. `events.emit`
 // is synchronous, but handlers (and the `.then()` chains they spawn) run on
 // the microtask/macrotask queue — one macrotask boundary is enough.
 export const flushAsync = async () => {
-  await new Promise<void>((r) => setTimeout(r, 0))
+  await sleep(0)
 }

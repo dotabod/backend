@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { flushAsync } from '../../../__tests__/shared-mocks.ts'
+import { createPacketStub, flushAsync } from '../../../__tests__/shared-mocks.ts'
 import { commandHandler, liveGsi, makeMessage, resetState, state } from './setup-mocks.ts'
 
 // Commands that talk to the overlay through the (stubbed) socket.io server.
@@ -114,7 +114,10 @@ describe('!resetwl', () => {
 describe('!hero', () => {
   it('blocks via the onlyOnline gate when the stream is offline', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { stream_online: false }, content: '!hero' })
+      makeMessage({
+        clientOverrides: { stream_online: false },
+        content: '!hero',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(t('notLive', { emote: 'PauseChamp', lng: 'en' }))
@@ -188,7 +191,10 @@ describe('!hero', () => {
     ]
 
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { gsi } as any, content: '!hero' })
+      makeMessage({
+        clientOverrides: { gsi: createPacketStub(gsi) },
+        content: '!hero',
+      })
     )
 
     expect(state.chatSayCalls).toHaveLength(1)

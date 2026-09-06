@@ -3,10 +3,19 @@
 // Filename intentionally not `.test.ts` so bun's runner ignores it.
 import { vi } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../../__tests__/shared-mocks'
+import {
+  buildSharedUtilsMock,
+  createGsiHandlerStub,
+  createPacketStub,
+  createSocketClientStub,
+  initTestI18n,
+  PRO_SUB,
+} from '../../../../__tests__/shared-mocks'
+import type { Packet, SocketClient } from '../../../../types'
+import type { GSIHandlerType } from '../../../gsi-handler-types'
 
 export interface MatchPlayer {
-  heroid: number
+  heroid: number | undefined
   accountid: number
   playerid: number | null
 }
@@ -62,31 +71,34 @@ export const resetGsiState = function resetGsiState() {
 vi.doMock('@dotabod/shared-utils', () =>
   buildSharedUtilsMock({
     logger: { debug: () => {}, error: () => {}, info: () => {}, warn: () => {} },
-    supabase: { from: () => ({}), rpc: async () => ({ data: [], error: null }) },
+    supabase: {
+      from: () => ({}),
+      rpc: async () => await Promise.resolve({ data: [], error: null }),
+    },
   })
 )
 
 // RedisClient is a class with a getInstance() static method. The handlers call
 // `RedisClient.getInstance().client.json.set/get` and `.client.get`.
 const fakeRedisClient = {
-  get: async (key: string) => gsiState.redisGet[key] ?? null,
-  set: async () => 'OK',
+  get: async (key: string) => await Promise.resolve(gsiState.redisGet[key] ?? null),
+  set: async () => await Promise.resolve('OK'),
   // Sorted-set stubs used by clipSchedule.ts (scheduleClip / rearmPersistedClips).
   // Errors are caught by clipSchedule's own try/catch, so returning silently is
   // fine for tests that don't exercise the durability path directly.
-  zAdd: async () => 0,
-  zRem: async () => 0,
-  zRangeByScore: async () => [] as string[],
+  zAdd: async () => await Promise.resolve(0),
+  zRem: async () => await Promise.resolve(0),
+  zRangeByScore: async () => await Promise.resolve([] as string[]),
   json: {
     del: async (key: string) => {
       gsiState.redisJsonDelCalls.push(key)
       if (gsiState.redisJsonDelError) {
-        throw gsiState.redisJsonDelError
+        return await Promise.reject(gsiState.redisJsonDelError)
       }
       delete gsiState.redisJson[key]
-      return 1
+      return await Promise.resolve(1)
     },
-    get: async (key: string) => gsiState.redisJson[key] ?? null,
+    get: async (key: string) => await Promise.resolve(gsiState.redisJson[key] ?? null),
     set: async (key: string, path: string, value: unknown) => {
       // Clone at write time. Handlers commonly mutate `res` after json.set
       // (e.g. generateRoshanMessage recalculates expireS), and storing the
@@ -95,7 +107,7 @@ const fakeRedisClient = {
       const snapshot = JSON.parse(JSON.stringify(value))
       gsiState.redisJsonSetCalls.push({ key, path, value: snapshot })
       gsiState.redisJson[key] = snapshot
-      return 'OK'
+      return await Promise.resolve('OK')
     },
   },
 }
@@ -124,7 +136,7 @@ vi.doMock('../../../../db/redis-client', () => ({
 vi.doMock('../../../lib/matchData', () => {
   class FakeMatchDataService {
     async resolveRoster() {
-      return {
+      return await Promise.resolve({
         completeness: {
           accountIds: 'all' as const,
           heroIds: 'all' as const,
@@ -136,7 +148,7 @@ vi.doMock('../../../lib/matchData', () => {
         hasAllHeroes: false,
         players: gsiState.matchPlayers.map((p) => ({
           accountId: p.accountid || null,
-          heroId: p.heroid || null,
+          heroId: p.heroid ?? null,
           playerName: null,
           rank: null,
           selected: null,
@@ -145,27 +157,30 @@ vi.doMock('../../../lib/matchData', () => {
         })),
         source: 'sourcetv' as const,
         stage: 'in-progress' as const,
-      }
+      })
     }
     async getAccountIds() {
-      return gsiState.matchPlayers
-        .map((p) => p.accountid)
-        .filter((id): id is number => !!id && id > 0)
+      return await Promise.resolve(
+        gsiState.matchPlayers.map((p) => p.accountid).filter((id): id is number => !!id && id > 0)
+      )
     }
     async getHeroesStatus() {
-      return
+      return await Promise.resolve()
     }
     async getStreamersInMatchCount() {
-      return 0
+      return await Promise.resolve(0)
     }
     async resolveHeroNameForSlot({ eventPlayerId }: { eventPlayerId: number }) {
       const p = gsiState.matchPlayers.find((mp) => mp.playerid === eventPlayerId)
-      return { name: p?.heroid ? `hero_${p.heroid}` : null, resolvedFromRoster: !!p }
+      return await Promise.resolve({
+        name: p?.heroid !== undefined && p.heroid !== 0 ? `hero_${p.heroid}` : null,
+        resolvedFromRoster: p !== undefined,
+      })
     }
   }
   return {
     MatchDataService: FakeMatchDataService,
-    getStreamersInMatch: async () => 0,
+    getStreamersInMatch: async () => await Promise.resolve(0),
   }
 })
 
@@ -180,22 +195,30 @@ let taskIdCounter = 0
 const { delayedQueue: realDelayedQueue } = await import('../../../lib/delayed-queue')
 
 const installDelayedQueueMock = function installDelayedQueueMock() {
-  ;(realDelayedQueue as any).addTask = (
-    delayMs: number,
-    callback: (payload: unknown) => void | Promise<void>,
-    payload: unknown = null
-  ) => {
-    gsiState.delayedQueueAddCalls.push({ delayMs })
-    taskIdCounter += 1
-    const id = `task-${taskIdCounter}`
-    void callback(payload)
-    return id
-  }
-  ;(realDelayedQueue as any).removeTask = (id: string) => {
-    gsiState.delayedQueueRemovedIds.push(id)
-    return true
-  }
-  ;(realDelayedQueue as any).getQueueSize = () => 0
+  Object.defineProperties(realDelayedQueue, {
+    addTask: {
+      configurable: true,
+      value: (
+        delayMs: number,
+        callback: (payload: unknown) => void | Promise<void>,
+        payload: unknown = null
+      ) => {
+        gsiState.delayedQueueAddCalls.push({ delayMs })
+        taskIdCounter += 1
+        const id = `task-${taskIdCounter}`
+        void callback(payload)
+        return id
+      },
+    },
+    getQueueSize: { configurable: true, value: () => 0 },
+    removeTask: {
+      configurable: true,
+      value: (id: string) => {
+        gsiState.delayedQueueRemovedIds.push(id)
+        return true
+      },
+    },
+  })
 }
 installDelayedQueueMock()
 
@@ -213,21 +236,22 @@ const { redisClient } = await import('../../../../db/redis-instance')
 // loads last wins. Calling this in `beforeEach` from gsi tests guarantees
 // the gsi patches are active for the test about to run.
 export const installGsiMocks = function installGsiMocks() {
-  chatClient.say = async (channel: string, message: string) => {
+  chatClient.say = (channel: string, message: string) => {
     gsiState.chatSayCalls.push({ channel, message })
   }
 
-  ;(redisClient as any).client = fakeRedisClient
+  Object.assign(redisClient, { client: fakeRedisClient })
 
   server.setServer({
     io: {
+      fetchSockets: async () => await Promise.resolve([]),
       to: (token: string) => ({
         emit: (event: string, payload: unknown) => {
           gsiState.ioEmitCalls.push({ event, payload, token })
         },
       }),
     },
-  } as any)
+  })
 
   installDelayedQueueMock()
 }
@@ -252,51 +276,56 @@ await import('../player.kill_list')
 
 export { events, gsiHandlers }
 
-export interface GsiHandlerLike {
-  client: any
-  disabled: boolean
-  getToken: () => string
-  addSecondsToNow: (s: number) => Date
-  bountyHeroNames: string[]
-  bountyTaskId?: string
-  killstreakTaskId?: string
-  closeBets: (winningTeam?: string) => Promise<void>
-  closeBetsCalls: (string | undefined)[]
+type TestPacket = Packet & {
+  hero: NonNullable<Packet['hero']>
+  map: NonNullable<Packet['map']>
+  player: NonNullable<Packet['player']>
+}
+
+type TestClient = SocketClient & { gsi: TestPacket }
+
+export type GsiHandlerLike = Omit<GSIHandlerType, 'client'> & {
+  client: TestClient
+  closeBetsCalls: ('radiant' | 'dire' | null)[]
 }
 
 export const makeGsiHandler = function makeGsiHandler(
   overrides: Partial<GsiHandlerLike> = {}
 ): GsiHandlerLike {
   const token = 'token-gsi-1'
-  const closeBetsCalls: (string | undefined)[] = []
-  return {
-    addSecondsToNow: (s: number) => new Date(Date.now() + s * 1000),
-    bountyHeroNames: [],
-    client: {
-      name: 'streamer',
-      token,
-      stream_online: true,
-      multiAccount: false,
+  const closeBetsCalls: ('radiant' | 'dire' | null)[] = []
+  const { client: clientOverride, ...handlerOverrides } = overrides
+  const gsi = createPacketStub({
+    hero: { id: 25, name: 'npc_dota_hero_lina' },
+    map: { clock_time: 600, game_time: 600, matchid: '7777777777' },
+    player: { activity: 'playing', team_name: 'radiant' },
+  })
+  const client =
+    clientOverride ??
+    createSocketClientStub({
+      gsi,
       locale: 'en',
+      multiAccount: undefined,
+      name: 'streamer',
       settings: [],
+      stream_online: true,
       subscription: PRO_SUB,
-      // Default gsi: a playable match. Individual tests can override.
-      gsi: {
-        hero: { name: 'npc_dota_hero_lina' },
-        map: { clock_time: 600, game_time: 600, matchid: '7777777777' },
-        player: { activity: 'playing', team_name: 'radiant' },
-      },
-    },
-    closeBets: async (winningTeam) => {
+      token,
+    })
+  const handler = createGsiHandlerStub(client, {
+    addSecondsToNow: (seconds) => new Date(Date.now() + seconds * 1000),
+    bountyHeroNames: [],
+    closeBets: async (winningTeam = null) => {
       closeBetsCalls.push(winningTeam)
+      await Promise.resolve()
     },
-    closeBetsCalls,
     disabled: false,
     getToken: () => token,
-    ...overrides,
-  }
+    ...handlerOverrides,
+  })
+  return Object.assign(handler, { client, closeBetsCalls })
 }
 
 export const registerHandler = function registerHandler(handler: GsiHandlerLike) {
-  gsiHandlers.set(handler.getToken(), handler as any)
+  gsiHandlers.set(handler.getToken(), handler)
 }

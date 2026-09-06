@@ -32,10 +32,10 @@ export const getStreamersInMatch = async function getStreamersInMatch({
   const userIds = new Set<string>()
 
   // Source 1: live Dotabod streamers tracked in this exact match.
-  if (matchId && matchId !== '0') {
+  if (matchId !== undefined && matchId.length > 0 && matchId !== '0') {
     const { data } = await supabase.from('matches').select('userId').eq('matchId', matchId)
     for (const row of data ?? []) {
-      if (row.userId) {
+      if (row.userId !== null && row.userId.length > 0) {
         userIds.add(row.userId)
       }
     }
@@ -43,12 +43,12 @@ export const getStreamersInMatch = async function getStreamersInMatch({
 
   // Source 2: registered Dotabod users present in the (SourceTV) roster.
   const accountIds = (
-    players?.length
+    players !== undefined && players.length > 0
       ? players.map((p) => p.accountId)
-      : client
+      : client !== undefined
         ? await new MatchDataService(client).getAccountIds()
         : []
-  ).filter((id): id is number => !!id && id !== 0)
+  ).filter((id): id is number => id !== null && id !== 0 && !Number.isNaN(id))
   if (accountIds.length) {
     const { data } = await supabase
       .from('steam_accounts')

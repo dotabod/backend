@@ -1,6 +1,13 @@
-import { describe, expect, it, vi } from 'vitest'
+import { setTimeout as sleep } from 'node:timers/promises'
 
-import { buildSharedUtilsMock } from '../../../__tests__/shared-mocks.ts'
+import { describe, expect, it } from 'vitest'
+
+import type {
+  ClipLogContext,
+  ClipQuery,
+  CreateReadyClipDependencies,
+} from '../create-ready-clip.ts'
+import { createReadyClip } from '../create-ready-clip.ts'
 
 const noopLogger = {
   debug: () => {},
@@ -9,13 +16,14 @@ const noopLogger = {
   warn: () => {},
 }
 
-// createReadyClip only touches `logger` from shared-utils; the Twitch ApiClient
-// is passed in, so a no-op surface keeps the test fully offline.
-vi.doMock(import('@dotabod/shared-utils'), () =>
-  buildSharedUtilsMock({ logger: noopLogger, supabase: {} })
-)
+const dependencies = {
+  logger: noopLogger,
+  wait: async (milliseconds: number) => {
+    await sleep(milliseconds)
+  },
+} satisfies CreateReadyClipDependencies
 
-const { createReadyClip } = await import('../create-ready-clip.ts')
+const LOG_CONTEXT = { name: 'test', state: 'test' } satisfies ClipLogContext
 
 // Build a fake Twurple ApiClient whose createClip returns the given ids in order
 // and whose getClipById reports a duration per clip id (0 = never transcodes).
@@ -29,30 +37,30 @@ const fakeApi = function fakeApi(opts: {
   // Clip creation goes through `callApi` rather than `clips.createClip` because
   // Twurple can't send Twitch's `duration` parameter; capture the queries so tests
   // can assert what was actually requested.
-  const createQueries: Record<string, string>[] = []
+  const createQueries: ClipQuery[] = []
   const api = {
-    callApi: async ({ query }: { query: Record<string, string> }) => {
+    callApi: async ({ query }: { query: ClipQuery }) => {
       createCalls += 1
       createQueries.push(query)
-      if (opts.createThrowsOn?.includes(createCalls)) {
-        throw new Error('createClip boom')
+      if (opts.createThrowsOn?.includes(createCalls) === true) {
+        return await Promise.reject(new Error('createClip boom'))
       }
       const id = opts.clipIds[createCalls - 1]
       if (id === undefined) {
-        throw new Error('ran out of fake clip ids')
+        return await Promise.reject(new Error('ran out of fake clip ids'))
       }
-      return { data: [{ id }] }
+      return await Promise.resolve({ data: [{ id }] })
     },
     clips: {
       getClipById: async (id: string) => {
         getCalls.push(id)
         const duration = opts.durations[id] ?? 0
-        return { duration }
+        return await Promise.resolve({ duration })
       },
     },
   }
   return {
-    api: api as any,
+    api,
     createQueries,
     getCreateCalls: () => createCalls,
     getGetCalls: () => getCalls,
@@ -61,14 +69,21 @@ const fakeApi = function fakeApi(opts: {
 
 const FAST_OPTS = { maxAttempts: 3, pollAttempts: 3, pollIntervalMs: 1 }
 
-describe('createReadyClip', () => {
+describe(createReadyClip, () => {
   it('returns the clip id when the first clip is ready immediately', async () => {
     const { api, getCreateCalls } = fakeApi({
       clipIds: ['clip-a'],
       durations: { 'clip-a': 29 },
     })
 
-    const result = await createReadyClip(api, 'acct', FAST_OPTS, '[Test]', {})
+    const result = await createReadyClip(
+      api,
+      'acct',
+      FAST_OPTS,
+      '[Test]',
+      LOG_CONTEXT,
+      dependencies
+    )
 
     expect(result).toBe('clip-a')
     expect(getCreateCalls()).toBe(1)
@@ -80,7 +95,14 @@ describe('createReadyClip', () => {
       durations: { 'clip-a': 60 },
     })
 
-    await createReadyClip(api, 'acct', { ...FAST_OPTS, durationSeconds: 60 }, '[Test]', {})
+    await createReadyClip(
+      api,
+      'acct',
+      { ...FAST_OPTS, durationSeconds: 60 },
+      '[Test]',
+      LOG_CONTEXT,
+      dependencies
+    )
 
     expect(createQueries[0]).toStrictEqual({ broadcaster_id: 'acct', duration: '60' })
   })
@@ -91,7 +113,7 @@ describe('createReadyClip', () => {
       durations: { 'clip-a': 29 },
     })
 
-    await createReadyClip(api, 'acct', FAST_OPTS, '[Test]', {})
+    await createReadyClip(api, 'acct', FAST_OPTS, '[Test]', LOG_CONTEXT, dependencies)
 
     expect(createQueries[0]).toStrictEqual({ broadcaster_id: 'acct' })
   })
@@ -110,7 +132,8 @@ describe('createReadyClip', () => {
       'acct',
       { ...FAST_OPTS, initialDelayMs: 50 },
       '[Test]',
-      {}
+      LOG_CONTEXT,
+      dependencies
     )
 
     expect(result).toBe('clip-a')
@@ -125,7 +148,14 @@ describe('createReadyClip', () => {
       durations: { dud: 0, good: 30 },
     })
 
-    const result = await createReadyClip(api, 'acct', FAST_OPTS, '[Test]', {})
+    const result = await createReadyClip(
+      api,
+      'acct',
+      FAST_OPTS,
+      '[Test]',
+      LOG_CONTEXT,
+      dependencies
+    )
 
     expect(result).toBe('good')
     expect(getCreateCalls()).toBe(2)
@@ -137,7 +167,14 @@ describe('createReadyClip', () => {
       durations: { d1: 0, d2: 0, d3: 0 },
     })
 
-    const result = await createReadyClip(api, 'acct', FAST_OPTS, '[Test]', {})
+    const result = await createReadyClip(
+      api,
+      'acct',
+      FAST_OPTS,
+      '[Test]',
+      LOG_CONTEXT,
+      dependencies
+    )
 
     expect(result).toBeNull()
     expect(getCreateCalls()).toBe(3)
@@ -150,7 +187,14 @@ describe('createReadyClip', () => {
       durations: { good: 30 },
     })
 
-    const result = await createReadyClip(api, 'acct', FAST_OPTS, '[Test]', {})
+    const result = await createReadyClip(
+      api,
+      'acct',
+      FAST_OPTS,
+      '[Test]',
+      LOG_CONTEXT,
+      dependencies
+    )
 
     expect(result).toBe('good')
     expect(getCreateCalls()).toBe(2)
@@ -170,14 +214,21 @@ describe('createReadyClip', () => {
     const api = {
       callApi: async () => {
         createCalls += 1
-        throw offlineError
+        return await Promise.reject(offlineError)
       },
       clips: {
-        getClipById: async () => ({ duration: 0 }),
+        getClipById: async () => await Promise.resolve({ duration: 0 }),
       },
-    } as any
+    }
 
-    const result = await createReadyClip(api, 'acct', FAST_OPTS, '[Test]', {})
+    const result = await createReadyClip(
+      api,
+      'acct',
+      FAST_OPTS,
+      '[Test]',
+      LOG_CONTEXT,
+      dependencies
+    )
 
     expect(result).toBeNull()
     // no retries — does not consume maxAttempts
@@ -195,14 +246,21 @@ describe('createReadyClip', () => {
     const api = {
       callApi: async () => {
         createCalls += 1
-        throw scopeError
+        return await Promise.reject(scopeError)
       },
       clips: {
-        getClipById: async () => ({ duration: 0 }),
+        getClipById: async () => await Promise.resolve({ duration: 0 }),
       },
-    } as any
+    }
 
-    const result = await createReadyClip(api, 'acct', FAST_OPTS, '[Test]', {})
+    const result = await createReadyClip(
+      api,
+      'acct',
+      FAST_OPTS,
+      '[Test]',
+      LOG_CONTEXT,
+      dependencies
+    )
 
     expect(result).toBeNull()
     // no retries — does not consume maxAttempts
@@ -215,14 +273,14 @@ describe('createReadyClip', () => {
     // here reports duration 0 for the first 3 polls, then transcodes on the 4th.
     let polls = 0
     const api = {
-      callApi: async () => ({ data: [{ id: 'slow' }] }),
+      callApi: async () => await Promise.resolve({ data: [{ id: 'slow' }] }),
       clips: {
-        getClipById: async (_id: string) => {
+        getClipById: async () => {
           polls += 1
-          return { duration: polls >= 4 ? 30 : 0 }
+          return await Promise.resolve({ duration: polls >= 4 ? 30 : 0 })
         },
       },
-    } as any
+    }
 
     // Draft-like opts: 5 polls is a long enough window to reach the 4th poll.
     const result = await createReadyClip(
@@ -230,7 +288,8 @@ describe('createReadyClip', () => {
       'acct',
       { maxAttempts: 2, pollAttempts: 5, pollIntervalMs: 1 },
       '[Test]',
-      {}
+      LOG_CONTEXT,
+      dependencies
     )
 
     // the original clip, not a recreation
@@ -247,23 +306,24 @@ describe('createReadyClip', () => {
     const api = {
       callApi: async () => {
         createCalls += 1
-        return { data: [{ id: `clip-${createCalls}` }] }
+        return await Promise.resolve({ data: [{ id: `clip-${createCalls}` }] })
       },
       clips: {
         getClipById: async (id: string) => {
           perClipPolls[id] = (perClipPolls[id] ?? 0) + 1
           // Each fresh clip needs 4 polls to transcode; 2 polls never reaches it.
-          return { duration: perClipPolls[id] >= 4 ? 30 : 0 }
+          return await Promise.resolve({ duration: perClipPolls[id] >= 4 ? 30 : 0 })
         },
       },
-    } as any
+    }
 
     const result = await createReadyClip(
       api,
       'acct',
       { maxAttempts: 2, pollAttempts: 2, pollIntervalMs: 1 },
       '[Test]',
-      {}
+      LOG_CONTEXT,
+      dependencies
     )
 
     // never caught a transcode within 2 polls
@@ -285,7 +345,8 @@ describe('createReadyClip', () => {
       'acct',
       { deadlineMs: 5, maxAttempts: 5, pollAttempts: 3, pollIntervalMs: 20 },
       '[Test]',
-      {}
+      LOG_CONTEXT,
+      dependencies
     )
 
     expect(result).toBeNull()

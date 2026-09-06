@@ -15,12 +15,12 @@ const supabaseMock = {
   from: (table: string) => ({
     upsert: async (values: Record<string, unknown>, options?: unknown) => {
       upsertCalls.push({ options, table, values })
-      return { data: null, error: null }
+      return await Promise.resolve({ data: null, error: null })
     },
   }),
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () =>
+vi.doMock('@dotabod/shared-utils', () =>
   buildSharedUtilsMock({ logger: noopLogger, supabase: supabaseMock })
 )
 

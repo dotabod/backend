@@ -30,7 +30,7 @@ export const sendExtensionPubSubBroadcastMessageIfChanged = async (
 }
 
 const tooltipsConfig = {
-  clientId: process.env.TWITCH_EXT_CLIENT_ID || '',
-  ownerId: process.env.TWITCH_BOT_PROVIDERID || '',
-  secret: process.env.TWITCH_EXT_SECRET || '',
+  clientId: process.env.TWITCH_EXT_CLIENT_ID ?? '',
+  ownerId: process.env.TWITCH_BOT_PROVIDERID ?? '',
+  secret: process.env.TWITCH_EXT_SECRET ?? '',
 }

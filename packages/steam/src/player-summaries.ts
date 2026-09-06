@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 const STEAM_ID64_BASE = 76_561_197_960_265_728n
 const CACHE_TTL_MS = 10 * 60 * 1000
 
@@ -12,7 +14,7 @@ interface Persona {
 }
 
 interface PersonaClient {
-  getPersonas(steamIds: string[]): Promise<{ personas: Record<string, Persona> }>
+  getPersonas: (steamIds: string[]) => Promise<{ personas: Record<string, Persona> }>
 }
 
 interface SteamPlayerSummaryServiceOptions {
@@ -26,9 +28,50 @@ interface CacheEntry {
   summary: SteamPlayerSummary
 }
 
+interface WebSummary {
+  countryCode: string | null
+  personaName: string | null
+}
+
+const webJsonValueSchema = z.json()
+const webPlayerSchema = z.object({
+  loccountrycode: webJsonValueSchema.optional(),
+  personaname: webJsonValueSchema.optional(),
+  steamid: webJsonValueSchema.optional(),
+})
+const webSummaryResponseSchema = z.object({
+  response: z
+    .object({
+      players: z.array(webJsonValueSchema).optional(),
+    })
+    .optional(),
+})
+
+type WebPlayerField = z.infer<typeof webJsonValueSchema> | undefined
+
+const webText = function webText(value: WebPlayerField): string | undefined {
+  const parsedText = z.string().safeParse(value)
+  return parsedText.success ? parsedText.data : undefined
+}
+
+const trimmedTextOrNull = function trimmedTextOrNull(
+  value: string | null | undefined
+): string | null {
+  const trimmed = value?.trim()
+  return trimmed === undefined || trimmed.length === 0 ? null : trimmed
+}
+
 const toSteamId64 = (accountId: number): string => (STEAM_ID64_BASE + BigInt(accountId)).toString()
 
 const toAccountId = (steamId64: string): number => Number(BigInt(steamId64) - STEAM_ID64_BASE)
+
+const validAccountId = function validAccountId(steamId64?: string): number | null {
+  if (steamId64 === undefined || steamId64.length === 0) {
+    return null
+  }
+  const accountId = toAccountId(steamId64)
+  return Number.isInteger(accountId) && accountId > 0 ? accountId : null
+}
 
 export class SteamPlayerSummaryService {
   private readonly cache = new Map<number, CacheEntry>()
@@ -58,22 +101,25 @@ export class SteamPlayerSummaryService {
       return false
     })
 
-    if (uncached.length) {
+    if (uncached.length > 0) {
       const steamIds = uncached.map(toSteamId64)
       const [personaResult, webResult] = await Promise.allSettled([
         this.getPersonas(steamIds),
         this.fetchWebSummaries(steamIds),
       ])
       const personas = personaResult.status === 'fulfilled' ? personaResult.value.personas : {}
-      const webSummaries = webResult.status === 'fulfilled' ? webResult.value : new Map()
+      const webSummaries =
+        webResult.status === 'fulfilled' ? webResult.value : new Map<number, WebSummary>()
 
       for (const accountId of uncached) {
         const steamId = toSteamId64(accountId)
         const web = webSummaries.get(accountId)
+        const personaName =
+          trimmedTextOrNull(personas[steamId]?.player_name) ?? web?.personaName ?? null
         const summary = {
           account_id: accountId,
-          country_code: web?.countryCode || null,
-          persona_name: personas?.[steamId]?.player_name?.trim() || web?.personaName || null,
+          country_code: web?.countryCode ?? null,
+          persona_name: personaName,
         }
         results.set(accountId, summary)
         this.cache.set(accountId, { expiresAt: now + CACHE_TTL_MS, summary })
@@ -86,10 +132,8 @@ export class SteamPlayerSummaryService {
     })
   }
 
-  private async fetchWebSummaries(
-    steamIds: string[]
-  ): Promise<Map<number, { personaName: string | null; countryCode: string | null }>> {
-    if (!this.apiKey || !steamIds.length) {
+  private async fetchWebSummaries(steamIds: string[]): Promise<Map<number, WebSummary>> {
+    if (this.apiKey === undefined || this.apiKey.length === 0 || steamIds.length === 0) {
       return new Map()
     }
 
@@ -101,28 +145,24 @@ export class SteamPlayerSummaryService {
       return new Map()
     }
 
-    const body = (await response.json()) as {
-      response?: {
-        players?: {
-          steamid?: string
-          personaname?: string
-          loccountrycode?: string
-        }[]
-      }
+    const parsedBody = webSummaryResponseSchema.safeParse(await response.json())
+    if (!parsedBody.success) {
+      return new Map()
     }
-    const summaries = new Map<number, { personaName: string | null; countryCode: string | null }>()
-    for (const player of body.response?.players ?? []) {
-      if (!player.steamid) {
-        continue
+
+    const summaries = new Map<number, WebSummary>()
+    for (const playerValue of parsedBody.data.response?.players ?? []) {
+      const parsedPlayer = webPlayerSchema.safeParse(playerValue)
+      const accountId = parsedPlayer.success
+        ? validAccountId(webText(parsedPlayer.data.steamid))
+        : null
+      if (accountId !== null && parsedPlayer.success) {
+        summaries.set(accountId, {
+          countryCode:
+            trimmedTextOrNull(webText(parsedPlayer.data.loccountrycode))?.toUpperCase() ?? null,
+          personaName: trimmedTextOrNull(webText(parsedPlayer.data.personaname)),
+        })
       }
-      const accountId = toAccountId(player.steamid)
-      if (!Number.isInteger(accountId) || accountId <= 0) {
-        continue
-      }
-      summaries.set(accountId, {
-        countryCode: player.loccountrycode?.trim().toUpperCase() || null,
-        personaName: player.personaname?.trim() || null,
-      })
     }
     return summaries
   }

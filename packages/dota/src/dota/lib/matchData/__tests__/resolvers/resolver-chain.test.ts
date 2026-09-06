@@ -15,7 +15,7 @@ class FakeResolver extends RosterResolver {
   }
   async resolve(_ctx: ResolverContext): Promise<RawRoster | null> {
     this.callCount += 1
-    return this.result
+    return await Promise.resolve(this.result)
   }
 }
 

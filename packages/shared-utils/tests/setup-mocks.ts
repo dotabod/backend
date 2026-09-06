@@ -46,29 +46,30 @@ const createTableBuilder = function createTableBuilder(table: string) {
   const filters: { method: string; col: string; val: unknown }[] = []
   let updateValues: unknown = null
 
-  const builder: any = {
+  const builder: unknown = {
     eq: (col: string, val: unknown) => {
       filters.push({ col, method: 'eq', val })
       return builder
     },
     insert: async (values: unknown) => {
       utilsState.inserts.push({ table, values })
-      return { data: null, error: null }
+      return await Promise.resolve({ data: null, error: null })
     },
     select: () => builder,
-    single: async () => utilsState.selectSingle[table] ?? { data: null, error: null },
+    single: async () =>
+      await Promise.resolve(utilsState.selectSingle[table] ?? { data: null, error: null }),
     update: (values: unknown) => {
       updateValues = values
       return updateChain
     },
     upsert: async (values: unknown, options?: unknown) => {
       utilsState.upserts.push({ options, table, values })
-      return { data: null, error: null }
+      return await Promise.resolve({ data: null, error: null })
     },
   }
 
   // .update() returns a separate chain that records filters then awaits.
-  const updateChain: any = {
+  const updateChain: unknown = {
     eq: (col: string, val: unknown) => {
       filters.push({ col, method: 'eq', val })
       return updateChain
@@ -111,9 +112,9 @@ vi.doMock('../src/logger', () => ({
 
 vi.doMock('@twurple/auth', () => ({
   getAppToken: async () => {
-    if (utilsState.appTokenError) {
+    if (utilsState.appTokenError !== null && utilsState.appTokenError !== undefined) {
       throw utilsState.appTokenError
     }
-    return utilsState.appToken
+    return await Promise.resolve(utilsState.appToken)
   },
 }))

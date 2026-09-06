@@ -63,8 +63,14 @@ export const chatClient = {
   ): void => {
     const user = findUserByName(channel.toLowerCase().replace('#', ''))
     const hasNewestScopes = user?.Account?.scope?.includes('channel:bot')
+    const providerAccountId = user?.Account?.providerAccountId
 
-    if (hasNewestScopes && user?.Account?.providerAccountId) {
+    if (
+      user !== null &&
+      hasNewestScopes === true &&
+      providerAccountId !== undefined &&
+      providerAccountId.length > 0
+    ) {
       if (!bypassDisableCheck) {
         const isDisabled = getValueOrDefault(
           DBSettings.commandDisable,
@@ -81,12 +87,12 @@ export const chatClient = {
       // outgoing message so we don't send a separate "Also try !x" line.
       const ctx = suggestionContext.getStore()
       let finalText = text
-      if (ctx?.suffix) {
+      if (ctx?.suffix !== null && ctx?.suffix !== undefined && ctx.suffix.length > 0) {
         finalText = `${text} · ${ctx.suffix}`
         ctx.suffix = null
       }
 
-      twitchChat.emit('say', user?.Account?.providerAccountId, finalText, reply_parent_message_id)
+      twitchChat.emit('say', providerAccountId, finalText, reply_parent_message_id)
     }
   },
   // Like `say`, but drops any pending command-suggestion suffix first. For
@@ -100,7 +106,10 @@ export const chatClient = {
     chatClient.say(channel, text, reply_parent_message_id)
   },
   whisper: (channel: string, text: string | undefined) => {
-    whisperQueue.push({ channel, text: text || 'Empty whisper message, monka' })
+    whisperQueue.push({
+      channel,
+      text: text !== undefined && text.length > 0 ? text : 'Empty whisper message, monka',
+    })
     void processQueue()
   },
 }

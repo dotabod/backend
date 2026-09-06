@@ -1,19 +1,44 @@
 import { logger } from '@dotabod/shared-utils'
-import type { NextFunction, Request, Response } from 'express'
+import type { Request, RequestHandler } from 'express'
 
 import getDBUser from '../db/get-db-user'
+import type { Packet } from '../types'
 import { invalidTokens, lookingupToken, pendingCheckAuth } from './lib/consts'
 import { recordGsiActivity } from './setup-signals'
 
-export const validateToken = async function validateToken(
-  req: Request,
-  res: Response,
-  next: NextFunction
+export interface AuthenticatedGsiPacket extends Packet {
+  auth?: {
+    token?: string
+  }
+}
+
+export interface ValidateTokenRequest {
+  body: AuthenticatedGsiPacket
+  headers: Request['headers']
+  socket: {
+    remoteAddress?: string
+  }
+}
+
+export interface ValidateTokenResponse {
+  json: (body: { error: string }) => ValidateTokenResponse
+  status: (code: number) => ValidateTokenResponse
+}
+
+export type ValidateTokenNext = () => void
+
+export const validateTokenRequest = async function validateTokenRequest(
+  req: ValidateTokenRequest,
+  res: ValidateTokenResponse,
+  next: ValidateTokenNext
 ): Promise<void> {
-  const forwardedIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress
+  const forwardedFor = req.headers['x-forwarded-for']
+  const forwardedIp = Array.isArray(forwardedFor)
+    ? forwardedFor[0]
+    : (forwardedFor ?? req.socket.remoteAddress)
 
   // Sent from dota gsi config file
-  const token = req.body?.auth?.token as string | undefined
+  const token = req.body.auth?.token
 
   if (invalidTokens.has(token)) {
     res.status(200).json({
@@ -22,7 +47,7 @@ export const validateToken = async function validateToken(
     return
   }
 
-  if (!token) {
+  if (token === undefined || token.length === 0) {
     logger.info('[GSI], Dropping message, no valid auth token', { forwardedIp })
     res.status(200).json({
       error: 'Invalid request! No token provided.',
@@ -43,7 +68,7 @@ export const validateToken = async function validateToken(
   pendingCheckAuth.set(token, true)
   try {
     const { result: client } = await getDBUser({ ip: forwardedIp, token })
-    if (client?.token) {
+    if (client?.token !== undefined && client.token.length > 0) {
       // Record first-seen for the setup wizard's Step 2 verify-state, regardless of
       // stream state. This is the signal that the cfg file is installed and Dota 2 is
       // running. Cached + idempotent upsert under the hood.
@@ -79,4 +104,12 @@ export const validateToken = async function validateToken(
   } finally {
     pendingCheckAuth.delete(token)
   }
+}
+
+export const validateToken: RequestHandler<
+  Record<string, string>,
+  { error: string },
+  AuthenticatedGsiPacket
+> = async (req, res, next) => {
+  await validateTokenRequest(req, res, next)
 }

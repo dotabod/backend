@@ -80,13 +80,14 @@ const _fixNewUsers = async function _fixNewUsers() {
 
   const botApi = await getTwitchAPI()
   for (const user of users) {
-    if (!user.Account?.providerAccountId) {
+    if (
+      user.Account?.providerAccountId === undefined ||
+      user.Account.providerAccountId.length === 0
+    ) {
       console.log('no account for user', user.id)
       continue
     }
-    if (botApi) {
-      await handleNewUser(user.Account.providerAccountId, botApi)
-    }
+    await handleNewUser(user.Account.providerAccountId, botApi)
   }
   return
 }
@@ -94,9 +95,6 @@ const _fixNewUsers = async function _fixNewUsers() {
 // await fixNewUsers()
 
 const handleNewUser = async function handleNewUser(providerAccountId: string, botApi: ApiClient) {
-  if (!botApi) {
-    return
-  }
   try {
     const stream = await botApi.streams.getStreamByUserId(providerAccountId)
     const streamer = await botApi.users.getUserById(providerAccountId)
@@ -130,7 +128,7 @@ const handleNewUser = async function handleNewUser(providerAccountId: string, bo
 
     console.log({ filteredData, userId })
 
-    if (!userId) {
+    if (userId === null || userId.length === 0) {
       logger.error('[USER] 2 Error checking auth', { error: 'No token' })
       return null
     }

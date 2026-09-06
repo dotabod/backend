@@ -52,6 +52,6 @@ export interface ParsedData {
 export interface DataBroadcasterInterface {
   token: string
   minimap: MinimapData
-  resetData(): void
-  sendData(parsedData: ParsedData): void
+  resetData: () => void
+  sendData: (parsedData: ParsedData) => void
 }

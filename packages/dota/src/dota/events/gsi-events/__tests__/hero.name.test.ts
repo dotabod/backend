@@ -4,7 +4,14 @@
 // surfaced in !unresolved formatting and chat copy until closeBets ran.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../../__tests__/shared-mocks'
+import {
+  buildSharedUtilsMock,
+  createGsiHandlerStub,
+  createPacketStub,
+  createSocketClientStub,
+  initTestI18n,
+  PRO_SUB,
+} from '../../../../__tests__/shared-mocks'
 
 interface UpdateCall {
   values: Record<string, unknown>
@@ -26,7 +33,7 @@ let nextPredictionId: string | null = 'old-prediction-id'
 const supabaseMock = {
   from: () => {
     let updateValues: Record<string, unknown> = {}
-    const builder: any = {
+    const builder: unknown = {
       eq: (col: string, val: string) => {
         if (Object.keys(updateValues).length > 0) {
           updateCalls.push({ values: updateValues, whereCol: col, whereVal: val })
@@ -37,9 +44,11 @@ const supabaseMock = {
       is: () => builder,
       select: () => builder,
       single: async () =>
-        nextPredictionId
-          ? { data: { predictionId: nextPredictionId }, error: null }
-          : { data: null, error: { message: 'not found' } },
+        await Promise.resolve(
+          nextPredictionId !== null && nextPredictionId.length > 0
+            ? { data: { predictionId: nextPredictionId }, error: null }
+            : { data: null, error: { message: 'not found' } }
+        ),
       update: (values: Record<string, unknown>) => {
         updateValues = values
         return builder
@@ -47,7 +56,7 @@ const supabaseMock = {
     }
     return builder
   },
-  rpc: async () => ({ data: [], error: null }),
+  rpc: async () => await Promise.resolve({ data: [], error: null }),
 }
 
 const loggerMock = {
@@ -57,48 +66,48 @@ const loggerMock = {
   warn: () => {},
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () =>
+vi.doMock('@dotabod/shared-utils', () =>
   buildSharedUtilsMock({ logger: loggerMock, supabase: supabaseMock })
 )
 
-vi.doMock(import('../../../../steam/ws'), () => ({
+vi.doMock('../../../../steam/ws', () => ({
   steamSocket: { emit: () => {}, on: () => {} },
   twitchChat: { emit: () => {}, on: () => {} },
   twitchEvents: { emit: () => {}, on: () => {} },
 }))
 
-vi.doMock(import('../../../../twitch/lib/open-twitch-bet'), () => ({
+vi.doMock('../../../../twitch/lib/open-twitch-bet', () => ({
   openTwitchBet: async ({ heroName }: { heroName?: string }) => {
     openBetCalls.push({ heroName })
-    return { id: 'new-prediction-id' }
+    return await Promise.resolve({ id: 'new-prediction-id' })
   },
 }))
 
-vi.doMock(import('../../../../twitch/lib/refund-twitch-bets'), () => ({
+vi.doMock('../../../../twitch/lib/refund-twitch-bets', () => ({
   refundTwitchBet: async (channelId: string, predictionId: string) => {
     refundCalls.push({ channelId, predictionId })
-    return predictionId
+    return await Promise.resolve(predictionId)
   },
 }))
 
-vi.doMock(import('../../../lib/delayed-queue'), () => ({
+vi.doMock('../../../lib/delayed-queue', () => ({
   delayedQueue: {
     addTask: (_delayMs: number, cb: (payload: unknown) => void | Promise<void>) => {
-      heldTasks.push({ invoke: () => cb(null) })
+      heldTasks.push({ invoke: async () => await Promise.resolve(cb(null)) })
       return `task-${heldTasks.length}`
     },
     removeTask: () => true,
   },
 }))
 
-vi.doMock(import('../../../../db/redis-client'), () => ({
+vi.doMock('../../../../db/redis-client', () => ({
   default: {
     getInstance: () => ({
       client: {
-        get: async (key: string) => redisStore[key] ?? null,
+        get: async (key: string) => await Promise.resolve(redisStore[key] ?? null),
         set: async (key: string, val: string) => {
           redisStore[key] = val
-          return 'OK'
+          return await Promise.resolve('OK')
         },
       },
     }),
@@ -116,25 +125,27 @@ const { gsiHandlers } = await import('../../../lib/consts')
 const TOKEN = 'token-arteezy'
 
 const registerFakeHandler = function registerFakeHandler() {
-  gsiHandlers.set(TOKEN, {
-    client: {
-      gsi: {
-        hero: { name: 'npc_dota_hero_pudge' },
-        map: { matchid: '8825999999' },
-        player: { activity: 'playing' },
-      },
-      locale: 'en',
-      multiAccount: false,
-      name: 'arteezy',
-      settings: [],
-      stream_online: true,
-      subscription: PRO_SUB,
-      token: TOKEN,
-    },
-    disabled: false,
-    getChannelId: () => 'twitch-channel-1',
-    getToken: () => TOKEN,
-  } as any)
+  const client = createSocketClientStub({
+    gsi: createPacketStub({
+      hero: { name: 'npc_dota_hero_pudge' },
+      map: { matchid: '8825999999' },
+      player: { activity: 'playing' },
+    }),
+    locale: 'en',
+    name: 'arteezy',
+    settings: [],
+    stream_online: true,
+    subscription: PRO_SUB,
+    token: TOKEN,
+  })
+  gsiHandlers.set(
+    TOKEN,
+    createGsiHandlerStub(client, {
+      disabled: false,
+      getChannelId: () => 'twitch-channel-1',
+      getToken: () => TOKEN,
+    })
+  )
 }
 
 const unregisterFakeHandler = function unregisterFakeHandler() {
@@ -188,7 +199,7 @@ describe('hero:name swap → matches.hero_name update', () => {
     openBetCalls.length = 0
     // Make the reopen "fail" by returning no id — simulate openTwitchBet
     // returning undefined on error (the real fn does this on caught errors).
-    vi.doMock(import('../../../../twitch/lib/open-twitch-bet'), () => ({
+    vi.doMock('../../../../twitch/lib/open-twitch-bet', () => ({
       openTwitchBet: async () => {},
     }))
 

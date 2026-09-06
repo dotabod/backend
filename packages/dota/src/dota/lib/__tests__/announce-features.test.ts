@@ -5,7 +5,14 @@
 // a fresh token so the module-level once-ever cache doesn't leak across cases.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n } from '../../../__tests__/shared-mocks'
+import {
+  buildSharedUtilsMock,
+  createGsiHandlerStub,
+  createPacketStub,
+  createSocketClientStub,
+  initTestI18n,
+} from '../../../__tests__/shared-mocks'
+import type { GSIHandlerType } from '../../gsi-handler-types'
 
 const loggerMock = {
   debug: () => {},
@@ -25,36 +32,36 @@ const supabaseMock = {
       if (table === 'notifications') {
         notificationInserts.push(row)
       }
-      return { error: null }
+      return await Promise.resolve({ error: null })
     },
     upsert: (values: { userId: string; key: string }) => ({
       select: async () => {
-        if (nextUpsertError) {
+        if (nextUpsertError !== null) {
           const error = nextUpsertError
           nextUpsertError = null
-          return { data: null, error }
+          return await Promise.resolve({ data: null, error })
         }
         const k = `${values.userId}:${values.key}`
         const firstTime = !settingsInserted.has(k)
         settingsInserted.add(k)
-        return { data: firstTime ? [{ key: values.key }] : [], error: null }
+        return await Promise.resolve({ data: firstTime ? [{ key: values.key }] : [], error: null })
       },
     }),
   }),
 }
-vi.doMock(import('@dotabod/shared-utils'), () =>
+vi.doMock('@dotabod/shared-utils', () =>
   buildSharedUtilsMock({ logger: loggerMock, supabase: supabaseMock })
 )
 
 const redisStore: Record<string, string> = {}
-vi.doMock(import('../../../db/redis-client'), () => ({
+vi.doMock('../../../db/redis-client', () => ({
   default: {
     getInstance: () => ({
       client: {
-        get: async (key: string) => redisStore[key] ?? null,
+        get: async (key: string) => await Promise.resolve(redisStore[key] ?? null),
         set: async (key: string, val: string) => {
           redisStore[key] = val
-          return 'OK'
+          return await Promise.resolve('OK')
         },
       },
     }),
@@ -87,23 +94,22 @@ const makeDotaClient = function makeDotaClient(opts: {
   settings?: Setting[]
   playing?: boolean
   stream_online?: boolean
-}): any {
+}): GSIHandlerType {
   const { token, matchid = 'm1', settings = [], playing = true, stream_online = true } = opts
-  return {
-    client: {
-      gsi: {
-        hero: { id: INVOKER_ID },
-        map: { matchid },
-        player: playing ? { activity: 'playing' } : {},
-      },
-      locale: 'en',
-      name: 'streamer',
-      settings,
-      stream_online,
-      subscription: undefined,
-      token,
-    },
-  }
+  const client = createSocketClientStub({
+    gsi: createPacketStub({
+      hero: { id: INVOKER_ID },
+      map: { matchid },
+      player: playing ? { activity: 'playing' } : {},
+    }),
+    locale: 'en',
+    name: 'streamer',
+    settings,
+    stream_online,
+    subscription: undefined,
+    token,
+  })
+  return createGsiHandlerStub(client)
 }
 
 const messages = () => sayMock.mock.calls.map((c) => String(c[1]))
@@ -254,7 +260,7 @@ describe('feature announcer', () => {
   })
 
   it('isFeatureEnabled: untouched follows master, explicit choice wins', () => {
-    const c = (settings: Setting[]) => ({ settings, subscription: undefined }) as any
+    const c = (settings: Setting[]) => createSocketClientStub({ settings, subscription: undefined })
     expect(isFeatureEnabled(c([]), 'cosmeticsAnnounce')).toBeTruthy()
     expect(
       isFeatureEnabled(c([{ key: 'autoOptInNewFeatures', value: false }]), 'cosmeticsAnnounce')

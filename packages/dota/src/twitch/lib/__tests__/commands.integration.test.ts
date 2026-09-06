@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { flushAsync } from '../../../__tests__/shared-mocks.ts'
+import { createPacketStub, flushAsync } from '../../../__tests__/shared-mocks.ts'
 import { commandHandler, makeMessage, resetState, state } from './setup-mocks.ts'
 
 // Integration tests that exercise individual chat command handlers via
@@ -91,7 +91,7 @@ describe('!wl', () => {
   it('reports the multiAccount message when steam32Id is unset and multiAccount is true', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        clientOverrides: { multiAccount: true, steam32Id: null } as any,
+        clientOverrides: { multiAccount: 440_614_454, steam32Id: null },
         content: '!wl',
       })
     )
@@ -224,9 +224,9 @@ describe('!mmr', () => {
     await commandHandler.handleMessage(
       makeMessage({
         clientOverrides: {
-          SteamAccount: [{ mmr: 4000, name: 'other', steam32Id: 11_111 }],
-          multiAccount: true,
-        } as any,
+          SteamAccount: [{ leaderboard_rank: null, mmr: 4000, name: 'other', steam32Id: 11_111 }],
+          multiAccount: 440_614_454,
+        },
         content: '!mmr',
       })
     )
@@ -255,16 +255,24 @@ describe('!gpm', () => {
     await commandHandler.handleMessage(
       makeMessage({
         clientOverrides: {
-          gsi: {
+          gsi: createPacketStub({
             hero: { id: 1 },
             player: { gold_from_creep_kills: 500, gold_from_hero_kills: 100, gpm: 650 },
-          },
-        } as any,
+          }),
+        },
         content: '!gpm',
       })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain('650')
+  })
+
+  it('reports lookup errors for an unknown hero argument', async () => {
+    await commandHandler.handleMessage(makeMessage({ content: '!gpm unknown-hero' }))
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toBe(
+      t('missingMatchData', { emote: 'PauseChamp', lng: 'en' })
+    )
   })
 })
 
@@ -335,12 +343,12 @@ describe('!apm', () => {
     await commandHandler.handleMessage(
       makeMessage({
         clientOverrides: {
-          gsi: {
+          gsi: createPacketStub({
             hero: { id: 1 },
             map: { game_time: 600, matchid: '7777777777' },
             player: { accountid: 99_999, commands_issued: 3000 },
-          },
-        } as any,
+          }),
+        },
         content: '!apm',
       })
     )
@@ -362,7 +370,7 @@ describe('!avg', () => {
   it('reports multiAccount when steam32Id is unset and multiAccount is true', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        clientOverrides: { multiAccount: true, steam32Id: null } as any,
+        clientOverrides: { multiAccount: 440_614_454, steam32Id: null },
         content: '!avg',
       })
     )
@@ -383,7 +391,7 @@ describe('auto-clipping disabled at 8500+ (no readable game data)', () => {
     gsi: undefined,
     mmr: 9000,
     settings: [{ key: 'disableAutoClipping', value: true }],
-  } as any
+  }
 
   it('!np replies with only the clipping-disabled note', async () => {
     await commandHandler.handleMessage(makeMessage({ clientOverrides: noData, content: '!np' }))
@@ -410,14 +418,14 @@ describe('auto-clipping disabled at 8500+ (no readable game data)', () => {
 })
 
 describe('stale roster GSI', () => {
-  const staleGsi = {
+  const staleGsi = createPacketStub({
     map: {
       game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
       matchid: '7777777777',
       win_team: 'none',
     },
     player: { activity: 'playing' },
-  } as any
+  })
 
   it.each(['!np', '!gm', '!avg'])(
     '%s reports gameNotFound instead of reusing the prior match',
@@ -436,7 +444,7 @@ describe('stale roster GSI', () => {
 })
 
 describe('spectator roster GSI', () => {
-  const spectatorGsi = {
+  const spectatorGsi = createPacketStub({
     hero: {
       team2: { player0: { id: 1, selected_unit: true } },
       team3: { player5: { id: 2 } },
@@ -456,7 +464,7 @@ describe('spectator roster GSI', () => {
       },
       team_name: 'spectator',
     },
-  } as any
+  })
 
   it('!np reads the same fresh spectator roster shown on the overlay', async () => {
     state.notablePlayers = [
@@ -479,7 +487,7 @@ describe('spectator roster GSI', () => {
 })
 
 describe('Hero Demo roster commands', () => {
-  const heroDemoGsi = {
+  const heroDemoGsi = createPacketStub({
     hero: { id: 1 },
     map: {
       customgamename: 'hero_demo',
@@ -488,7 +496,7 @@ describe('Hero Demo roster commands', () => {
       win_team: 'none',
     },
     player: { accountid: 99_999, activity: 'playing' },
-  } as any
+  })
 
   it.each(['!np', '!gm', '!avg'])(
     '%s explains why public match data is unavailable',

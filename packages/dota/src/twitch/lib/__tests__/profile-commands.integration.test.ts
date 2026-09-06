@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { createPacketStub } from '../../../__tests__/shared-mocks.ts'
 import { commandHandler, liveGsi, makeMessage, resetState, state } from './setup-mocks.ts'
 
 // Profile-link family (opendota, profile) plus the broadcaster-only !friends.
@@ -22,7 +23,10 @@ describe('!opendota', () => {
 
   it('still links the Dotabod profile when no steam account is connected', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { steam32Id: null }, content: '!opendota' })
+      makeMessage({
+        clientOverrides: { steam32Id: null },
+        content: '!opendota',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain('dotabod.com/streamer')
@@ -30,7 +34,10 @@ describe('!opendota', () => {
 
   it('links the broadcaster Dotabod profile from a live match when args are given', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { gsi: liveGsi() }, content: '!opendota me' })
+      makeMessage({
+        clientOverrides: { gsi: liveGsi() },
+        content: '!opendota me',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain('dotabod.com/streamer')
@@ -48,7 +55,10 @@ describe('!profile', () => {
 
   it('blocks when the stream is offline', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { stream_online: false }, content: '!profile' })
+      makeMessage({
+        clientOverrides: { stream_online: false },
+        content: '!profile',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(notLive)
@@ -65,7 +75,11 @@ describe('!friends', () => {
   it('reports notPlaying when a hero exists but there is no live match', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        clientOverrides: { gsi: { hero: { name: 'npc_dota_hero_antimage' } } as any },
+        clientOverrides: {
+          gsi: createPacketStub({
+            hero: { id: 1, name: 'npc_dota_hero_antimage' },
+          }),
+        },
         content: '!friends',
         permission: 4,
       })

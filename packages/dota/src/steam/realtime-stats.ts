@@ -26,7 +26,7 @@ export const getRealtimeStats = async function getRealtimeStats({
   refetchCards = false,
 }: RealtimeStatsOptions): Promise<DelayedGames> {
   const matchId = client.gsi?.map?.matchid
-  if (!matchId) {
+  if (matchId === undefined || matchId.length === 0) {
     throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))
   }
 
@@ -37,8 +37,8 @@ export const getRealtimeStats = async function getRealtimeStats({
   if (roster.source === 'sourcetv') {
     const doc = await matchData.getDelayedGameDoc()
     const sourceTvServerId = doc?.match?.server_steam_id
-    if (sourceTvServerId && String(sourceTvServerId) !== '0') {
-      steamServerId = String(sourceTvServerId)
+    if (sourceTvServerId !== undefined && sourceTvServerId.length > 0 && sourceTvServerId !== '0') {
+      steamServerId = sourceTvServerId
     }
   } else {
     // PRESERVED — ordinary pubs still depend on the disabled spectate-friend lookup. SourceTV
@@ -54,7 +54,7 @@ export const getRealtimeStats = async function getRealtimeStats({
     steamServerId = await redisClient.client.get(`${matchId}:${token}:steamServerId`)
   }
 
-  if (!steamServerId) {
+  if (steamServerId === null || steamServerId.length === 0) {
     throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
   }
 
@@ -74,7 +74,7 @@ export const getRealtimeStats = async function getRealtimeStats({
       },
       (err: unknown, data: DelayedGames) => {
         clearTimeout(timeoutId)
-        if (err) {
+        if (err !== null && err !== undefined) {
           reject(err)
         } else {
           resolve(data)
@@ -89,11 +89,11 @@ export const findRealtimePlayer = function findRealtimePlayer(
   accountId: number | undefined,
   playerIdx: number | undefined
 ): RealtimePlayer | undefined {
-  if (accountId && Number.isFinite(accountId)) {
+  if (accountId !== undefined && accountId !== 0 && Number.isFinite(accountId)) {
     const accountPlayer = game.teams
       .flatMap((team) => team.players)
       .find((player) => Number(player.accountid) === accountId)
-    if (accountPlayer) {
+    if (accountPlayer !== undefined) {
       return accountPlayer
     }
   }

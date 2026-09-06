@@ -33,34 +33,38 @@ export interface SteamLogOnDetails {
   machineName?: string
 }
 
+interface SteamUserEventRegistrar {
+  (
+    event: 'receivedFromGC',
+    listener: (appid: number, msgType: number, payload: Buffer) => void
+  ): SteamUserClient
+  (event: 'loggedOn', listener: (details: unknown, parental: unknown) => void): SteamUserClient
+  (event: 'refreshToken', listener: (token: string) => void): SteamUserClient
+  (event: 'machineAuthToken', listener: (token: string) => void): SteamUserClient
+  (event: 'disconnected', listener: (eresult: number, msg?: string) => void): SteamUserClient
+  (event: 'error', listener: (err: { eresult?: number; message?: string }) => void): SteamUserClient
+}
+
 /** The slice of a `steam-user` instance these shims (and steam.ts) depend on. */
 export interface SteamUserClient {
-  steamID: { toString(): string } | null
+  steamID: { toString: () => string } | null
   /** Not provided by steam-user; we set it ourselves so node-dota2 can read it. */
   loggedOn?: boolean
-  logOn(details: SteamLogOnDetails): void
-  logOff(): void
-  gamesPlayed(apps: unknown, force?: boolean): void
-  getPersonas(steamIds: string[]): Promise<{
+  logOn: (details: SteamLogOnDetails) => void
+  logOff: () => void
+  gamesPlayed: (apps: unknown, force?: boolean) => void
+  getPersonas: (steamIds: string[]) => Promise<{
     personas: Record<string, { player_name?: string }>
   }>
-  sendToGC(
+  sendToGC: (
     appid: number,
     msgType: number,
     header: Record<string, unknown> | null,
     body: Buffer,
     callback?: (appid: number, msgType: number, payload: Buffer) => void
-  ): void
-  on(
-    event: 'receivedFromGC',
-    listener: (appid: number, msgType: number, payload: Buffer) => void
-  ): this
-  on(event: 'loggedOn', listener: (details: unknown, parental: unknown) => void): this
-  on(event: 'refreshToken', listener: (token: string) => void): this
-  on(event: 'machineAuthToken', listener: (token: string) => void): this
-  on(event: 'disconnected', listener: (eresult: number, msg?: string) => void): this
-  on(event: 'error', listener: (err: { eresult?: number; message?: string }) => void): this
-  removeAllListeners(): this
+  ) => void
+  on: SteamUserEventRegistrar
+  removeAllListeners: () => this
 }
 
 /** The v1 SteamGameCoordinator header shape node-dota2 constructs. */

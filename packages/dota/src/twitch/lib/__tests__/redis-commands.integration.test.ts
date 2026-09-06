@@ -27,7 +27,11 @@ describe('!clearsharing', () => {
 
   it('blocks viewers (permission below mod)', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ content: '!clearsharing', permission: 0, userName: 'viewer' })
+      makeMessage({
+        content: '!clearsharing',
+        permission: 0,
+        userName: 'viewer',
+      })
     )
     expect(state.redisDelCalls).toHaveLength(0)
     expect(state.chatSayCalls).toHaveLength(0)
@@ -46,7 +50,7 @@ describe('!lgs', () => {
   it('reports the multiAccount message when no steam id and multiAccount is set', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        clientOverrides: { multiAccount: true, steam32Id: null } as any,
+        clientOverrides: { multiAccount: 440_614_454, steam32Id: null },
         content: '!lgs',
       })
     )

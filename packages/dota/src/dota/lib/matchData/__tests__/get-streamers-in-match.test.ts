@@ -24,7 +24,7 @@ const supabase = {
         select: () => ({
           eq: async (_column: string, matchId: string) => {
             queriedMatchId = matchId
-            return { data: matchesRows }
+            return await Promise.resolve({ data: matchesRows })
           },
         }),
       }
@@ -34,26 +34,25 @@ const supabase = {
       select: () => ({
         in: async (_column: string, ids: number[]) => {
           queriedAccountIds = ids
-          return { data: steamRows }
+          return await Promise.resolve({ data: steamRows })
         },
       }),
     }
   },
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () =>
-  buildSharedUtilsMock({ logger: noopLogger, supabase })
-)
+vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ logger: noopLogger, supabase }))
 
 // getStreamersInMatch can fall through to MatchDataService when no roster
 // is provided, which reaches into Mongo. Stub it so tests without roster don't
 // hang trying to connect to a real Mongo singleton.
-vi.doMock(import('../../../../steam/mongo-db-singleton'), () => ({
+vi.doMock('../../../../steam/mongo-db-singleton', () => ({
   default: {
     close: async () => {},
-    connect: async () => ({
-      collection: () => ({ findOne: async () => null }),
-    }),
+    connect: async () =>
+      await Promise.resolve({
+        collection: () => ({ findOne: async () => await Promise.resolve(null) }),
+      }),
   },
 }))
 

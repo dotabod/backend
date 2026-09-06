@@ -13,7 +13,7 @@ import commandHandler from '../lib/command-handler'
 commandHandler.registerCommand('roshan', {
   aliases: ['rosh', 'aegis'],
   dbkey: DBSettings.commandRosh,
-  handler: async (message, _args) => {
+  handler: async (message) => {
     const {
       channel: { name: channel, client },
     } = message
@@ -27,7 +27,7 @@ commandHandler.registerCommand('roshan', {
       return
     }
 
-    if (!client.gsi?.hero?.name) {
+    if (client.gsi?.hero?.name === undefined || client.gsi.hero.name.length === 0) {
       chatClient.say(channel, t('noHero', { lng: client.locale }), message.user.messageId)
       return
     }
@@ -38,7 +38,10 @@ commandHandler.registerCommand('roshan', {
       redisClient.getJson<AegisRes>(`${client.token}:aegis`),
     ])
 
-    if (!roshJson?.minS && !roshJson?.maxS) {
+    if (
+      (roshJson?.minS === undefined || roshJson.minS === 0) &&
+      (roshJson?.maxS === undefined || roshJson.maxS === 0)
+    ) {
       chatClient.say(
         channel,
         t('roshanAlive', { emote: 'Happi', lng: client.locale }),

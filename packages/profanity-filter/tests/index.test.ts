@@ -14,12 +14,7 @@ describe('Profanity Filter', () => {
       const moderated = await moderateText(normal)
       expect(moderated).toBe(normal)
 
-      const details = getProfanityDetails(normal) as {
-        isFlagged: boolean
-        source: string
-        matches?: string[]
-        language?: string
-      }
+      const details = getProfanityDetails(normal)
       expect(details.isFlagged).toBeFalsy()
       expect(details.source).toBe('none')
     })
@@ -29,12 +24,7 @@ describe('Profanity Filter', () => {
       const moderated = await moderateText(text)
       expect(moderated).toBe(text)
 
-      const details = getProfanityDetails(text) as {
-        isFlagged: boolean
-        source: string
-        matches?: string[]
-        language?: string
-      }
+      const details = getProfanityDetails(text)
       expect(details.isFlagged).toBeFalsy()
       expect(details.source).toBe('none')
 
@@ -75,12 +65,7 @@ describe('Profanity Filter', () => {
         expect(moderated).not.toBe(profane)
         expect(moderated).toContain('***')
 
-        const details = getProfanityDetails(profane) as {
-          isFlagged: boolean
-          source: string
-          matches?: string[]
-          language?: string
-        }
+        const details = getProfanityDetails(profane)
         expect(details.isFlagged).toBeTruthy()
       }
     })
@@ -100,12 +85,7 @@ describe('Profanity Filter', () => {
         expect(moderated).not.toBe(text)
         expect(moderated).toContain('***')
 
-        const details = getProfanityDetails(text) as {
-          isFlagged: boolean
-          source: string
-          matches?: string[]
-          language?: string
-        }
+        const details = getProfanityDetails(text)
         expect(details.isFlagged).toBeTruthy()
       }
     })
@@ -128,12 +108,7 @@ describe('Profanity Filter', () => {
         expect(moderated).not.toBe(text)
         expect(moderated).toContain('***')
 
-        const details = getProfanityDetails(text) as {
-          isFlagged: boolean
-          source: string
-          matches?: string[]
-          language?: string
-        }
+        const details = getProfanityDetails(text)
         expect(details.isFlagged).toBeTruthy()
       }
     })
@@ -160,12 +135,7 @@ describe('Profanity Filter', () => {
         const profane = `This contains a bad word: ${word}`
         const moderated = await moderateText(profane)
 
-        const details = getProfanityDetails(profane) as {
-          isFlagged: boolean
-          source: string
-          matches?: string[]
-          language?: string
-        }
+        const details = getProfanityDetails(profane)
         // console.log({ details, word }, 'geczy')
         expect(moderated).not.toBe(profane)
         expect(moderated).toContain('***')
@@ -182,13 +152,7 @@ describe('Profanity Filter', () => {
 
       // Test array input for getProfanityDetails
       const profaneTexts = badWords.map((word) => `This contains a bad word: ${word}`)
-      const detailsArray = getProfanityDetails(profaneTexts) as {
-        text: string
-        isFlagged: boolean
-        source: string
-        matches?: string[]
-        language?: string
-      }[]
+      const detailsArray = getProfanityDetails(profaneTexts)
 
       expect(Array.isArray(detailsArray)).toBeTruthy()
       expect(detailsArray).toHaveLength(badWords.length)
@@ -209,12 +173,7 @@ describe('Profanity Filter', () => {
       expect(moderated).not.toBe(profane)
       expect(moderated).toContain('***')
 
-      const details = getProfanityDetails(profane) as {
-        isFlagged: boolean
-        source: string
-        matches?: string[]
-        language?: string
-      }
+      const details = getProfanityDetails(profane)
       expect(details.isFlagged).toBeTruthy()
     })
   })
@@ -226,12 +185,7 @@ describe('Profanity Filter', () => {
       expect(moderated).not.toBe(spaced)
       expect(moderated).toContain('***')
 
-      const details = getProfanityDetails(spaced) as {
-        isFlagged: boolean
-        source: string
-        matches?: string[]
-        language?: string
-      }
+      const details = getProfanityDetails(spaced)
       expect(details.isFlagged).toBeTruthy()
     })
 
@@ -241,12 +195,7 @@ describe('Profanity Filter', () => {
       expect(moderated).not.toBe(starred)
       expect(moderated).toContain('***')
 
-      const details = getProfanityDetails(starred) as {
-        isFlagged: boolean
-        source: string
-        matches?: string[]
-        language?: string
-      }
+      const details = getProfanityDetails(starred)
       expect(details.isFlagged).toBeTruthy()
     })
 
@@ -256,12 +205,7 @@ describe('Profanity Filter', () => {
       expect(moderated).not.toBe(stretched)
       expect(moderated).toContain('***')
 
-      const details = getProfanityDetails(stretched) as {
-        isFlagged: boolean
-        source: string
-        matches?: string[]
-        language?: string
-      }
+      const details = getProfanityDetails(stretched)
       expect(details.isFlagged).toBeTruthy()
     })
 
@@ -271,12 +215,7 @@ describe('Profanity Filter', () => {
       expect(moderated).not.toBe(punctuated)
       expect(moderated).toContain('***')
 
-      const details = getProfanityDetails(punctuated) as {
-        isFlagged: boolean
-        source: string
-        matches?: string[]
-        language?: string
-      }
+      const details = getProfanityDetails(punctuated)
       expect(details.isFlagged).toBeTruthy()
     })
 
@@ -286,12 +225,7 @@ describe('Profanity Filter', () => {
       expect(moderated).not.toBe(leet)
       expect(moderated).toContain('***')
 
-      const details = getProfanityDetails(leet) as {
-        isFlagged: boolean
-        source: string
-        matches?: string[]
-        language?: string
-      }
+      const details = getProfanityDetails(leet)
       expect(details.isFlagged).toBeTruthy()
     })
   })
@@ -303,12 +237,7 @@ describe('Profanity Filter', () => {
       expect(moderated).not.toBe(russian)
       expect(moderated).toContain('***')
 
-      const details = getProfanityDetails(russian) as {
-        isFlagged: boolean
-        source: string
-        matches?: string[]
-        language?: string
-      }
+      const details = getProfanityDetails(russian)
       expect(details.isFlagged).toBeTruthy()
 
       expect(detectRussianProfanity(russian)).toBeTruthy()
@@ -320,12 +249,7 @@ describe('Profanity Filter', () => {
       expect(moderated).not.toBe(spanish)
       expect(moderated).toContain('***')
 
-      const details = getProfanityDetails(spanish) as {
-        isFlagged: boolean
-        source: string
-        matches?: string[]
-        language?: string
-      }
+      const details = getProfanityDetails(spanish)
       expect(details.isFlagged).toBeTruthy()
     })
 
@@ -335,12 +259,7 @@ describe('Profanity Filter', () => {
       expect(moderated).not.toBe(german)
       expect(moderated).toContain('***')
 
-      const details = getProfanityDetails(german) as {
-        isFlagged: boolean
-        source: string
-        matches?: string[]
-        language?: string
-      }
+      const details = getProfanityDetails(german)
       expect(details.isFlagged).toBeTruthy()
     })
   })
@@ -352,12 +271,7 @@ describe('Profanity Filter', () => {
       expect(moderated).not.toBe(unicode)
       expect(moderated).toContain('***')
 
-      const details = getProfanityDetails(unicode) as {
-        isFlagged: boolean
-        source: string
-        matches?: string[]
-        language?: string
-      }
+      const details = getProfanityDetails(unicode)
       expect(details.isFlagged).toBeTruthy()
     })
 
@@ -367,12 +281,7 @@ describe('Profanity Filter', () => {
       expect(moderated).not.toBe(embedded)
       expect(moderated).toContain('***')
 
-      const details = getProfanityDetails(embedded) as {
-        isFlagged: boolean
-        source: string
-        matches?: string[]
-        language?: string
-      }
+      const details = getProfanityDetails(embedded)
       expect(details.isFlagged).toBeTruthy()
     })
 
@@ -382,12 +291,7 @@ describe('Profanity Filter', () => {
       expect(moderated).not.toBe(mixed)
       expect(moderated).toContain('***')
 
-      const details = getProfanityDetails(mixed) as {
-        isFlagged: boolean
-        source: string
-        matches?: string[]
-        language?: string
-      }
+      const details = getProfanityDetails(mixed)
       expect(details.isFlagged).toBeTruthy()
     })
 
@@ -397,12 +301,7 @@ describe('Profanity Filter', () => {
       expect(moderated).not.toBe(obfuscated)
       expect(moderated).toContain('***')
 
-      const details = getProfanityDetails(obfuscated) as {
-        isFlagged: boolean
-        source: string
-        matches?: string[]
-        language?: string
-      }
+      const details = getProfanityDetails(obfuscated)
       expect(details.isFlagged).toBeTruthy()
     })
   })
@@ -429,18 +328,19 @@ describe('Profanity Filter', () => {
         expect(moderated).not.toBe(phrase)
         expect(moderated).toContain('***')
 
-        const details = getProfanityDetails(phrase) as {
-          isFlagged: boolean
-          source: string
-          matches?: string[]
-          language?: string
-        }
+        const details = getProfanityDetails(phrase)
 
         // console.log({ phrase, details, match }, 'testing')
         expect(details.isFlagged).toBeTruthy()
         expect(details.source).toBe('hate-speech')
 
-        if (match && details.matches && details.matches.length > 0) {
+        if (
+          match !== null &&
+          match !== undefined &&
+          match.length > 0 &&
+          details.matches !== undefined &&
+          details.matches.length > 0
+        ) {
           expect(details.matches[0]).toBe(match)
         }
       }
@@ -481,12 +381,7 @@ describe('Profanity Filter', () => {
       for (const word of words) {
         const moderated = await moderateText(word)
 
-        const details = getProfanityDetails(word) as {
-          isFlagged: boolean
-          source: string
-          matches?: string[]
-          language?: string
-        }
+        const details = getProfanityDetails(word)
         // console.log({ word, moderated, details }, 'Checking word for false positive')
         expect(moderated).toBe(word)
         expect(details.isFlagged).toBeFalsy()
@@ -509,12 +404,7 @@ describe('Profanity Filter', () => {
         const moderated = await moderateText(phrase)
         expect(moderated).toBe(phrase)
 
-        const details = getProfanityDetails(phrase) as {
-          isFlagged: boolean
-          source: string
-          matches?: string[]
-          language?: string
-        }
+        const details = getProfanityDetails(phrase)
         expect(details.isFlagged).toBeFalsy()
       }
     })

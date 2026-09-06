@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { GcWatchdog } from '../utils/gc-watchdog'
+import type { GcAction } from '../utils/gc-watchdog'
 
 // Deterministic injectable clock: advance() moves virtual time forward so the
 // escalation ladder (spacing + dead-exit ceiling) is exact and non-flaky.
@@ -19,6 +20,13 @@ const opts = (clock: ReturnType<typeof makeClock>) => ({
   now: clock.now,
   relaunchIntervalMs: 30_000,
 })
+
+const getExitReason = function getExitReason(action: GcAction): string {
+  if (action.type !== 'exit') {
+    throw new Error(`Expected exit action, received ${action.type}`)
+  }
+  return action.reason
+}
 
 describe(GcWatchdog, () => {
   it('starts not-ready and becomes ready on gcReady', () => {
@@ -69,10 +77,10 @@ describe(GcWatchdog, () => {
     // now 180_000 since unready
     clock.advance(30_000)
     const action = wd.step({ type: 'helloTimeout' })
-    expect(action.type).toBe('exit')
-    if (action.type === 'exit') {
-      expect(action.reason).toContain('exiting')
-    }
+    expect({ reason: getExitReason(action), type: action.type }).toStrictEqual({
+      reason: 'GC not ready for 180s (>= 180s ceiling); exiting for a clean restart',
+      type: 'exit',
+    })
   })
 
   it('a gcReady resets the ladder so later trouble starts fresh', () => {

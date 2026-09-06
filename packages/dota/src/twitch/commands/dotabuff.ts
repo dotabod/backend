@@ -37,9 +37,9 @@ commandHandler.registerCommand('dotabuff', {
         locale: channelClient.locale,
       })
 
-      if (player?.accountid) {
+      if (player?.accountid !== null && player?.accountid !== undefined && player.accountid !== 0) {
         const url = await getDotabodProfileUrl(channelClient, Number(player.accountid))
-        if (!url) {
+        if (url === null || url.length === 0) {
           chatClient.say(
             channelName,
             t('dotabodProfileNotFound', {
@@ -63,12 +63,13 @@ commandHandler.registerCommand('dotabuff', {
           }),
           message.user.messageId
         )
-        return
       }
     } catch (error) {
       chatClient.say(
         message.channel.name,
-        (error as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        error instanceof Error
+          ? error.message
+          : t('gameNotFound', { lng: message.channel.client.locale }),
         message.user.messageId
       )
     }

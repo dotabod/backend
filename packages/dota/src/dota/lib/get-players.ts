@@ -17,7 +17,7 @@ export const getPlayers = async function getPlayers({
   currentMatchId?: string
   players?: RosterPlayer[]
 }) {
-  if (!currentMatchId) {
+  if (currentMatchId === undefined || currentMatchId.length === 0) {
     throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))
   }
 
@@ -33,13 +33,14 @@ export const getPlayers = async function getPlayers({
       .collection<DelayedGames>('delayedGames')
       .findOne({ 'match.match_id': currentMatchId })
 
-    if (!response && !players?.length) {
+    const hasProvidedPlayers = players !== undefined && players.length > 0
+    if (response === null && !hasProvidedPlayers) {
       throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
     }
 
     // Use pre-supplied players when the caller already resolved them; otherwise look up
     // the historical roster from the delayedGames doc.
-    const { matchPlayers, accountIds } = players?.length
+    const { matchPlayers, accountIds } = hasProvidedPlayers
       ? { accountIds: players.map((p) => p.accountId ?? 0), matchPlayers: players }
       : await lookupRosterByMatchId(currentMatchId)
 
@@ -66,7 +67,7 @@ export const getPlayers = async function getPlayers({
 
         steamSocket.emit('getCards', accountIds, false, (err: unknown, cards: Cards[]) => {
           clearTimeout(timeoutId)
-          if (err) {
+          if (err !== null && err !== undefined) {
             reject(err)
           } else {
             resolve(cards)
@@ -81,7 +82,7 @@ export const getPlayers = async function getPlayers({
       accountIds,
       average_mmr: response?.average_mmr,
       cards,
-      gameMode: response ? Number(response.match.game_mode) : undefined,
+      gameMode: response !== null ? Number(response.match.game_mode) : undefined,
       matchPlayers,
     }
   } finally {

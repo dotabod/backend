@@ -18,7 +18,7 @@ export const profileLink = async function profileLink({
   locale,
 }: ProfileLinkParams) {
   const currentMatchId = client?.gsi?.map?.matchid
-  if (!currentMatchId) {
+  if (currentMatchId === undefined || currentMatchId.length === 0) {
     throw new CustomError(t('notPlaying', { emote: 'PauseChamp', lng: locale }))
   }
 

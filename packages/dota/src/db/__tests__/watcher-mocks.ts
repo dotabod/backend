@@ -6,7 +6,12 @@
 // directly, mirroring the twitch-events sharedMocks pattern.
 import { vi } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/shared-mocks'
+import {
+  buildSharedUtilsMock,
+  createGsiHandlerStub,
+  createSocketClientStub,
+  initTestI18n,
+} from '../../__tests__/shared-mocks'
 
 type ChannelHandler = (payload: {
   new?: Record<string, unknown>
@@ -54,28 +59,28 @@ export const resetWatcherState = function resetWatcherState() {
 // `.single()` after various `.eq().neq().in().order().limit()` calls) returns
 // real data; other tables resolve to empty.
 const sbBuilder = function sbBuilder(_table: string) {
-  const b: any = {
+  const b: unknown = {
     eq: () => b,
     in: () => b,
-    insert: async () => ({ data: null, error: null }),
+    insert: async () => await Promise.resolve({ data: null, error: null }),
     is: () => b,
     limit: () => b,
-    maybeSingle: async () => ({ data: null, error: null }),
+    maybeSingle: async () => await Promise.resolve({ data: null, error: null }),
     neq: () => b,
     not: () => b,
     order: () => b,
     select: () => b,
-    single: async () => ({ data: null, error: null }),
+    single: async () => await Promise.resolve({ data: null, error: null }),
     then: async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) =>
       await Promise.resolve({ data: null, error: null }).then(onFulfilled),
     update: () => b,
-    upsert: async () => ({ data: null, error: null }),
+    upsert: async () => await Promise.resolve({ data: null, error: null }),
   }
   return b
 }
 
 const realtimeChannel = function realtimeChannel() {
-  const ch: any = {
+  const ch: unknown = {
     on: (_type: string, opts: { event: string; table: string }, handler: ChannelHandler) => {
       watcherState.channelHandlers.set(`${opts.event}:${opts.table}`, handler)
       return ch
@@ -116,7 +121,7 @@ vi.doMock('@dotabod/shared-utils', () =>
     // Twurple auth provider — watcher's UPDATE:accounts handler calls
     // removeUser when the token is refreshed.
     getAuthProvider: () => ({ removeUser: () => {} }),
-    getTwitchAPI: async () => ({}),
+    getTwitchAPI: async () => await Promise.resolve({}),
   })
 )
 
@@ -145,10 +150,13 @@ vi.doMock('../../dota/clear-cache-for-user', () => ({
     if (handler) {
       handler.multiAccountRevalidatedAt = undefined
     }
-    if (client.Account?.providerAccountId) {
+    if (
+      client.Account?.providerAccountId !== undefined &&
+      client.Account.providerAccountId.length > 0
+    ) {
       twitchIdToToken.delete(client.Account.providerAccountId)
     }
-    if (client.name) {
+    if (client.name !== undefined && client.name.length > 0) {
       twitchNameToToken.delete(client.name)
     }
     gsiHandlers.delete(client.token)
@@ -196,11 +204,11 @@ vi.doMock('../handle-stream-status-transition', () => ({
 }))
 
 vi.doMock(import('../get-db-user'), () => ({
-  default: async () => ({ reason: 'stub', result: null }),
+  default: async () => await Promise.resolve({ reason: 'stub', result: null }),
 }))
 
 vi.doMock('../../dota/lib/ranks', () => ({
-  getRankDetail: async () => ({}),
+  getRankDetail: async () => await Promise.resolve({}),
 }))
 
 vi.doMock('../../dota/server', () => ({
@@ -259,8 +267,20 @@ export const seedClient = function seedClient(opts: {
   }[]
 }) {
   const token = opts.token ?? opts.userId
-  const client: any = {
-    Account: opts.providerAccountId ? { providerAccountId: opts.providerAccountId } : undefined,
+  const client = createSocketClientStub({
+    Account:
+      opts.providerAccountId !== undefined && opts.providerAccountId.length > 0
+        ? {
+            access_token: '',
+            expires_at: null,
+            expires_in: null,
+            obtainment_timestamp: null,
+            providerAccountId: opts.providerAccountId,
+            refresh_token: '',
+            requires_refresh: false,
+            scope: null,
+          }
+        : null,
     SteamAccount: opts.steamAccounts ?? [],
     multiAccount: opts.multiAccount,
     name: opts.name ?? `user-${opts.userId}`,
@@ -268,20 +288,18 @@ export const seedClient = function seedClient(opts: {
     stream_online: false,
     stream_start_date: null,
     token,
-  }
-  const handler: any = {
-    client,
+  })
+  const handler = createGsiHandlerStub(client, {
     disable: () => {},
     emitWLUpdate: vi.fn(),
-    getChannelId: () => null,
+    getChannelId: () => '',
     multiAccountRevalidatedAt: opts.multiAccountRevalidatedAt,
-    token,
-  }
+  })
   gsiHandlers.set(token, handler)
-  if (opts.providerAccountId) {
+  if (opts.providerAccountId !== undefined && opts.providerAccountId.length > 0) {
     twitchIdToToken.set(opts.providerAccountId, token)
   }
-  if (client.name) {
+  if (client.name.length > 0) {
     twitchNameToToken.set(client.name, token)
   }
   return { client, handler }

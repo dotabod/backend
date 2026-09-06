@@ -52,7 +52,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
       return
     }
 
-    if (dotaClient.bountyTaskId) {
+    if (dotaClient.bountyTaskId !== undefined && dotaClient.bountyTaskId.length > 0) {
       delayedQueue.removeTask(dotaClient.bountyTaskId)
     }
     const heroName = getHeroNameOrColor(heroId, playerIdIndex)

@@ -1,10 +1,17 @@
-import type { NextFunction, Request, Response } from 'express'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { createPacketStub } from '../../__tests__/shared-mocks'
+import type { Packet } from '../../types'
+import type {
+  ValidateTokenNext,
+  ValidateTokenRequest,
+  ValidateTokenResponse,
+} from '../validate-token'
 
 const getDBUserMock = vi.fn()
 const recordGsiActivityMock = vi.fn()
 
-vi.doMock(import('@dotabod/shared-utils'), () => ({
+vi.doMock('@dotabod/shared-utils', () => ({
   logger: { info: vi.fn() },
 }))
 
@@ -17,76 +24,76 @@ vi.doMock(import('../setup-signals'), () => ({
 }))
 
 const { invalidTokens, lookingupToken, pendingCheckAuth } = await import('../lib/consts')
-const { validateToken } = await import('../validate-token')
+const { validateTokenRequest: validateToken } = await import('../validate-token')
 
-const makeRequest = function makeRequest(token = 'token-1'): Request {
+const makeRequest = function makeRequest(token = 'token-1'): ValidateTokenRequest {
   return {
-    body: { auth: { token }, player: { activity: 'playing' } },
+    body: {
+      ...createPacketStub({ player: { activity: 'playing' } }),
+      auth: { token },
+    },
     headers: {},
     socket: { remoteAddress: '127.0.0.1' },
-  } as Request
+  }
 }
 
-const makeResponse = function makeResponse(): {
-  response: Response
+interface ResponseHarness {
+  response: ValidateTokenResponse
   statusCalls: number[]
   jsonCalls: unknown[]
-} {
+}
+
+const makeResponse = function makeResponse(): ResponseHarness {
   const statusCalls: number[] = []
   const jsonCalls: unknown[] = []
-  const response = {
-    json(value: unknown) {
+  const response: ValidateTokenResponse = {
+    json(value) {
       jsonCalls.push(value)
       return response
     },
-    status(code: number) {
+    status(code) {
       statusCalls.push(code)
       return response
     },
-  } as Response
+  }
   return { jsonCalls, response, statusCalls }
 }
 
-const makeClient = function makeClient(token = 'token-1', streamOnline = true) {
+interface TestClient {
+  gsi?: Packet
+  gsiUpdatedAt?: number
+  pendingGsi?: Packet
+  pendingGsiUpdatedAt?: number
+  stream_online: boolean
+  token: string
+}
+
+const makeClient = function makeClient(token = 'token-1', streamOnline = true): TestClient {
   return {
-    gsi: undefined,
-    gsiUpdatedAt: undefined as number | undefined,
-    pendingGsi: undefined,
-    pendingGsiUpdatedAt: undefined as number | undefined,
     stream_online: streamOnline,
     token,
   }
 }
 
-const deferred = function deferred<T>() {
-  let resolve!: (value: T) => void
-  let reject!: (reason: unknown) => void
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res
-    reject = rej
-  })
-  return { promise, reject, resolve }
-}
-
-beforeEach(() => {
-  getDBUserMock.mockReset()
-  recordGsiActivityMock.mockReset()
-  invalidTokens.clear()
-  lookingupToken.clear()
-  pendingCheckAuth.clear()
-})
-
 describe('validateToken cleanup', () => {
+  beforeEach(() => {
+    getDBUserMock.mockReset()
+    recordGsiActivityMock.mockReset()
+    invalidTokens.clear()
+    lookingupToken.clear()
+    pendingCheckAuth.clear()
+  })
+
   it('releases pending auth after a successful online lookup and assigns GSI', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-09-02T12:00:00.000Z'))
     const request = makeRequest()
     const { response, jsonCalls } = makeResponse()
     const client = makeClient()
-    const next = vi.fn()
+    const next = vi.fn<ValidateTokenNext>()
     getDBUserMock.mockResolvedValue({ result: client })
 
-    await validateToken(request, response, next as NextFunction)
+    await validateToken(request, response, next)
 
     expect(client.gsi).toBe(request.body)
     expect(client.gsiUpdatedAt).toBe(Date.now())
@@ -104,11 +111,11 @@ describe('validateToken cleanup', () => {
     vi.setSystemTime(new Date('2026-09-02T12:00:00.000Z'))
     const request = makeRequest()
     const { response, statusCalls, jsonCalls } = makeResponse()
-    const next = vi.fn()
+    const next = vi.fn<ValidateTokenNext>()
     const client = makeClient('token-1', false)
     getDBUserMock.mockResolvedValue({ result: client })
 
-    await validateToken(request, response, next as NextFunction)
+    await validateToken(request, response, next)
 
     expect(statusCalls).toStrictEqual([200])
     expect(jsonCalls).toStrictEqual([{ error: 'Stream offline' }])
@@ -126,7 +133,7 @@ describe('validateToken cleanup', () => {
     const { response, statusCalls, jsonCalls } = makeResponse()
     getDBUserMock.mockResolvedValue({ result: null })
 
-    await validateToken(request, response, vi.fn() as NextFunction)
+    await validateToken(request, response, vi.fn<ValidateTokenNext>())
 
     expect(statusCalls).toStrictEqual([200])
     expect(jsonCalls).toStrictEqual([{ error: 'Invalid token, skipping auth check' }])
@@ -139,7 +146,7 @@ describe('validateToken cleanup', () => {
     const { response, statusCalls, jsonCalls } = makeResponse()
     getDBUserMock.mockRejectedValue(new Error('lookup failed'))
 
-    await validateToken(request, response, vi.fn() as NextFunction)
+    await validateToken(request, response, vi.fn<ValidateTokenNext>())
 
     expect(statusCalls).toStrictEqual([200])
     expect(jsonCalls).toStrictEqual([{ error: 'Invalid token, skipping auth check' }])
@@ -148,21 +155,22 @@ describe('validateToken cleanup', () => {
   })
 
   it('rejects a concurrent request while retaining the lock until the first lookup finishes', async () => {
-    const lookup = deferred<{ result: ReturnType<typeof makeClient> }>()
-    getDBUserMock.mockReturnValue(lookup.promise)
+    const lookupGate: { release?: () => void } = {}
+    getDBUserMock.mockImplementation(async () => {
+      await new Promise<void>((resolve) => {
+        lookupGate.release = resolve
+      })
+      return { result: makeClient() }
+    })
     const firstRequest = makeRequest()
     const firstResponse = makeResponse()
-    const firstNext = vi.fn()
+    const firstNext = vi.fn<ValidateTokenNext>()
 
-    const firstValidation = validateToken(
-      firstRequest,
-      firstResponse.response,
-      firstNext as NextFunction
-    )
+    const firstValidation = validateToken(firstRequest, firstResponse.response, firstNext)
     expect(pendingCheckAuth.has('token-1')).toBeTruthy()
 
     const secondResponse = makeResponse()
-    await validateToken(makeRequest(), secondResponse.response, vi.fn() as NextFunction)
+    await validateToken(makeRequest(), secondResponse.response, vi.fn<ValidateTokenNext>())
 
     expect(getDBUserMock).toHaveBeenCalledOnce()
     expect(secondResponse.statusCalls).toStrictEqual([200])
@@ -171,7 +179,11 @@ describe('validateToken cleanup', () => {
     ])
     expect(pendingCheckAuth.has('token-1')).toBeTruthy()
 
-    lookup.resolve({ result: makeClient() })
+    const releaseLookup = lookupGate.release
+    if (releaseLookup === undefined) {
+      throw new Error('lookup did not start')
+    }
+    releaseLookup()
     await firstValidation
 
     expect(firstNext).toHaveBeenCalledOnce()

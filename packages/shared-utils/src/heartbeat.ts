@@ -22,7 +22,7 @@ export const startHeartbeat = function startHeartbeat(opts: HeartbeatOptions = {
     name = 'uptime heartbeat',
   } = opts
 
-  if (!url) {
+  if (url === undefined || url.length === 0) {
     logger.warn(`${name}: push URL not set, heartbeat disabled`)
     return
   }

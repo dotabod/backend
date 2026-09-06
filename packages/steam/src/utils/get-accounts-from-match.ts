@@ -14,7 +14,10 @@ export const getAccountsFromMatch = async function getAccountsFromMatch({
     accountid: number
   }[]
 } = {}) {
-  const players = searchPlayers?.length ? searchPlayers : getSpectatorPlayers(gsi)
+  const players =
+    searchPlayers !== undefined && searchPlayers.length > 0
+      ? searchPlayers
+      : getSpectatorPlayers(gsi)
 
   // spectator account ids
   if (Array.isArray(players) && players.length) {
@@ -24,7 +27,7 @@ export const getAccountsFromMatch = async function getAccountsFromMatch({
     }
   }
 
-  const matchId = searchMatchId || gsi?.map?.matchid
+  const matchId = searchMatchId ?? gsi?.map?.matchid
 
   const mongo = MongoDBSingleton
   const db = await mongo.connect()

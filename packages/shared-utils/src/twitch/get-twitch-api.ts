@@ -14,7 +14,10 @@ let apiClient: ApiClient | null = null
  */
 export const getTwitchAPI = async (twitchId?: string): Promise<ApiClient> => {
   const authProvider = getAuthProvider()
-  const lookupTwitchId = twitchId || process.env.TWITCH_BOT_PROVIDERID!
+  const lookupTwitchId = twitchId ?? process.env.TWITCH_BOT_PROVIDERID
+  if (lookupTwitchId === undefined || lookupTwitchId.length === 0) {
+    throw new Error('Missing Twitch user ID')
+  }
 
   // Check if user is already in the auth provider
   try {
@@ -26,7 +29,12 @@ export const getTwitchAPI = async (twitchId?: string): Promise<ApiClient> => {
       const accessToken = tokens?.access_token
       const refreshToken = tokens?.refresh_token
 
-      if (!accessToken || !refreshToken) {
+      if (
+        accessToken === undefined ||
+        accessToken.length === 0 ||
+        refreshToken === undefined ||
+        refreshToken.length === 0
+      ) {
         logger.info('[TWITCH] Missing tokens', { lookupTwitchId, twitchId })
         throw new Error('Missing Twitch tokens')
       }
@@ -34,12 +42,13 @@ export const getTwitchAPI = async (twitchId?: string): Promise<ApiClient> => {
       // Create token data object
       const tokenData = {
         accessToken,
-        expiresIn: tokens.expires_in ?? 0,
-        obtainmentTimestamp: tokens.obtainment_timestamp
-          ? new Date(tokens.obtainment_timestamp).getTime()
-          : Date.now(),
+        expiresIn: tokens?.expires_in ?? 0,
+        obtainmentTimestamp:
+          tokens?.obtainment_timestamp !== undefined && tokens.obtainment_timestamp.length > 0
+            ? new Date(tokens.obtainment_timestamp).getTime()
+            : Date.now(),
         refreshToken,
-        scope: tokens.scope?.split(' ') ?? [],
+        scope: tokens?.scope?.split(' ') ?? [],
       }
 
       // Add user to the auth provider
@@ -50,7 +59,7 @@ export const getTwitchAPI = async (twitchId?: string): Promise<ApiClient> => {
   }
 
   // Create API client if it doesn't exist yet
-  if (!apiClient) {
+  if (apiClient === null) {
     apiClient = new ApiClient({ authProvider })
     logger.info('[TWITCH] Created new API client', { twitchId: lookupTwitchId })
   }

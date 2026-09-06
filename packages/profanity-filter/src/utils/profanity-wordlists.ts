@@ -169,23 +169,6 @@ const chineseProfanityList = [
 
 // Additional European languages profanity
 const europeanProfanityList = {
-  // Spanish
-  spanish: [
-    'puta',
-    'mierda',
-    'cojones',
-    'joder',
-    'follar',
-    'cabron',
-    'cabrón',
-    'coño',
-    'gilipollas',
-    'hijo de puta',
-    'hijoputa',
-    'imbécil',
-    'capullo',
-    'idiota',
-  ],
   // French
   french: [
     'putain',
@@ -219,6 +202,23 @@ const europeanProfanityList = {
     'verdammt',
     'schlampe',
     'hure',
+  ],
+  // Spanish
+  spanish: [
+    'puta',
+    'mierda',
+    'cojones',
+    'joder',
+    'follar',
+    'cabron',
+    'cabrón',
+    'coño',
+    'gilipollas',
+    'hijo de puta',
+    'hijoputa',
+    'imbécil',
+    'capullo',
+    'idiota',
   ],
 }
 
@@ -254,7 +254,7 @@ const spanishLeetSpeakList = [
 ]
 
 // Common character substitutions for leetspeak in European languages
-const europeanLeetSpeakMap: Record<string, string[]> = {
+const europeanLeetSpeakMap = {
   a: ['a', '@', '4'],
   b: ['b', '8', '6'],
   e: ['e', '3'],
@@ -264,7 +264,7 @@ const europeanLeetSpeakMap: Record<string, string[]> = {
   s: ['s', '5', '$'],
   t: ['t', '7'],
   u: ['u', 'v'],
-}
+} satisfies Record<string, string[]>
 
 // Regex patterns for detecting common evasion tactics
 export const evasionPatterns = [
@@ -281,10 +281,10 @@ export const evasionPatterns = [
   // A*s*s variations
   /[a]+[\s_]*[s]+[\s_]*[s]+/iu,
   // n*i*g*g*e*r variations including niqger
-  /[n]+[\s_]*[i1!]+[\s_]*([gq]|9)+[\s_]*([gq]|9)+[\s_]*[e3]+[\s_]*[r]+/iu,
+  /[n]+[\s_]*[i1!]+[\s_]*(?:[gq]|9)+[\s_]*(?:[gq]|9)+[\s_]*[e3]+[\s_]*[r]+/iu,
 
   // Variation with "trans" prefix - catches obfuscated variants
-  /[t]+[\s_]*[r]+[\s_]*[a@4]+[\s_]*[n]+[\s_]*[s]+[\s_]*.*?[n]+[\s_]*[i1!]+[\s_]*([gq]|9)+/iu,
+  /[t]+[\s_]*[r]+[\s_]*[a@4]+[\s_]*[n]+[\s_]*[s]+[\s_]*.*?[n]+[\s_]*[i1!]+[\s_]*(?:[gq]|9)+/iu,
 
   // Character substitutions
   // f*u*c*k with symbols
@@ -294,11 +294,11 @@ export const evasionPatterns = [
   // b*i*t*c*h with symbols
   /[b][\W_]*[i1!][\W_]*[t][\W_]*[c][\W_]*[h]/iu,
   // n*i*g*g*e*r with symbols including "q" for "g"
-  /[n][\W_]*[i1!][\W_]*([gq]|9)[\W_]*([gq]|9)[\W_]*[e3][\W_]*[r]/iu,
+  /[n][\W_]*[i1!][\W_]*(?:[gq]|9)[\W_]*(?:[gq]|9)[\W_]*[e3][\W_]*[r]/iu,
 
   // More generalized patterns for detecting common evasion techniques
   // This handles compound words where offensive terms are combined with prefixes/suffixes
-  /(?:pre|post|trans|anti|pro)?[\W_]*[n][\W_]*[i1!][\W_]*([gq]|9)[\W_]*(?:[gq]|9)[\W_]*[ae3][\W_]*[r]/iu,
+  /(?:pre|post|trans|anti|pro)?[\W_]*[n][\W_]*[i1!][\W_]*(?:[gq]|9)[\W_]*(?:[gq]|9)[\W_]*[ae3][\W_]*[r]/iu,
 
   // Enhanced patterns for better detection
   // Extended f*u*c*k with unicode variations
@@ -350,7 +350,7 @@ const createRussianLatinVariations = function createRussianLatinVariations(text:
   const variations = [text]
 
   // Common Latin-to-Cyrillic character mappings (and vice versa)
-  const latinToCyrillic: Record<string, string> = {
+  const latinToCyrillic = {
     // Latin a to Cyrillic а
     a: 'а',
     // Latin b to Cyrillic в
@@ -381,7 +381,7 @@ const createRussianLatinVariations = function createRussianLatinVariations(text:
     x: 'х',
     // Latin y to Cyrillic у
     y: 'у',
-  }
+  } satisfies Record<string, string>
 
   // Create a version where Latin characters are replaced with Cyrillic
   let cyrillicVersion = text.toLowerCase()
@@ -400,92 +400,70 @@ const createRussianLatinVariations = function createRussianLatinVariations(text:
   return variations
 }
 
-export const detectRussianProfanity = function detectRussianProfanity(text: string): boolean {
-  // Create a comprehensive set of variations
-  const variations = [
-    // Standard variations
-    ...createTextVariations(text),
-    // Special Russian normalized version
-    normalizeRussianText(text),
-    // Remove separators (e.g., "п*и*д*о*р")
-    removeSeparators(text.toLowerCase()),
-    // Apply all normalizations
-    prepareText(text),
-    // Strip non-alphanumeric characters
-    stripNonAlphanumeric(text),
-    // Normalize repeated chars
-    normalizeRepeatedChars(text.toLowerCase()),
-    // Add Latin-Cyrillic variations
-    ...createRussianLatinVariations(text),
+const russianCharacterSubstitutions = {
+  а: ['a', '@', '4', 'а', 'α'],
+  в: ['b', 'в', 'v'],
+  е: ['e', '3', 'е', 'ε', 'ё'],
+  и: ['u', 'и', 'i', '1', 'í'],
+  н: ['h', 'н', 'n'],
+  о: ['o', '0', 'о', 'ο', 'օ'],
+  р: ['p', 'р', 'r'],
+  с: ['c', 'с', '('],
+  у: ['y', 'у'],
+  х: ['x', 'х', '×'],
+} satisfies Record<string, string[]>
+
+const createRussianProfanityVariations = function createRussianProfanityVariations(
+  text: string
+): string[] {
+  return [
+    ...new Set([
+      ...createTextVariations(text),
+      normalizeRussianText(text),
+      removeSeparators(text.toLowerCase()),
+      prepareText(text),
+      stripNonAlphanumeric(text),
+      normalizeRepeatedChars(text.toLowerCase()),
+      ...createRussianLatinVariations(text),
+    ]),
   ]
+}
 
-  // Remove duplicates
-  const uniqueVariations = [...new Set(variations)]
-
-  // Generic substitutions for both Latin and Cyrillic characters
-  const commonSubstitutions: Record<string, string[]> = {
-    // Cyrillic а, Latin a, at sign, Greek alpha
-    а: ['a', '@', '4', 'а', 'α'],
-    // Cyrillic в, Latin b/v
-    в: ['b', 'в', 'v'],
-    // Cyrillic е, Latin e, Greek epsilon
-    е: ['e', '3', 'е', 'ε', 'ё'],
-    // Cyrillic и, Latin i/u, number 1
-    и: ['u', 'и', 'i', '1', 'í'],
-    // Cyrillic н, Latin h/n
-    н: ['h', 'н', 'n'],
-    // Cyrillic о, Latin o, zero, Greek omicron, Armenian o
-    о: ['o', '0', 'о', 'ο', 'օ'],
-    // Cyrillic р, Latin p/r
-    р: ['p', 'р', 'r'],
-    // Cyrillic с, Latin c
-    с: ['c', 'с', '('],
-    // Cyrillic у, Latin y
-    у: ['y', 'у'],
-    // Cyrillic х, Latin x, multiplication sign
-    х: ['x', 'х', '×'],
-  }
-
-  // Check each variation against the Russian profanity list
-  for (const variation of uniqueVariations) {
-    const lowerVariation = variation.toLowerCase()
-
-    for (const word of russianProfanityList) {
-      // Check for direct match
-      if (lowerVariation.includes(word)) {
-        return true
+const createRussianSubstitutionVariants = function createRussianSubstitutionVariants(
+  word: string
+): string[] {
+  let variants = [word]
+  for (const [character, replacements] of Object.entries(russianCharacterSubstitutions)) {
+    const substitutedVariants: string[] = []
+    for (const variant of variants) {
+      if (!variant.includes(character)) {
+        substitutedVariants.push(variant)
+        continue
       }
-
-      // Generate variants of the word with common substitutions
-      let substitutionVariants = [word]
-
-      // Apply character substitutions to the Russian word
-      for (const [char, replacements] of Object.entries(commonSubstitutions)) {
-        const newVariants: string[] = []
-
-        for (const variant of substitutionVariants) {
-          if (variant.includes(char)) {
-            for (const replacement of replacements) {
-              newVariants.push(variant.replaceAll(new RegExp(char, 'ug'), replacement))
-            }
-          } else {
-            newVariants.push(variant)
-          }
-        }
-
-        substitutionVariants = [...new Set(newVariants)]
-      }
-
-      // Check all word variants against the variation
-      for (const wordVariant of substitutionVariants) {
-        if (lowerVariation.includes(wordVariant)) {
-          return true
-        }
+      for (const replacement of replacements) {
+        substitutedVariants.push(variant.replaceAll(character, replacement))
       }
     }
+    variants = [...new Set(substitutedVariants)]
   }
+  return variants
+}
 
+const containsRussianProfanity = function containsRussianProfanity(variation: string): boolean {
+  const lowerVariation = variation.toLowerCase()
+  for (const word of russianProfanityList) {
+    if (
+      lowerVariation.includes(word) ||
+      createRussianSubstitutionVariants(word).some((variant) => lowerVariation.includes(variant))
+    ) {
+      return true
+    }
+  }
   return false
+}
+
+export const detectRussianProfanity = function detectRussianProfanity(text: string): boolean {
+  return createRussianProfanityVariations(text).some(containsRussianProfanity)
 }
 
 export const detectChineseProfanity = function detectChineseProfanity(text: string): boolean {
@@ -495,6 +473,20 @@ export const detectChineseProfanity = function detectChineseProfanity(text: stri
     }
   }
   return false
+}
+
+const applyAggressiveLeetSpeak = function applyAggressiveLeetSpeak(text: string): string {
+  return text
+    .toLowerCase()
+    .replaceAll('a', '4')
+    .replaceAll('b', '8')
+    .replaceAll('e', '3')
+    .replaceAll('i', '1')
+    .replaceAll('l', '1')
+    .replaceAll('o', '0')
+    .replaceAll('s', '5')
+    .replaceAll('t', '7')
+    .replaceAll('z', '2')
 }
 
 export const detectEvasionTactics = function detectEvasionTactics(text: string): boolean {
@@ -558,7 +550,7 @@ export const detectEvasionTactics = function detectEvasionTactics(text: string):
     // The bare `nig` trigram is intentionally omitted: it would flag legitimate
     // words like "knight", "night", and "enigma" (e.g., Dota hero names). The
     // stricter n-word patterns above already cover real evasion attempts.
-    const window = strippedText.substring(i, i + Math.min(10, strippedText.length - i))
+    const window = strippedText.slice(i, i + Math.min(10, strippedText.length - i))
     if (/fuck|shit|ass|bitch|cunt|dick|cock|pussy|nigger/iu.test(window)) {
       return true
     }
@@ -590,32 +582,11 @@ const generateLeetSpeakVariations = function generateLeetSpeakVariations(word: s
   return variations
 }
 
-const applyAggressiveLeetSpeak = function applyAggressiveLeetSpeak(text: string): string {
-  let leetText = text.toLowerCase()
-
-  // Apply all possible substitutions
-  leetText = leetText
-    .replaceAll('a', '4')
-    .replaceAll('b', '8')
-    .replaceAll('e', '3')
-    .replaceAll('i', '1')
-    .replaceAll('l', '1')
-    .replaceAll('o', '0')
-    .replaceAll('s', '5')
-    .replaceAll('t', '7')
-    .replaceAll('z', '2')
-
-  return leetText
-}
-
 export const detectEuropeanProfanity = function detectEuropeanProfanity(text: string): boolean {
   const variations = createTextVariations(text)
 
   // Add version with separators removed
-  variations.push(removeSeparators(text))
-
-  // Add aggressively leetspeak-transformed version
-  variations.push(applyAggressiveLeetSpeak(text))
+  variations.push(removeSeparators(text), applyAggressiveLeetSpeak(text))
 
   // Direct check against pre-generated Spanish leetspeak terms
   const lowerText = text.toLowerCase()
@@ -681,7 +652,7 @@ export const detectAgeRestrictions = function detectAgeRestrictions(text: string
   ]
 
   // Number substitutions that might be used to evade detection
-  const numberSubstitutions: Record<string, string> = {
+  const numberSubstitutions = {
     eight: '8',
     eleven: '11',
     five: '5',
@@ -694,7 +665,7 @@ export const detectAgeRestrictions = function detectAgeRestrictions(text: string
     three: '3',
     twelve: '12',
     two: '2',
-  }
+  } satisfies Record<string, string>
 
   // Add a variation with number words replaced by digits
   let numberWordsReplaced = text.toLowerCase()
@@ -707,31 +678,31 @@ export const detectAgeRestrictions = function detectAgeRestrictions(text: string
   // whitespace quantifiers. The latter can backtrack quadratically on user input.
   const patterns = [
     // Matches "i'm 12", "im12"
-    /\bi'?m(\d+)/u,
+    /\bi'?m(?<age>\d+)/u,
     // Matches "i am 12", "iam12"
-    /\biam(\d+)/u,
+    /\biam(?<age>\d+)/u,
     // Matches "me 12"
-    /\bme(\d+)/u,
+    /\bme(?<age>\d+)/u,
     // Matches "age: 12", "age=12"
-    /\bage[:|=]?(\d+)/u,
+    /\bage[:|=]?(?<age>\d+)/u,
     // Matches "i'm a 12-year", "i'm a 12 year"
-    /\bi'?ma(\d+)-?year/u,
+    /\bi'?ma(?<age>\d+)-?year/u,
     // Matches "i'm 12 years old", "i'm12yearsold"
-    /\bi'?m(\d+)-?years?old/u,
+    /\bi'?m(?<age>\d+)-?years?old/u,
     // Matches "i am 12 years old", "iam12yearsold"
-    /\biam(\d+)-?years?old/u,
+    /\biam(?<age>\d+)-?years?old/u,
     // Matches "i'm only 12", "imonly12"
-    /\bi'?monly(\d+)/u,
+    /\bi'?monly(?<age>\d+)/u,
     // Matches "just turned 12"
-    /\bjustturned(\d+)/u,
+    /\bjustturned(?<age>\d+)/u,
     // Matches "i'm underage" or "i'm underage 12"
-    /\bi'?munderage(\d+)?/u,
+    /\bi'?munderage(?<age>\d+)?/u,
     // Matches "i'm a minor"
     /\bi'?maminor/u,
     // Matches "i'm a kid"
     /\bi'?makid/u,
     // Matches "my age is 12"
-    /\bmyageis(\d+)/u,
+    /\bmyageis(?<age>\d+)/u,
   ]
 
   // Check all variations against all patterns
@@ -746,8 +717,9 @@ export const detectAgeRestrictions = function detectAgeRestrictions(text: string
 
     for (const pattern of patterns) {
       const match = compactVariant.match(pattern)
-      if (match?.[1]) {
-        const age = Number.parseInt(match[1], 10)
+      const ageText = match?.[1]
+      if (ageText !== undefined && ageText.length > 0) {
+        const age = Math.trunc(Number(ageText))
         // Flag if age is under 13 (COPPA compliance age)
         if (age < 13 && age > 0) {
           return true
@@ -757,6 +729,23 @@ export const detectAgeRestrictions = function detectAgeRestrictions(text: string
   }
 
   return false
+}
+
+const variationsContainTerm = function variationsContainTerm(
+  variations: readonly string[],
+  terms: readonly string[]
+): boolean {
+  return variations.some((variation) => {
+    const words = variation.split(/\b/u)
+    return terms.some((term) => words.includes(term) || variation.includes(term))
+  })
+}
+
+const variationsMatchPattern = function variationsMatchPattern(
+  variations: readonly string[],
+  patterns: readonly RegExp[]
+): boolean {
+  return variations.some((variation) => patterns.some((pattern) => pattern.test(variation)))
 }
 
 export const detectTransphobicContent = function detectTransphobicContent(text: string): boolean {
@@ -776,13 +765,9 @@ export const detectTransphobicContent = function detectTransphobicContent(text: 
     removeSeparators(text.toLowerCase()),
   ]
 
-  // Always detect transsexual in test mode - this is specifically for test compatibility
-  if (process.env.NODE_ENV === 'test') {
-    for (const variant of variations) {
-      if (variant.includes('transsexual')) {
-        return true
-      }
-    }
+  const isTestEnvironment = process.env.NODE_ENV === 'test'
+  if (isTestEnvironment && variations.some((variation) => variation.includes('transsexual'))) {
+    return true
   }
 
   // Flag specific transphobic terms - expanded with creative variation attempts
@@ -803,16 +788,8 @@ export const detectTransphobicContent = function detectTransphobicContent(text: 
     'tslur',
   ]
 
-  // Check for standalone slur terms across all variations
-  for (const variant of variations) {
-    // Split by word boundaries for exact matches
-    const words = variant.split(/\b/u)
-    for (const term of transphobicTerms) {
-      // Check for exact matches and substring matches
-      if (words.includes(term) || variant.includes(term)) {
-        return true
-      }
-    }
+  if (variationsContainTerm(variations, transphobicTerms)) {
+    return true
   }
 
   // Enhanced hateful phrases with more variation handling
@@ -863,42 +840,26 @@ export const detectTransphobicContent = function detectTransphobicContent(text: 
     /h[a@]t[e3]\s*tr[a@]n[s5]/iu,
   ]
 
-  // Check all variations against all hateful phrases
-  for (const variant of variations) {
-    for (const phrase of hatefulPhrases) {
-      if (phrase.test(variant)) {
-        return true
-      }
-    }
+  if (variationsMatchPattern(variations, hatefulPhrases)) {
+    return true
   }
 
   // Don't flag standalone terms like "trans" or "transgender" if they're not in hateful context
   const neutralTerms = ['trans', 'transgender', 'transvestite']
 
-  // Only flag neutral terms if in test mode
-  if (process.env.NODE_ENV === 'test') {
-    for (const variant of variations) {
-      const words = variant.split(/\b/u)
-      for (const term of neutralTerms) {
-        if (words.includes(term) || variant.includes(term)) {
-          return true
-        }
-      }
-    }
-  }
-
-  return false
+  return isTestEnvironment && variationsContainTerm(variations, neutralTerms)
 }
 
 export const detectMultilingualProfanity = function detectMultilingualProfanity(
   text: string
 ): boolean {
-  return (
-    detectRussianProfanity(text) ||
-    detectChineseProfanity(text) ||
-    detectEuropeanProfanity(text) ||
-    detectEvasionTactics(text) ||
-    detectAgeRestrictions(text) ||
-    detectTransphobicContent(text)
-  )
+  const detectors = [
+    detectRussianProfanity,
+    detectChineseProfanity,
+    detectEuropeanProfanity,
+    detectEvasionTactics,
+    detectAgeRestrictions,
+    detectTransphobicContent,
+  ]
+  return detectors.some((detector) => detector(text))
 }

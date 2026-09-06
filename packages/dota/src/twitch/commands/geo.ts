@@ -15,7 +15,7 @@ import type { MessageType } from '../lib/command-handler'
 commandHandler.registerCommand('geo', {
   aliases: ['country', 'location'],
   dbkey: DBSettings.commandGeo,
-  handler: async (message: MessageType, _args: string[]) => {
+  handler: async (message: MessageType) => {
     const {
       channel: { name: channel, client },
     } = message
@@ -23,7 +23,7 @@ commandHandler.registerCommand('geo', {
     const { locale } = client
     const currentMatchId = client.gsi?.map?.matchid
 
-    if (!currentMatchId) {
+    if (currentMatchId === undefined || currentMatchId.length === 0) {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: locale }),
@@ -50,7 +50,7 @@ commandHandler.registerCommand('geo', {
           `${currentMatchId}:${client.token}:steamServerId`
         )
 
-        if (!steamServerId) {
+        if (steamServerId === null || steamServerId.length === 0) {
           throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
         }
       }
@@ -70,10 +70,11 @@ commandHandler.registerCommand('geo', {
       const countriesList = matchPlayers
         .map((p) => {
           const cc = p.accountId === null ? undefined : summaries.get(p.accountId)?.countryCode
-          if (!cc) {
+          if (cc === null || cc === undefined || cc.length === 0) {
             return '?'
           }
-          return countryCodeEmoji(cc) || cc
+          const emoji = countryCodeEmoji(cc)
+          return emoji !== undefined && emoji.length > 0 ? emoji : cc
         })
         .join(' · ')
 
@@ -86,10 +87,8 @@ commandHandler.registerCommand('geo', {
         message.user.messageId
       )
     } catch (error) {
-      const msg = (error as Error)?.message
-        ? (error as Error).message
-        : t('gameNotFound', { lng: locale })
-      chatClient.say(channel, msg, message.user.messageId)
+      const reply = error instanceof Error ? error.message : t('gameNotFound', { lng: locale })
+      chatClient.say(channel, reply, message.user.messageId)
     }
   },
   permission: 2,

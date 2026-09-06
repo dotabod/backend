@@ -22,7 +22,7 @@ interface PredictionEvent {
 export const transformBetData = (event: PredictionEvent) => {
   const rawDate = event.locks_at ?? event.locked_at ?? event.ended_at
   return {
-    endDate: rawDate ? new Date(rawDate) : '',
+    endDate: rawDate !== undefined && rawDate.length > 0 ? new Date(rawDate) : '',
     outcomes: event?.outcomes?.map((outcome) => {
       const hasTopPredictors = 'top_predictors' in outcome
 

@@ -132,6 +132,9 @@ importers:
       socket.io-client:
         specifier: ^4.8.1
         version: 4.8.3
+      zod:
+        specifier: ^4.5.4
+        version: 4.5.4
     devDependencies:
       '@faker-js/faker':
         specifier: ^10.5.0
@@ -203,6 +206,9 @@ importers:
       winston:
         specifier: ^3.17.0
         version: 3.19.0
+      zod:
+        specifier: ^4.5.4
+        version: 4.5.4
 
   packages/steam:
     dependencies:
@@ -242,6 +248,9 @@ importers:
       winston:
         specifier: ^3.13.0
         version: 3.19.0
+      zod:
+        specifier: ^4.5.4
+        version: 4.5.4
     devDependencies:
       '@types/retry':
         specifier: ^0.12.5
@@ -289,9 +298,15 @@ importers:
       express:
         specifier: ^4.21.2
         version: 4.22.2
+      p-limit:
+        specifier: 3.1.0
+        version: 3.1.0
       socket.io:
         specifier: ^4.8.1
         version: 4.8.3
+      zod:
+        specifier: ^4.5.4
+        version: 4.5.4
     devDependencies:
       '@types/express':
         specifier: ^5.0.0
@@ -4032,6 +4047,7 @@ snapshots:
       '@twurple/api': 7.2.1(@twurple/auth@7.2.1)
       '@twurple/auth': 7.2.1
       winston: 3.19.0
+      zod: 4.5.4
     transitivePeerDependencies:
       - encoding
 

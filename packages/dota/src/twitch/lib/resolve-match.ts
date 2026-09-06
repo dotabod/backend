@@ -74,7 +74,7 @@ export const findResolvedMatchesInSession = async function findResolvedMatchesIn
     .not('won', 'is', null)
     .gte('created_at', startDate.toISOString())
 
-  if (opts.excludeMatchId) {
+  if (opts.excludeMatchId !== undefined && opts.excludeMatchId.length > 0) {
     query = query.neq('matchId', opts.excludeMatchId)
   }
 
@@ -93,11 +93,13 @@ export const findMostRecentResolvedMatch = async function findMostRecentResolved
   streamStartDate: Date | null,
   excludeMatchId?: string
 ): Promise<{ matchId: string } | null> {
-  const [match] = await findResolvedMatchesInSession(userId, streamStartDate, {
-    excludeMatchId,
-    limit: 1,
-  })
-  return match ? { matchId: match.matchId } : null
+  const match = (
+    await findResolvedMatchesInSession(userId, streamStartDate, {
+      excludeMatchId,
+      limit: 1,
+    })
+  ).at(0)
+  return match === undefined ? null : { matchId: match.matchId }
 }
 
 export const resolveByMostRecentMatch = async function resolveByMostRecentMatch(
@@ -128,7 +130,7 @@ const getMatchDetails = async function getMatchDetails(
       'getMatchMinimalDetails',
       { match_id: Number(matchId) },
       (err: unknown, response: MatchMinimalDetailsResponse) => {
-        if (err) {
+        if (err !== null && err !== undefined) {
           logger.info('[BETS] Could not get match details for retroactive resolution', {
             error: err,
             matchId,
@@ -159,7 +161,7 @@ const closeTwitchBetById = async function closeTwitchBetById(
     // Fetch recent predictions and find the one matching our ID
     // We fetch more than 1 since the current game might have a different prediction
     const { data: predictions } = await retryTransient(
-      () => api.predictions.getPredictions(twitchId, { limit: 10 }),
+      async () => await api.predictions.getPredictions(twitchId, { limit: 10 }),
       { label: 'resolveMatch:getPredictions' }
     )
 
@@ -200,8 +202,8 @@ const closeTwitchBetById = async function closeTwitchBetById(
     const [wonOutcome, lossOutcome] = prediction.outcomes
 
     await retryTransient(
-      () =>
-        api.predictions.resolvePrediction(
+      async () =>
+        await api.predictions.resolvePrediction(
           twitchId,
           predictionId,
           won ? wonOutcome.id : lossOutcome.id
@@ -238,7 +240,7 @@ export const resolveMatchRetroactively = async function resolveMatchRetroactivel
 ): Promise<ResolveMatchResult> {
   // Check if trying to resolve the current ongoing match
   const currentMatchId = client.gsi?.map?.matchid
-  if (currentMatchId && matchId === currentMatchId) {
+  if (currentMatchId !== undefined && currentMatchId.length > 0 && matchId === currentMatchId) {
     chatClient.say(channel, t('bets.cannotResolveCurrentMatch', { lng: client.locale }), messageId)
     return { errorKey: 'currentMatch', success: false }
   }
@@ -342,7 +344,7 @@ export const resolveMatchRetroactively = async function resolveMatchRetroactivel
 
   // Update MMR if it's a ranked game. For a flip we need to reverse the old
   // delta AND apply the new one, so the magnitude doubles.
-  if (isRanked && match.steam32Id) {
+  if (isRanked && match.steam32Id !== null && match.steam32Id !== 0) {
     const mmrSize = isParty ? MULTIPLIER_PARTY : MULTIPLIER_SOLO
     const mmrDelta = (won ? mmrSize : -mmrSize) * (isCorrection ? 2 : 1)
     const newMMR = client.mmr + mmrDelta
@@ -368,10 +370,10 @@ export const resolveMatchRetroactively = async function resolveMatchRetroactivel
   // Close the specific Twitch prediction only on a first-time resolution.
   // Already-resolved predictions can't be re-resolved on Twitch's side,
   // so we don't try when flipping a previously recorded result.
-  if (!isCorrection && match.predictionId) {
+  if (!isCorrection && match.predictionId !== null && match.predictionId.length > 0) {
     const channelId = handler?.getChannelId() ?? client.Account?.providerAccountId
 
-    if (channelId) {
+    if (channelId !== undefined && channelId.length > 0) {
       const closed = await closeTwitchBetById(won, channelId, match.predictionId, matchId)
       if (closed) {
         logger.info('[BETS] Retroactive resolution - Twitch prediction closed', {
@@ -392,7 +394,7 @@ export const resolveMatchRetroactively = async function resolveMatchRetroactivel
       context: won ? 'won' : 'lost',
       lng: client.locale,
       matchId,
-      previousContext: previousWon ? 'won' : 'lost',
+      previousContext: previousWon === true ? 'won' : 'lost',
       username: resolvedByUsername,
     }),
     messageId

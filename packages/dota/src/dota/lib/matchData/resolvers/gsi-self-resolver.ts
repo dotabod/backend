@@ -7,18 +7,18 @@ import type { RawRoster, ResolverContext } from './roster-resolver'
 export class GsiSelfResolver extends RosterResolver {
   readonly name = 'gsi-self' as const
 
-  async resolve({ gsi }: ResolverContext): Promise<RawRoster | null> {
+  resolve = async ({ gsi }: ResolverContext): Promise<RawRoster | null> => {
     if (!gsi) {
-      return null
+      return await Promise.resolve(null)
     }
     const heroid = gsi.hero?.id
     const accountid = Number(gsi.player?.accountid)
-    const validHero = typeof heroid === 'number' && Number.isFinite(heroid) && heroid > 0
+    const validHero = heroid !== undefined && Number.isFinite(heroid) && heroid > 0
     const validAcct = Number.isFinite(accountid) && accountid > 0
     if (!validHero && !validAcct) {
-      return null
+      return await Promise.resolve(null)
     }
-    return {
+    return await Promise.resolve({
       matchPlayers: [
         {
           accountid: validAcct ? accountid : 0,
@@ -26,7 +26,7 @@ export class GsiSelfResolver extends RosterResolver {
           playerid: null,
         },
       ],
-      source: 'gsi-self',
-    }
+      source: this.name,
+    })
   }
 }

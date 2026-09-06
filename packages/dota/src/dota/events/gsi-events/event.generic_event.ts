@@ -59,7 +59,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.GenericEvent}`, {
         // hero:smoked handler already announces it ("<hero> is smoked!") — staying silent here
         // is what keeps the two paths from double-posting. After the buff settles (~3s), roast
         // only if a teammate smoked and the streamer got left behind.
-        delayedQueue.addTask(SMOKE_FOMO_DELAY_MS, async () => {
+        delayedQueue.addTask(SMOKE_FOMO_DELAY_MS, () => {
           const { client } = dotaClient
           if (!client.stream_online) {
             return
@@ -76,7 +76,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.GenericEvent}`, {
           }
 
           // Caught out: a teammate smoked, the streamer is alive, but never got the buff.
-          const caughtOut = client.gsi?.hero?.alive !== false && !client.gsi?.hero?.smoked
+          const caughtOut = client.gsi?.hero?.alive !== false && client.gsi?.hero?.smoked !== true
           if (caughtOut) {
             say(client, t('chatters.smokeWithoutYou', { emote: 'HAH', lng: client.locale }))
           }

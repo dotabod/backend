@@ -37,7 +37,7 @@ const disableBetsForTwitchId = async function disableBetsForTwitchId(
   errorMessage: string
 ) {
   const token = getTokenFromTwitchId(twitchId)
-  if (!token) {
+  if (token === null || token.length === 0) {
     return
   }
 
@@ -81,16 +81,27 @@ export const openTwitchBet = async ({
   const title = isTitleDefault
     ? t('predictions.title', { heroName, lng: locale })
     : betsInfo.title.replace('[heroname]', heroName ?? '')
+  const moderatedTitle = await moderateText(title)
   const filteredTitle =
-    (await moderateText(title)) || t('predictions.title', { heroName, lng: locale })
+    moderatedTitle === null || moderatedTitle === undefined || moderatedTitle.length === 0
+      ? t('predictions.title', { heroName, lng: locale })
+      : moderatedTitle
 
   const isYesDefault = betsInfo.yes === defaultSettings.betsInfo.yes
   const yes = isYesDefault ? t('predictions.yes', { lng: locale }) : betsInfo.yes
-  const filteredYes = (await moderateText(yes)) || t('predictions.yes', { lng: locale })
+  const moderatedYes = await moderateText(yes)
+  const filteredYes =
+    moderatedYes === null || moderatedYes === undefined || moderatedYes.length === 0
+      ? t('predictions.yes', { lng: locale })
+      : moderatedYes
 
   const isNoDefault = betsInfo.no === defaultSettings.betsInfo.no
   const no = isNoDefault ? t('predictions.no', { lng: locale }) : betsInfo.no
-  const filteredNo = (await moderateText(no)) || t('predictions.no', { lng: locale })
+  const moderatedNo = await moderateText(no)
+  const filteredNo =
+    moderatedNo === null || moderatedNo === undefined || moderatedNo.length === 0
+      ? t('predictions.no', { lng: locale })
+      : moderatedNo
 
   const isValidDuration = betsInfo.duration >= 30 && betsInfo.duration <= 1800
   // 4 min default
@@ -115,13 +126,13 @@ export const openTwitchBet = async ({
       outcomes: [filteredYes.slice(0, 25), filteredNo.slice(0, 25)],
       title: filteredTitle.slice(0, 45),
     })
-    .catch(async (error) => {
+    .catch(async (error: { body?: string; stack?: string }) => {
       if (isPredictionAlreadyActiveError(error)) {
         throw error
       }
 
       try {
-        if (error.stack?.includes('The user context for the user')) {
+        if (error.stack?.includes('The user context for the user') === true) {
           await supabase
             .from('accounts')
             .update({
@@ -140,7 +151,8 @@ export const openTwitchBet = async ({
       }
 
       try {
-        if (JSON.parse(error?.body)?.message?.includes('channel points not enabled')) {
+        const parsedError = JSON.parse(error.body ?? '{}') as { message?: string }
+        if (parsedError.message?.includes('channel points not enabled') === true) {
           await disableBetsForTwitchId(twitchId, 'Channel points not enabled')
           logger.info('[PREDICT] [BETS] Channel points not enabled for', {
             twitchId,
@@ -153,7 +165,8 @@ export const openTwitchBet = async ({
 
       try {
         // "message\": \"Invalid refresh token\"\n}" means they have to logout and login
-        if (JSON.parse(error?.body)?.message?.includes('refresh token')) {
+        const parsedError = JSON.parse(error.body ?? '{}') as { message?: string }
+        if (parsedError.message?.includes('refresh token') === true) {
           say(
             client,
             t('bets.error', {

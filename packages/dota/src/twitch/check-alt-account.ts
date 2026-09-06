@@ -62,7 +62,7 @@ export const checkAltAccount = async function checkAltAccount(
     const {
       data: [follow],
     } = await api.channels.getChannelFollowers(twitchChannelId, userInfo.userId)
-    if (!follow) {
+    if (follow === undefined) {
       altAccountCache[chattersUsername] = false
       return
     }

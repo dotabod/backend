@@ -45,7 +45,7 @@ twitchChat.on('disconnect', (reason, details) => {
 const getUserRankTier = async function getUserRankTier(twitchUsername: string): Promise<number> {
   try {
     const profile = await getDotabodRankProfile(twitchUsername)
-    return profile?.rank_tier || 0
+    return profile?.rank_tier ?? 0
   } catch {
     return 0
   }
@@ -217,7 +217,7 @@ twitchChat.on(
     const toggleCommand = commandHandler.commands.get('toggle')
     if (
       isBotDisabled &&
-      !toggleCommand?.aliases?.includes(text.replace('!', '').split(' ')[0]) &&
+      toggleCommand?.aliases?.includes(text.replace('!', '').split(' ')[0]) !== true &&
       text.split(' ')[0] !== '!toggle'
     ) {
       logger.debug('Bot is disabled', { channel, text, user })
@@ -255,7 +255,7 @@ twitchChat.on('event', (eventName: keyof typeof events, broadcasterId: string, d
   // Can start doing something with the events
 
   const token = getTokenFromTwitchId(broadcasterId)
-  if (!token) {
+  if (token === null || token.length === 0) {
     return
   }
 

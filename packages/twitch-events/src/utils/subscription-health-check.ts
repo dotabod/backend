@@ -1,8 +1,10 @@
 import { checkBotStatus, fetchConduitId, getTwitchHeaders, logger } from '@dotabod/shared-utils'
+import { z } from 'zod'
 
 import { eventSubMap } from '../chat-sub-ids'
-import type { EventSubStatus } from '../interfaces'
+import { EVENT_SUB_STATUSES } from '../interfaces'
 import { genericSubscribe } from '../subscribe-chat-messages-for-user'
+import { TWITCH_EVENT_TYPE_NAMES } from '../twitch-event-types'
 import type { TwitchEventTypes } from '../twitch-event-types'
 import { getAccountIds } from '../twitch/lib/get-account-ids'
 import { rateLimiter } from './rate-limiter-core'
@@ -12,12 +14,46 @@ import { rateLimiter } from './rate-limiter-core'
 // requires_refresh flip; the 5-min reconciliation just doesn't re-check them.
 // Empirically the rescan was always a no-op and the user-visible failure
 // (predictions not appearing in a stream) self-heals on the next sign-in.
-const CRITICAL_SUBSCRIPTION_TYPES: (keyof TwitchEventTypes)[] = [
+const CRITICAL_SUBSCRIPTION_TYPES = [
   'stream.online',
   'stream.offline',
   'user.update',
   'channel.chat.message',
-] as const
+] as const satisfies readonly (keyof TwitchEventTypes)[]
+type CriticalSubscriptionType = (typeof CRITICAL_SUBSCRIPTION_TYPES)[number]
+const CHAT_SUBSCRIPTION_TYPE = 'channel.chat.message'
+const subscriptionPageSchema = z.object({
+  data: z.array(
+    z.object({
+      condition: z
+        .object({
+          broadcaster_user_id: z.string().optional(),
+          user_id: z.string().optional(),
+        })
+        .optional(),
+      id: z.string(),
+      status: z.enum(EVENT_SUB_STATUSES),
+      type: z.enum(TWITCH_EVENT_TYPE_NAMES),
+    })
+  ),
+  pagination: z.object({ cursor: z.string().optional() }).optional(),
+})
+
+interface HealthCheckContext {
+  accountIds: string[]
+  conduitId: string
+  isBanned: boolean
+  lastLogTime: number
+  processedCount: number
+  result: HealthCheckResult
+  startTime: number
+  usersWithMissingCritical: Map<string, CriticalSubscriptionType[]>
+}
+
+interface SubscriptionPageResult {
+  cursor?: string
+  fetchedCount: number
+}
 
 interface HealthCheckResult {
   totalUsers: number
@@ -28,6 +64,180 @@ interface HealthCheckResult {
   userErrors: Record<string, number>
 }
 
+const repairCriticalSubscription = async function repairCriticalSubscription(
+  conduitId: string,
+  userId: string,
+  type: CriticalSubscriptionType,
+  result: HealthCheckResult
+): Promise<void> {
+  try {
+    const success = await genericSubscribe(conduitId, userId, type)
+    if (success) {
+      result.fixedSubscriptions += 1
+      result.criticalFixCount += 1
+      logger.warn('[TWITCHEVENTS] Fixed critical missing subscription', { type, userId })
+      return
+    }
+
+    result.errorCount += 1
+    logger.error('[TWITCHEVENTS] Subscription returned false but did not throw', {
+      type,
+      userId,
+    })
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    result.errorCount += 1
+    result.userErrors[errorMessage] = (result.userErrors[errorMessage] ?? 0) + 1
+    logger.error('[TWITCHEVENTS] Failed to fix critical subscription', {
+      error: errorMessage,
+      type,
+      userId,
+    })
+  }
+}
+
+const processHealthCheckUser = async function processHealthCheckUser(
+  context: HealthCheckContext,
+  userId: string
+): Promise<void> {
+  try {
+    const existingSubscriptions = eventSubMap.get(userId)
+    const missingCritical = CRITICAL_SUBSCRIPTION_TYPES.filter(
+      (type) =>
+        existingSubscriptions?.[type] === undefined &&
+        !(type === CHAT_SUBSCRIPTION_TYPE && context.isBanned)
+    )
+    if (missingCritical.length === 0) {
+      return
+    }
+
+    context.usersWithMissingCritical.set(userId, missingCritical)
+    context.result.usersWithIssues += 1
+    await Promise.all(
+      missingCritical.map(async (type) => {
+        await repairCriticalSubscription(context.conduitId, userId, type, context.result)
+      })
+    )
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    context.result.errorCount += 1
+    context.result.userErrors[errorMessage] = (context.result.userErrors[errorMessage] ?? 0) + 1
+    logger.error('[TWITCHEVENTS] Error checking user subscriptions', {
+      error: errorMessage,
+      userId,
+    })
+  }
+}
+
+const logHealthCheckProgress = function logHealthCheckProgress(context: HealthCheckContext) {
+  const now = Date.now()
+  if (context.processedCount % 200 !== 0 && now - context.lastLogTime <= 5000) {
+    return
+  }
+
+  context.lastLogTime = now
+  const percentComplete = Math.round((context.processedCount / context.accountIds.length) * 100)
+  const elapsedSec = (now - context.startTime) / 1000
+  logger.info('[TWITCHEVENTS] Health check progress', {
+    criticalFixed: context.result.criticalFixCount,
+    percent: `${percentComplete}%`,
+    processed: context.processedCount,
+    timeElapsed: `${Math.round(elapsedSec / 60)}m ${Math.round(elapsedSec % 60)}s`,
+    total: context.accountIds.length,
+    usersWithIssues: context.result.usersWithIssues,
+  })
+}
+
+const processAccountChunks = async function processAccountChunks(
+  context: HealthCheckContext,
+  startIndex = 0
+): Promise<void> {
+  const chunk = context.accountIds.slice(startIndex, startIndex + 25)
+  if (chunk.length === 0) {
+    return
+  }
+
+  await Promise.all(
+    chunk.map(async (userId) => {
+      await processHealthCheckUser(context, userId)
+    })
+  )
+  context.processedCount += chunk.length
+  logHealthCheckProgress(context)
+  await processAccountChunks(context, startIndex + chunk.length)
+}
+
+const storeSubscriptionPage = function storeSubscriptionPage(
+  page: z.infer<typeof subscriptionPageSchema>
+): number {
+  let fetchedCount = 0
+  for (const subscription of page.data) {
+    const broadcasterId =
+      subscription.condition?.broadcaster_user_id ?? subscription.condition?.user_id
+    if (broadcasterId === undefined || broadcasterId.length === 0) {
+      continue
+    }
+
+    const subscriptions = eventSubMap.get(broadcasterId) ?? {}
+    subscriptions[subscription.type] = {
+      id: subscription.id,
+      status: subscription.status,
+    }
+    eventSubMap.set(broadcasterId, subscriptions)
+    fetchedCount += 1
+  }
+  return fetchedCount
+}
+
+const fetchSubscriptionPage = async function fetchSubscriptionPage(
+  headers: Awaited<ReturnType<typeof getTwitchHeaders>>,
+  cursor?: string
+): Promise<SubscriptionPageResult> {
+  return await rateLimiter.schedule(async () => {
+    const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
+    if (cursor !== undefined && cursor.length > 0) {
+      url.searchParams.append('after', cursor)
+    }
+
+    const response = await fetch(url.toString(), { headers, method: 'GET' })
+    if (response.status !== 200) {
+      logger.error('[TWITCHEVENTS] Failed to fetch subscriptions', { status: response.status })
+      return { fetchedCount: 0 }
+    }
+
+    const responseBody: unknown = await response.json()
+    const parsedPage = subscriptionPageSchema.safeParse(responseBody)
+    if (!parsedPage.success) {
+      throw new Error('Twitch returned an invalid EventSub subscriptions response')
+    }
+    return {
+      cursor: parsedPage.data.pagination?.cursor,
+      fetchedCount: storeSubscriptionPage(parsedPage.data),
+    }
+  })
+}
+
+const fetchSubscriptionPages = async function fetchSubscriptionPages(
+  headers: Awaited<ReturnType<typeof getTwitchHeaders>>,
+  cursor?: string,
+  fetchedCount = 0
+): Promise<number> {
+  const page = await fetchSubscriptionPage(headers, cursor)
+  const totalFetched = fetchedCount + page.fetchedCount
+  if (page.cursor === undefined || page.cursor.length === 0) {
+    return totalFetched
+  }
+  return await fetchSubscriptionPages(headers, page.cursor, totalFetched)
+}
+
+const fetchSubscriptionsForHealthCheck =
+  async function fetchSubscriptionsForHealthCheck(): Promise<void> {
+    logger.info('[TWITCHEVENTS] Fetching current subscriptions from Twitch API')
+    const headers = await getTwitchHeaders()
+    const fetchedCount = await fetchSubscriptionPages(headers)
+    logger.info('[TWITCHEVENTS] Fetched current subscriptions', { count: fetchedCount })
+  }
+
 export const runSubscriptionHealthCheck =
   async function runSubscriptionHealthCheck(): Promise<HealthCheckResult> {
     logger.info('[TWITCHEVENTS] Starting subscription health check')
@@ -37,7 +247,7 @@ export const runSubscriptionHealthCheck =
     const conduitId = await fetchConduitId()
 
     // Validate conduit ID before proceeding
-    if (!conduitId) {
+    if (conduitId === null || conduitId.length === 0) {
       const errorMessage = 'No valid conduit ID available - health check cannot proceed'
       logger.error(`[TWITCHEVENTS] ${errorMessage}`)
       throw new Error(errorMessage)
@@ -63,7 +273,7 @@ export const runSubscriptionHealthCheck =
     logger.info(`[TWITCHEVENTS] joining ${accountIds.length} channels`)
 
     // Fetch existing subscriptions if eventSubMap is empty
-    if (Object.keys(eventSubMap).length === 0) {
+    if (eventSubMap.size === 0) {
       logger.info('[TWITCHEVENTS] EventSubMap is empty, fetching existing subscriptions')
       await fetchSubscriptionsForHealthCheck()
     }
@@ -78,108 +288,17 @@ export const runSubscriptionHealthCheck =
       usersWithIssues: 0,
     }
 
-    // Process in chunks for efficiency and rate limit management
-    const CHUNK_SIZE = 25
-    let lastLogTime = Date.now()
-    let processedCount = 0
-
-    // Map to track users with missing critical subscriptions
-    const usersWithMissingCritical = new Map<string, string[]>()
-
-    for (let i = 0; i < accountIds.length; i += CHUNK_SIZE) {
-      const chunk = accountIds.slice(i, i + CHUNK_SIZE)
-
-      // Process each user in parallel within the chunk
-      await Promise.all(
-        chunk.map(async (userId) => {
-          try {
-            const existingSubscriptions = eventSubMap[userId] || {}
-            const existingTypes = Object.keys(existingSubscriptions) as (keyof TwitchEventTypes)[]
-
-            // Check for missing critical subscriptions
-            const missingCritical = CRITICAL_SUBSCRIPTION_TYPES.filter(
-              (type) =>
-                !existingTypes.includes(type) && !(type === 'channel.chat.message' && isBanned)
-            )
-
-            if (missingCritical.length === 0) {
-              return
-            }
-
-            usersWithMissingCritical.set(userId, missingCritical)
-            result.usersWithIssues += 1
-
-            for (const type of missingCritical) {
-              try {
-                // Skip chat subscriptions if bot is banned
-                if (type === 'channel.chat.message' && isBanned) {
-                  logger.info('[TWITCHEVENTS] Skipping chat subscription for banned bot', {
-                    userId,
-                  })
-                  continue
-                }
-
-                const success = await genericSubscribe(conduitId, userId, type)
-
-                if (success) {
-                  result.fixedSubscriptions += 1
-                  result.criticalFixCount += 1
-                  logger.warn('[TWITCHEVENTS] Fixed critical missing subscription', {
-                    type,
-                    userId,
-                  })
-                } else {
-                  result.errorCount += 1
-                  logger.error('[TWITCHEVENTS] Subscription returned false but did not throw', {
-                    type,
-                    userId,
-                  })
-                }
-              } catch (error) {
-                result.errorCount += 1
-                const errorMsg = error instanceof Error ? error.message : String(error)
-                result.userErrors[errorMsg] = (result.userErrors[errorMsg] || 0) + 1
-
-                logger.error('[TWITCHEVENTS] Failed to fix critical subscription', {
-                  error: errorMsg,
-                  type,
-                  userId,
-                })
-              }
-            }
-          } catch (error) {
-            result.errorCount += 1
-            const errorMsg = error instanceof Error ? error.message : String(error)
-            result.userErrors[errorMsg] = (result.userErrors[errorMsg] || 0) + 1
-
-            logger.error('[TWITCHEVENTS] Error checking user subscriptions', {
-              error: errorMsg,
-              userId,
-            })
-          }
-        })
-      )
-
-      // Update progress counter
-      processedCount += chunk.length
-
-      // Log progress periodically (every 5 seconds or 200 users)
-      const now = Date.now()
-      if (processedCount % 200 === 0 || now - lastLogTime > 5000) {
-        lastLogTime = now
-        const percentComplete = Math.round((processedCount / accountIds.length) * 100)
-        const elapsedSec = (now - startTime) / 1000
-
-        logger.info('[TWITCHEVENTS] Health check progress', {
-          criticalFixed: result.criticalFixCount,
-          percent: `${percentComplete}%`,
-          processed: processedCount,
-          timeElapsed: `${Math.round(elapsedSec / 60)}m ${Math.round(elapsedSec % 60)}s`,
-          total: accountIds.length,
-          usersWithIssues: result.usersWithIssues,
-        })
-      }
-    }
+    const usersWithMissingCritical = new Map<string, CriticalSubscriptionType[]>()
+    await processAccountChunks({
+      accountIds,
+      conduitId,
+      isBanned,
+      lastLogTime: Date.now(),
+      processedCount: 0,
+      result,
+      startTime,
+      usersWithMissingCritical,
+    })
 
     // Calculate final timing
     const totalTimeSec = (Date.now() - startTime) / 1000
@@ -213,75 +332,6 @@ export const runSubscriptionHealthCheck =
     })
 
     return result
-  }
-
-const fetchSubscriptionsForHealthCheck =
-  async function fetchSubscriptionsForHealthCheck(): Promise<void> {
-    logger.info('[TWITCHEVENTS] Fetching current subscriptions from Twitch API')
-    const headers = await getTwitchHeaders()
-    let cursor: string | undefined
-    let fetchedCount = 0
-
-    do {
-      await rateLimiter.schedule(async () => {
-        const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
-        if (cursor) {
-          url.searchParams.append('after', cursor)
-        }
-
-        const response = await fetch(url.toString(), {
-          headers,
-          method: 'GET',
-        })
-
-        if (response.status !== 200) {
-          logger.error('[TWITCHEVENTS] Failed to fetch subscriptions', {
-            status: response.status,
-          })
-          return
-        }
-
-        const result = (await response.json()) as {
-          data: {
-            id: string
-            status: string
-            type: string
-            version: string
-            condition?: {
-              broadcaster_user_id?: string
-              user_id?: string
-            }
-          }[]
-          pagination: {
-            cursor: string
-          }
-        }
-        const { data, pagination } = result
-
-        // Process subscriptions
-        data.forEach((sub) => {
-          const broadcasterId = sub.condition?.broadcaster_user_id || sub.condition?.user_id
-          if (!broadcasterId) {
-            return
-          }
-
-          // Initialize broadcaster entry if it doesn't exist
-          eventSubMap[broadcasterId] ??= {} as (typeof eventSubMap)[number]
-
-          // Store subscription details
-          eventSubMap[broadcasterId][sub.type as keyof TwitchEventTypes] = {
-            id: sub.id,
-            status: sub.status as EventSubStatus,
-          }
-
-          fetchedCount += 1
-        })
-
-        cursor = pagination?.cursor
-      })
-    } while (cursor)
-
-    logger.info('[TWITCHEVENTS] Fetched current subscriptions', { count: fetchedCount })
   }
 
 // CLI entry-point lives in src/scripts/runSubscriptionHealthCheck.ts so this

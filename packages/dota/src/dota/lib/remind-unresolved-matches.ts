@@ -58,7 +58,10 @@ export const remindUnresolvedMatches = async function remindUnresolvedMatches():
           if (Number.isNaN(endedAt) || now - endedAt < REMINDER_AFTER_MS) {
             continue
           }
-          if (await redisClient.client.get(reminderSentFlagKey(client.token, match.matchId))) {
+          const reminderSent = await redisClient.client.get(
+            reminderSentFlagKey(client.token, match.matchId)
+          )
+          if (reminderSent !== null && reminderSent.length > 0) {
             continue
           }
           dueIds.add(match.matchId)

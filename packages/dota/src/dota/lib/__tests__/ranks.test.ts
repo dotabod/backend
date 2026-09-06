@@ -16,9 +16,7 @@ const noopLogger = {
 
 // ranks.ts -> getWL imports `supabase`/`logger` from shared-utils at load time;
 // these helpers never touch it at runtime, so a no-op surface is enough.
-vi.doMock(import('@dotabod/shared-utils'), () =>
-  buildSharedUtilsMock({ logger: noopLogger, supabase: {} })
-)
+vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ logger: noopLogger, supabase: {} }))
 
 const { rankTierToMmr, mmrToRankTier, estimateMMR, getRankDetail } = await import('../ranks.ts')
 
@@ -87,13 +85,14 @@ describe('getRankDetail', () => {
 
   it('returns rank progression details for an in-range mmr', async () => {
     const detail = await getRankDetail(100)
-    expect(detail).not.toBeNull()
-    const d = detail as Exclude<typeof detail, null>
-    expect((d as any).myRank.title).toBe('Herald☆1')
-    expect((d as any).nextMMR).toBe(154)
-    expect((d as any).mmrToNextRank).toBe(54)
+    if (!detail || 'standing' in detail) {
+      throw new Error('Expected an in-range rank detail')
+    }
+    expect(detail.myRank?.title).toBe('Herald☆1')
+    expect(detail.nextMMR).toBe(154)
+    expect(detail.mmrToNextRank).toBe(54)
     // ceil(54 / 25)
-    expect((d as any).winsToNextRank).toBe(3)
+    expect(detail.winsToNextRank).toBe(3)
   })
 
   it('routes to the leaderboard lookup at the exact top-of-range boundary, matching mmrToRankTier(5619) === 80 (immortal)', async () => {

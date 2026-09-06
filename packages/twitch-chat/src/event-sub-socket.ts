@@ -249,7 +249,7 @@ export class EventsubSocket extends EventEmitter {
 
     switch (message_type) {
       case 'session_welcome': {
-        this.handleSessionWelcome(payload, this.eventsub.is_reconnecting || false)
+        this.handleSessionWelcome(payload, this.eventsub.is_reconnecting ?? false)
         break
       }
       case 'session_keepalive': {
@@ -329,7 +329,7 @@ export class EventsubSocket extends EventEmitter {
     if (this.disposed) {
       return
     }
-    if (keepalive_timeout_seconds) {
+    if (keepalive_timeout_seconds !== undefined && keepalive_timeout_seconds !== 0) {
       this.silenceTime = keepalive_timeout_seconds + 1
     }
     // Any keepalive/notification proves the connection is live — refresh the
@@ -397,7 +397,11 @@ export class EventsubSocket extends EventEmitter {
       // are exactly the ones stuck reconnect-looping in CONNECTING, so keep a noop
       // error sink attached through close() to absorb the aborted-handshake error.
       ws?.addEventListener('error', () => {})
-      if (ws && ws.readyState !== WebSocket.CLOSED && ws.readyState !== WebSocket.CLOSING) {
+      if (
+        ws !== undefined &&
+        ws.readyState !== WebSocket.CLOSED &&
+        ws.readyState !== WebSocket.CLOSING
+      ) {
         ws.close()
       }
     } catch (error) {

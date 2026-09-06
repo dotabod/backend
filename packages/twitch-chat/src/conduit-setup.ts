@@ -103,7 +103,7 @@ const getConduitId = async function getConduitId(forceRefresh = false): Promise<
 
     const onData = (data: { conduitId?: string }) => {
       cleanup()
-      if (data?.conduitId) {
+      if (data.conduitId !== undefined && data.conduitId.length > 0) {
         logger.info('[TWITCHCHAT] Received conduit ID', {
           conduitId: `${data.conduitId.slice(0, 8)}...`,
         })
@@ -116,7 +116,7 @@ const getConduitId = async function getConduitId(forceRefresh = false): Promise<
     const onError = (error: { error?: string }) => {
       cleanup()
       logger.error('[TWITCHCHAT] Error getting conduit ID', { error })
-      reject(new Error(error.error || 'Unknown error getting conduit ID'))
+      reject(new Error(error.error ?? 'Unknown error getting conduit ID'))
     }
 
     const timeout = setTimeout(() => {
@@ -175,7 +175,7 @@ const legacyEventHandlerNames: Partial<Record<keyof TwitchEventTypes, string>> =
 
 const handleObsEvents = (type: keyof TwitchEventTypes, broadcasterId: string, data: unknown) => {
   if (hasDotabodSocket()) {
-    const name = legacyEventHandlerNames[type] || type
+    const name = legacyEventHandlerNames[type] ?? type
     emitEvent(name, broadcasterId, data)
   }
 }
@@ -280,9 +280,9 @@ const revokeEvent = function revokeEvent(data: {
   }
 }
 
-// EventSub payloads aren't modeled centrally (TwitchEventTypes only carries versions);
-// handlers stay typed at their definitions, so this registry holds them via `any`.
-const eventHandlers: Partial<Record<keyof TwitchEventTypes, (data: any) => void>> = {
+// EventSub payloads aren't modeled centrally (TwitchEventTypes only carries versions),
+// so preserve each handler's own payload type while checking the registry keys.
+const eventHandlers = {
   'channel.chat.message': handleChatMessage,
   'channel.poll.begin': createEventHandler('channel.poll.begin', transformPollData),
   'channel.poll.end': createEventHandler('channel.poll.end', transformPollData),
@@ -299,7 +299,7 @@ const eventHandlers: Partial<Record<keyof TwitchEventTypes, (data: any) => void>
   'user.authorization.grant': grantEvent,
   'user.authorization.revoke': revokeEvent,
   'user.update': updateUserEvent,
-}
+} satisfies Partial<Record<keyof TwitchEventTypes, (...args: never[]) => unknown>>
 
 // Initialize WebSocket and handle events
 const initializeSocket = async function initializeSocket() {
@@ -398,12 +398,17 @@ const initializeSocket = async function initializeSocket() {
         // The user_id was the bot
         // The broadcaster_user_id was the streamer
 
+        const broadcasterUserId = payload.subscription?.condition?.broadcaster_user_id
+        const eventUserId = payload.event?.user_id
+        const conditionUserId = payload.subscription?.condition?.user_id
         const userId =
-          payload.subscription?.condition?.broadcaster_user_id ||
-          payload?.event?.user_id ||
-          payload.subscription?.condition?.user_id
+          broadcasterUserId !== undefined && broadcasterUserId.length > 0
+            ? broadcasterUserId
+            : eventUserId !== undefined && eventUserId.length > 0
+              ? eventUserId
+              : conditionUserId
 
-        if (!userId) {
+        if (userId === undefined || userId.length === 0) {
           logger.info('No user_id or broadcaster_user_id found in revocation event', { payload })
           return
         }

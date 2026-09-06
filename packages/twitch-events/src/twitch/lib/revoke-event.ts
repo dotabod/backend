@@ -20,8 +20,8 @@ export const deleteSubscription = async (id: string) => {
 
 // Function to stop subscriptions for a user
 export const stopUserSubscriptions = async (providerAccountId: string) => {
-  const subscriptions = eventSubMap[providerAccountId]
-  if (!subscriptions) {
+  const subscriptions = eventSubMap.get(providerAccountId)
+  if (subscriptions === undefined) {
     return
   }
 
@@ -39,7 +39,7 @@ export const stopUserSubscriptions = async (providerAccountId: string) => {
     })
   )
 
-  delete eventSubMap[providerAccountId]
+  eventSubMap.delete(providerAccountId)
 }
 
 const disableChannel = async function disableChannel(broadcasterId: string) {
@@ -69,7 +69,7 @@ const disableChannel = async function disableChannel(broadcasterId: string) {
     return
   }
 
-  if (settings.find((s) => s.key === 'commandDisable' && s.value === true)) {
+  if (settings.some((setting) => setting.key === 'commandDisable' && setting.value === true)) {
     logger.info('twitch-events User already disabled', { twitchId: broadcasterId })
     return
   }
@@ -85,11 +85,30 @@ const disableChannel = async function disableChannel(broadcasterId: string) {
 // Track pending revoke operations to debounce multiple calls
 const pendingRevokes = new Map<string, NodeJS.Timeout>()
 
-export const revokeEvent = async function revokeEvent({
+export const executeRevoke = async function executeRevoke(
+  providerAccountId: string
+): Promise<void> {
+  logger.info(`${providerAccountId} revoke executing after debounce`)
+  pendingRevokes.delete(providerAccountId)
+
+  await stopUserSubscriptions(providerAccountId)
+  await supabase
+    .from('accounts')
+    .update({
+      requires_refresh: true,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('provider', 'twitch')
+    .eq('providerAccountId', providerAccountId)
+
+  await disableChannel(providerAccountId)
+}
+
+export const revokeEvent = function revokeEvent({
   providerAccountId,
 }: {
   providerAccountId: string
-}) {
+}): void {
   if (providerAccountId === process.env.TWITCH_BOT_PROVIDERID) {
     logger.info('Bot was revoked by Twitch in events!')
     botStatus.isBanned = true
@@ -103,26 +122,8 @@ export const revokeEvent = async function revokeEvent({
   // Set a new timeout
   pendingRevokes.set(
     providerAccountId,
-    setTimeout(async () => {
-      logger.info(`${providerAccountId} revoke executing after debounce`)
-      pendingRevokes.delete(providerAccountId)
-
-      try {
-        void stopUserSubscriptions(providerAccountId)
-      } catch (error) {
-        logger.info('Failed to delete subscriptions', { error, twitchId: providerAccountId })
-      }
-
-      await supabase
-        .from('accounts')
-        .update({
-          requires_refresh: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('provider', 'twitch')
-        .eq('providerAccountId', providerAccountId)
-
-      await disableChannel(providerAccountId)
+    setTimeout(() => {
+      void executeRevoke(providerAccountId)
     }, 3000)
   )
 }

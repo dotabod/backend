@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../__tests__/shared-mocks.ts'
+import {
+  buildSharedUtilsMock,
+  createSocketClientStub,
+  initTestI18n,
+  PRO_SUB,
+} from '../../../__tests__/shared-mocks.ts'
 import type { RosterPlayer } from '../../../dota/lib/matchData'
 import type { SocketClient } from '../../../types'
 
@@ -11,16 +16,14 @@ const noopLogger = {
   warn: () => {},
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () =>
-  buildSharedUtilsMock({ logger: noopLogger, supabase: {} })
-)
+vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ logger: noopLogger, supabase: {} }))
 
 await initTestI18n()
 
 const { clippingDisabledNote } = await import('../clipping-note.ts')
 
 const makeClient = function makeClient(over: Partial<SocketClient> = {}): SocketClient {
-  return {
+  return createSocketClientStub({
     SteamAccount: [],
     locale: 'en',
     // is8500Plus -> true via connected mmr
@@ -29,7 +32,7 @@ const makeClient = function makeClient(over: Partial<SocketClient> = {}): Socket
     steam32Id: 1,
     subscription: PRO_SUB,
     ...over,
-  } as unknown as SocketClient
+  })
 }
 
 const blank = { playerName: null, rank: null, selected: null, slot: null, team: null }

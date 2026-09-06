@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
   clearSubscriptions,
@@ -7,8 +7,6 @@ import {
   seedSubscriptions,
   state,
 } from './shared-mocks.ts'
-
-const realSetTimeout = globalThis.setTimeout
 
 const REQUIRED = [
   'channel.chat.message',
@@ -24,16 +22,12 @@ const REQUIRED = [
   'channel.poll.end',
 ] as const
 
-beforeEach(() => {
-  resetState()
-  clearSubscriptions()
-})
-
-afterEach(() => {
-  globalThis.setTimeout = realSetTimeout
-})
-
 describe(initUserSubscriptions, () => {
+  beforeEach(() => {
+    resetState()
+    clearSubscriptions()
+  })
+
   it('subscribes a new user to every required event type', async () => {
     const ok = await initUserSubscriptions('111')
     expect(state.subscribeCalls).toHaveLength(REQUIRED.length)
@@ -70,8 +64,8 @@ describe(initUserSubscriptions, () => {
       REQUIRED.filter((t) => t !== 'stream.online' && t !== 'channel.poll.end')
     )
     await initUserSubscriptions('111')
-    const types = state.subscribeCalls.map((c) => c.type).sort()
-    expect(types).toStrictEqual(['channel.poll.end', 'stream.online'])
+    const types = state.subscribeCalls.map((call) => call.type)
+    expect(types).toStrictEqual(['stream.online', 'channel.poll.end'])
   })
 
   it('returns false when a critical subscription fails', async () => {
@@ -89,19 +83,30 @@ describe(initUserSubscriptions, () => {
   })
 
   it('retries critical subscriptions on a rate-limit error before giving up', async () => {
-    // Fire backoff timers instantly so the retry loop runs without real waits.
-    globalThis.setTimeout = ((cb: () => void) => {
-      cb()
-      return 0 as unknown as ReturnType<typeof setTimeout>
-    }) as typeof setTimeout
     const calls: string[] = []
+    const waitCalls: number[] = []
     state.subscribeResult = (_userId, type) => {
       calls.push(type)
-      throw new Error('Rate limit hit')
+      if (type === 'stream.online') {
+        throw new Error('Rate limit hit')
+      }
+      return true
     }
-    const ok = await initUserSubscriptions('111')
-    expect(ok).toBeFalsy()
-    // stream.online is critical -> retried up to 3 times.
-    expect(calls.filter((t) => t === 'stream.online').length).toBeGreaterThan(1)
+    const ok = await initUserSubscriptions('111', {
+      waitForRetry: async (milliseconds: number) => {
+        await Promise.resolve()
+        waitCalls.push(milliseconds)
+      },
+    })
+
+    expect({
+      ok,
+      streamOnlineAttempts: calls.filter((type) => type === 'stream.online').length,
+      waitCalls,
+    }).toStrictEqual({
+      ok: false,
+      streamOnlineAttempts: 3,
+      waitCalls: [1000, 2000],
+    })
   })
 })

@@ -8,6 +8,23 @@ import type {
 } from '../types'
 import { coverage, emptyRoster } from './coverage'
 
+const inferStage = function inferStage(
+  source: RosterSource,
+  completeness: RosterCompleteness,
+  heroesStatus: HeroesStatus | undefined
+): MatchStage {
+  if (source === 'none') {
+    return 'unknown'
+  }
+  if (heroesStatus) {
+    return 'roster-draft'
+  }
+  if (completeness.heroIds === 'all') {
+    return 'in-progress'
+  }
+  return 'hero-draft'
+}
+
 // Pure transform: takes a resolver's typed output and produces the public `ResolvedRoster`.
 // All the messy normalization rules (`accountid:0` sentinel collapse, NaN slot/hero rejection,
 // ghost-row filter, spectator team derivation, completeness math, stage inference) live HERE in
@@ -21,14 +38,13 @@ export const normalize = function normalize({
   source: RosterSource
   matchPlayers: Players
   heroesStatus?: HeroesStatus
-  gsi: Packet | undefined
+  gsi?: Packet
 }): ResolvedRoster {
   // Drop ghost entries (no accountid, no heroid, no name — pure stubs).
   const cleaned = matchPlayers.filter((p) => {
-    const validAcct =
-      typeof p.accountid === 'number' && Number.isFinite(p.accountid) && p.accountid > 0
-    const validHero = typeof p.heroid === 'number' && Number.isFinite(p.heroid) && p.heroid > 0
-    const hasName = typeof p.player_name === 'string' && p.player_name.length > 0
+    const validAcct = Number.isFinite(p.accountid) && p.accountid > 0
+    const validHero = p.heroid !== undefined && Number.isFinite(p.heroid) && p.heroid > 0
+    const hasName = p.player_name !== undefined && p.player_name.length > 0
     return validAcct || validHero || hasName
   })
   if (cleaned.length === 0) {
@@ -36,14 +52,10 @@ export const normalize = function normalize({
   }
 
   const players: RosterPlayer[] = cleaned.map((p) => {
-    const rawSlot = (p as { playerid?: unknown }).playerid
-    const slot = typeof rawSlot === 'number' && Number.isFinite(rawSlot) ? rawSlot : null
-    const rawHero = (p as { heroid?: unknown }).heroid
+    const slot = p.playerid !== null && Number.isFinite(p.playerid) ? p.playerid : null
     const heroId =
-      typeof rawHero === 'number' && Number.isFinite(rawHero) && rawHero > 0 ? rawHero : null
-    const rawSelected = (p as { selected?: unknown }).selected
-    const selected =
-      source === 'gsi-spectator' && typeof rawSelected === 'boolean' ? rawSelected : null
+      p.heroid !== undefined && Number.isFinite(p.heroid) && p.heroid > 0 ? p.heroid : null
+    const selected = source === 'gsi-spectator' ? (p.selected ?? null) : null
     return {
       accountId: p.accountid && p.accountid > 0 ? p.accountid : null,
       heroId,
@@ -85,21 +97,4 @@ export const normalize = function normalize({
     source,
     stage: inferStage(source, completeness, heroesStatus),
   }
-}
-
-const inferStage = function inferStage(
-  source: RosterSource,
-  completeness: RosterCompleteness,
-  heroesStatus: HeroesStatus | undefined
-): MatchStage {
-  if (source === 'none') {
-    return 'unknown'
-  }
-  if (heroesStatus) {
-    return 'roster-draft'
-  }
-  if (completeness.heroIds === 'all') {
-    return 'in-progress'
-  }
-  return 'hero-draft'
 }

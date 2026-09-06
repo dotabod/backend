@@ -11,6 +11,23 @@ export interface InGameSnapshot {
   dire_score: number | null
 }
 
+interface ClosingScores {
+  dire_score: number | null
+  kda: { assists: number | null; deaths: number | null; kills: number | null }
+  radiant_score: number | null
+}
+
+const EMPTY_IN_GAME_SNAPSHOT: InGameSnapshot = {
+  assists: null,
+  deaths: null,
+  dire_score: null,
+  duration: null,
+  hero_name: null,
+  kills: null,
+  matchId: '',
+  radiant_score: null,
+}
+
 interface LiveGsiLike {
   hero?: { name?: string | null } | null
   player?: {
@@ -29,7 +46,7 @@ interface LiveGsiLike {
 // Treats empty strings as missing — the disconnect GSI packet often returns
 // `hero.name = ""` rather than dropping the key.
 const liveString = (v: string | null | undefined): string | null => {
-  if (typeof v !== 'string') {
+  if (v === null || v === undefined) {
     return null
   }
   return v.length > 0 ? v : null
@@ -46,12 +63,12 @@ const monotonic = (
   live: number | null | undefined,
   prev: number | null | undefined
 ): number | null => {
-  const l = typeof live === 'number' ? live : null
-  const p = typeof prev === 'number' ? prev : null
-  if (l == null) {
+  const l = live ?? null
+  const p = prev ?? null
+  if (l === null) {
     return p
   }
-  if (p == null) {
+  if (p === null) {
     return l
   }
   return Math.max(l, p)
@@ -67,17 +84,19 @@ export const mergeInGameSnapshotTick = function mergeInGameSnapshotTick(args: {
   prev: InGameSnapshot | null
 }): InGameSnapshot {
   const { matchId, gsi, prev } = args
-  const samePrev = prev?.matchId === matchId ? prev : null
+  const previous = prev?.matchId === matchId ? prev : EMPTY_IN_GAME_SNAPSHOT
   const liveHero = liveString(gsi?.hero?.name)
+  const liveMap = gsi?.map ?? {}
+  const livePlayer = gsi?.player ?? {}
   return {
-    assists: monotonic(gsi?.player?.assists, samePrev?.assists),
-    deaths: monotonic(gsi?.player?.deaths, samePrev?.deaths),
-    dire_score: monotonic(gsi?.map?.dire_score, samePrev?.dire_score),
-    duration: monotonic(gsi?.map?.game_time, samePrev?.duration),
-    hero_name: liveHero ?? samePrev?.hero_name ?? null,
-    kills: monotonic(gsi?.player?.kills, samePrev?.kills),
+    assists: monotonic(livePlayer.assists, previous.assists),
+    deaths: monotonic(livePlayer.deaths, previous.deaths),
+    dire_score: monotonic(liveMap.dire_score, previous.dire_score),
+    duration: monotonic(liveMap.game_time, previous.duration),
+    hero_name: liveHero ?? previous.hero_name,
+    kills: monotonic(livePlayer.kills, previous.kills),
     matchId,
-    radiant_score: monotonic(gsi?.map?.radiant_score, samePrev?.radiant_score),
+    radiant_score: monotonic(liveMap.radiant_score, previous.radiant_score),
   }
 }
 
@@ -93,11 +112,7 @@ export const buildClosingScores = function buildClosingScores(args: {
     | undefined
   gcMatch: { radiant_score?: number | null; dire_score?: number | null } | null | undefined
   gsi: LiveGsiLike | null | undefined
-}): {
-  kda: { kills: number | null; deaths: number | null; assists: number | null }
-  radiant_score: number | null
-  dire_score: number | null
-} {
+}): ClosingScores {
   const { gcPlayer, gcMatch, gsi } = args
   return {
     dire_score: monotonic(gcMatch?.dire_score, gsi?.map?.dire_score),
@@ -121,23 +136,25 @@ export const buildUnresolvedSnapshot = function buildUnresolvedSnapshot(args: {
   now: Date
 }): UnresolvedMatch {
   const { matchId, gsi, cached, now } = args
-
-  const hero_name = cached?.hero_name ?? liveString(gsi?.hero?.name)
-  const kills = monotonic(gsi?.player?.kills, cached?.kills)
-  const deaths = monotonic(gsi?.player?.deaths, cached?.deaths)
-  const assists = monotonic(gsi?.player?.assists, cached?.assists)
-  const radiant_score = monotonic(gsi?.map?.radiant_score, cached?.radiant_score)
-  const dire_score = monotonic(gsi?.map?.dire_score, cached?.dire_score)
-  const duration = monotonic(gsi?.map?.game_time, cached?.duration)
+  const stored = cached ?? EMPTY_IN_GAME_SNAPSHOT
+  const liveMap = gsi?.map ?? {}
+  const livePlayer = gsi?.player ?? {}
+  const heroName = stored.hero_name ?? liveString(gsi?.hero?.name)
+  const kills = monotonic(livePlayer.kills, stored.kills)
+  const deaths = monotonic(livePlayer.deaths, stored.deaths)
+  const assists = monotonic(livePlayer.assists, stored.assists)
+  const radiantScore = monotonic(liveMap.radiant_score, stored.radiant_score)
+  const direScore = monotonic(liveMap.dire_score, stored.dire_score)
+  const duration = monotonic(liveMap.game_time, stored.duration)
 
   const iso = now.toISOString()
   return {
     created_at: iso,
-    dire_score,
-    hero_name,
+    dire_score: direScore,
+    hero_name: heroName,
     kda: { assists, deaths, duration, kills },
     matchId,
-    radiant_score,
+    radiant_score: radiantScore,
     updated_at: iso,
   }
 }

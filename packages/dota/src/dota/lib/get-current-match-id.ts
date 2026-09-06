@@ -16,6 +16,61 @@ const activeMatchStates = new Set([
   'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
 ])
 
+export const isGsiFresh = function isGsiFresh(
+  client: Pick<SocketClient, 'gsi' | 'gsiUpdatedAt'>,
+  now = Date.now()
+): boolean {
+  if (client.gsi === undefined) {
+    return false
+  }
+  const updatedAt = client.gsiUpdatedAt
+  if (updatedAt === undefined || updatedAt === 0) {
+    return false
+  }
+  return now - updatedAt <= GSI_STALE_AFTER_MS
+}
+
+const hasFreshActiveGameState = function hasFreshActiveGameState(
+  client: Pick<SocketClient, 'gsi' | 'gsiUpdatedAt'>,
+  now: number
+): boolean {
+  const packet = client.gsi
+
+  if (packet === undefined || !isGsiFresh(client, now)) {
+    return false
+  }
+  if (!activeMatchStates.has(packet.map?.game_state ?? '')) {
+    return false
+  }
+  const winTeam = packet.map?.win_team
+  if (winTeam !== undefined && winTeam.length > 0 && winTeam !== 'none') {
+    return false
+  }
+
+  return true
+}
+
+const getFreshActiveMatchId = function getFreshActiveMatchId(
+  client: Pick<SocketClient, 'gsi' | 'gsiUpdatedAt'>,
+  now: number
+): string | undefined {
+  const packet = client.gsi
+  const matchId = packet?.map?.matchid
+
+  if (!hasFreshActiveGameState(client, now)) {
+    return undefined
+  }
+  if (matchId === undefined || matchId.length === 0) {
+    return undefined
+  }
+  const numericMatchId = Number(matchId)
+  if (numericMatchId === 0 || Number.isNaN(numericMatchId)) {
+    return undefined
+  }
+
+  return matchId
+}
+
 // Roster commands can read the full team2/team3 payload that Dota exposes while spectating.
 // Keep the same freshness/end-state protections as player commands without rejecting that
 // intentional spectator source before MatchDataService gets a chance to resolve it.
@@ -24,7 +79,11 @@ export const getCurrentRosterMatchId = function getCurrentRosterMatchId(
   now = Date.now()
 ): string | undefined {
   const matchId = getFreshActiveMatchId(client, now)
-  if (!matchId || (!isPlayingMatch(client.gsi) && !isSpectator(client.gsi))) {
+  if (
+    matchId === undefined ||
+    matchId.length === 0 ||
+    (!isPlayingMatch(client.gsi) && !isSpectator(client.gsi))
+  ) {
     return undefined
   }
 
@@ -50,44 +109,4 @@ export const isCurrentCustomGame = function isCurrentCustomGame(
   now = Date.now()
 ): boolean {
   return hasFreshActiveGameState(client, now) && isArcade(client.gsi)
-}
-
-const getFreshActiveMatchId = function getFreshActiveMatchId(
-  client: Pick<SocketClient, 'gsi' | 'gsiUpdatedAt'>,
-  now: number
-): string | undefined {
-  const packet = client.gsi
-  const matchId = packet?.map?.matchid
-
-  if (!matchId || !Number(matchId) || !hasFreshActiveGameState(client, now)) {
-    return undefined
-  }
-
-  return matchId
-}
-
-const hasFreshActiveGameState = function hasFreshActiveGameState(
-  client: Pick<SocketClient, 'gsi' | 'gsiUpdatedAt'>,
-  now: number
-): boolean {
-  const packet = client.gsi
-
-  if (!packet || !isGsiFresh(client, now)) {
-    return false
-  }
-  if (!activeMatchStates.has(packet.map?.game_state ?? '')) {
-    return false
-  }
-  if (packet.map?.win_team && packet.map.win_team !== 'none') {
-    return false
-  }
-
-  return true
-}
-
-export const isGsiFresh = function isGsiFresh(
-  client: Pick<SocketClient, 'gsi' | 'gsiUpdatedAt'>,
-  now = Date.now()
-): boolean {
-  return !!client.gsi && !!client.gsiUpdatedAt && now - client.gsiUpdatedAt <= GSI_STALE_AFTER_MS
 }

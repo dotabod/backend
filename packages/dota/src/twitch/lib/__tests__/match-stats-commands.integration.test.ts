@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { createPacketStub } from '../../../__tests__/shared-mocks.ts'
 import { commandHandler, liveGsi, makeMessage, resetState, state } from './setup-mocks.ts'
 
 // !items and !stats read live player data. Ordinary pubs still stop at the disabled
@@ -18,7 +19,10 @@ beforeEach(() => {
 describe('!items', () => {
   it('blocks when the stream is offline', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { stream_online: false }, content: '!items' })
+      makeMessage({
+        clientOverrides: { stream_online: false },
+        content: '!items',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(notLive)
@@ -33,7 +37,7 @@ describe('!items', () => {
   it('reports gameNotFound for a non-numeric match id', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        clientOverrides: { gsi: { map: { matchid: '0' } } as any },
+        clientOverrides: { gsi: createPacketStub({ map: { matchid: '0' } }) },
         content: '!items',
       })
     )

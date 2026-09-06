@@ -1,13 +1,19 @@
-import type { BlockType, DotaEvent, MatchMinimalDetailsResponse, SocketClient } from '../types'
+import type { BlockType, DotaEvent, MatchClosingDetailsResponse, SocketClient } from '../types'
 import type { DataBroadcasterInterface } from './events/minimap/data-broadcaster-types'
+
+interface NeutralItemTimerInterface {
+  checkNeutralItems: () => Promise<void>
+  reset: () => void
+}
 
 // Type definition for GSIHandler that can be used without importing the actual class
 export interface GSIHandlerType {
   closeBets: (
     team: 'radiant' | 'dire' | null,
-    gcData?: MatchMinimalDetailsResponse
+    gcData?: MatchClosingDetailsResponse
   ) => Promise<void>
   openBets: (client: SocketClient) => Promise<void>
+  openTheBet: (matchId: string, heroName: string, myTeam?: string) => Promise<void>
   emitNotablePlayers: () => Promise<void>
   emitStreamersInMatch: () => Promise<void>
   emitBadgeUpdate: () => void
@@ -32,16 +38,15 @@ export interface GSIHandlerType {
   treadsData: { treadToggles: number; manaSaved: number; manaAtLastToggle: number }
   disabled: boolean
 
-  // Use generic Record type instead of concrete implementations
   mapBlocker: DataBroadcasterInterface
-  neutralItemTimer: Record<string, any>
+  neutralItemTimer: NeutralItemTimerInterface
 
-  enable(): void
-  disable(): void
-  getMmr(): number
-  getToken(): string
-  getSteam32(): number | null
-  getChannelId(): string
-  addSecondsToNow(seconds: number): Date
-  resetClientState(): Promise<void>
+  enable: () => void
+  disable: () => void
+  getMmr: () => number
+  getToken: () => string
+  getSteam32: () => number | null
+  getChannelId: () => string
+  addSecondsToNow: (seconds: number) => Date
+  resetClientState: () => Promise<void>
 }

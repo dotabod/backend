@@ -125,7 +125,7 @@ export const dispatchFeatureAnnouncements = async function dispatchFeatureAnnoun
   }
 
   const matchId = client.gsi?.map?.matchid
-  if (!matchId) {
+  if (matchId === undefined || matchId.length === 0) {
     return
   }
 

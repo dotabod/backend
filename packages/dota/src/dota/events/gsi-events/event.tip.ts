@@ -35,7 +35,11 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
     const high = is8500Plus(dotaClient.client)
     const senderHeroId = players[senderPlayerIdIndex]?.heroId
     const heroName = high
-      ? senderFoundIndex !== -1 && senderHeroId
+      ? senderFoundIndex !== -1 &&
+        senderHeroId !== null &&
+        senderHeroId !== undefined &&
+        senderHeroId !== 0 &&
+        !Number.isNaN(senderHeroId)
         ? getHeroNameOrColor(senderHeroId, senderPlayerIdIndex)
         : null
       : getHeroNameOrColor(senderHeroId ?? 0, senderPlayerIdIndex)
@@ -45,7 +49,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
     if (receiverPlayerIdIndex === playingHeroSlot) {
       say(
         dotaClient.client,
-        heroName
+        heroName !== null && heroName.length > 0
           ? t('tip.from', {
               emote: 'ICANT',
               heroName,
@@ -62,14 +66,18 @@ eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
     if (senderPlayerIdIndex === playingHeroSlot) {
       const receiverHeroId = players[receiverPlayerIdIndex]?.heroId
       const toHero = high
-        ? receiverFoundIndex !== -1 && receiverHeroId
+        ? receiverFoundIndex !== -1 &&
+          receiverHeroId !== null &&
+          receiverHeroId !== undefined &&
+          receiverHeroId !== 0 &&
+          !Number.isNaN(receiverHeroId)
           ? getHeroNameOrColor(receiverHeroId, receiverPlayerIdIndex)
           : null
         : getHeroNameOrColor(receiverHeroId ?? 0, receiverPlayerIdIndex)
 
       say(
         dotaClient.client,
-        toHero
+        toHero !== null && toHero.length > 0
           ? t('tip.to', {
               emote: 'PepeLaugh',
               heroName: toHero,

@@ -20,20 +20,20 @@ declare module 'bad-words' {
 
 declare module 'profanity-filter' {
   export class ProfanityFilter {
-    isProfane(text: string): boolean
-    clean(text: string): string
-    addWords(words: string[]): void
-    removeWords(words: string[]): void
+    isProfane: (text: string) => boolean
+    clean: (text: string) => string
+    addWords: (words: string[]) => void
+    removeWords: (words: string[]) => void
   }
 }
 
 declare module 'profanity-util' {
   interface ProfanityUtil {
-    check(text: string | string[]): [string[], number]
-    purify(text: string | string[]): [string | string[], number]
-    addWords(words: string | string[]): string[]
-    removeWords(words: string | string[]): string[]
-    getDictionary(): string[]
+    check: (text: string | string[]) => [string[], number]
+    purify: (text: string | string[]) => [string | string[], number]
+    addWords: (words: string | string[]) => string[]
+    removeWords: (words: string | string[]) => string[]
+    getDictionary: () => string[]
   }
 
   const profanityUtil: ProfanityUtil
@@ -52,11 +52,11 @@ declare module 'russian-bad-words' {
 declare module 'washyourmouthoutwithsoap' {
   export interface Wash {
     // Returns supported locale codes (ISO 639-1)
-    supported(): string[]
+    supported: () => string[]
     // Checks if text contains bad words for the specified locale
-    check(locale: string, text: string): boolean
+    check: (locale: string, text: string) => boolean
     // Returns all bad words for the specified locale
-    words(locale: string): string[]
+    words: (locale: string) => string[]
   }
 
   const wash: Wash

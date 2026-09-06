@@ -63,7 +63,7 @@ export const deleteClipsBatch = async function deleteClipsBatch(
     // Assert type
     const result = (await response.json()) as GqlDeleteResponse
 
-    if (result[0]?.errors?.[0]?.message) {
+    if (result[0]?.errors?.[0]?.message !== undefined && result[0].errors[0].message.length > 0) {
       logger.error('GQL delete batch returned error', {
         ...logContext,
         error: result[0].errors[0].message,

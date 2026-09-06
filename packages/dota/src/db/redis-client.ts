@@ -3,7 +3,7 @@ import type { RedisJSON } from '@redis/json/dist/commands'
 import { createClient } from 'redis'
 
 class RedisClient {
-  private static instance: RedisClient
+  private static instance: RedisClient | undefined
   public client: ReturnType<typeof createClient>
   public subscriber: ReturnType<typeof createClient>
 
@@ -47,7 +47,7 @@ class RedisClient {
   }
 
   public static getInstance(): RedisClient {
-    if (!RedisClient.instance) {
+    if (RedisClient.instance === undefined) {
       RedisClient.instance = new RedisClient()
     }
     return RedisClient.instance

@@ -40,7 +40,7 @@ export const announceCapturedCosmetics = async function announceCapturedCosmetic
     }
 
     const heroId = client.gsi?.hero?.id
-    if (!heroId || heroId <= 0) {
+    if (heroId === undefined || heroId <= 0) {
       return
     }
 

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const upsert = vi.hoisted(() => vi.fn())
 
-vi.mock(import('@dotabod/shared-utils'), () => ({
+vi.mock('@dotabod/shared-utils', () => ({
   logger: { info: vi.fn() },
   supabase: {
     from: vi.fn(() => ({ upsert })),

@@ -50,10 +50,12 @@ const firstBloodChat = async function firstBloodChat(dotaClient: GSIHandlerType,
     (await redisClient.client.get(`${dotaClient.client.token}:playingTeam`)) ??
     dotaClient.client.gsi?.player?.team_name
 
+  if (playingTeam !== 'radiant' && playingTeam !== 'dire') {
+    return
+  }
   const otherTeam = playingTeam === 'radiant' ? 'dire' : 'radiant'
   const wasFirstBlood =
-    playingTeam &&
-    dotaClient.client.gsi?.map?.[`${playingTeam as 'radiant' | 'dire'}_score`] === 0 &&
+    dotaClient.client.gsi?.map?.[`${playingTeam}_score`] === 0 &&
     dotaClient.client.gsi.map[`${otherTeam}_score`] === 1
 
   if (!wasFirstBlood) {
@@ -70,10 +72,10 @@ const firstBloodChat = async function firstBloodChat(dotaClient: GSIHandlerType,
 const cantCastItem = function cantCastItem(item: Item, dotaClient: GSIHandlerType) {
   return (
     Number(item.cooldown) > 0 ||
-    !item.can_cast ||
-    dotaClient.client.gsi?.previously?.hero?.muted ||
-    dotaClient.client.gsi?.previously?.hero?.hexed ||
-    dotaClient.client.gsi?.previously?.hero?.stunned
+    item.can_cast !== true ||
+    dotaClient.client.gsi?.previously?.hero?.muted === true ||
+    dotaClient.client.gsi?.previously?.hero?.hexed === true ||
+    dotaClient.client.gsi?.previously?.hero?.stunned === true
   )
 }
 
@@ -99,12 +101,12 @@ const passiveDeathChat = function passiveDeathChat(dotaClient: GSIHandlerType, h
           return false
         }
 
-        if (i.charges) {
+        if (i.charges === true) {
           return Number(item.charges) >= 10
         }
         return true
       })
-      if (found) {
+      if (found !== undefined) {
         return found.title
       }
       return null
@@ -112,7 +114,7 @@ const passiveDeathChat = function passiveDeathChat(dotaClient: GSIHandlerType, h
     .flatMap((f) => f ?? [])
     .join(', ')
 
-  if (!itemNames) {
+  if (itemNames.length === 0) {
     return
   }
 

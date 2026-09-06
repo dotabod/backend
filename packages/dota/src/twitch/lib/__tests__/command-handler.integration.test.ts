@@ -112,6 +112,38 @@ describe('CommandHandler dispatch (integration)', () => {
   })
 
   describe('!won / !lost end-to-end via handleMessage', () => {
+    it('!won resolves a pending match for the streamer team', async () => {
+      state.redisGet['token-abc:pendingManualResolution'] = JSON.stringify({
+        matchId: '7777777777',
+        timestamp: 1,
+      })
+      state.redisGet['token-abc:playingTeam'] = 'radiant'
+      state.steamSocketResponse = { last_match: null, matches: [] }
+
+      await commandHandler.handleMessage(makeMessage({ content: '!won', permission: 2 }))
+
+      expect(state.closeBetsCalls).toHaveLength(1)
+      expect(state.closeBetsCalls[0]?.[0]).toBe('radiant')
+      expect(state.redisDelCalls).toContain('token-abc:pendingManualResolution')
+      expect(state.chatSayCalls.at(-1)?.message).toContain('manually resolved as WON')
+    })
+
+    it('!lost resolves a pending match for the opposing team', async () => {
+      state.redisGet['token-abc:pendingManualResolution'] = JSON.stringify({
+        matchId: '7777777777',
+        timestamp: 1,
+      })
+      state.redisGet['token-abc:playingTeam'] = 'radiant'
+      state.steamSocketResponse = { last_match: null, matches: [] }
+
+      await commandHandler.handleMessage(makeMessage({ content: '!lost', permission: 2 }))
+
+      expect(state.closeBetsCalls).toHaveLength(1)
+      expect(state.closeBetsCalls[0]?.[0]).toBe('dire')
+      expect(state.redisDelCalls).toContain('token-abc:pendingManualResolution')
+      expect(state.chatSayCalls.at(-1)?.message).toContain('manually resolved as LOST')
+    })
+
     it('!lost with no arg and no pending resolution flips the most-recent resolved match', async () => {
       state.recentList = [{ hero_name: null, matchId: '7777777777', won: true }]
       state.sessionMatch = baseMatchRow({ matchId: '7777777777', won: true })
@@ -120,7 +152,7 @@ describe('CommandHandler dispatch (integration)', () => {
 
       expect(state.updateCalls).toHaveLength(1)
       expect(state.updateCalls[0].values).toMatchObject({ won: false })
-      expect(state.chatSayCalls.at(-1).message).toContain('corrected from WON to LOST')
+      expect(state.chatSayCalls.at(-1)?.message).toContain('corrected from WON to LOST')
     })
 
     it('!won with a matchId arg routes through the retroactive path', async () => {

@@ -1,13 +1,20 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { clearSubscriptions, resetState, state, subscribeToEvents } from './shared-mocks.ts'
 
-beforeEach(() => {
-  resetState()
-  clearSubscriptions()
-})
+const originalClientId = process.env.TWITCH_CLIENT_ID
 
 describe(subscribeToEvents, () => {
+  beforeEach(() => {
+    resetState()
+    clearSubscriptions()
+    process.env.TWITCH_CLIENT_ID = 'client-1'
+  })
+
+  afterEach(() => {
+    process.env.TWITCH_CLIENT_ID = originalClientId
+  })
+
   it('bails out when no conduit ID is available', async () => {
     state.conduitId = ''
     state.accountIds = ['111']
@@ -17,6 +24,13 @@ describe(subscribeToEvents, () => {
 
   it('bails out when there are no accounts to subscribe', async () => {
     state.accountIds = []
+    await subscribeToEvents()
+    expect(state.subscribeCalls).toHaveLength(0)
+  })
+
+  it('bails out when the Twitch client ID is unavailable', async () => {
+    delete process.env.TWITCH_CLIENT_ID
+    state.accountIds = ['111']
     await subscribeToEvents()
     expect(state.subscribeCalls).toHaveLength(0)
   })

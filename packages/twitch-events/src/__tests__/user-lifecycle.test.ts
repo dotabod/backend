@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import {
   clearSubscriptions,
@@ -9,13 +9,18 @@ import {
 } from './shared-mocks.ts'
 
 const botEnv = { bot: process.env.TWITCH_BOT_PROVIDERID, client: process.env.TWITCH_CLIENT_ID }
-
-beforeEach(() => {
-  resetState()
-  clearSubscriptions()
-})
+const immediateRetry = {
+  waitForRetry: async () => {
+    await Promise.resolve()
+  },
+}
 
 describe(handleNewUser, () => {
+  beforeEach(() => {
+    resetState()
+    clearSubscriptions()
+  })
+
   it('returns early without a providerAccountId', async () => {
     await handleNewUser('')
     expect(state.updates).toHaveLength(0)
@@ -35,18 +40,13 @@ describe(handleNewUser, () => {
   })
 
   it('skips the profile update and logs at ERROR level when the account is not found after retry', async () => {
-    // The lookup retries once with a 1s wait to mitigate Realtime/replica
-    // races. Use fake timers so the test isn't slowed by the real delay.
+    // The lookup retries once to mitigate Realtime/replica races.
     // Persistent null (both attempts) means either a bogus providerAccountId
     // or replica lag >REPLICA_LAG_RETRY_MS — surface at error level so the
     // alert pipeline picks it up. (Previously logged as warn, which made
     // genuine replication problems invisible.)
-    vi.useFakeTimers()
     state.dbUser = null
-    const work = handleNewUser('111', false)
-    await vi.advanceTimersByTimeAsync(1100)
-    await work
-    vi.useRealTimers()
+    await handleNewUser('111', false, immediateRetry)
     expect(state.updates).toHaveLength(0)
     expect(
       state.logError.some(
@@ -61,7 +61,7 @@ describe(handleNewUser, () => {
     state.dbUser = { userId: 'user-1' }
     state.streamer = { displayName: 'Streamer', name: 'streamer' }
     // Force a critical type to fail so initUserSubscriptions returns false.
-    state.subscribeResult = (_userId, type) => (type === 'stream.online' ? false : true)
+    state.subscribeResult = (_userId, type) => type !== 'stream.online'
 
     await expect(handleNewUser('222')).rejects.toThrow(
       /initUserSubscriptions: critical subscription failed/u
@@ -69,7 +69,6 @@ describe(handleNewUser, () => {
   })
 
   it('recovers when the accounts row appears on the second lookup (replica lag)', async () => {
-    vi.useFakeTimers()
     state.streamer = { displayName: 'L8', name: 'l8' }
     // Script per-call lookup behavior: first call returns null (row not yet
     // visible), second call returns the row (replica caught up). The mocked
@@ -80,10 +79,7 @@ describe(handleNewUser, () => {
       { data: null, error: null },
       { data: { userId: 'user-3' }, error: null },
     ]
-    const work = handleNewUser('333', false)
-    await vi.advanceTimersByTimeAsync(1100)
-    await work
-    vi.useRealTimers()
+    await handleNewUser('333', false, immediateRetry)
 
     expect(state.updates.some((u) => u.table === 'users' && u.values.name === 'l8')).toBeTruthy()
     // Both queued results were consumed → the retry path actually ran.
@@ -96,15 +92,11 @@ describe(handleNewUser, () => {
     // misleading warn "no accounts row for providerAccountId". The fix bubbles
     // the error up so the outer catch logs at error level with the actual
     // error attached — observability now sees the real cause.
-    vi.useFakeTimers()
     state.accountsLookupResults = [
       { data: null, error: new Error('connection reset by peer') },
       { data: null, error: new Error('connection reset by peer') },
     ]
-    const work = handleNewUser('111', false)
-    await vi.advanceTimersByTimeAsync(1100)
-    await work
-    vi.useRealTimers()
+    await handleNewUser('111', false, immediateRetry)
 
     // The misleading warn must NOT fire — the row isn't missing, the lookup
     // errored.
@@ -113,11 +105,14 @@ describe(handleNewUser, () => {
     ).toBeFalsy()
     // Instead, the error path is logged with the real cause.
     expect(
-      state.logError.some(
-        (l) =>
+      state.logError.some((l) => {
+        const loggedError = l.meta.error
+        return (
           l.message.includes('profile update failed') &&
-          String((l.meta?.error as Error | undefined)?.message).includes('connection reset')
-      )
+          loggedError instanceof Error &&
+          loggedError.message.includes('connection reset')
+        )
+      })
     ).toBeTruthy()
     // And the users row was NOT updated (we never got a userId).
     expect(state.updates).toHaveLength(0)
@@ -168,6 +163,8 @@ describe(handleNewUser, () => {
 
 describe(ensureBotIsModerator, () => {
   beforeEach(() => {
+    resetState()
+    clearSubscriptions()
     process.env.TWITCH_BOT_PROVIDERID = 'bot-1'
     process.env.TWITCH_CLIENT_ID = 'client-1'
   })

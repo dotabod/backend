@@ -1,4 +1,7 @@
+import { setTimeout as delay } from 'node:timers/promises'
+
 import { logger } from '@dotabod/shared-utils'
+import pLimit from 'p-limit'
 
 interface RateLimitInfo {
   limit: number
@@ -6,111 +9,104 @@ interface RateLimitInfo {
   reset: number
 }
 
+interface RateLimitStatus extends RateLimitInfo {
+  queueLength: number
+}
+
 export class RateLimiter {
-  private readonly queue: (() => Promise<unknown>)[] = []
-  private processing = false
+  private readonly runOneAtATime = pLimit(1)
   private readonly rateLimitInfo: RateLimitInfo = {
-    // Default limit
     limit: 800,
     remaining: 800,
-    // Default 1 minute reset
     reset: Date.now() + 60_000,
   }
+  private readonly waitForReset: (delayMs: number) => Promise<void>
 
-  get queueLength() {
-    return this.queue.length
+  constructor(waitForReset: (delayMs: number) => Promise<void> = delay) {
+    this.waitForReset = waitForReset
   }
 
-  get rateLimitStatus() {
+  get queueLength(): number {
+    return this.runOneAtATime.pendingCount
+  }
+
+  get rateLimitStatus(): RateLimitStatus {
     return {
       ...this.rateLimitInfo,
       queueLength: this.queueLength,
     }
   }
 
-  updateLimits(headers: Headers) {
+  updateLimits(headers: Headers): void {
     const limit = headers.get('Ratelimit-Limit')
     const remaining = headers.get('Ratelimit-Remaining')
     const reset = headers.get('Ratelimit-Reset')
 
-    if (limit) {
-      this.rateLimitInfo.limit = Number.parseInt(limit, 10)
+    if (limit !== null && limit.length > 0) {
+      this.rateLimitInfo.limit = Math.trunc(Number(limit))
     }
-    if (remaining) {
-      this.rateLimitInfo.remaining = Number.parseInt(remaining, 10)
+    if (remaining !== null && remaining.length > 0) {
+      this.rateLimitInfo.remaining = Math.trunc(Number(remaining))
     }
-    if (reset) {
-      this.rateLimitInfo.reset = Number.parseInt(reset, 10) * 1000
-      // Convert to milliseconds
+    if (reset !== null && reset.length > 0) {
+      this.rateLimitInfo.reset = Math.trunc(Number(reset)) * 1000
     }
 
-    // Log rate limit status when it changes
     logger.debug('[RateLimiter] Status', this.rateLimitStatus)
   }
 
-  private decrementRemaining() {
+  private decrementRemaining(): void {
     this.rateLimitInfo.remaining = Math.max(0, this.rateLimitInfo.remaining - 1)
   }
 
-  private async processQueue() {
-    if (this.processing) {
+  private async waitForCapacity(): Promise<void> {
+    if (this.rateLimitInfo.remaining > 0) {
       return
     }
-    this.processing = true
 
-    while (this.queue.length > 0) {
-      if (this.rateLimitInfo.remaining <= 0) {
-        const now = Date.now()
-        if (now < this.rateLimitInfo.reset) {
-          const delay = this.rateLimitInfo.reset - now
-          logger.info('[RateLimiter] Rate limit reached, waiting...', {
-            delay: Math.round(delay / 1000),
-            queueLength: this.queueLength,
-          })
-          await new Promise((resolve) => setTimeout(resolve, delay))
-          this.rateLimitInfo.remaining = this.rateLimitInfo.limit
-        } else {
-          // Reset has passed, reset the remaining count
-          this.rateLimitInfo.remaining = this.rateLimitInfo.limit
-          // Default to 1 minute if we don't have a new reset time
-          this.rateLimitInfo.reset = now + 60_000
-        }
-      }
-
-      const task = this.queue.shift()
-      if (task) {
-        try {
-          await task()
-          this.decrementRemaining()
-        } catch (error) {
-          console.error('Rate limited task failed:', error)
-        }
-      }
-
-      // Log queue status every 100 tasks
-      if (this.queue.length % 100 === 0 && this.queue.length > 0) {
-        logger.info('[RateLimiter] Queue status', {
-          rateLimit: this.rateLimitInfo.remaining,
-          remaining: this.queue.length,
-        })
-      }
+    const now = Date.now()
+    if (now >= this.rateLimitInfo.reset) {
+      this.rateLimitInfo.remaining = this.rateLimitInfo.limit
+      this.rateLimitInfo.reset = now + 60_000
+      return
     }
 
-    this.processing = false
+    const delayMs = this.rateLimitInfo.reset - now
+    logger.info('[RateLimiter] Rate limit reached, waiting...', {
+      delay: Math.round(delayMs / 1000),
+      queueLength: this.queueLength,
+    })
+    await this.waitForReset(delayMs)
+    this.rateLimitInfo.remaining = this.rateLimitInfo.limit
+  }
+
+  private logQueueStatus(): void {
+    if (this.queueLength % 100 === 0 && this.queueLength > 0) {
+      logger.info('[RateLimiter] Queue status', {
+        rateLimit: this.rateLimitInfo.remaining,
+        remaining: this.queueLength,
+      })
+    }
+  }
+
+  private async runTask<T>(task: () => Promise<T>): Promise<T> {
+    await this.waitForCapacity()
+    try {
+      const taskResult = await task()
+      this.decrementRemaining()
+      return taskResult
+    } catch (error) {
+      const taskError =
+        error instanceof Error ? error : new Error('Rate limited task failed', { cause: error })
+      logger.error('[RateLimiter] Task failed', { error: taskError.message })
+      throw taskError
+    } finally {
+      this.logQueueStatus()
+    }
   }
 
   async schedule<T>(task: () => Promise<T>): Promise<T> {
-    return await new Promise((resolve, reject) => {
-      this.queue.push(async () => {
-        try {
-          const result = await task()
-          resolve(result)
-        } catch (error) {
-          reject(error)
-        }
-      })
-      void this.processQueue()
-    })
+    return await this.runOneAtATime(async () => await this.runTask(task))
   }
 }
 

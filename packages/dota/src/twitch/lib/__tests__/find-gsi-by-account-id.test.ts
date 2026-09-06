@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { createPacketStub, createSocketClientStub } from '../../../__tests__/shared-mocks'
 import { findAccountFromCmd } from '../find-gsi-by-account-id'
 
 // findAccountFromCmd is exercised three ways: by Twitch chat commands like
@@ -9,13 +10,13 @@ import { findAccountFromCmd } from '../find-gsi-by-account-id'
 
 describe('findAccountFromCmd — default (non-spectator) branch', () => {
   it('returns ourHero=true with the flat hero when accountid is populated', async () => {
-    const packet: any = {
+    const packet = createPacketStub({
       hero: { alive: true, id: 74 },
       items: { slot0: { name: 'item_tango' } },
       map: { matchid: '123' },
       player: { accountid: 123_456, gpm: 400 },
-    }
-    const r = await findAccountFromCmd({ gsi: packet } as any, [], 'en', 'items')
+    })
+    const r = await findAccountFromCmd(createSocketClientStub({ gsi: packet }), [], 'en', 'items')
     expect(r.ourHero).toBeTruthy()
     expect(r.hero).toStrictEqual(packet.hero)
     expect(r.accountIdFromArgs).toBe(123_456)
@@ -25,32 +26,32 @@ describe('findAccountFromCmd — default (non-spectator) branch', () => {
     // Brief windows during draft transitions: packet.hero.id is already 74 but
     // packet.player.accountid hasn't arrived. Pre-fix this threw missingMatchData;
     // post-fix we return the hero and let the caller's isValidHero decide.
-    const packet: any = {
+    const packet = createPacketStub({
       hero: { alive: true, id: 74 },
       map: { matchid: '123' },
       player: {},
-    }
-    const r = await findAccountFromCmd({ gsi: packet } as any, [], 'en', 'items')
+    })
+    const r = await findAccountFromCmd(createSocketClientStub({ gsi: packet }), [], 'en', 'items')
     expect(r.ourHero).toBeTruthy()
     expect(r.hero).toStrictEqual(packet.hero)
     expect(r.accountIdFromArgs).toBeUndefined()
   })
 
   it('returns hero.id=-1 unchanged when the hero is still on the picker', async () => {
-    const packet: any = {
+    const packet = createPacketStub({
       hero: { id: -1 },
       map: { matchid: '123' },
       player: {},
-    }
-    const r = await findAccountFromCmd({ gsi: packet } as any, [], 'en', 'items')
+    })
+    const r = await findAccountFromCmd(createSocketClientStub({ gsi: packet }), [], 'en', 'items')
     expect(r.ourHero).toBeTruthy()
     expect(r.hero?.id).toBe(-1)
     // The caller's isValidHero will reject -1; helper no longer pre-empts.
   })
 
   it('does not throw on a totally empty packet (caller decides)', async () => {
-    const packet: any = { map: { matchid: '123' } }
-    const r = await findAccountFromCmd({ gsi: packet } as any, [], 'en', 'items')
+    const packet = createPacketStub({ map: { matchid: '123' } })
+    const r = await findAccountFromCmd(createSocketClientStub({ gsi: packet }), [], 'en', 'items')
     expect(r.ourHero).toBeTruthy()
     expect(r.hero).toBeUndefined()
   })
@@ -61,7 +62,7 @@ describe('findAccountFromCmd — spectator branch', () => {
     heroes: Record<string, { id: number; selected_unit?: boolean }>
     accounts: Record<string, number>
   }) {
-    return {
+    return createPacketStub({
       hero: {
         team2: Object.fromEntries(
           Object.entries(overrides.heroes)
@@ -91,7 +92,7 @@ describe('findAccountFromCmd — spectator branch', () => {
             .map(([k, v]) => [k.slice(3), { accountid: v }])
         ),
       },
-    } as any
+    })
   }
 
   it('returns the selected_unit hero when one is set', async () => {
@@ -102,10 +103,10 @@ describe('findAccountFromCmd — spectator branch', () => {
         p2_player1: { id: 22, selected_unit: true },
       },
     })
-    const r = await findAccountFromCmd({ gsi: packet } as any, [], 'en', 'items')
+    const r = await findAccountFromCmd(createSocketClientStub({ gsi: packet }), [], 'en', 'items')
     expect(r.ourHero).toBeFalsy()
     expect(r.accountIdFromArgs).toBe(222)
-    expect((r.hero as any)?.id).toBe(22)
+    expect(r.hero?.id).toBe(22)
   })
 
   it('falls back to the first hero with a valid id when no selected_unit (fix for VIPTwitchCon case)', async () => {
@@ -116,10 +117,10 @@ describe('findAccountFromCmd — spectator branch', () => {
         p2_player1: { id: 22 },
       },
     })
-    const r = await findAccountFromCmd({ gsi: packet } as any, [], 'en', 'items')
+    const r = await findAccountFromCmd(createSocketClientStub({ gsi: packet }), [], 'en', 'items')
     expect(r.ourHero).toBeFalsy()
     expect(r.accountIdFromArgs).toBe(111)
-    expect((r.hero as any)?.id).toBe(74)
+    expect(r.hero?.id).toBe(74)
   })
 
   it('skips heroes with id=-1 when picking the first-valid fallback', async () => {
@@ -130,9 +131,9 @@ describe('findAccountFromCmd — spectator branch', () => {
         p2_player1: { id: 22 },
       },
     })
-    const r = await findAccountFromCmd({ gsi: packet } as any, [], 'en', 'items')
+    const r = await findAccountFromCmd(createSocketClientStub({ gsi: packet }), [], 'en', 'items')
     expect(r.accountIdFromArgs).toBe(222)
-    expect((r.hero as any)?.id).toBe(22)
+    expect(r.hero?.id).toBe(22)
   })
 
   it('returns undefined hero when every hero is unpicked (caller surfaces the right message)', async () => {
@@ -143,7 +144,7 @@ describe('findAccountFromCmd — spectator branch', () => {
         p2_player1: { id: -1 },
       },
     })
-    const r = await findAccountFromCmd({ gsi: packet } as any, [], 'en', 'items')
+    const r = await findAccountFromCmd(createSocketClientStub({ gsi: packet }), [], 'en', 'items')
     // No firstValidHero → accountIdFromArgs undefined → findSpectatorIdx null →
     // hero stays undefined. Caller's isValidHero will reject and show
     // missingMatchData, which is the correct UX for "literally nothing picked".
@@ -159,9 +160,9 @@ describe('findAccountFromCmd — spectator branch', () => {
         p2_player1: { id: 22, selected_unit: true },
       },
     })
-    const r = await findAccountFromCmd({ gsi: packet } as any, [], 'en', 'items')
+    const r = await findAccountFromCmd(createSocketClientStub({ gsi: packet }), [], 'en', 'items')
     expect(r.accountIdFromArgs).toBe(222)
-    expect((r.hero as any)?.id).toBe(22)
+    expect(r.hero?.id).toBe(22)
   })
 
   it('finds a hero in team3 when team2 has none', async () => {
@@ -171,8 +172,8 @@ describe('findAccountFromCmd — spectator branch', () => {
         p3_player5: { id: 30 },
       },
     })
-    const r = await findAccountFromCmd({ gsi: packet } as any, [], 'en', 'items')
+    const r = await findAccountFromCmd(createSocketClientStub({ gsi: packet }), [], 'en', 'items')
     expect(r.accountIdFromArgs).toBe(555)
-    expect((r.hero as any)?.id).toBe(30)
+    expect(r.hero?.id).toBe(30)
   })
 })

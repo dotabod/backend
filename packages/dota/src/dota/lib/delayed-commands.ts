@@ -1,7 +1,7 @@
 import { DBSettings } from '../../settings'
 import type { SettingKeys } from '../../settings'
 
-export const DelayedCommands: { command: string; key: SettingKeys }[] = [
+export const DelayedCommands = [
   {
     command: '!np',
     key: DBSettings.commandNP,
@@ -34,4 +34,4 @@ export const DelayedCommands: { command: string; key: SettingKeys }[] = [
     command: '!stats',
     key: DBSettings.commandItems,
   },
-]
+] as const satisfies readonly { command: string; key: SettingKeys }[]

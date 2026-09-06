@@ -59,10 +59,10 @@ commandHandler.registerCommand('today', {
       channel: { name: channel, client },
     } = message
 
-    if (!client.steam32Id) {
+    if (client.steam32Id === null || client.steam32Id === 0) {
       chatClient.say(
         channel,
-        client.multiAccount
+        client.multiAccount !== undefined && client.multiAccount !== 0
           ? t('multiAccount', {
               lng: client.locale,
               url: 'dotabod.com/dashboard/features',

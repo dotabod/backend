@@ -161,9 +161,9 @@ const GENERIC_FEATURE_TIERS = {
 export type GenericFeature = keyof typeof GENERIC_FEATURE_TIERS
 
 export const getRequiredTier = function getRequiredTier(
-  feature?: FeatureTier | GenericFeature
+  feature?: string
 ): Database['public']['Enums']['SubscriptionTier'] {
-  if (!feature) {
+  if (feature === undefined || feature.length === 0) {
     return SUBSCRIPTION_TIERS.PRO
   }
 
@@ -219,7 +219,7 @@ export const canAccessFeature = function canAccessFeature(
   }
 
   // Return early if feature is free or subscription is invalid
-  if (isFreeFeature || !subscription || !isSubscriptionActive(subscription)) {
+  if (!isSubscriptionActive(subscription)) {
     return {
       hasAccess: isFreeFeature,
       requiredTier,

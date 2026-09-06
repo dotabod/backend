@@ -1,77 +1,30 @@
-import { t } from 'i18next'
-import type { Socket as ClientSocket } from 'socket.io-client'
-
 import { steamSocket, twitchChat, twitchEvents } from '../../steam/ws'
 import { chatClient } from '../chat-client'
 import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import { fetchSocketVersion, runVersionCommand } from './version-handler'
+import type { VersionCommandDependencies } from './version-handler'
 
-const VERSION_ACK_TIMEOUT_MS = 2000
-
-const fetchVersion = async function fetchVersion(socket: ClientSocket): Promise<string | null> {
-  return await new Promise((resolve) => {
-    if (!socket.connected) {
-      resolve(null)
-      return
+const versionCommandDependencies: VersionCommandDependencies = {
+  getVersions: async () => {
+    const [steam, twitchChatVersion, twitchEventsVersion] = await Promise.all([
+      fetchSocketVersion(steamSocket),
+      fetchSocketVersion(twitchChat),
+      fetchSocketVersion(twitchEvents),
+    ])
+    return {
+      dota: process.env.COMMIT_HASH ?? null,
+      steam,
+      twitchChat: twitchChatVersion,
+      twitchEvents: twitchEventsVersion,
     }
-    const timer = setTimeout(() => {
-      resolve(null)
-    }, VERSION_ACK_TIMEOUT_MS)
-    socket.emit('getVersion', (commitHash: string | null) => {
-      clearTimeout(timer)
-      resolve(commitHash ?? null)
-    })
-  })
+  },
+  say: (channel, text, messageId) => {
+    chatClient.say(channel, text, messageId)
+  },
 }
 
 commandHandler.registerCommand('version', {
-  handler: async (message: MessageType, _args: string[]) => {
-    const dotaHash = process.env.COMMIT_HASH ?? null
-    const [steamHash, chatHash, eventsHash] = await Promise.all([
-      fetchVersion(steamSocket),
-      fetchVersion(twitchChat),
-      fetchVersion(twitchEvents),
-    ])
-
-    const versions: Record<string, string | null> = {
-      dota: dotaHash,
-      steam: steamHash,
-      'twitch-chat': chatHash,
-      'twitch-events': eventsHash,
-    }
-    const known = Object.values(versions).filter((v): v is string => Boolean(v))
-    const uniqueHashes = new Set(known)
-
-    if (known.length === 0) {
-      chatClient.say(
-        message.channel.name,
-        t('version.unknown', {
-          lng: message.channel.client.locale,
-          url: 'github.com/dotabod/backend',
-        }),
-        message.user.messageId
-      )
-      return
-    }
-
-    const allKnownAndSame = uniqueHashes.size === 1 && known.length === Object.keys(versions).length
-    const versionStr = allKnownAndSame
-      ? known[0]
-      : Object.entries(versions)
-          .map(([name, hash]) => `${name}:${hash ?? '?'}`)
-          .join(', ')
-    const url = allKnownAndSame
-      ? `github.com/dotabod/backend/compare/${known[0]}...master`
-      : 'github.com/dotabod/backend/commits/master'
-
-    chatClient.say(
-      message.channel.name,
-      t('version.commit', {
-        lng: message.channel.client.locale,
-        url,
-        version: versionStr,
-      }),
-      message.user.messageId
-    )
+  handler: async (message) => {
+    await runVersionCommand(message, versionCommandDependencies)
   },
 })

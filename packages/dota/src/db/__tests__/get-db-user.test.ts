@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { createGsiHandlerStub, createSocketClientStub } from '../../__tests__/shared-mocks'
 import {
   dbState,
   gsiHandlers,
@@ -29,8 +30,8 @@ describe('getDBUser', () => {
   })
 
   it('returns the cached client when gsiHandlers already has the token', async () => {
-    const cached = { name: 'cached-user', token: 'cached-token' } as any
-    gsiHandlers.set('cached-token', { client: cached } as any)
+    const cached = createSocketClientStub({ name: 'cached-user', token: 'cached-token' })
+    gsiHandlers.set('cached-token', createGsiHandlerStub(cached))
 
     const res = await getDBUser({ token: 'cached-token' })
 
@@ -39,9 +40,9 @@ describe('getDBUser', () => {
   })
 
   it('returns the cached client by twitchId via the twitchIdToToken map', async () => {
-    const cached = { name: 'cached-user', token: 'tok-2' } as any
+    const cached = createSocketClientStub({ name: 'cached-user', token: 'tok-2' })
     twitchIdToToken.set('twitch-id-7', 'tok-2')
-    gsiHandlers.set('tok-2', { client: cached } as any)
+    gsiHandlers.set('tok-2', createGsiHandlerStub(cached))
 
     const res = await getDBUser({ twitchId: 'twitch-id-7' })
 

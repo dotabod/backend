@@ -5,6 +5,43 @@ import { server } from '../../dota/server'
 import { chatClient } from '../chat-client'
 import commandHandler from '../lib/command-handler'
 
+const notifyStreamStatus = function notifyStreamStatus(
+  channelName: string,
+  locale: string,
+  state: string,
+  command?: string,
+  context = 'none'
+): void {
+  chatClient.say(
+    channelName,
+    t('stream', {
+      channel: channelName,
+      command,
+      context,
+      lng: locale,
+      state,
+    })
+  )
+}
+
+export const refreshSettings = function refreshSettings(token: string): void {
+  server.io.to(token).emit('refresh-settings', 'mutate')
+}
+
+const updateStreamStatus = async function updateStreamStatus(
+  token: string,
+  isOnline: boolean
+): Promise<void> {
+  await supabase
+    .from('users')
+    .update({
+      stream_online: isOnline,
+      stream_start_date: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', token)
+}
+
 commandHandler.registerCommand('online', {
   aliases: ['offline'],
   cooldown: 0,
@@ -38,37 +75,3 @@ commandHandler.registerCommand('online', {
   },
   permission: 2,
 })
-
-const notifyStreamStatus = (
-  channelName: string,
-  locale: string,
-  state: string,
-  command?: string,
-  context = 'none'
-) => {
-  chatClient.say(
-    channelName,
-    t('stream', {
-      channel: channelName,
-      command,
-      context,
-      lng: locale,
-      state,
-    })
-  )
-}
-
-export const refreshSettings = (token: string) => {
-  server.io.to(token).emit('refresh-settings', 'mutate')
-}
-
-const updateStreamStatus = async (token: string, isOnline: boolean) => {
-  await supabase
-    .from('users')
-    .update({
-      stream_online: isOnline,
-      stream_start_date: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', token)
-}

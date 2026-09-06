@@ -58,7 +58,11 @@ export const is8500Plus = (dotaClient: SocketClient) => {
     return true
   }
 
-  if (currentSteamAccount?.leaderboard_rank) {
+  if (
+    currentSteamAccount?.leaderboard_rank !== null &&
+    currentSteamAccount?.leaderboard_rank !== undefined &&
+    currentSteamAccount.leaderboard_rank !== 0
+  ) {
     return true
   }
 

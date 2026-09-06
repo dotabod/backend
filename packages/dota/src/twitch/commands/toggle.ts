@@ -6,7 +6,7 @@ import commandHandler from '../lib/command-handler'
 commandHandler.registerCommand('toggle', {
   aliases: ['disable', 'enable'],
   cooldown: 0,
-  handler: async (message, _args) => {
+  handler: async (message) => {
     const {
       channel: { client },
     } = message
@@ -19,15 +19,13 @@ commandHandler.registerCommand('toggle', {
 
     const userId = message.channel.client.token
 
-    if (isBotDisabled) {
-      await commandDisable.enable(userId)
-    } else {
-      await commandDisable.disable(userId, 'MANUAL_DISABLE', {
-        additional_info: `Manually disabled by ${message.user.name} via chat command`,
-        command: '!toggle',
-        disabled_by: message.user.name,
-      })
-    }
+    await (isBotDisabled
+      ? commandDisable.enable(userId)
+      : commandDisable.disable(userId, 'MANUAL_DISABLE', {
+          additional_info: `Manually disabled by ${message.user.name} via chat command`,
+          command: '!toggle',
+          disabled_by: message.user.name,
+        }))
   },
   permission: 2,
 })

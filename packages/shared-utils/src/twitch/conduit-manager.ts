@@ -1,43 +1,54 @@
+import { setTimeout as sleep } from 'node:timers/promises'
+
+import { z } from 'zod'
+
 import { logger } from '../logger'
 import { getTwitchHeaders } from './get-twitch-headers'
 
 // Cache controls
 // 24 hours
 const CACHE_TIMEOUT = 1000 * 60 * 60 * 24
+const CONDUITS_URL = 'https://api.twitch.tv/helix/eventsub/conduits'
+const CONDUIT_SHARDS_URL = `${CONDUITS_URL}/shards`
 let lastFetchTime = 0
 let cachedConduitId: string | null = null
 let fetchPromise: Promise<string | null> | null = null
 
 // Environment variable override
-const TWITCH_CONDUIT_ID = process.env.TWITCH_CONDUIT_ID || null
+const configuredConduitId = process.env.TWITCH_CONDUIT_ID
+const TWITCH_CONDUIT_ID =
+  configuredConduitId === undefined || configuredConduitId.length === 0 ? null : configuredConduitId
 
 // Set initial value if env var is provided
-if (TWITCH_CONDUIT_ID) {
+if (TWITCH_CONDUIT_ID !== null) {
   cachedConduitId = TWITCH_CONDUIT_ID
 }
 
-/**
- * Interface for Twitch conduit response
- */
-export interface TwitchConduitResponse {
-  data: {
-    id: string
-    shard_count: number
-    transport?: {
-      method: string
-      session_id?: string
-    }
-  }[]
-}
+const conduitSchema = z.object({
+  id: z.string().min(1),
+  shard_count: z.number(),
+  transport: z
+    .object({
+      method: z.string(),
+      session_id: z.string().optional(),
+    })
+    .optional(),
+})
 
-/**
- * Interface for Twitch conduit create response
- */
-export interface TwitchConduitCreateResponse {
-  data: {
-    id: string
-    shard_count: number
-  }[]
+const conduitResponseSchema = z.object({ data: z.array(conduitSchema) })
+const conduitCreateResponseSchema = z.object({
+  data: z.array(conduitSchema.pick({ id: true, shard_count: true })),
+})
+const conduitShardResponseSchema = z.object({
+  errors: z.array(z.object({ message: z.string() })).optional(),
+})
+
+export type TwitchConduitResponse = z.infer<typeof conduitResponseSchema>
+export type TwitchConduitCreateResponse = z.infer<typeof conduitCreateResponseSchema>
+type RetryWait = (milliseconds: number) => Promise<void>
+
+const waitForRetry = async function waitForRetry(milliseconds: number): Promise<void> {
+  await sleep(milliseconds)
 }
 
 const createConduit = async function createConduit(): Promise<string> {
@@ -46,7 +57,7 @@ const createConduit = async function createConduit(): Promise<string> {
   // Get fresh headers for the request
   const headers = await getTwitchHeaders()
 
-  const createReq = await fetch('https://api.twitch.tv/helix/eventsub/conduits', {
+  const createReq = await fetch(CONDUITS_URL, {
     body: JSON.stringify({ shard_count: 1 }),
     headers: {
       ...headers,
@@ -65,16 +76,15 @@ const createConduit = async function createConduit(): Promise<string> {
   }
 
   try {
-    const response = (await createReq.json()) as { data?: { id: string }[] }
-    if (response.data && response.data.length > 0 && response.data[0].id) {
-      const newConduitId = response.data[0].id
-      logger.info('[CONDUIT_MANAGER] Successfully created new conduit', {
-        conduitId: `${newConduitId.slice(0, 8)}...`,
-      })
-      return newConduitId
+    const response = conduitCreateResponseSchema.parse(await createReq.json())
+    const [createdConduit] = response.data
+    if (createdConduit === undefined) {
+      throw new Error('Invalid response format when creating conduit')
     }
-
-    throw new Error('Invalid response format when creating conduit')
+    logger.info('[CONDUIT_MANAGER] Successfully created new conduit', {
+      conduitId: `${createdConduit.id.slice(0, 8)}...`,
+    })
+    return createdConduit.id
   } catch (error) {
     logger.error('[CONDUIT_MANAGER] Error parsing create conduit response', {
       error: error instanceof Error ? error.message : String(error),
@@ -87,7 +97,7 @@ export const fetchConduitId = async function fetchConduitId(
   forceRefresh = false
 ): Promise<string | null> {
   // If we have an explicitly set environment variable, use it
-  if (TWITCH_CONDUIT_ID) {
+  if (TWITCH_CONDUIT_ID !== null) {
     logger.info('[CONDUIT_MANAGER] Using conduit ID from environment')
     return TWITCH_CONDUIT_ID
   }
@@ -96,7 +106,7 @@ export const fetchConduitId = async function fetchConduitId(
   const cacheExpired = now - lastFetchTime > CACHE_TIMEOUT
 
   // Return cached value if available and not forcing refresh or expired
-  if (cachedConduitId && !forceRefresh && !cacheExpired) {
+  if (cachedConduitId !== null && cachedConduitId.length > 0 && !forceRefresh && !cacheExpired) {
     return cachedConduitId
   }
 
@@ -107,7 +117,7 @@ export const fetchConduitId = async function fetchConduitId(
   }
 
   // Return existing promise if one is in progress
-  if (fetchPromise) {
+  if (fetchPromise !== null) {
     return await fetchPromise
   }
 
@@ -119,7 +129,7 @@ export const fetchConduitId = async function fetchConduitId(
 
       // First try to get existing conduits
       logger.info('[CONDUIT_MANAGER] Fetching existing conduits')
-      const conduitsReq = await fetch('https://api.twitch.tv/helix/eventsub/conduits', {
+      const conduitsReq = await fetch(CONDUITS_URL, {
         headers,
         method: 'GET',
       })
@@ -129,7 +139,7 @@ export const fetchConduitId = async function fetchConduitId(
         // Try again with fresh headers
         const freshHeaders = await getTwitchHeaders()
 
-        const retryReq = await fetch('https://api.twitch.tv/helix/eventsub/conduits', {
+        const retryReq = await fetch(CONDUITS_URL, {
           headers: freshHeaders,
           method: 'GET',
         })
@@ -138,9 +148,10 @@ export const fetchConduitId = async function fetchConduitId(
           throw new Error('Authorization failed after token refresh')
         }
 
-        const retryData = (await retryReq.json()) as TwitchConduitResponse
-        if (retryData.data && retryData.data.length > 0 && retryData.data[0]?.id) {
-          cachedConduitId = retryData.data[0].id
+        const retryData = conduitResponseSchema.parse(await retryReq.json())
+        const [retryConduit] = retryData.data
+        if (retryConduit !== undefined) {
+          cachedConduitId = retryConduit.id
           lastFetchTime = now
           return cachedConduitId
         }
@@ -155,11 +166,12 @@ export const fetchConduitId = async function fetchConduitId(
         throw new Error(`Failed to fetch conduits: ${conduitsReq.status} ${errorText}`)
       }
 
-      const { data } = (await conduitsReq.json()) as TwitchConduitResponse
+      const { data } = conduitResponseSchema.parse(await conduitsReq.json())
 
       // If we found existing conduits, use the first one
-      if (data && data.length > 0 && data[0]?.id) {
-        cachedConduitId = data[0].id
+      const [existingConduit] = data
+      if (existingConduit !== undefined) {
+        cachedConduitId = existingConduit.id
         lastFetchTime = now
         logger.info('[CONDUIT_MANAGER] Using existing conduit', {
           conduitId: `${cachedConduitId.slice(0, 8)}...`,
@@ -193,9 +205,10 @@ export const fetchConduitId = async function fetchConduitId(
 }
 
 export const updateConduitShard = async function updateConduitShard(
-  session_id: string,
+  sessionId: string,
   conduitId: string,
-  retryCount = 0
+  retryCount = 0,
+  wait: RetryWait = waitForRetry
 ): Promise<boolean> {
   const body = {
     conduit_id: conduitId,
@@ -204,7 +217,7 @@ export const updateConduitShard = async function updateConduitShard(
         id: 0,
         transport: {
           method: 'websocket',
-          session_id,
+          session_id: sessionId,
         },
       },
     ],
@@ -214,7 +227,7 @@ export const updateConduitShard = async function updateConduitShard(
     // Get fresh headers before each attempt to ensure we have the latest token
     const currentHeaders = await getTwitchHeaders(process.env.TWITCH_BOT_PROVIDERID, true)
 
-    const conduitUpdate = await fetch('https://api.twitch.tv/helix/eventsub/conduits/shards', {
+    const conduitUpdate = await fetch(CONDUIT_SHARDS_URL, {
       body: JSON.stringify(body),
       headers: {
         ...currentHeaders,
@@ -229,7 +242,7 @@ export const updateConduitShard = async function updateConduitShard(
       )
 
       // Force token refresh by getting fresh headers
-      const _freshHeaders = await getTwitchHeaders()
+      await getTwitchHeaders()
 
       // Retry with exponential backoff (max 5 retries)
       if (retryCount < 5) {
@@ -239,8 +252,8 @@ export const updateConduitShard = async function updateConduitShard(
           `[CONDUIT_MANAGER] Retrying shard update in ${delay}ms, attempt ${retryCount + 1}`
         )
 
-        await new Promise((resolve) => setTimeout(resolve, delay))
-        return updateConduitShard(session_id, conduitId, retryCount + 1)
+        await wait(delay)
+        return await updateConduitShard(sessionId, conduitId, retryCount + 1, wait)
       }
 
       logger.error('[CONDUIT_MANAGER] Max retries reached for shard update after token refresh')
@@ -261,15 +274,15 @@ export const updateConduitShard = async function updateConduitShard(
           `[CONDUIT_MANAGER] Retrying shard update in ${delay}ms, attempt ${retryCount + 1}`
         )
 
-        await new Promise((resolve) => setTimeout(resolve, delay))
-        return updateConduitShard(session_id, conduitId, retryCount + 1)
+        await wait(delay)
+        return await updateConduitShard(sessionId, conduitId, retryCount + 1, wait)
       }
       return false
     }
 
     logger.info('[CONDUIT_MANAGER] Socket assigned to shard')
-    const response = (await conduitUpdate.json()) as { errors?: { message: string }[] }
-    if (response.errors && response.errors.length > 0) {
+    const response = conduitShardResponseSchema.parse(await conduitUpdate.json())
+    if (response.errors !== undefined && response.errors.length > 0) {
       logger.error('[CONDUIT_MANAGER] Failed to update the shard', { errors: response.errors })
       return false
     }
@@ -285,8 +298,8 @@ export const updateConduitShard = async function updateConduitShard(
         `[CONDUIT_MANAGER] Retrying shard update after error in ${delay}ms, attempt ${retryCount + 1}`
       )
 
-      await new Promise((resolve) => setTimeout(resolve, delay))
-      return await updateConduitShard(session_id, conduitId, retryCount + 1)
+      await wait(delay)
+      return await updateConduitShard(sessionId, conduitId, retryCount + 1, wait)
     }
     return false
   }

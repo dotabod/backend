@@ -9,7 +9,10 @@ export const refundTwitchBet = async (twitchId: string, specificPredictionId?: s
     // Always fetch predictions to verify status before canceling
     // Fetch more if we have a specific ID to find it in history
     const { data: predictions } = await retryTransient(
-      () => api.predictions.getPredictions(twitchId, { limit: specificPredictionId ? 10 : 1 }),
+      async () =>
+        await api.predictions.getPredictions(twitchId, {
+          limit: specificPredictionId !== undefined && specificPredictionId.length > 0 ? 10 : 1,
+        }),
       { label: 'refundTwitchBet:getPredictions' }
     )
 
@@ -22,9 +25,10 @@ export const refundTwitchBet = async (twitchId: string, specificPredictionId?: s
     }
 
     // Find the target prediction
-    const prediction = specificPredictionId
-      ? predictions.find((p) => p.id === specificPredictionId)
-      : predictions[0]
+    const prediction =
+      specificPredictionId !== undefined && specificPredictionId.length > 0
+        ? predictions.find((p) => p.id === specificPredictionId)
+        : predictions[0]
 
     if (!prediction) {
       logger.info('[PREDICT] Specific prediction not found in recent list', {
@@ -52,9 +56,12 @@ export const refundTwitchBet = async (twitchId: string, specificPredictionId?: s
       twitchId,
     })
 
-    await retryTransient(() => api.predictions.cancelPrediction(twitchId, prediction.id), {
-      label: 'refundTwitchBet:cancelPrediction',
-    })
+    await retryTransient(
+      async () => await api.predictions.cancelPrediction(twitchId, prediction.id),
+      {
+        label: 'refundTwitchBet:cancelPrediction',
+      }
+    )
     return prediction.id
   } catch (error) {
     logger.error('[PREDICT] Error refunding twitch bet', { error, twitchId })

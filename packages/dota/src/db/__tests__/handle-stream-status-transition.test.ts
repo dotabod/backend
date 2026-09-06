@@ -1,21 +1,23 @@
-import type { Server } from 'socket.io'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { createPacketStub } from '../../__tests__/shared-mocks'
 import { handleStreamStatusTransition } from '../handle-stream-status-transition'
 
 const createIo = () => {
-  const emit = vi.fn(() => {})
-  const to = vi.fn(() => ({ emit }))
+  const emit = vi.fn((_event: string, ..._args: unknown[]) => {})
+  const to = vi.fn((_room: string) => ({ emit }))
 
   return {
     emit,
-    io: { to } as unknown as Pick<Server, 'to'>,
+    io: { to },
     to,
   }
 }
 
-const createClient = (streamOnline: boolean) => ({
-  gsi: { map: { matchid: '7777777777' } } as any,
+type TransitionClient = Parameters<typeof handleStreamStatusTransition>[0]['client']
+
+const createClient = (streamOnline: boolean): TransitionClient => ({
+  gsi: createPacketStub({ map: { matchid: '7777777777' } }),
   gsiUpdatedAt: 123,
   name: 'tester',
   stream_online: streamOnline,
@@ -74,7 +76,7 @@ describe(handleStreamStatusTransition, () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-09-02T12:00:00.000Z'))
     const { io } = createIo()
-    const pendingGsi = { map: { matchid: '8888888888' } } as any
+    const pendingGsi = createPacketStub({ map: { matchid: '8888888888' } })
     const client = {
       ...createClient(true),
       gsi: undefined,

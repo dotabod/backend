@@ -1,46 +1,97 @@
+import { setTimeout as sleep } from 'node:timers/promises'
+
 import { logger } from '@dotabod/shared-utils'
-import type { ApiClient } from '@twurple/api'
+import { z } from 'zod'
+
+export interface ClipQuery extends Record<string, string | undefined> {
+  broadcaster_id: string
+  duration?: string
+}
+
+interface ClipApiRequest {
+  canOverrideScopedUserContext: boolean
+  method: 'POST'
+  query: ClipQuery
+  scopes: string[]
+  type: 'helix'
+  url: 'clips'
+  userId: string
+}
+
+export interface ClipApiClient {
+  callApi: (options: ClipApiRequest) => Promise<{ data: { id: string }[] }>
+  clips: {
+    getClipById: (id: string) => Promise<{ duration: number } | null>
+  }
+}
 
 export interface CreateReadyClipOptions {
-  // How many fresh clips to create before giving up.
   maxAttempts: number
-  // Per clip, how many times to poll for transcode completion.
   pollAttempts: number
   pollIntervalMs: number
-  // Optional delay after creating a clip before the first poll. Helix reports
-  // duration > 0 from capture metadata before the renditions actually exist on
-  // the CDN (~10-13s observed), so polling immediately can submit a clip whose
-  // files all still 404.
   initialDelayMs?: number
-  // Optional wall-clock budget across all attempts (keeps draft retries
-  // inside the draft screen window). Unset = no deadline.
   deadlineMs?: number
-  // Published clip length in seconds (Twitch accepts 5-60, default 30). The
-  // capture window is anchored to the API call and `duration` extends BACKWARD
-  // from it, so a longer clip buys tolerance for aiming slightly late without
-  // moving the target.
   durationSeconds?: number
 }
 
-const sleep = async (ms: number) => await new Promise((resolve) => setTimeout(resolve, ms))
+export interface ClipLogContext {
+  matchId?: string
+  name: string
+  state: string
+}
 
-// Twurple 7.4's `clips.createClip` hardcodes its query to `broadcaster_id` +
-// `has_delay` — a parameter Twitch removed and documents as never having had an
-// effect. It has no way to send `duration`, which Twitch added on 2025-12-19
-// (float, 5-60, default 30). Calling the endpoint directly through the client's
-// public `callApi` is the only way to widen the clip, and it keeps Twurple's
-// auth/scope/token-refresh handling.
+interface ClipLogMetadata extends ClipLogContext {
+  attempt: number
+  clipId?: string
+  error?: string
+  poll?: number
+}
+
+interface ClipLogger {
+  error: (message: string, metadata: ClipLogMetadata) => void
+  info: (message: string, metadata: ClipLogMetadata) => void
+  warn: (message: string, metadata: ClipLogMetadata) => void
+}
+
+export interface CreateReadyClipDependencies {
+  logger: ClipLogger
+  wait: (milliseconds: number) => Promise<void>
+}
+
+interface ClipWorkflow {
+  accountId: string
+  api: ClipApiClient
+  dependencies: CreateReadyClipDependencies
+  logContext: ClipLogContext
+  logPrefix: string
+  options: CreateReadyClipOptions
+  startTime: number
+}
+
+const clipErrorSchema = z.object({
+  body: z.string().optional(),
+  message: z.string().optional(),
+  statusCode: z.number().optional(),
+})
+type ClipError = z.infer<typeof clipErrorSchema>
+
+const wait = async function wait(milliseconds: number): Promise<void> {
+  await sleep(milliseconds)
+}
+
+const defaultDependencies = { logger, wait } satisfies CreateReadyClipDependencies
+
 const createClipWithDuration = async function createClipWithDuration(
-  api: ApiClient,
+  api: ClipApiClient,
   accountId: string,
   durationSeconds: number | undefined
 ): Promise<string> {
-  const query: Record<string, string> = { broadcaster_id: accountId }
+  const query: ClipQuery = { broadcaster_id: accountId }
   if (durationSeconds !== undefined) {
     query.duration = String(durationSeconds)
   }
 
-  const result = await api.callApi<{ data: { id: string }[] }>({
+  const response = await api.callApi({
     canOverrideScopedUserContext: true,
     method: 'POST',
     query,
@@ -49,131 +100,144 @@ const createClipWithDuration = async function createClipWithDuration(
     url: 'clips',
     userId: accountId,
   })
-  return result.data[0].id
+  const [createdClip] = response.data
+  if (createdClip === undefined) {
+    throw new Error('Twitch returned no clip after creating one')
+  }
+  return createdClip.id
 }
 
-// Twitch responds 404 with body like {"status":404,"message":"Channel offline."}
-// when CreateClip is called against an offline broadcaster. The bot can't recover
-// from that — retrying won't bring the stream online inside the budget — so we
-// short-circuit instead of burning the remaining attempts (and erroring 3x).
-const isChannelOfflineError = function isChannelOfflineError(err: unknown): boolean {
-  if (typeof err !== 'object' || err === null) {
+const isChannelOfflineError = function isChannelOfflineError(error: ClipError | null): boolean {
+  if (error?.statusCode !== 404) {
     return false
   }
-  const e = err as { statusCode?: unknown; body?: unknown; message?: unknown }
-  if (e.statusCode !== 404) {
-    return false
-  }
-  const body = typeof e.body === 'string' ? e.body : ''
-  const message = typeof e.message === 'string' ? e.message : ''
-  return (
-    /channel offline|stream not live/iu.test(body) ||
-    /channel offline|stream not live/iu.test(message)
-  )
+  return /channel offline|stream not live/iu.test(`${error.body ?? ''} ${error.message ?? ''}`)
 }
 
-// Twurple's AuthProvider throws when the broadcaster's token is missing the
-// clips:edit scope: "...does not have any of the requested scopes (clips:edit)
-// and can not be upgraded." That's a permanent per-user auth state — the streamer
-// has to re-authorize — so retrying inside the loop can't recover it and just
-// re-logs the same error 2-3x per game state. Short-circuit like the offline case.
-const isMissingScopeError = function isMissingScopeError(err: unknown): boolean {
-  if (typeof err !== 'object' || err === null) {
-    return false
-  }
-  const message =
-    typeof (err as { message?: unknown }).message === 'string'
-      ? (err as { message: string }).message
-      : ''
-  return /requested scopes|can not be upgraded/iu.test(message)
+const isMissingScopeError = function isMissingScopeError(error: ClipError | null): boolean {
+  return /requested scopes|can not be upgraded/iu.test(error?.message ?? '')
 }
 
-// Twitch's CreateClip API is asynchronous and silently fails to actually produce
-// a clip a large fraction of the time: it returns a clip ID, but the clip never
-// transcodes (duration stays 0, renditions 404) — permanently, not just briefly.
-// Re-polling that dead ID can't recover it, so when a clip never transcodes we
-// create a brand-new clip and try again. The 10 hero portraits sit in the top HUD
-// for the whole match, so a later gameplay clip is still fine for hero detection.
-export const createReadyClip = async function createReadyClip(
-  api: ApiClient,
-  accountId: string,
-  opts: CreateReadyClipOptions,
-  logPrefix: string,
-  logContext: Record<string, unknown>
-): Promise<string | null> {
-  const start = Date.now()
-  const overDeadline = () => opts.deadlineMs !== undefined && Date.now() - start > opts.deadlineMs
+const isOverDeadline = function isOverDeadline(workflow: ClipWorkflow): boolean {
+  const { deadlineMs } = workflow.options
+  return deadlineMs !== undefined && Date.now() - workflow.startTime > deadlineMs
+}
 
-  for (let attempt = 1; attempt <= opts.maxAttempts; attempt += 1) {
-    if (overDeadline()) {
-      break
-    }
+const pollClip = async function pollClip(
+  workflow: ClipWorkflow,
+  clipId: string,
+  attempt: number,
+  poll: number
+): Promise<'deadline' | 'ready' | 'retry'> {
+  if (isOverDeadline(workflow)) {
+    return 'deadline'
+  }
 
-    let clipId: string
-    try {
-      clipId = await createClipWithDuration(api, accountId, opts.durationSeconds)
-    } catch (error) {
-      if (isChannelOfflineError(error)) {
-        logger.info(`${logPrefix} createClip skipped — channel offline`, {
-          ...logContext,
-          attempt,
-        })
-        return null
-      }
-      if (isMissingScopeError(error)) {
-        logger.warn(`${logPrefix} createClip skipped — token missing clips:edit scope`, {
-          ...logContext,
-          attempt,
-        })
-        return null
-      }
-      logger.error(`${logPrefix} createClip failed`, {
-        ...logContext,
+  try {
+    const clip = await workflow.api.clips.getClipById(clipId)
+    if (clip !== null && clip.duration > 0) {
+      workflow.dependencies.logger.info(`${workflow.logPrefix} clip ready`, {
+        ...workflow.logContext,
         attempt,
-        error: (error as Error).message,
+        clipId,
       })
-      continue
+      return 'ready'
     }
-
-    logger.info(`${logPrefix} clip created`, { ...logContext, attempt, clipId })
-
-    // Give Twitch's transcode a head start before the first poll — see
-    // initialDelayMs on CreateReadyClipOptions. The deadline check inside the
-    // poll loop still bounds the total wait.
-    if (opts.initialDelayMs) {
-      await sleep(opts.initialDelayMs)
-    }
-
-    for (let poll = 1; poll <= opts.pollAttempts; poll += 1) {
-      if (overDeadline()) {
-        return null
-      }
-      try {
-        const clip = await api.clips.getClipById(clipId)
-        if (clip && clip.duration > 0) {
-          logger.info(`${logPrefix} clip ready`, { ...logContext, attempt, clipId })
-          return clipId
-        }
-      } catch (error) {
-        logger.warn(`${logPrefix} Error checking clip readiness`, {
-          ...logContext,
-          attempt,
-          clipId,
-          error: (error as Error).message,
-          poll,
-        })
-      }
-      if (poll < opts.pollAttempts) {
-        await sleep(opts.pollIntervalMs)
-      }
-    }
-
-    logger.warn(`${logPrefix} clip did not transcode; recreating`, {
-      ...logContext,
+  } catch (error) {
+    const parsedError = clipErrorSchema.safeParse(error)
+    const clipError = parsedError.success ? parsedError.data : null
+    workflow.dependencies.logger.warn(`${workflow.logPrefix} Error checking clip readiness`, {
+      ...workflow.logContext,
       attempt,
       clipId,
+      error: clipError?.message ?? String(error),
+      poll,
     })
   }
 
-  return null
+  if (poll >= workflow.options.pollAttempts) {
+    return 'retry'
+  }
+  await workflow.dependencies.wait(workflow.options.pollIntervalMs)
+  return await pollClip(workflow, clipId, attempt, poll + 1)
+}
+
+const createReadyClipAttempt = async function createReadyClipAttempt(
+  workflow: ClipWorkflow,
+  attempt: number
+): Promise<string | null> {
+  if (attempt > workflow.options.maxAttempts || isOverDeadline(workflow)) {
+    return null
+  }
+
+  let clipId: string
+  try {
+    clipId = await createClipWithDuration(
+      workflow.api,
+      workflow.accountId,
+      workflow.options.durationSeconds
+    )
+  } catch (error) {
+    const parsedError = clipErrorSchema.safeParse(error)
+    const clipError = parsedError.success ? parsedError.data : null
+    if (isChannelOfflineError(clipError)) {
+      workflow.dependencies.logger.info(
+        `${workflow.logPrefix} createClip skipped — channel offline`,
+        { ...workflow.logContext, attempt }
+      )
+      return null
+    }
+    if (isMissingScopeError(clipError)) {
+      workflow.dependencies.logger.warn(
+        `${workflow.logPrefix} createClip skipped — token missing clips:edit scope`,
+        { ...workflow.logContext, attempt }
+      )
+      return null
+    }
+    workflow.dependencies.logger.error(`${workflow.logPrefix} createClip failed`, {
+      ...workflow.logContext,
+      attempt,
+      error: clipError?.message ?? String(error),
+    })
+    return await createReadyClipAttempt(workflow, attempt + 1)
+  }
+
+  workflow.dependencies.logger.info(`${workflow.logPrefix} clip created`, {
+    ...workflow.logContext,
+    attempt,
+    clipId,
+  })
+
+  if (workflow.options.initialDelayMs !== undefined && workflow.options.initialDelayMs !== 0) {
+    await workflow.dependencies.wait(workflow.options.initialDelayMs)
+  }
+
+  const pollResult = await pollClip(workflow, clipId, attempt, 1)
+  if (pollResult === 'ready') {
+    return clipId
+  }
+  if (pollResult === 'deadline') {
+    return null
+  }
+
+  workflow.dependencies.logger.warn(`${workflow.logPrefix} clip did not transcode; recreating`, {
+    ...workflow.logContext,
+    attempt,
+    clipId,
+  })
+  return await createReadyClipAttempt(workflow, attempt + 1)
+}
+
+export const createReadyClip = async function createReadyClip(
+  api: ClipApiClient,
+  accountId: string,
+  options: CreateReadyClipOptions,
+  logPrefix: string,
+  logContext: ClipLogContext,
+  dependencies: CreateReadyClipDependencies = defaultDependencies
+): Promise<string | null> {
+  return await createReadyClipAttempt(
+    { accountId, api, dependencies, logContext, logPrefix, options, startTime: Date.now() },
+    1
+  )
 }

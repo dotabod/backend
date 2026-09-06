@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import type { EventSubStatus } from '../interfaces.ts'
+import type { TwitchEventTypes } from '../twitch-event-types.ts'
 import {
   clearSubscriptions,
   eventSubMap,
@@ -8,30 +10,48 @@ import {
   subsToCleanup,
 } from './shared-mocks.ts'
 
-const sub = (overrides: Record<string, unknown> = {}) => ({
-  condition: { broadcaster_user_id: '111' },
-  id: 's1',
-  status: 'enabled',
-  transport: { method: 'conduit' },
-  type: 'stream.online',
-  ...overrides,
-})
+interface SubscriptionFixture {
+  condition: {
+    broadcaster_user_id?: string
+    client_id?: string
+  }
+  id: string
+  status: EventSubStatus
+  transport: { method: string }
+  type: keyof TwitchEventTypes
+}
 
-beforeEach(() => {
-  clearSubscriptions()
-  subsToCleanup.length = 0
-  fetchState.queue = []
-  fetchState.calls = []
-})
+const sub = (overrides: Partial<SubscriptionFixture> = {}) =>
+  ({
+    condition: { broadcaster_user_id: '111' },
+    id: 's1',
+    status: 'enabled',
+    transport: { method: 'conduit' },
+    type: 'stream.online',
+    ...overrides,
+  }) satisfies SubscriptionFixture
 
 describe(fetchExistingSubscriptions, () => {
+  beforeEach(() => {
+    clearSubscriptions()
+    subsToCleanup.length = 0
+    fetchState.queue = []
+    fetchState.calls = []
+  })
+
   it('stores fetched subscriptions in eventSubMap keyed by broadcaster', async () => {
     fetchState.queue = [
-      { json: { data: [sub({ id: 's1', type: 'stream.online' })], pagination: {}, total: 1 } },
+      {
+        json: { data: [sub({ id: 's1', type: 'stream.online' })], pagination: {}, total: 1 },
+        status: 200,
+      },
     ]
     await fetchExistingSubscriptions()
-    expect(eventSubMap['111']).toBeDefined()
-    expect(eventSubMap['111']['stream.online']).toMatchObject({ id: 's1', status: 'enabled' })
+    expect(eventSubMap.get('111')).toBeDefined()
+    expect(eventSubMap.get('111')?.['stream.online']).toMatchObject({
+      id: 's1',
+      status: 'enabled',
+    })
   })
 
   it('follows pagination cursors across pages', async () => {
@@ -41,6 +61,7 @@ describe(fetchExistingSubscriptions, () => {
           data: [sub({ condition: { broadcaster_user_id: '111' }, id: 's1' })],
           pagination: { cursor: 'next' },
         },
+        status: 200,
       },
       {
         json: {
@@ -49,13 +70,14 @@ describe(fetchExistingSubscriptions, () => {
           ],
           pagination: {},
         },
+        status: 200,
       },
     ]
     await fetchExistingSubscriptions()
     expect(fetchState.calls).toHaveLength(2)
     expect(fetchState.calls[1]).toContain('after=next')
-    expect(eventSubMap['111']).toBeDefined()
-    expect(eventSubMap['222']).toBeDefined()
+    expect(eventSubMap.get('111')).toBeDefined()
+    expect(eventSubMap.get('222')).toBeDefined()
   })
 
   it('queues webhook + broadcaster-less subscriptions for cleanup', async () => {
@@ -68,6 +90,7 @@ describe(fetchExistingSubscriptions, () => {
           ],
           pagination: {},
         },
+        status: 200,
       },
     ]
     await fetchExistingSubscriptions()
@@ -93,6 +116,7 @@ describe(fetchExistingSubscriptions, () => {
           ],
           pagination: {},
         },
+        status: 200,
       },
     ]
     await fetchExistingSubscriptions()

@@ -55,6 +55,28 @@ const recordLastSeen = async function recordLastSeen(userId: string, key: SetupS
   }
 }
 
+const recordFirstSeenSafely = async function recordFirstSeenSafely(
+  userId: string,
+  key: SetupSignalKey
+): Promise<void> {
+  try {
+    await recordFirstSeen(userId, key)
+  } catch (error) {
+    logger.info('[setup-signals] first-seen recording failed', { error, key, userId })
+  }
+}
+
+const recordLastSeenSafely = async function recordLastSeenSafely(
+  userId: string,
+  key: SetupSignalKey
+): Promise<void> {
+  try {
+    await recordLastSeen(userId, key)
+  } catch (error) {
+    logger.info('[setup-signals] last-seen recording failed', { error, key, userId })
+  }
+}
+
 // Cache populates before the upsert resolves: on the GSI hot path (5/sec/user) we'd
 // rather accept one missed signal on transient failure than let duplicate writes pile up.
 const recordOnce = function recordOnce(userId: string, cache: BoundedSet, key: SetupSignalKey) {
@@ -62,7 +84,7 @@ const recordOnce = function recordOnce(userId: string, cache: BoundedSet, key: S
     return
   }
   cache.add(userId)
-  recordFirstSeen(userId, key).catch(() => {})
+  void recordFirstSeenSafely(userId, key)
 }
 
 const recordThrottled = function recordThrottled(userId: string, key: SetupSignalKey) {
@@ -83,7 +105,7 @@ const recordThrottled = function recordThrottled(userId: string, key: SetupSigna
     }
   }
   lastSeenWrites.set(cacheKey, now)
-  recordLastSeen(userId, key).catch(() => {})
+  void recordLastSeenSafely(userId, key)
 }
 
 export const recordGsiFirstSeen = function recordGsiFirstSeen(userId: string): void {

@@ -1,22 +1,29 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+import { z } from 'zod'
 
 import { LOBBY_TYPE_RANKED } from '../../db/get-wl'
 import getHero from '../../dota/lib/get-hero'
-import type { HeroNames } from '../../dota/lib/get-hero'
 import { DBSettings } from '../../settings'
 import { dotabodMatchHistoryUrl } from '../../utils/index'
 import { chatClient } from '../chat-client'
 import commandHandler from '../lib/command-handler'
 
+const matchKdaSchema = z.object({
+  assists: z.number().nullable(),
+  deaths: z.number().nullable(),
+  kills: z.number().nullable(),
+})
+
 commandHandler.registerCommand('lgs', {
   aliases: ['lastgamescore', 'lgscore', 'lgwl'],
   dbkey: DBSettings.commandLGS,
-  handler: async (message, _args) => {
-    if (!message.channel.client.steam32Id) {
+  handler: async (message) => {
+    if (message.channel.client.steam32Id === null || message.channel.client.steam32Id === 0) {
       chatClient.say(
         message.channel.name,
-        message.channel.client.multiAccount
+        message.channel.client.multiAccount !== undefined &&
+          message.channel.client.multiAccount !== 0
           ? t('multiAccount', {
               lng: message.channel.client.locale,
               url: 'dotabod.com/dashboard/features',
@@ -65,17 +72,14 @@ commandHandler.registerCommand('lgs', {
         : t('lastgamescore.lost', { lng: message.channel.client.locale })
     )
 
-    const kda = lg.kda as {
-      kills: number | null
-      deaths: number | null
-      assists: number | null
-    } | null
-    if (kda) {
+    const parsedKda = matchKdaSchema.safeParse(lg.kda)
+    if (parsedKda.success) {
+      const kda = parsedKda.data
       const kdaMsg = `${kda.kills ?? 0}/${kda.deaths ?? 0}/${kda.assists ?? 0}`
       returnMsg.push(
         t('lastgamescore.kda', {
           heroName:
-            getHero(lg.hero_name as HeroNames)?.localized_name ??
+            getHero(lg.hero_name)?.localized_name ??
             t('unknown', { lng: message.channel.client.locale }),
           kdavalue: kdaMsg,
           lng: message.channel.client.locale,

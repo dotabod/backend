@@ -9,7 +9,7 @@ import type { MessageType } from '../lib/command-handler'
 
 // Extract unique rank titles and map them to their base tier values
 const rankTitles: Record<string, number> = {}
-ranks.forEach((rank) => {
+for (const rank of ranks) {
   // Extract base rank name without stars
   const baseRank = rank.title.split('☆')[0].toLowerCase()
   // Get first digit of the image which represents the medal tier
@@ -19,7 +19,7 @@ ranks.forEach((rank) => {
   if (!rankTitles[baseRank]) {
     rankTitles[baseRank] = medalTier
   }
-})
+}
 
 // Add immortal (not in ranks array because it's special)
 rankTitles.immortal = 80

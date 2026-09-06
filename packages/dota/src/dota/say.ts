@@ -51,7 +51,7 @@ export const say = function say(
   }
 
   // Check specific feature access
-  if (key && !getValueOrDefault(key, client.settings, client.subscription)) {
+  if (key !== undefined && !Boolean(getValueOrDefault(key, client.settings, client.subscription))) {
     return
   }
 

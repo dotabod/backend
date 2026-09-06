@@ -1,6 +1,7 @@
 import DOTA_ABILITIES from 'dotaconstants/build/abilities.json' with { type: 'json' }
 import DOTA_HERO_ABILITIES from 'dotaconstants/build/hero_abilities.json' with { type: 'json' }
 import { t } from 'i18next'
+import { z } from 'zod'
 
 import type { GSIHandlerType } from '../../dota/gsi-handler-types'
 import { gsiHandlers } from '../../dota/lib/consts'
@@ -10,6 +11,57 @@ import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
 import commandHandler from '../lib/command-handler'
 import { findAccountFromCmd } from '../lib/find-gsi-by-account-id'
+
+type LookupHero = Awaited<ReturnType<typeof findAccountFromCmd>>['hero']
+
+const heroIdSchema = z.object({ id: z.number() })
+const heroAbilitiesSchema = z.record(z.string(), z.object({ abilities: z.array(z.string()) }))
+const abilityDetailsSchema = z.record(
+  z.string(),
+  z.object({
+    desc: z.string().optional(),
+    dname: z.string().optional(),
+    is_innate: z.boolean().optional(),
+  })
+)
+
+const heroAbilities = heroAbilitiesSchema.parse(DOTA_HERO_ABILITIES)
+const abilityDetails = abilityDetailsSchema.parse(DOTA_ABILITIES)
+
+const isValidGSIHandler = function isValidGSIHandler(
+  gsiHandler: GSIHandlerType | undefined,
+  hasCurrentGame: boolean
+): boolean {
+  return gsiHandler !== undefined && hasCurrentGame
+}
+
+const getValidHeroId = function getValidHeroId(hero: LookupHero): number | null {
+  const parsedHero = heroIdSchema.safeParse(hero)
+  if (!parsedHero.success || !getHeroById(parsedHero.data.id)) {
+    return null
+  }
+  return parsedHero.data.id
+}
+
+const getHeroInnate = function getHeroInnate(
+  heroData: ReturnType<typeof getHeroById>
+): { description: string; title: string } | undefined {
+  if (!heroData) {
+    return undefined
+  }
+
+  const abilities = heroAbilities[heroData.key]?.abilities ?? []
+  for (const ability of abilities) {
+    const details = abilityDetails[ability]
+    if (details?.is_innate === true && details.dname !== undefined && details.desc !== undefined) {
+      return {
+        description: details.desc,
+        title: details.dname,
+      }
+    }
+  }
+  return undefined
+}
 
 commandHandler.registerCommand('innate', {
   dbkey: DBSettings.commandInnate,
@@ -36,7 +88,8 @@ commandHandler.registerCommand('innate', {
         channelClient.locale,
         command
       )
-      if (!isValidHero(hero) || !hero) {
+      const heroId = getValidHeroId(hero)
+      if (heroId === null) {
         chatClient.say(
           channelName,
           t('gameNotFound', { lng: channelClient.locale }),
@@ -45,7 +98,7 @@ commandHandler.registerCommand('innate', {
         return
       }
 
-      const heroData = getHeroById(hero.id)
+      const heroData = getHeroById(heroId)
       const heroInnate = getHeroInnate(heroData)
 
       if (!heroInnate) {
@@ -62,50 +115,21 @@ commandHandler.registerCommand('innate', {
         withHeroLink(
           t('innate', {
             description: heroInnate.description,
-            heroName: getHeroNameOrColor(hero.id, playerIdx),
+            heroName: getHeroNameOrColor(heroId, playerIdx),
             lng: channelClient.locale,
             title: heroInnate.title,
           }),
-          hero.id
+          heroId
         ),
         message.user.messageId
       )
     } catch (error) {
       chatClient.say(
         channelName,
-        (error as Error).message ?? t('gameNotFound', { lng: channelClient.locale }),
+        error instanceof Error ? error.message : t('gameNotFound', { lng: channelClient.locale }),
         message.user.messageId
       )
     }
   },
   onlyOnline: true,
 })
-
-const isValidGSIHandler = (
-  gsiHandler: GSIHandlerType | undefined,
-  hasCurrentGame: boolean
-): boolean => !!gsiHandler && hasCurrentGame
-
-const isValidHero = (hero: { id?: number } | null | undefined): boolean =>
-  typeof hero?.id === 'number' && !!getHeroById(hero.id)
-
-const getHeroInnate = (
-  heroData: ReturnType<typeof getHeroById>
-): { title: string; description: string } | undefined => {
-  const abilities =
-    DOTA_HERO_ABILITIES?.[heroData?.key as keyof typeof DOTA_HERO_ABILITIES]?.abilities
-  for (const ability of abilities) {
-    const abilityData = DOTA_ABILITIES[ability as keyof typeof DOTA_ABILITIES]
-    if (
-      'is_innate' in abilityData &&
-      'dname' in abilityData &&
-      'desc' in abilityData &&
-      abilityData.is_innate
-    ) {
-      return {
-        description: abilityData.desc,
-        title: abilityData.dname,
-      }
-    }
-  }
-}

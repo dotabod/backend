@@ -11,7 +11,7 @@ export const fetchDelayedGameDoc = async function fetchDelayedGameDoc(
   try {
     return await db.collection<DelayedGames>('delayedGames').findOne({ 'match.match_id': matchId })
   } finally {
-    await mongo.close()
+    mongo.close()
   }
 }
 
@@ -27,14 +27,14 @@ export const extractPlayersFromMongoDoc = function extractPlayersFromMongoDoc(
   }
   const hasTwoTeams = Array.isArray(doc.teams) && doc.teams.length === 2
 
-  if (!hasTwoTeams && Array.isArray(doc.teams)) {
+  if (!hasTwoTeams && Array.isArray(doc.teams) && doc.teams.length > 0) {
     const out: Players = []
     for (const team of doc.teams) {
       if (!Array.isArray(team?.players)) {
         continue
       }
       for (const p of team.players) {
-        out.push({ accountid: Number(p.accountid), heroid: p.heroid, playerid: null })
+        out.push({ accountid: p.accountid, heroid: p.heroid, playerid: null })
       }
     }
     return out
@@ -45,10 +45,8 @@ export const extractPlayersFromMongoDoc = function extractPlayersFromMongoDoc(
     for (const team of doc.teams) {
       for (const a of team.players) {
         flat.push({
-          accountid: Number(a.accountid),
-          heroid:
-            a.heroid ||
-            doc.players?.find((p) => Number(p.accountid) === Number(a.accountid))?.heroid,
+          accountid: a.accountid,
+          heroid: a.heroid || doc.players?.find((p) => Number(p.accountid) === a.accountid)?.heroid,
           playerid: a.playerid,
         })
       }

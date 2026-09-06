@@ -3,15 +3,22 @@ import type { RawRoster, ResolverContext, RosterResolver } from './roster-resolv
 // Tries resolvers in priority order and returns the first non-null result. No fall-through after
 // a match. Order is the only thing that determines priority — there's no scoring or voting.
 export class ResolverChain {
-  constructor(private readonly resolvers: readonly RosterResolver[]) {}
+  private readonly resolvers: readonly RosterResolver[]
+
+  constructor(resolvers: readonly RosterResolver[]) {
+    this.resolvers = resolvers
+  }
 
   async resolve(ctx: ResolverContext): Promise<RawRoster | null> {
-    for (const r of this.resolvers) {
-      const result = await r.resolve(ctx)
-      if (result) {
-        return result
-      }
+    return await this.resolveAt(0, ctx)
+  }
+
+  private async resolveAt(index: number, ctx: ResolverContext): Promise<RawRoster | null> {
+    if (index >= this.resolvers.length) {
+      return null
     }
-    return null
+    const resolver = this.resolvers[index]
+    const roster = await resolver.resolve(ctx)
+    return roster ?? (await this.resolveAt(index + 1, ctx))
   }
 }

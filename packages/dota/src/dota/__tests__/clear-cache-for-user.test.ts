@@ -8,9 +8,14 @@
 // re-introduce the bug — this test guards against that.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock } from '../../__tests__/shared-mocks'
+import {
+  buildSharedUtilsMock,
+  createGsiHandlerStub,
+  createSocketClientStub,
+  createTwitchAccountStub,
+} from '../../__tests__/shared-mocks'
 
-vi.doMock(import('@dotabod/shared-utils'), () =>
+vi.doMock('@dotabod/shared-utils', () =>
   buildSharedUtilsMock({
     getAuthProvider: () => ({ removeUser: () => {} }),
     logger: {
@@ -19,7 +24,10 @@ vi.doMock(import('@dotabod/shared-utils'), () =>
       info: () => {},
       warn: () => {},
     },
-    supabase: { from: () => ({}), rpc: async () => ({ data: [], error: null }) },
+    supabase: {
+      from: () => ({}),
+      rpc: async () => await Promise.resolve({ data: [], error: null }),
+    },
   })
 )
 
@@ -42,12 +50,12 @@ beforeEach(() => {
 
 describe('clearCacheForUser', () => {
   it('removes the client from gsiHandlers and the lookup maps', async () => {
-    const client: any = {
-      Account: { providerAccountId: 'tw' },
+    const client = createSocketClientStub({
+      Account: createTwitchAccountStub({ providerAccountId: 'tw' }),
       name: 'name',
       token: 'tok',
-    }
-    gsiHandlers.set('tok', { client, disable: () => {} } as any)
+    })
+    gsiHandlers.set('tok', createGsiHandlerStub(client))
     twitchIdToToken.set('tw', 'tok')
     twitchNameToToken.set('name', 'tok')
 
@@ -59,12 +67,12 @@ describe('clearCacheForUser', () => {
   })
 
   it('does NOT remove entries from invalidTokens (caller controls that)', async () => {
-    const client: any = {
-      Account: { providerAccountId: 'tw-keep' },
+    const client = createSocketClientStub({
+      Account: createTwitchAccountStub({ providerAccountId: 'tw-keep' }),
       name: 'keep',
       token: 'tok-keep',
-    }
-    gsiHandlers.set('tok-keep', { client, disable: () => {} } as any)
+    })
+    gsiHandlers.set('tok-keep', createGsiHandlerStub(client))
     invalidTokens.add('tok-keep')
     invalidTokens.add('tw-keep')
 

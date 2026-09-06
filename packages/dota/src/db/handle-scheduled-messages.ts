@@ -9,7 +9,7 @@ const processMessagePlaceholders = function processMessagePlaceholders(
   return message.replaceAll('{username}', data.username)
 }
 
-const sendMessageToUser = async function sendMessageToUser(
+const sendMessageToUser = function sendMessageToUser(
   userId: string,
   username: string,
   messageContent: string
@@ -19,11 +19,6 @@ const sendMessageToUser = async function sendMessageToUser(
     const processedMessage = processMessagePlaceholders(messageContent, { username })
 
     // Send the message via Twitch chat
-    if (!chatClient?.say) {
-      logger.error('Chat client not initialized')
-      return false
-    }
-
     chatClient.say(username, processedMessage)
     logger.info(`Sent scheduled message to ${username}: ${processedMessage}`)
     return true
@@ -67,7 +62,7 @@ export const handleUserOnlineMessages = async function handleUserOnlineMessages(
       return []
     }
 
-    const allMessages = [...(userSpecificMessages || []), ...(globalMessages || [])]
+    const allMessages = [...(userSpecificMessages ?? []), ...(globalMessages ?? [])]
 
     if (allMessages.length === 0) {
       return []
@@ -144,7 +139,13 @@ export const handleUserOnlineMessages = async function handleUserOnlineMessages(
         }
 
         // If all users have received it, mark as delivered
-        if (deliveryCount && userCount && deliveryCount >= userCount) {
+        if (
+          deliveryCount !== null &&
+          deliveryCount > 0 &&
+          userCount !== null &&
+          userCount > 0 &&
+          deliveryCount >= userCount
+        ) {
           const { error: updateError } = await supabase
             .from('ScheduledMessage')
             .update({

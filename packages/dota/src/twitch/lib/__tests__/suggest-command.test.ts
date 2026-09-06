@@ -3,7 +3,13 @@ import { join } from 'node:path'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../__tests__/shared-mocks.ts'
+import {
+  buildSharedUtilsMock,
+  createSocketClientStub,
+  initTestI18n,
+  PRO_SUB,
+} from '../../../__tests__/shared-mocks.ts'
+import type { SettingKeys } from '../../../settings'
 import type { MessageType } from '../command-handler'
 
 const noopLogger = {
@@ -13,19 +19,17 @@ const noopLogger = {
   warn: () => {},
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () =>
-  buildSharedUtilsMock({ logger: noopLogger, supabase: {} })
-)
+vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ logger: noopLogger, supabase: {} }))
 
 // Stub the CommandHandler singleton with just the `.commands` map the
 // dispatcher needs for per-candidate dbkey lookup. Avoids dragging in the
 // full handler (which would pull in all 50+ command modules).
-const fakeCommands = new Map<string, { dbkey?: string }>([
+const fakeCommands = new Map<string, { dbkey?: SettingKeys }>([
   ['today', { dbkey: 'commandToday' }],
   ['lgs', { dbkey: 'commandLGS' }],
   ['wl', { dbkey: 'commandWL' }],
 ])
-vi.doMock(import('../command-handler.ts'), () => ({
+vi.doMock('../command-handler.ts', () => ({
   default: { commands: fakeCommands },
 }))
 
@@ -37,26 +41,25 @@ const { commandClusters, prepareSuggestionSuffix, suggestionContext, _resetSugge
 const makeMessage = function makeMessage(
   over: { settings?: { key: string; value: unknown }[] } = {}
 ): MessageType {
+  const settings = over.settings ?? []
+  const client = createSocketClientStub({ locale: 'en', settings, subscription: PRO_SUB })
   return {
     channel: {
-      client: {
-        locale: 'en',
-        subscription: PRO_SUB,
-      },
+      client,
       id: 'channel-1',
       name: '#streamer',
-      settings: over.settings ?? [],
+      settings,
     },
     content: '!today',
     user: { messageId: 'm-1', name: 'viewer', permission: 0, userId: 'u-1' },
-  } as unknown as MessageType
+  }
 }
 
 // Run prepareSuggestionSuffix `count` times and return the last call's result.
 const runUntilSuggestion = function runUntilSuggestion(cmd: string, msg: MessageType, count = 4) {
   let last: string | null = null
   for (let i = 0; i < count; i += 1) {
-    last = prepareSuggestionSuffix(cmd, msg)
+    last = prepareSuggestionSuffix(cmd, msg, fakeCommands)
   }
   return last
 }
@@ -78,9 +81,9 @@ describe('prepareSuggestionSuffix', () => {
   it('emits a suffix on the throttle boundary and not before', () => {
     const msg = makeMessage()
     for (let i = 0; i < 3; i += 1) {
-      expect(prepareSuggestionSuffix('today', msg)).toBeNull()
+      expect(prepareSuggestionSuffix('today', msg, fakeCommands)).toBeNull()
     }
-    const suffix = prepareSuggestionSuffix('today', msg)
+    const suffix = prepareSuggestionSuffix('today', msg, fakeCommands)
     expect(suffix).toBeTruthy()
     expect(suffix).toMatch(/!(lgs|wl)/u)
   })

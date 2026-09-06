@@ -40,14 +40,16 @@ export class NeutralItemTimer {
   constructor(private readonly dotaClient: GSIHandlerType) {}
 
   async checkNeutralItems() {
-    if (!this.dotaClient.client.gsi?.map?.game_time) {
+    const map = this.dotaClient.client.gsi?.map
+    const gameTime = map?.game_time
+    if (map === undefined || gameTime === undefined || gameTime === 0) {
       return
     }
     if (!this.dotaClient.client.stream_online) {
       return
     }
 
-    const clockTime = this.dotaClient.client.gsi.map.clock_time || 0
+    const clockTime = map.clock_time
 
     // Only check every CHECK_INTERVAL seconds
     if (clockTime - this.lastCheckedTime < this.CHECK_INTERVAL) {

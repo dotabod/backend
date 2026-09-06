@@ -3,7 +3,11 @@
 // exact module away — importing it here would replace the code under test).
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock } from '../../../__tests__/shared-mocks.ts'
+import {
+  buildSharedUtilsMock,
+  createGsiHandlerStub,
+  createSocketClientStub,
+} from '../../../__tests__/shared-mocks.ts'
 import type { SocketClient } from '../../../types'
 
 const noopLogger = {
@@ -27,10 +31,14 @@ const supabaseMock = {
           eq: (_col: string, steam32Id: unknown) => {
             mockState.steamAccountsUpdateCalls.push({ steam32Id, values })
             return {
-              select: async () => ({
-                data: mockState.foundToken ? [{ userId: mockState.foundToken }] : [],
-                error: null,
-              }),
+              select: async () =>
+                await Promise.resolve({
+                  data:
+                    mockState.foundToken !== null && mockState.foundToken.length > 0
+                      ? [{ userId: mockState.foundToken }]
+                      : [],
+                  error: null,
+                }),
             }
           },
         }),
@@ -41,7 +49,7 @@ const supabaseMock = {
         update: (values: Record<string, unknown>) => ({
           eq: async (_col: string, id: unknown) => {
             mockState.usersUpdateCalls.push({ id, values })
-            return { data: null, error: null }
+            return await Promise.resolve({ data: null, error: null })
           },
         }),
       }
@@ -50,7 +58,7 @@ const supabaseMock = {
   },
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () =>
+vi.doMock('@dotabod/shared-utils', () =>
   buildSharedUtilsMock({ logger: noopLogger, supabase: supabaseMock })
 )
 
@@ -58,7 +66,7 @@ const { updateMmr } = await import('../update-mmr.ts')
 const { gsiHandlers } = await import('../consts.ts')
 
 const makeClient = function makeClient(overrides: Partial<SocketClient> = {}): SocketClient {
-  return {
+  return createSocketClientStub({
     Account: null,
     SteamAccount: [{ leaderboard_rank: null, mmr: 5000, name: 'streamer', steam32Id: 99_999 }],
     beta_tester: false,
@@ -71,7 +79,7 @@ const makeClient = function makeClient(overrides: Partial<SocketClient> = {}): S
     stream_start_date: null,
     token: 'token-abc',
     ...overrides,
-  }
+  })
 }
 
 describe('updateMmr (steam32Id branch)', () => {
@@ -84,7 +92,7 @@ describe('updateMmr (steam32Id branch)', () => {
 
   it('syncs the in-memory client.mmr immediately after a successful update', async () => {
     const client = makeClient({ mmr: 5000, steam32Id: 99_999 })
-    gsiHandlers.set('token-abc', { client } as any)
+    gsiHandlers.set('token-abc', createGsiHandlerStub(client))
 
     await updateMmr({
       channel: '#streamer',
@@ -99,7 +107,7 @@ describe('updateMmr (steam32Id branch)', () => {
 
   it('does not lose an update when two corrections land back-to-back, each reading the live client.mmr', async () => {
     const client = makeClient({ mmr: 5000, steam32Id: 99_999 })
-    gsiHandlers.set('token-abc', { client } as any)
+    gsiHandlers.set('token-abc', createGsiHandlerStub(client))
 
     // Mirrors real call sites: currentMmr is read from the live client, and
     // the new value is currentMmr + delta. Before the fix, client.mmr never
@@ -128,7 +136,7 @@ describe('updateMmr (steam32Id branch)', () => {
       { leaderboard_rank: null, mmr: 5000, name: 'main', steam32Id: 11_111 },
       { leaderboard_rank: null, mmr: 3000, name: 'smurf', steam32Id: 99_999 },
     ]
-    gsiHandlers.set('token-abc', { client } as any)
+    gsiHandlers.set('token-abc', createGsiHandlerStub(client))
 
     await updateMmr({
       channel: '#streamer',

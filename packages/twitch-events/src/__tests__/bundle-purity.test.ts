@@ -4,8 +4,7 @@
 /// <reference types="node" />
 import { execSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
@@ -22,13 +21,13 @@ import { describe, expect, it } from 'vitest'
 //
 // These tests fail FAST (source scan) and SLOW (actually build + parse).
 
-const SRC = dirname(import.meta.dirname)
-const PKG = dirname(SRC)
-const BUNDLE = join(PKG, 'dist', 'index.js')
+const SRC = path.dirname(import.meta.dirname)
+const PKG = path.dirname(SRC)
+const BUNDLE = path.join(PKG, 'dist', 'index.js')
 
 const walk = function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
-    const p = join(dir, entry)
+    const p = path.join(dir, entry)
     if (statSync(p).isDirectory()) {
       // CLI-only entries live under src/scripts/ and are never bundled.
       if (entry === 'scripts' || entry === '__tests__') {

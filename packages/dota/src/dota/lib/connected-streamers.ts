@@ -2,8 +2,14 @@ import type { SocketClient } from '../../types'
 import type { GSIHandlerType } from '../gsi-handler-types'
 import { gsiHandlers, twitchIdToToken, twitchNameToToken } from './consts'
 
+const isMissingLookupKey = function isMissingLookupKey(
+  value: string | null | undefined
+): value is null | undefined {
+  return value === null || value === undefined || value.length === 0
+}
+
 export const getTokenFromTwitchId = function getTokenFromTwitchId(twitchId?: string | null) {
-  if (!twitchId) {
+  if (isMissingLookupKey(twitchId)) {
     return null
   }
   if (!twitchIdToToken.has(twitchId)) {
@@ -11,7 +17,7 @@ export const getTokenFromTwitchId = function getTokenFromTwitchId(twitchId?: str
   }
 
   const token = twitchIdToToken.get(twitchId)
-  if (!token || !gsiHandlers.has(token)) {
+  if (isMissingLookupKey(token) || !gsiHandlers.has(token)) {
     return null
   }
 
@@ -19,7 +25,7 @@ export const getTokenFromTwitchId = function getTokenFromTwitchId(twitchId?: str
 }
 
 const getTokenFromTwitchName = function getTokenFromTwitchName(name?: string | null) {
-  if (!name) {
+  if (isMissingLookupKey(name)) {
     return null
   }
   if (!twitchNameToToken.has(name)) {
@@ -27,7 +33,7 @@ const getTokenFromTwitchName = function getTokenFromTwitchName(name?: string | n
   }
 
   const token = twitchNameToToken.get(name)
-  if (!token || !gsiHandlers.has(token)) {
+  if (isMissingLookupKey(token) || !gsiHandlers.has(token)) {
     return null
   }
 
@@ -36,7 +42,7 @@ const getTokenFromTwitchName = function getTokenFromTwitchName(name?: string | n
 
 export const findUserByName = function findUserByName(name?: string): SocketClient | null {
   const token = getTokenFromTwitchName(name)
-  if (!token) {
+  if (isMissingLookupKey(token)) {
     return null
   }
 
@@ -44,7 +50,7 @@ export const findUserByName = function findUserByName(name?: string): SocketClie
 }
 
 export default function findUser(token?: string): SocketClient | null {
-  if (!token || !gsiHandlers.has(token)) {
+  if (isMissingLookupKey(token) || !gsiHandlers.has(token)) {
     return null
   }
   return gsiHandlers.get(token)?.client ?? null
@@ -54,7 +60,7 @@ export const findUserByTwitchId = function findUserByTwitchId(
   twitchId?: string
 ): SocketClient | null {
   const token = getTokenFromTwitchId(twitchId)
-  if (!token) {
+  if (isMissingLookupKey(token)) {
     return null
   }
 
@@ -65,7 +71,7 @@ export const findGSIHandlerByTwitchId = function findGSIHandlerByTwitchId(
   twitchId?: string
 ): GSIHandlerType | null {
   const token = getTokenFromTwitchId(twitchId)
-  if (!token) {
+  if (isMissingLookupKey(token)) {
     return null
   }
 

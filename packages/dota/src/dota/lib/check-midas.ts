@@ -39,7 +39,7 @@ const checkMidasIterator = async function checkMidasIterator(client: SocketClien
 
   // Check if player has a midas. findItem returns `Item[] | false`, so an
   // optional-chain shortcut here would skip narrowing on the `false` arm.
-  if (!midasItem || !midasItem[0]) {
+  if (midasItem === false || midasItem.length === 0) {
     return false
   }
 

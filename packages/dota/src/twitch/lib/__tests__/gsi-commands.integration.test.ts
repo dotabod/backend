@@ -1,6 +1,7 @@
 import { t } from 'i18next'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { createPacketStub } from '../../../__tests__/shared-mocks.ts'
 import { getHeroNameOrColor } from '../../../dota/lib/heroes.ts'
 import { commandHandler, makeMessage, resetState, state } from './setup-mocks.ts'
 
@@ -14,7 +15,7 @@ const notPlaying = t('notPlaying', { emote: 'PauseChamp', lng: 'en' })
 const gameNotFound = t('gameNotFound', { lng: 'en' })
 
 const playingGsi = (extra: Record<string, unknown> = {}) =>
-  ({
+  createPacketStub({
     hero: { id: HERO_ID },
     map: {
       game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
@@ -23,10 +24,10 @@ const playingGsi = (extra: Record<string, unknown> = {}) =>
     },
     player: { activity: 'playing' },
     ...extra,
-  }) as any
+  })
 
 const heroDemoGsi = () =>
-  ({
+  createPacketStub({
     hero: { id: HERO_ID },
     map: {
       customgamename: 'hero_demo',
@@ -35,10 +36,10 @@ const heroDemoGsi = () =>
       win_team: 'none',
     },
     player: { accountid: 99_999, activity: 'playing' },
-  }) as any
+  })
 
 const spectatorGsi = () =>
-  ({
+  createPacketStub({
     hero: {
       team2: { player0: { id: HERO_ID, selected_unit: true } },
       team3: {},
@@ -54,7 +55,7 @@ const spectatorGsi = () =>
       team3: {},
       team_name: 'spectator',
     },
-  }) as any
+  })
 
 beforeEach(() => {
   resetState()
@@ -64,7 +65,10 @@ beforeEach(() => {
 describe('!xpm', () => {
   it('blocks when the stream is offline', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { stream_online: false }, content: '!xpm' })
+      makeMessage({
+        clientOverrides: { stream_online: false },
+        content: '!xpm',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(notLive)
@@ -137,7 +141,10 @@ describe('!shard', () => {
 
   it('echoes the hero name for a valid hero in a live match', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { gsi: playingGsi() }, content: '!shard' })
+      makeMessage({
+        clientOverrides: { gsi: playingGsi() },
+        content: '!shard',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain(heroName)
@@ -182,7 +189,10 @@ describe('!innate', () => {
     async (content) => {
       await commandHandler.handleMessage(
         makeMessage({
-          clientOverrides: { gsi: playingGsi(), gsiUpdatedAt: Date.now() - 120_000 },
+          clientOverrides: {
+            gsi: playingGsi(),
+            gsiUpdatedAt: Date.now() - 120_000,
+          },
           content,
         })
       )

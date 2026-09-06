@@ -34,7 +34,7 @@ describe(getRequiredTier, () => {
   })
 
   it('falls back to PRO for an unknown feature', () => {
-    expect(getRequiredTier('not-a-real-feature' as any)).toBe('PRO')
+    expect(getRequiredTier('not-a-real-feature')).toBe('PRO')
   })
 })
 
@@ -85,8 +85,6 @@ describe(canAccessFeature, () => {
   })
 
   it('denies a pro feature when the subscription is canceled', () => {
-    expect(
-      canAccessFeature('bets', sub({ status: 'CANCELED' as any, tier: 'PRO' })).hasAccess
-    ).toBeFalsy()
+    expect(canAccessFeature('bets', sub({ status: 'CANCELED', tier: 'PRO' })).hasAccess).toBeFalsy()
   })
 })

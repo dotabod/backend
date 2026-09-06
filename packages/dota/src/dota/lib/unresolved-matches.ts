@@ -1,26 +1,28 @@
 import { supabase } from '@dotabod/shared-utils'
+import { z } from 'zod'
 
 import { getSessionStartDate } from '../../db/stream-window'
 import type { SocketClient } from '../../types'
 import getHero from './get-hero'
-import type { HeroNames } from './get-hero'
 
-interface UnresolvedKda {
-  kills?: number | null
-  deaths?: number | null
-  assists?: number | null
-  duration?: number | null
-}
+const unresolvedMatchSchema = z.object({
+  created_at: z.string(),
+  dire_score: z.number().nullable(),
+  hero_name: z.string().nullable(),
+  kda: z
+    .object({
+      assists: z.number().nullish(),
+      deaths: z.number().nullish(),
+      duration: z.number().nullish(),
+      kills: z.number().nullish(),
+    })
+    .nullable(),
+  matchId: z.string(),
+  radiant_score: z.number().nullable(),
+  updated_at: z.string(),
+})
 
-export interface UnresolvedMatch {
-  matchId: string
-  hero_name: string | null
-  kda: UnresolvedKda | null
-  radiant_score: number | null
-  dire_score: number | null
-  created_at: string
-  updated_at: string
-}
+export type UnresolvedMatch = z.infer<typeof unresolvedMatchSchema>
 
 // Set once per match when its single reminder is sent; also set eagerly for
 // matches that can never be resolved (no-stats) so they're never nudged. TTL
@@ -45,10 +47,10 @@ export const getUnresolvedMatches = async function getUnresolvedMatches(
     .order('created_at', { ascending: false })
     .limit(10)
 
-  if (error || !data) {
+  if (error !== null) {
     return []
   }
-  return data as UnresolvedMatch[]
+  return z.array(unresolvedMatchSchema).parse(data ?? [])
 }
 
 export const formatTimeAgo = function formatTimeAgo(date: Date, now: Date = new Date()): string {
@@ -76,22 +78,26 @@ export const formatUnresolvedMatch = function formatUnresolvedMatch(
   match: UnresolvedMatch,
   now: Date = new Date()
 ): string {
-  const hero = getHero(match.hero_name as HeroNames)
+  const hero = getHero(match.hero_name)
   const heroName = hero?.localized_name ?? match.hero_name ?? 'Unknown'
 
   const parts: string[] = [heroName]
 
   const { kda } = match
-  if (kda && (kda.kills != null || kda.deaths != null || kda.assists != null)) {
+  if (
+    kda &&
+    [kda.kills, kda.deaths, kda.assists].some((stat) => stat !== null && stat !== undefined)
+  ) {
     parts.push(`${kda.kills ?? 0}/${kda.deaths ?? 0}/${kda.assists ?? 0}`)
   }
 
-  if (match.radiant_score != null && match.dire_score != null) {
+  if (match.radiant_score !== null && match.dire_score !== null) {
     parts.push(`${match.radiant_score}-${match.dire_score}`)
   }
 
-  if (kda?.duration != null) {
-    parts.push(formatDuration(kda.duration))
+  const duration = kda?.duration ?? null
+  if (duration !== null) {
+    parts.push(formatDuration(duration))
   }
 
   const endedAt = match.updated_at || match.created_at

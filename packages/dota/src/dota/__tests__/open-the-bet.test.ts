@@ -1,19 +1,100 @@
+import type { Database } from '@dotabod/shared-utils'
 // Regression tests for the Arteezy stale-GSI bug: `openTheBet` used to read
 // matchId + hero name from `client.gsi` at delay-fire time, which can be
 // cleared (player abandoned + requeued) between `openBets()` validating and
 // `openTheBet()` running. The fix captures both values at validation time and
 // passes them through the delayed callback closure.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { z } from 'zod'
 
-import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../__tests__/shared-mocks'
+import {
+  buildSharedUtilsMock,
+  createPacketStub,
+  createSocketClientStub,
+  initTestI18n,
+  PRO_SUB,
+} from '../../__tests__/shared-mocks'
+import type { Packet, SocketClient } from '../../types'
+import type { say } from '../say'
+
+type SharedUtilsMockOptions = Parameters<typeof buildSharedUtilsMock>[0]
+type LoggerMetadata = NonNullable<Parameters<SharedUtilsMockOptions['logger']['info']>[1]>
+type SayOptions = Parameters<typeof say>[2]
+type MatchInsert = Database['public']['Tables']['matches']['Insert']
+type SteamAccountInsert = Database['public']['Tables']['steam_accounts']['Insert']
+type MatchUpdate = Database['public']['Tables']['matches']['Update']
+type SteamAccountUpdate = Database['public']['Tables']['steam_accounts']['Update']
+type UserUpdate = Database['public']['Tables']['users']['Update']
+type CapturedInsertValues = Partial<MatchInsert & SteamAccountInsert>
+type CapturedUpdateValues = Partial<MatchUpdate & SteamAccountUpdate & UserUpdate>
+
+interface SupabaseError {
+  code?: string
+  message: string
+}
+
+interface ExistingBetRow {
+  id: string
+  matchId: string
+  myTeam: string
+}
+
+interface SteamAccountRecord {
+  connectedUserIds: string[] | null
+  id: string
+  mmr: number
+  userId: string
+}
+
+interface OpenTwitchBetControl {
+  throwOnNextCall: Error | null
+}
+
+interface TwitchApiError extends Error {
+  body?: string
+  statusCode?: number
+}
+
+const twitchApiErrorBodySchema = z.object({ message: z.string().optional() })
+
+interface MatchPredictionLookup {
+  data: { predictionId: string | null } | null
+  error: SupabaseError | null
+}
+
+interface SteamAccountLookup {
+  data: SteamAccountRecord | null
+  error: SupabaseError | null
+}
+
+interface SteamAccountInsertResult {
+  data: SteamAccountRecord | null
+  error: SupabaseError | null
+  throwError: Error | null
+}
+
+interface BetRowsResult {
+  data: ExistingBetRow[]
+  error: null
+}
+
+type LiveGsiPlayerOverrides = Omit<Partial<NonNullable<Packet['player']>>, 'accountid'> & {
+  accountid?: number | string
+}
+
+interface LiveGsiOverrides {
+  hero?: Partial<NonNullable<Packet['hero']>>
+  map?: Partial<NonNullable<Packet['map']>>
+  player?: LiveGsiPlayerOverrides
+}
 
 interface InsertCall {
   table: string
-  values: Record<string, unknown>
+  values: CapturedInsertValues
 }
 interface UpdateCall {
   table: string
-  values: Record<string, unknown>
+  values: CapturedUpdateValues
 }
 interface OpenBetCall {
   heroName: string | undefined
@@ -29,11 +110,11 @@ interface DelayedTask {
 const supabaseInserts: InsertCall[] = []
 const supabaseUpdates: UpdateCall[] = []
 const steamAccountSelectCalls: number[] = []
-const loggerErrorCalls: { message: string; meta?: Record<string, unknown> }[] = []
-const loggerInfoCalls: { message: string; meta?: Record<string, unknown> }[] = []
+const loggerErrorCalls: { message: string; meta?: LoggerMetadata }[] = []
+const loggerInfoCalls: { message: string; meta?: LoggerMetadata }[] = []
 const openBetCalls: OpenBetCall[] = []
 const closeBetCalls: unknown[][] = []
-const sayCalls: { message: string; options?: Record<string, unknown> }[] = []
+const sayCalls: { message: string; options?: SayOptions }[] = []
 const ioEmitCalls: {
   token: string
   event: string
@@ -42,114 +123,120 @@ const ioEmitCalls: {
 }[] = []
 const heldTasks: DelayedTask[] = []
 const removedTaskIds: string[] = []
-const openTwitchBetControl: { throwOnNextCall: Error | null } = { throwOnNextCall: null }
-const matchPredictionLookup: {
-  data: { predictionId: string | null } | null
-  error: { message: string } | null
-} = { data: null, error: null }
+const openTwitchBetControl: OpenTwitchBetControl = { throwOnNextCall: null }
+const matchPredictionLookup: MatchPredictionLookup = { data: null, error: null }
 // Existing rows the supabase mock returns from a `.select(...).eq.eq.is(...)`
 // chain (the openBets duplicate-bet check at line 712-718). Default: empty.
-const existingBetRows: Record<string, unknown>[] = []
-const steamAccountLookup: {
-  data: Record<string, unknown> | null
-  error: { code?: string; message: string } | null
-} = { data: null, error: null }
-const steamAccountInsertResult: {
-  data: Record<string, unknown> | null
-  error: { code?: string; message: string } | null
-  throwError: Error | null
-} = { data: null, error: null, throwError: null }
+const existingBetRows: ExistingBetRow[] = []
+const steamAccountLookup: SteamAccountLookup = { data: null, error: null }
+const steamAccountInsertResult: SteamAccountInsertResult = {
+  data: null,
+  error: null,
+  throwError: null,
+}
+
+interface SupabaseBuilder {
+  eq: () => SupabaseBuilder
+  gte: () => SupabaseBuilder
+  insert: (values: CapturedInsertValues) => Promise<SteamAccountInsertResult>
+  is: () => Promise<BetRowsResult>
+  limit: () => Promise<BetRowsResult>
+  match: () => Promise<{ data: null; error: null }>
+  maybeSingle: () => Promise<typeof steamAccountLookup>
+  neq: () => SupabaseBuilder
+  not: () => SupabaseBuilder
+  order: () => SupabaseBuilder
+  select: () => SupabaseBuilder
+  single: () => Promise<typeof matchPredictionLookup | { data: null; error: { message: string } }>
+  then: (onFulfilled: (value: BetRowsResult) => BetRowsResult) => Promise<BetRowsResult>
+  update: (values: CapturedUpdateValues) => SupabaseBuilder
+  upsert: () => Promise<{ data: null; error: null }>
+}
 
 const supabaseMock = {
   from: (table: string) => {
-    const builder: any = {
+    const builder: SupabaseBuilder = {
       // openBets duplicate-check chain (.select.eq.eq.is) resolves with
       // existingBetRows; the existing-bet branch only fires when the test
       // seeds at least one row.
       select: () => builder,
-      insert: async (values: Record<string, unknown>) => {
+      insert: async (values: CapturedInsertValues) => {
         supabaseInserts.push({ table, values })
         if (table === 'steam_accounts') {
           if (steamAccountInsertResult.throwError) {
-            throw steamAccountInsertResult.throwError
+            return await Promise.reject(steamAccountInsertResult.throwError)
           }
-          return { ...steamAccountInsertResult }
+          return await Promise.resolve({ ...steamAccountInsertResult })
         }
-        return { data: null, error: null }
+        return await Promise.resolve({ data: null, error: null, throwError: null })
       },
-      update: (values: Record<string, unknown>) => {
+      update: (values: CapturedUpdateValues) => {
         supabaseUpdates.push({ table, values })
         return builder
       },
-      upsert: async () => ({ data: null, error: null }),
+      upsert: async () => await Promise.resolve({ data: null, error: null }),
       eq: () => builder,
-      is: async () => ({ data: [...existingBetRows], error: null }),
+      is: async () => await Promise.resolve({ data: [...existingBetRows], error: null }),
       neq: () => builder,
       not: () => builder,
       gte: () => builder,
       order: () => builder,
-      limit: async () => ({ data: [...existingBetRows], error: null }),
+      limit: async () => await Promise.resolve({ data: [...existingBetRows], error: null }),
       single: async () => {
         if (table === 'matches') {
-          return { ...matchPredictionLookup }
+          return await Promise.resolve({ ...matchPredictionLookup })
         }
-        return { data: null, error: { message: 'not found' } }
+        return await Promise.resolve({ data: null, error: { message: 'not found' } })
       },
       maybeSingle: async () => {
         if (table === 'steam_accounts') {
           steamAccountSelectCalls.push(Date.now())
         }
-        return { ...steamAccountLookup }
+        return await Promise.resolve({ ...steamAccountLookup })
       },
-      match: async () => ({ data: null, error: null }),
-      then: async (onF: any) =>
-        await Promise.resolve({ data: [...existingBetRows], error: null }).then(onF),
+      match: async () => await Promise.resolve({ data: null, error: null }),
+      then: async (onFulfilled) =>
+        await Promise.resolve({ data: [...existingBetRows], error: null }).then(onFulfilled),
     }
     return builder
   },
-  rpc: async () => ({ data: [], error: null }),
+  rpc: async () => await Promise.resolve({ data: [], error: null }),
 }
 
 const loggerMock = {
   debug: () => {},
-  error: (message: string, meta?: Record<string, unknown>) => {
+  error: (message: string, meta?: LoggerMetadata) => {
     loggerErrorCalls.push({ message, meta })
   },
-  info: (message: string, meta?: Record<string, unknown>) => {
+  info: (message: string, meta?: LoggerMetadata) => {
     loggerInfoCalls.push({ message, meta })
   },
   warn: () => {},
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () =>
+vi.doMock('@dotabod/shared-utils', () =>
   buildSharedUtilsMock({ logger: loggerMock, supabase: supabaseMock })
 )
 
-vi.doMock(import('../../steam/ws'), () => ({
+vi.doMock('../../steam/ws', () => ({
   steamSocket: { emit: () => {}, on: () => {} },
   twitchChat: { emit: () => {}, on: () => {} },
   twitchEvents: { emit: () => {}, on: () => {} },
 }))
 
-vi.doMock(import('../../twitch/lib/open-twitch-bet'), () => ({
-  isPredictionAlreadyActiveError: (error: unknown) => {
-    if (typeof error !== 'object' || error === null) {
-      return false
-    }
-    const candidate = error as { statusCode?: unknown; body?: unknown }
-    if (candidate.statusCode !== 400 || typeof candidate.body !== 'string') {
+vi.doMock('../../twitch/lib/open-twitch-bet', () => ({
+  isPredictionAlreadyActiveError: (error: TwitchApiError) => {
+    if (error.statusCode !== 400 || error.body === undefined) {
       return false
     }
     try {
-      const body = JSON.parse(candidate.body) as { message?: unknown }
-      return (
-        typeof body.message === 'string' && body.message.includes('prediction event already active')
-      )
+      const body = twitchApiErrorBodySchema.parse(JSON.parse(error.body))
+      return body.message?.includes('prediction event already active') === true
     } catch {
       return false
     }
   },
-  openTwitchBet: async ({ heroName, client }: { heroName?: string; client: any }) => {
+  openTwitchBet: async ({ heroName, client }: { heroName?: string; client: SocketClient }) => {
     openBetCalls.push({
       heroName,
       matchidAtCallTime: client?.gsi?.map?.matchid,
@@ -157,25 +244,26 @@ vi.doMock(import('../../twitch/lib/open-twitch-bet'), () => ({
     if (openTwitchBetControl.throwOnNextCall) {
       const e = openTwitchBetControl.throwOnNextCall
       openTwitchBetControl.throwOnNextCall = null
-      throw e
+      return await Promise.reject(e)
     }
-    return { id: 'bet-id-1' }
+    return await Promise.resolve({ id: 'bet-id-1' })
   },
 }))
 
-vi.doMock(import('../../twitch/lib/close-twitch-bet'), () => ({
+vi.doMock('../../twitch/lib/close-twitch-bet', () => ({
   closeTwitchBet: async (...args: unknown[]) => {
     closeBetCalls.push(args)
+    await Promise.resolve()
   },
 }))
 
-vi.doMock(import('../say'), () => ({
-  say: (_client: unknown, message: string, options?: Record<string, unknown>) => {
+vi.doMock('../say', () => ({
+  say: (_client: SocketClient, message: string, options?: SayOptions) => {
     sayCalls.push({ message, options })
   },
 }))
 
-vi.doMock(import('../lib/delayed-queue'), () => ({
+vi.doMock('../lib/delayed-queue', () => ({
   delayedQueue: {
     addTask: (
       delayMs: number,
@@ -212,25 +300,26 @@ vi.doMock(import('../lib/delayed-queue'), () => ({
 // bypass these by constructing with stream_online=false so the ctor early-
 // returns, but the modules are still imported at file-load time so they
 // need to load cleanly.
-vi.doMock(import('../../db/get-wl'), async () => {
-  const real = await vi.importActual<any>('../../db/get-wl')
+vi.doMock('../../db/get-wl', async () => {
+  const real = await vi.importActual<typeof import('../../db/get-wl')>('../../db/get-wl')
   return {
     ...real,
-    getWL: async () => ({
-      record: [{ lose: 2, type: 'R', win: 5 }],
-      statsDays: 14,
-      statsDaysTotal: 30,
-    }),
+    getWL: async () =>
+      await Promise.resolve({
+        record: [{ lose: 2, type: 'R', win: 5 }],
+        statsDays: 14,
+        statsDaysTotal: 30,
+      }),
   }
 })
 
 vi.doMock(import('../lib/ranks'), async () => {
-  const real = await vi.importActual<any>('../lib/ranks')
+  const real = await vi.importActual<typeof import('../lib/ranks')>('../lib/ranks')
   return {
     ...real,
-    getDotabodRankProfile: async () => null,
-    getRankDescription: async () => null,
-    getRankDetail: async () => null,
+    getDotabodRankProfile: async () => await Promise.resolve(null),
+    getRankDescription: async () => await Promise.resolve(null),
+    getRankDetail: async () => await Promise.resolve(null),
     getRankTitle: () => 'Immortal',
   }
 })
@@ -239,48 +328,54 @@ await initTestI18n()
 
 const { redisClient } = await import('../../db/redis-instance')
 const redisStore: Record<string, string> = {}
-;(redisClient as any).client = {
-  del: async (key: string) => {
-    delete redisStore[key]
-    return 1
-  },
-  get: async (key: string) => redisStore[key] ?? null,
-  json: {
-    get: async () => null,
-  },
-  multi: () => {
-    const ops: (() => void)[] = []
-    const chain: any = {
-      del: (key: string) => {
-        ops.push(() => {
-          delete redisStore[key]
-        })
-        return chain
-      },
-      exec: async () => {
-        ops.forEach((op) => {
-          op()
-        })
-        return []
-      },
-    }
-    return chain
-  },
-  set: async (key: string, val: string) => {
-    redisStore[key] = val
-    return 'OK'
-  },
-  setEx: async (key: string, _ttl: number, val: string) => {
-    redisStore[key] = val
-    return 'OK'
-  },
+interface RedisMultiChain {
+  del: (key: string) => RedisMultiChain
+  exec: () => Promise<never[]>
 }
+
+Object.assign(redisClient, {
+  client: {
+    del: async (key: string) => {
+      delete redisStore[key]
+      return await Promise.resolve(1)
+    },
+    get: async (key: string) => await Promise.resolve(redisStore[key] ?? null),
+    json: {
+      get: async () => await Promise.resolve(null),
+    },
+    multi: () => {
+      const ops: (() => void)[] = []
+      const chain: RedisMultiChain = {
+        del: (key: string) => {
+          ops.push(() => {
+            delete redisStore[key]
+          })
+          return chain
+        },
+        exec: async () => {
+          ops.forEach((op) => {
+            op()
+          })
+          return await Promise.resolve([])
+        },
+      }
+      return chain
+    },
+    set: async (key: string, val: string) => {
+      redisStore[key] = val
+      return await Promise.resolve('OK')
+    },
+    setEx: async (key: string, _ttl: number, val: string) => {
+      redisStore[key] = val
+      return await Promise.resolve('OK')
+    },
+  },
+})
 
 const { server } = await import('../server')
 server.setServer({
   io: {
-    fetchSockets: async () => [],
-    in: () => ({ fetchSockets: async () => [] }),
+    fetchSockets: async () => await Promise.resolve([]),
     to: (token: string) => ({
       emit: (event: string, payload: unknown, ...trailingPayloads: unknown[]) => {
         ioEmitCalls.push({
@@ -292,23 +387,29 @@ server.setServer({
       },
     }),
   },
-} as any)
+})
 
 // Side-effect import: registers the GSIHandler constructor with the factory.
 await import('../gsi-handler')
 const { createGSIHandler } = await import('../gsi-handler-factory')
 
-type Client = any
+type Client = SocketClient
 
 const makeClient = function makeClient(overrides: Partial<Client> = {}): Client {
-  return {
-    Account: { providerAccountId: 'twitch-arteezy' },
-    SteamAccount: [],
-    beta_tester: false,
+  return createSocketClientStub({
+    Account: {
+      access_token: '',
+      expires_at: null,
+      expires_in: null,
+      obtainment_timestamp: null,
+      providerAccountId: 'twitch-arteezy',
+      refresh_token: '',
+      requires_refresh: false,
+      scope: null,
+    },
     gsi: undefined,
     locale: 'en',
     mmr: 12_000,
-    multiAccount: false,
     name: 'arteezy',
     settings: [],
     steam32Id: 86_745_912,
@@ -317,16 +418,16 @@ const makeClient = function makeClient(overrides: Partial<Client> = {}): Client 
     subscription: PRO_SUB,
     token: 'token-arteezy',
     ...overrides,
-  }
+  })
 }
 
-const liveGsi = function liveGsi(overrides: Record<string, any> = {}) {
-  return {
+const liveGsi = function liveGsi(overrides: LiveGsiOverrides = {}) {
+  return createPacketStub({
     hero: { name: 'npc_dota_hero_nevermore' },
     map: { clock_time: 0, game_time: 0, matchid: '8825999999', win_team: 'none' },
     player: { activity: 'playing', team_name: 'radiant' },
     ...overrides,
-  }
+  })
 }
 
 const steam64 = function steam64(steam32Id: number) {
@@ -334,12 +435,19 @@ const steam64 = function steam64(steam32Id: number) {
 }
 
 const makeHandler = function makeHandler(client: Client) {
-  const handler = createGSIHandler(client) as any
+  const handler = createGSIHandler(client)
   // ctor disabled the handler because stream_online was false; flip both
   // flags so openBets proceeds as if the streamer is live.
   handler.client.stream_online = true
   handler.disabled = false
   return handler
+}
+
+const requireGsi = function requireGsi(client: Client) {
+  if (!client.gsi) {
+    throw new Error('Expected test client to have GSI data')
+  }
+  return client.gsi
 }
 
 describe('openTheBet — Arteezy stale-GSI regression', () => {
@@ -430,8 +538,9 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     // Simulate the Arteezy scenario: between openBets and the delayed callback,
     // the game abandons and GSI clears (or a new game has begun and reset
     // wiped state). The captured matchId/hero must still flow through.
-    handler.client.gsi.map = undefined
-    handler.client.gsi.hero = undefined
+    const gsi = requireGsi(handler.client)
+    gsi.map = undefined
+    gsi.hero = undefined
 
     await heldTasks[0].invoke()
 
@@ -666,9 +775,10 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     await handler.openBets(handler.client)
     expect(heldTasks).toHaveLength(1)
 
-    handler.client.gsi.player = undefined
-    handler.client.gsi.map = undefined
-    handler.client.gsi.hero = undefined
+    const gsi = requireGsi(handler.client)
+    gsi.player = undefined
+    gsi.map = undefined
+    gsi.hero = undefined
 
     await heldTasks[0].invoke()
 
@@ -798,7 +908,11 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
 
     await handler.setupOBSBlockers('DOTA_GAMERULES_STATE_STRATEGY_TIME')
     ioEmitCalls.length = 0
-    client.gsi.map.game_state = 'DOTA_GAMERULES_STATE_POST_GAME'
+    const map = requireGsi(client).map
+    if (!map) {
+      throw new Error('Expected test client to have GSI map data')
+    }
+    map.game_state = 'DOTA_GAMERULES_STATE_POST_GAME'
     redisStore['token-arteezy:matchId'] = '8978976957'
     const closeBets = vi.spyOn(handler, 'closeBets').mockResolvedValue()
 

@@ -164,21 +164,23 @@ describe(sendTwitchChatMessage, () => {
     let attempt = 0
     state.fetchImpl = async () => {
       attempt += 1
-      return {
+      return await Promise.resolve({
         json: async () =>
-          attempt === 1
-            ? {
-                data: [
-                  {
-                    drop_reason: { code: 'msg_duplicate', message: 'duplicate' },
-                    is_sent: false,
-                    message_id: '',
-                  },
-                ],
-              }
-            : { data: [{ is_sent: true, message_id: 'retry-id' }] },
+          await Promise.resolve(
+            attempt === 1
+              ? {
+                  data: [
+                    {
+                      drop_reason: { code: 'msg_duplicate', message: 'duplicate' },
+                      is_sent: false,
+                      message_id: '',
+                    },
+                  ],
+                }
+              : { data: [{ is_sent: true, message_id: 'retry-id' }] }
+          ),
         ok: true,
-      }
+      })
     }
 
     const res = await sendTwitchChatMessage({
@@ -201,10 +203,12 @@ describe(sendTwitchChatMessage, () => {
   })
 
   it('returns the API response on success', async () => {
-    state.fetchImpl = async () => ({
-      json: async () => ({ data: [{ is_sent: true, message_id: 'real-id' }] }),
-      ok: true,
-    })
+    state.fetchImpl = async () =>
+      await Promise.resolve({
+        json: async () =>
+          await Promise.resolve({ data: [{ is_sent: true, message_id: 'real-id' }] }),
+        ok: true,
+      })
     const res = await sendTwitchChatMessage({
       broadcaster_id: 'b-ok',
       message: 'success-case',
@@ -233,12 +237,13 @@ describe(sendTwitchChatMessage, () => {
   })
 
   it('flags rate limiting on a 429 response', async () => {
-    state.fetchImpl = async () => ({
-      ok: false,
-      status: 429,
-      statusText: 'Too Many Requests',
-      text: async () => '',
-    })
+    state.fetchImpl = async () =>
+      await Promise.resolve({
+        ok: false,
+        status: 429,
+        statusText: 'Too Many Requests',
+        text: async () => await Promise.resolve(''),
+      })
     const res = await sendTwitchChatMessage({
       broadcaster_id: 'b-429',
       message: 'rate-case',
@@ -248,12 +253,13 @@ describe(sendTwitchChatMessage, () => {
   })
 
   it('includes the error body for a non-429 failure', async () => {
-    state.fetchImpl = async () => ({
-      ok: false,
-      status: 400,
-      statusText: 'Bad Request',
-      text: async () => 'invalid sender',
-    })
+    state.fetchImpl = async () =>
+      await Promise.resolve({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        text: async () => await Promise.resolve('invalid sender'),
+      })
     const res = await sendTwitchChatMessage({
       broadcaster_id: 'b-400',
       message: 'badreq-case',

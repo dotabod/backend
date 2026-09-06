@@ -24,7 +24,7 @@ export const findItem = function findItem({
   const inv = Object.values(data.items)
 
   const items: Item[] = inv
-    .slice(0, searchStashAlso ? 9 : 6)
+    .slice(0, searchStashAlso === true ? 9 : 6)
     .filter((item: Item) => itemNames.includes(item.name))
 
   // Doesn't have this item

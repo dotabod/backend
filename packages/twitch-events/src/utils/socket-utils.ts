@@ -1,11 +1,32 @@
 import { botStatus, fetchConduitId, logger } from '@dotabod/shared-utils'
+import type { Json } from '@dotabod/shared-utils'
 import { Server } from 'socket.io'
 import type { Socket } from 'socket.io'
+import { z } from 'zod'
 
 import { handleNewUser } from '../handle-new-user'
 import { revokeEvent } from '../twitch/lib/revoke-event'
+import { createSocketUserActions } from './socket-user-actions'
 
-const socketIo = new Server(5015, {
+interface ClientToServerEvents {
+  enable: (providerAccountId: string) => void
+  getConduitData: (options?: Json) => void
+  getVersion: (acknowledge: (commitHash: string | null) => void) => void
+  grant: (providerAccountId: string) => void
+  resubscribe: (providerAccountId: string) => void
+  revoke: (providerAccountId: string) => void
+}
+
+interface ServerToClientEvents {
+  conduitData: (payload: { conduitId: string }) => void
+  conduitError: (payload: { error: string }) => void
+}
+
+type EventSocket = Socket<ClientToServerEvents, ServerToClientEvents>
+
+const conduitOptionsSchema = z.object({ forceRefresh: z.boolean().optional() })
+
+const socketIo = new Server<ClientToServerEvents, ServerToClientEvents>(5015, {
   cors: {
     methods: ['GET', 'POST'],
     // This allows any origin - adjust for production,
@@ -15,15 +36,21 @@ const socketIo = new Server(5015, {
 
 // the socketio hooks onto the listener http server that it creates
 const DOTABOD_EVENTS_ROOM = 'twitch-channel-events'
-export let eventsIOConnected = false
 const connectedClients = new Set<string>()
 
-const sendConduitData = async function sendConduitData(socket: Socket, forceRefresh = false) {
+export const isEventsIOConnected = function isEventsIOConnected(): boolean {
+  return connectedClients.size > 0
+}
+
+const sendConduitData = async function sendConduitData(
+  socket: EventSocket,
+  forceRefresh: boolean
+): Promise<void> {
   try {
     logger.info('[TWITCHEVENTS] Getting conduit data', { forceRefresh })
     const conduitId = await fetchConduitId(forceRefresh)
 
-    if (!conduitId) {
+    if (conduitId === null || conduitId.length === 0) {
       logger.error('[TWITCHEVENTS] Failed to fetch conduit ID')
       socket.emit('conduitError', { error: 'Failed to fetch conduit ID' })
       return
@@ -43,44 +70,23 @@ const sendConduitData = async function sendConduitData(socket: Socket, forceRefr
   }
 }
 
-// handleNewUser throws on critical-sub failure; without a .catch the
-// rejection becomes an unhandledRejection (twitch-events has no process-level
-// handler) and Node 24 crashes the single-replica service. Extracted from
-// the inline socket handler so it can be regression-tested directly.
-export const onSocketEnable = function onSocketEnable(providerAccountId: string): void {
-  logger.info('[TWITCHEVENTS] Enabling events for user', { providerAccountId })
-  handleNewUser(providerAccountId, true).catch((error) => {
-    logger.error('[TWITCHEVENTS] socket enable handleNewUser failed', {
-      error: error instanceof Error ? error.message : String(error),
-      providerAccountId,
-    })
-  })
-}
+export const { onSocketEnable, onSocketResubscribe } = createSocketUserActions({
+  handleNewUser,
+  logger,
+})
 
-export const onSocketResubscribe = function onSocketResubscribe(providerAccountId: string): void {
-  logger.info('[TWITCHEVENTS] Resubscribing to events for user', { providerAccountId })
-  handleNewUser(providerAccountId, true).catch((error) => {
-    logger.error('[TWITCHEVENTS] socket resubscribe handleNewUser failed', {
-      error: error instanceof Error ? error.message : String(error),
-      providerAccountId,
-    })
-  })
-}
-
-export const setupSocketIO = () => {
-  socketIo.on('connection', async (socket) => {
+const registerSocket = async function registerSocket(socket: EventSocket): Promise<void> {
+  try {
     logger.info('[TWITCHEVENTS] Joining socket to room')
     await socket.join(DOTABOD_EVENTS_ROOM)
 
     // Track liveness by connected-client count so a reconnecting client's old
     // socket disconnecting can't strand the flag false while a new one is live.
     connectedClients.add(socket.id)
-    eventsIOConnected = true
     logger.info('[TWITCHEVENTS] client connected', { clients: connectedClients.size })
 
     socket.on('disconnect', () => {
       connectedClients.delete(socket.id)
-      eventsIOConnected = connectedClients.size > 0
       logger.info('[TWITCHEVENTS] Socket disconnected', { clients: connectedClients.size })
     })
 
@@ -89,8 +95,12 @@ export const setupSocketIO = () => {
     })
 
     // Handle conduit data requests from twitch-chat
-    socket.on('getConduitData', (options = { forceRefresh: false }) => {
-      void sendConduitData(socket, options.forceRefresh)
+    socket.on('getConduitData', (options) => {
+      const parsedOptions = conduitOptionsSchema.safeParse(options)
+      const forceRefresh = parsedOptions.success
+        ? (parsedOptions.data.forceRefresh ?? false)
+        : false
+      void sendConduitData(socket, forceRefresh)
     })
 
     socket.on('grant', (providerAccountId: string) => {
@@ -102,15 +112,23 @@ export const setupSocketIO = () => {
     })
 
     socket.on('revoke', (providerAccountId: string) => {
-      void revokeEvent({ providerAccountId })
+      revokeEvent({ providerAccountId })
     })
 
     socket.on('enable', (providerAccountId: string) => {
-      onSocketEnable(providerAccountId)
+      void onSocketEnable(providerAccountId)
     })
 
     socket.on('resubscribe', (providerAccountId: string) => {
-      onSocketResubscribe(providerAccountId)
+      void onSocketResubscribe(providerAccountId)
     })
+  } catch (error) {
+    logger.error('[TWITCHEVENTS] Failed to register socket', { error })
+  }
+}
+
+export const setupSocketIO = function setupSocketIO(): void {
+  socketIo.on('connection', (socket) => {
+    void registerSocket(socket)
   })
 }

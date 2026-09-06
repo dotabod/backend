@@ -1,9 +1,8 @@
-import { logger, supabase } from '@dotabod/shared-utils'
+import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
 import { getRawSettingValue, getValueOrDefault } from '../../settings'
 import type { SettingKeys } from '../../settings'
-import MongoDBSingleton from '../../steam/mongo-db-singleton'
 import type { SocketClient } from '../../types'
 import type { SubscriptionRow } from '../../types/subscription'
 import { canAccessFeature } from '../../utils/subscription'
@@ -41,12 +40,92 @@ export interface CommandOptions {
 
 const defaultCooldown = 15_000
 
+const parseMessage = function parseMessage(message: MessageType): string[] {
+  const match = /^!(?<command>\w+=?)\s*(?<arguments>.*)/u.exec(
+    message.content.replaceAll('\uDB40\uDC00', '')
+  )
+  const command = match?.groups?.command
+  const argumentText = match?.groups?.arguments
+  if (command === undefined || argumentText === undefined) {
+    return []
+  }
+
+  const args = argumentText.match(/\S+|"[^"]+"/gu)
+  if (args === null) {
+    return [command.toLowerCase().trim()]
+  }
+  for (const [index, argument] of args.entries()) {
+    if (argument.startsWith('"')) {
+      args[index] = argument.slice(1, -1).trim()
+    }
+  }
+  return [command.toLowerCase().trim(), ...args]
+}
+
+const isCommandEnabled = function isCommandEnabled(
+  settings: SocketClient['settings'],
+  dbkey?: SettingKeys,
+  subscription?: SubscriptionRow
+): boolean {
+  if (dbkey === undefined) {
+    return true
+  }
+  return Boolean(getValueOrDefault(dbkey, settings, subscription))
+}
+
+const isCommandEnabledRaw = function isCommandEnabledRaw(
+  settings: SocketClient['settings'],
+  dbkey?: SettingKeys
+): boolean {
+  if (dbkey === undefined) {
+    return true
+  }
+  return Boolean(getRawSettingValue(dbkey, settings))
+}
+
+interface DisabledCommandContext {
+  bypassUsers: readonly string[]
+  commandEnabledRaw: boolean
+  commandIsOnCooldown: boolean
+  commandName: string
+  message: MessageType
+  options: CommandOptions
+}
+
+const shouldBlockDisabledCommand = function shouldBlockDisabledCommand({
+  bypassUsers,
+  commandEnabledRaw,
+  commandIsOnCooldown,
+  commandName,
+  message,
+  options,
+}: DisabledCommandContext): boolean {
+  if (bypassUsers.includes(message.user.name.toLowerCase())) {
+    return false
+  }
+  if (options.dbkey !== undefined && commandEnabledRaw) {
+    const { hasAccess } = canAccessFeature(options.dbkey, message.channel.client.subscription)
+    if (!hasAccess && !commandIsOnCooldown) {
+      chatClient.say(
+        message.channel.name,
+        t('subscriptionRequired', {
+          channel: message.channel.client.name,
+          command: `!${commandName}`,
+          lng: message.channel.client.locale,
+        }),
+        message.user.messageId
+      )
+    }
+  }
+  return true
+}
+
 class CommandHandler {
   aliases = new Map<string, string>()
   // Map for storing command information
   commands = new Map<string, CommandOptions>()
   // Map for storing command cooldowns
-  cooldowns = new Map()
+  cooldowns = new Map<string, number>()
   // List of users that are allowed to bypass the cooldown
   bypassCooldownUsers: string[] = []
 
@@ -62,8 +141,11 @@ class CommandHandler {
   cleanupCooldowns = () => {
     const now = Date.now()
     for (const key of this.cooldowns.keys()) {
-      const [, command] = key.split('.')
+      const command = key.slice(key.indexOf('.') + 1)
       const cooldownTime = this.cooldowns.get(key)
+      if (cooldownTime === undefined) {
+        continue
+      }
       const timeDiff = now - cooldownTime
 
       // Get the command cooldown from options or use defaultCooldown
@@ -104,47 +186,10 @@ class CommandHandler {
     }
   }
 
-  async logCommand(commandName: string, message: MessageType) {
-    // Log statistics for this command
-    const {
-      channel: { name: channel, id: channelId },
-    } = message
-    const command = commandName.toLowerCase()
-
-    // current date in yyyy-mm-dd format
-    const date = new Date().toISOString().slice(0, 10)
-    const data = {
-      channel,
-      channelId,
-      command,
-      date,
-    }
-
-    const mongo = MongoDBSingleton
-    const db = await mongo.connect()
-
-    try {
-      await db.collection('commandstats').updateOne(
-        { channel, command, date },
-        {
-          $inc: {
-            count: 1,
-          },
-          $set: data,
-        },
-        { upsert: true }
-      )
-    } catch (error) {
-      logger.error('Error in commandstats update', { error })
-    } finally {
-      await mongo.close()
-    }
-  }
-
   // Function for handling incoming Twitch chat messages
   async handleMessage(message: MessageType) {
     // Parse the message to get the command and its arguments
-    const [command, ...args] = this.parseMessage(message)
+    const [command, ...args] = parseMessage(message)
 
     // Check if the command is registered
     if (!this.commands.has(command) && !this.aliases.has(command)) {
@@ -166,7 +211,7 @@ class CommandHandler {
     // Log statistics for this command
     // await this.logCommand(command, message)
 
-    if (options.onlyOnline && !message.channel.client.stream_online) {
+    if (options.onlyOnline === true && !message.channel.client.stream_online) {
       chatClient.say(
         message.channel.name,
         t('notLive', { emote: 'PauseChamp', lng: message.channel.client.locale }),
@@ -175,10 +220,10 @@ class CommandHandler {
       return
     }
 
-    const isCommandEnabledRaw = this.isEnabledRaw(message.channel.settings, options.dbkey)
+    const commandEnabledRaw = isCommandEnabledRaw(message.channel.settings, options.dbkey)
 
     // Check if the command is enabled (via settings and subscription)
-    const isCommandEnabled = this.isEnabled(
+    const commandEnabled = isCommandEnabled(
       message.channel.settings,
       options.dbkey,
       message.channel.client.subscription
@@ -192,34 +237,18 @@ class CommandHandler {
       message.channel.id
     )
 
-    // If the command is disabled (by settings or subscription)
-    if (!isCommandEnabled) {
-      // Bypass list users can use commands even without subscription
-      if (this.bypassCooldownUsers.includes(message.user.name.toLowerCase())) {
-        // Allow bypass users to proceed
-      } else {
-        // Check if the specific reason for being disabled is lack of subscription access.
-        // We only message the user about subscription issues if the command is *enabled* in their settings
-        // but they lack the required subscription tier.
-        if (options.dbkey && isCommandEnabledRaw) {
-          const { hasAccess } = canAccessFeature(options.dbkey, message.channel.client.subscription)
-
-          // If disabled due to subscription AND not currently on cooldown AND the user hasn't explicitly disabled it in settings
-          if (!hasAccess && !commandIsOnCooldown) {
-            chatClient.say(
-              message.channel.name,
-              t('subscriptionRequired', {
-                channel: message.channel.client.name,
-                command: `!${commandName}`,
-                lng: message.channel.client.locale,
-              }),
-              message.user.messageId
-            )
-          }
-        }
-        // Return because the command is disabled for whatever reason (settings or subscription)
-        return
-      }
+    if (
+      !commandEnabled &&
+      shouldBlockDisabledCommand({
+        bypassUsers: this.bypassCooldownUsers,
+        commandEnabledRaw,
+        commandIsOnCooldown,
+        commandName,
+        message,
+        options,
+      })
+    ) {
+      return
     }
 
     // If the command is enabled, but currently on cooldown
@@ -239,37 +268,11 @@ class CommandHandler {
 
     // Execute the command handler inside a scoped suffix context so the first
     // chatClient.say it emits can append a suggestion to the same chat line.
-    const suffix = prepareSuggestionSuffix(commandName, message)
-    await suggestionContext.run({ suffix }, () => options.handler(message, args, command))
-  }
-
-  // Function for parsing a Twitch chat message to extract the command and its arguments
-  parseMessage(message: MessageType) {
-    // Use a regular expression to match the command and its arguments
-    // `/\uDB40\uDC00/g` is unicode empty space that 7tv adds to spam a command
-    const match = /^!(\w+=?)\s*(.*)/u.exec(message.content.replaceAll('\\uDB40\\uDC00', ''))
-
-    if (!match) {
-      // Return an empty array if the message is not a command
-      return []
+    const suffix = prepareSuggestionSuffix(commandName, message, this.commands)
+    const runHandler = async () => {
+      await options.handler(message, args, command)
     }
-
-    // Split the arguments on spaces, while taking into account quoted strings
-    const args = match[2].match(/\S+|"[^"]+"/gu)
-    if (args === null) {
-      // Return the command if there are no arguments
-      return [match[1].toLowerCase().trim()]
-    }
-
-    // Strip the quotes from the quoted arguments
-    for (let i = 0; i < args.length; i += 1) {
-      if (args[i].startsWith('"')) {
-        args[i] = args[i].slice(1, -1).trim()
-      }
-    }
-
-    // Return the command and its arguments
-    return [match[1].toLowerCase().trim(), ...args]
+    await suggestionContext.run({ suffix }, runHandler)
   }
 
   // Function for checking if a command is on cooldown
@@ -286,47 +289,26 @@ class CommandHandler {
       return false
     }
 
-    // Check if the command has been used recently
-    if (!this.cooldowns.has(`${channelId}.${command}`)) {
+    const cooldownKey = `${channelId}.${command}`
+    const cooldownStartedAt = this.cooldowns.get(cooldownKey)
+    if (cooldownStartedAt === undefined) {
       // Set the initial cooldown time
-      this.cooldowns.set(`${channelId}.${command}`, Date.now())
+      this.cooldowns.set(cooldownKey, Date.now())
       // The command is not on cooldown if it has not been used before
       return false
     }
 
     // Check if the command cooldown has expired
-    const timeDiff = Date.now() - this.cooldowns.get(`${channelId}.${command}`)
+    const timeDiff = Date.now() - cooldownStartedAt
     if (timeDiff >= cooldown) {
       // Update the cooldown time
-      this.cooldowns.set(`${channelId}.${command}`, Date.now())
+      this.cooldowns.set(cooldownKey, Date.now())
       // The command is not on cooldown if its cooldown has expired
       return false
     }
 
     // The command is on cooldown if none of the above conditions are met
     return true
-  }
-
-  isEnabled(
-    settings: SocketClient['settings'],
-    dbkey?: SettingKeys,
-    subscription?: SubscriptionRow
-  ) {
-    // Default enabled if no dbkey is provided
-    if (!dbkey) {
-      return true
-    }
-
-    return !!getValueOrDefault(dbkey, settings, subscription)
-  }
-
-  isEnabledRaw(settings: SocketClient['settings'], dbkey?: SettingKeys) {
-    // Default enabled if no dbkey is provided
-    if (!dbkey) {
-      return true
-    }
-
-    return !!getRawSettingValue(dbkey, settings)
   }
 
   // Function for updating the cooldown time for a command

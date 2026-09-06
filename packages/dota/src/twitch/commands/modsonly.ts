@@ -11,10 +11,11 @@ commandHandler.registerCommand('modsonly', {
   aliases: ['modsonlyoff', 'modsonlyon'],
   cooldown: 0,
   dbkey: DBSettings.commandModsonly,
-  handler: async (message: MessageType, _args: string[]) => {
+  handler: async (message: MessageType) => {
     const {
       channel: { name: channel, id: channelId, client },
     } = message
+    const botProviderId = process.env.TWITCH_BOT_PROVIDERID ?? ''
     if (modMode.has(channelId)) {
       modMode.delete(channelId)
       chatClient.say(
@@ -23,8 +24,8 @@ commandHandler.registerCommand('modsonly', {
         message.user.messageId
       )
       if (!(await checkBotStatus())) {
-        const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID)
-        await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {
+        const api = await getTwitchAPI(botProviderId)
+        await api.asUser(botProviderId, async (ctx) => {
           await ctx.chat.updateSettings(channelId, {
             emoteOnlyModeEnabled: false,
             subscriberOnlyModeEnabled: false,
@@ -37,8 +38,8 @@ commandHandler.registerCommand('modsonly', {
     // Delete all messages that are not from a mod
     modMode.add(channelId)
     if (!(await checkBotStatus())) {
-      const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID)
-      await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {
+      const api = await getTwitchAPI(botProviderId)
+      await api.asUser(botProviderId, async (ctx) => {
         await ctx.chat.updateSettings(channelId, {
           emoteOnlyModeEnabled: true,
           subscriberOnlyModeEnabled: true,

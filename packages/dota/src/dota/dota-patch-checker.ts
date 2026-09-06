@@ -13,15 +13,22 @@ let lastCheckTimestamp = 0
 // API endpoints for Dota 2 patch notes
 const DOTA_PATCH_LIST_URL = 'https://www.dota2.com/datafeed/patchnoteslist?language=english'
 
+interface DotaPatchListResponse {
+  patches: {
+    patch_name: string
+    patch_timestamp: number
+  }[]
+}
+
 const checkForNewDotaPatch = async function checkForNewDotaPatch(): Promise<{
   isNewPatch: boolean
   version: string | null
 }> {
   try {
     // Get the list of patches
-    const response = await axios.get(DOTA_PATCH_LIST_URL)
+    const response = await axios.get<DotaPatchListResponse>(DOTA_PATCH_LIST_URL)
 
-    if (!response.data?.patches?.length) {
+    if (response.data.patches.length === 0) {
       logger.warn('[DotaPatchChecker] No patch data found in API response')
       return { isNewPatch: false, version: null }
     }
@@ -29,6 +36,9 @@ const checkForNewDotaPatch = async function checkForNewDotaPatch(): Promise<{
     // Get the latest patch from the sorted list (patches are sorted with oldest first, newest last)
     const { patches } = response.data
     const latestPatch = patches.at(-1)
+    if (latestPatch === undefined) {
+      return { isNewPatch: false, version: null }
+    }
     const currentVersion = latestPatch.patch_name
     const currentTimestamp = latestPatch.patch_timestamp
 
@@ -73,7 +83,7 @@ const checkForNewDotaPatch = async function checkForNewDotaPatch(): Promise<{
 const notifyClientsAboutNewPatch = function notifyClientsAboutNewPatch(version: string): void {
   // Iterate through all connected clients
   for (const [_token, handler] of gsiHandlers.entries()) {
-    if (handler && !handler.disabled && handler.client.stream_online) {
+    if (!handler.disabled && handler.client.stream_online) {
       say(
         handler.client,
         t('dotapatch.newPatch', {
@@ -104,7 +114,7 @@ export const initDotaPatchChecker = function initDotaPatchChecker(checkIntervalM
     try {
       const { isNewPatch, version } = await checkForNewDotaPatch()
 
-      if (isNewPatch && version) {
+      if (isNewPatch && version !== null && version.length > 0) {
         // Notify all connected clients about the new patch
         notifyClientsAboutNewPatch(version)
       }

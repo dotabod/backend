@@ -9,6 +9,14 @@ import axios from 'axios'
 
 const API_URL = 'http://localhost:3000'
 
+interface CheckResponse {
+  details: {
+    isFlagged: boolean
+    language?: string
+    matches?: string[]
+  }
+}
+
 // Test cases to check
 const testCases = [
   { description: 'Normal text', text: 'Hello world, this is a normal text.' },
@@ -57,7 +65,7 @@ const testAPI = async function testAPI() {
   // console.log('Testing /check endpoint:')
   for (const testCase of testCases) {
     try {
-      const response = await axios.post(`${API_URL}/check`, {
+      const response = await axios.post<CheckResponse>(`${API_URL}/check`, {
         text: testCase.text,
       })
 
@@ -65,10 +73,16 @@ const testAPI = async function testAPI() {
       // console.log(`Contains profanity: ${response.data.containsProfanity}`)
       if (response.data.details.isFlagged) {
         // console.log(`Source: ${response.data.details.source}`)
-        if (response.data.details.language) {
+        if (
+          response.data.details.language !== undefined &&
+          response.data.details.language.length > 0
+        ) {
           // console.log(`Language: ${response.data.details.language}`)
         }
-        if (response.data.details.matches) {
+        if (
+          response.data.details.matches !== undefined &&
+          response.data.details.matches.length > 0
+        ) {
           // console.log(`Matches: ${response.data.details.matches.join(', ')}`)
         }
       }

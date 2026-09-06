@@ -3,7 +3,11 @@
 // exist before it can follow), so the 0-10 day "alt" window almost never fired.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/shared-mocks'
+import {
+  buildSharedUtilsMock,
+  createSocketClientStub,
+  initTestI18n,
+} from '../../__tests__/shared-mocks'
 
 const state: {
   creationDate: Date
@@ -16,18 +20,20 @@ const state: {
 }
 
 const reinstallMocks = function reinstallMocks() {
-  vi.doMock(import('@dotabod/shared-utils'), () =>
+  vi.doMock('@dotabod/shared-utils', () =>
     buildSharedUtilsMock({
-      getTwitchAPI: async () => ({
-        channels: {
-          getChannelFollowers: async () => ({
-            data: state.followDate ? [{ followDate: state.followDate }] : [],
-          }),
-        },
-        users: {
-          getUserByName: async () => ({ creationDate: state.creationDate }),
-        },
-      }),
+      getTwitchAPI: async () =>
+        await Promise.resolve({
+          channels: {
+            getChannelFollowers: async () =>
+              await Promise.resolve({
+                data: state.followDate ? [{ followDate: state.followDate }] : [],
+              }),
+          },
+          users: {
+            getUserByName: async () => await Promise.resolve({ creationDate: state.creationDate }),
+          },
+        }),
       logger: {
         debug: () => {},
         error: () => {},
@@ -54,7 +60,7 @@ await initTestI18n()
 
 const { checkAltAccount } = await import('../check-alt-account')
 
-const client = { locale: 'en' } as any
+const client = createSocketClientStub({ locale: 'en' })
 const DAYS = 24 * 60 * 60 * 1000
 
 beforeEach(() => {

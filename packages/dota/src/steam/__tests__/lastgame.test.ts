@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/shared-mocks.ts'
+import {
+  buildSharedUtilsMock,
+  createSocketClientStub,
+  initTestI18n,
+} from '../../__tests__/shared-mocks.ts'
 
 const noopLogger = {
   debug: () => {},
@@ -14,29 +18,39 @@ const noopLogger = {
 let supabaseMatchRow: { matchId: number } | null = null
 let delayedGamesRows: { match: { match_id: string } }[] = []
 
-const supabaseChain: any = {
+const createDelayedGamesCursor = function createDelayedGamesCursor() {
+  const cursor = {
+    limit: () => cursor,
+    sort: () => cursor,
+    toArray: async () => await Promise.resolve(delayedGamesRows),
+  }
+  return cursor
+}
+
+const supabaseChain: unknown = {
   eq: () => supabaseChain,
   from: () => supabaseChain,
   limit: () => supabaseChain,
   not: () => supabaseChain,
   order: () => supabaseChain,
   select: () => supabaseChain,
-  single: async () => ({ data: supabaseMatchRow }),
+  single: async () => await Promise.resolve({ data: supabaseMatchRow }),
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () =>
+vi.doMock('@dotabod/shared-utils', () =>
   buildSharedUtilsMock({ logger: noopLogger, supabase: supabaseChain })
 )
 
-vi.doMock(import('../mongo-db-singleton'), () => ({
+vi.doMock('../mongo-db-singleton', () => ({
   default: {
-    close: async () => {},
-    connect: async () => ({
-      collection: () => ({
-        find: () => ({ toArray: async () => delayedGamesRows }),
-        findOne: async () => null,
+    close: () => {},
+    connect: async () =>
+      await Promise.resolve({
+        collection: () => ({
+          find: createDelayedGamesCursor,
+          findOne: async () => await Promise.resolve(null),
+        }),
       }),
-    }),
   },
 }))
 
@@ -44,19 +58,19 @@ await initTestI18n()
 
 const lastgame = (await import('../lastgame.ts')).default
 
-const normalClient = {
-  SteamAccount: [{ mmr: 3000, steam32Id: 86_745_912 }],
+const normalClient = createSocketClientStub({
+  SteamAccount: [{ leaderboard_rank: null, mmr: 3000, name: null, steam32Id: 86_745_912 }],
   mmr: 3000,
   name: 'streamer',
   steam32Id: 86_745_912,
-} as any
+})
 
-const highMmrClient = {
-  SteamAccount: [{ mmr: 9000, steam32Id: 86_745_912 }],
+const highMmrClient = createSocketClientStub({
+  SteamAccount: [{ leaderboard_rank: null, mmr: 9000, name: null, steam32Id: 86_745_912 }],
   mmr: 9000,
   name: 'streamer',
   steam32Id: 86_745_912,
-} as any
+})
 
 describe('lastgame — not-playing "last game" link', () => {
   it('links match history when Supabase has a finished match', async () => {

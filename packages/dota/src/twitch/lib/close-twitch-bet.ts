@@ -28,53 +28,47 @@ export const closeTwitchBet = async function closeTwitchBet(
     }
   }
 
-  return await retryTransient(() => api.predictions.getPredictions(twitchId, { limit: 1 }), {
-    label: 'closeTwitchBet:getPredictions',
-  })
-    .then(async ({ data: predictions }) => {
-      if (!Array.isArray(predictions) || !predictions.length) {
-        logger.info('[PREDICT] Close bets - no predictions found', {
-          predictions,
-          token: twitchId,
-        })
-        return
-      }
+  try {
+    const { data: predictions } = await retryTransient(
+      async () => await api.predictions.getPredictions(twitchId, { limit: 1 }),
+      { label: 'closeTwitchBet:getPredictions' }
+    )
+    if (!Array.isArray(predictions) || predictions.length === 0) {
+      logger.info('[PREDICT] Close bets - no predictions found', {
+        predictions,
+        token: twitchId,
+      })
+      return
+    }
 
-      const [wonOutcome, lossOutcome] = predictions[0].outcomes
+    const [prediction] = predictions
+    const [wonOutcome, lossOutcome] = prediction.outcomes
+    const discardZeroBets = getValueOrDefault(DBSettings.discardZeroBets, settings, subscription)
+    if (discardZeroBets && (wonOutcome.users === 0 || lossOutcome.users === 0)) {
+      logger.info('[PREDICT] [BETS] Refunding prediction - zero predictions on one side', {
+        lossOutcomeUsers: lossOutcome.users,
+        matchId,
+        twitchId,
+        wonOutcomeUsers: wonOutcome.users,
+      })
+      await refundTwitchBet(twitchId, prediction.id)
+      return
+    }
 
-      // if (predictions[0].status !== 'LOCKED') {
-      //   logger.info('[PREDICT]','[BETS] Bet is not locked', channel)
-      //   return
-      // }
-
-      // Check if the discardZeroBets setting is enabled
-      const discardZeroBets = getValueOrDefault(DBSettings.discardZeroBets, settings, subscription)
-
-      // If enabled, check if either outcome has zero users
-      if (discardZeroBets && (wonOutcome.users === 0 || lossOutcome.users === 0)) {
-        logger.info('[PREDICT] [BETS] Refunding prediction - zero predictions on one side', {
-          lossOutcomeUsers: lossOutcome.users,
-          matchId,
-          twitchId,
-          wonOutcomeUsers: wonOutcome.users,
-        })
-        await refundTwitchBet(twitchId, predictions[0].id)
-        return
-      }
-
-      return await retryTransient(
-        () =>
-          api.predictions.resolvePrediction(
-            twitchId || '',
-            predictions[0].id,
+    try {
+      await retryTransient(
+        async () =>
+          await api.predictions.resolvePrediction(
+            twitchId,
+            prediction.id,
             won ? wonOutcome.id : lossOutcome.id
           ),
         { label: 'closeTwitchBet:resolvePrediction' }
-      ).catch((error) => {
-        logger.error('[BETS] Could not resolve prediction', { error, token: twitchId })
-      })
-    })
-    .catch((error) => {
-      logger.error('[BETS] Could not get predictions', { error, token: twitchId })
-    })
+      )
+    } catch (error) {
+      logger.error('[BETS] Could not resolve prediction', { error, token: twitchId })
+    }
+  } catch (error) {
+    logger.error('[BETS] Could not get predictions', { error, token: twitchId })
+  }
 }

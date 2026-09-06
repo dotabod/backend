@@ -1,4 +1,5 @@
 import { supabase } from '@dotabod/shared-utils'
+import { z } from 'zod'
 
 import { DBSettings, getValueOrDefault } from '../../../settings'
 import { steamSocket } from '../../../steam/ws'
@@ -19,6 +20,16 @@ import {
 } from './resolvers'
 import type { RawRoster, ResolverContext, VisionFetcher } from './resolvers'
 import type { ResolvedRoster, RosterPlayer } from './types'
+
+const cardsSchema = z.array(
+  z.object({
+    account_id: z.number(),
+    createdAt: z.coerce.date(),
+    leaderboard_rank: z.number(),
+    lifetime_games: z.number().default(0),
+    rank_tier: z.number(),
+  })
+)
 
 // One cached entry point per match for roster/Mongo/cards lookups. Dispatch is polymorphic —
 // `ResolverChain` runs each `RosterResolver` in priority order and the first to claim wins. There
@@ -55,10 +66,11 @@ import type { ResolvedRoster, RosterPlayer } from './types'
  */
 export class MatchDataService {
   private readonly chain: ResolverChain
+  private readonly client: SocketClient
   private readonly visionResolver: VisionResolver
 
   constructor(
-    private readonly client: SocketClient,
+    client: SocketClient,
     opts?: { visionFetcher?: VisionFetcher; chain?: ResolverChain }
   ) {
     // Default chain in priority order. Tests can inject a custom chain (or a custom Vision
@@ -69,12 +81,13 @@ export class MatchDataService {
     // ignored here because the class already knows its own; a unit-test stub WILL use the arg.
     // `visionResolver` is kept as its own field (not just buried in the chain) so `fetchRoster`
     // can reuse it for the name-backfill pass below without constructing a second instance.
+    this.client = client
     this.visionResolver = new VisionResolver(opts?.visionFetcher)
     this.chain =
       opts?.chain ??
       new ResolverChain([
         new GsiSpectatorResolver(),
-        new SourceTvResolver(async (_matchId) => await this.getDelayedGameDoc()),
+        new SourceTvResolver(async () => await this.getDelayedGameDoc()),
         this.visionResolver,
         new GsiSelfResolver(),
       ])
@@ -84,15 +97,15 @@ export class MatchDataService {
 
   get matchId(): string | undefined {
     const id = this.client.gsi?.map?.matchid
-    return !id || id === '0' ? undefined : id
+    return id === undefined || id.length === 0 || id === '0' ? undefined : id
   }
 
   get hasSteam32Id(): boolean {
-    return !!this.client.steam32Id
+    return this.client.steam32Id !== null && this.client.steam32Id !== 0
   }
 
   get isStreamOnline(): boolean {
-    return !!this.client.stream_online
+    return this.client.stream_online
   }
 
   get isHighMmr(): boolean {
@@ -113,7 +126,7 @@ export class MatchDataService {
 
   get hasWinTeam(): boolean {
     const wt = this.client.gsi?.map?.win_team
-    return !!wt && wt !== 'none'
+    return wt !== undefined && wt.length > 0 && wt !== 'none'
   }
 
   get autoClippingEnabled(): boolean {
@@ -131,45 +144,55 @@ export class MatchDataService {
   // --- Memoized async base primitives ---
   // Caches the resolved value for the lifetime of THIS instance. Rejections clear the slot.
 
-  private rosterPromise?: Promise<ResolvedRoster>
+  private rosterPromise: Promise<ResolvedRoster> | null = null
   async resolveRoster(): Promise<ResolvedRoster> {
     if (!this.rosterPromise) {
-      const p = this.fetchRoster()
-      this.rosterPromise = p
-      p.catch(() => {
-        if (this.rosterPromise === p) {
-          this.rosterPromise = undefined
+      const rosterPromise = this.fetchRoster()
+      this.rosterPromise = rosterPromise
+      try {
+        return await rosterPromise
+      } catch (error) {
+        if (this.rosterPromise === rosterPromise) {
+          this.rosterPromise = null
         }
-      })
+        throw error
+      }
     }
     return await this.rosterPromise
   }
 
-  private docPromise?: Promise<DelayedGames | null>
+  private docPromise: Promise<DelayedGames | null> | null = null
   async getDelayedGameDoc(): Promise<DelayedGames | null> {
     if (!this.docPromise) {
       const { matchId } = this
-      const p = matchId ? fetchDelayedGameDoc(matchId) : Promise.resolve(null)
-      this.docPromise = p
-      p.catch(() => {
-        if (this.docPromise === p) {
-          this.docPromise = undefined
+      const docPromise =
+        matchId === undefined ? Promise.resolve(null) : fetchDelayedGameDoc(matchId)
+      this.docPromise = docPromise
+      try {
+        return await docPromise
+      } catch (error) {
+        if (this.docPromise === docPromise) {
+          this.docPromise = null
         }
-      })
+        throw error
+      }
     }
     return await this.docPromise
   }
 
-  private cardsPromise?: Promise<Cards[]>
+  private cardsPromise: Promise<Cards[]> | null = null
   async getCards(): Promise<Cards[]> {
     if (!this.cardsPromise) {
-      const p = this.fetchCards()
-      this.cardsPromise = p
-      p.catch(() => {
-        if (this.cardsPromise === p) {
-          this.cardsPromise = undefined
+      const cardsPromise = this.fetchCards()
+      this.cardsPromise = cardsPromise
+      try {
+        return await cardsPromise
+      } catch (error) {
+        if (this.cardsPromise === cardsPromise) {
+          this.cardsPromise = null
         }
-      })
+        throw error
+      }
     }
     return await this.cardsPromise
   }
@@ -178,26 +201,26 @@ export class MatchDataService {
 
   async getAverageMmr(): Promise<number | null> {
     const doc = await this.getDelayedGameDoc()
-    const v = doc?.average_mmr
-    return typeof v === 'number' && Number.isFinite(v) ? v : null
+    const averageMmr = doc?.average_mmr
+    return averageMmr !== undefined && Number.isFinite(averageMmr) ? averageMmr : null
   }
 
   async getGameMode(): Promise<number | null> {
     const doc = await this.getDelayedGameDoc()
-    const v = doc?.match?.game_mode
-    return typeof v === 'number' && Number.isFinite(v) ? v : null
+    const gameMode = doc?.match?.game_mode
+    return gameMode !== undefined && Number.isFinite(gameMode) ? gameMode : null
   }
 
   async getLobbyType(): Promise<number | null> {
     const doc = await this.getDelayedGameDoc()
-    const v = doc?.match?.lobby_type
-    return typeof v === 'number' && Number.isFinite(v) ? v : null
+    const lobbyType = doc?.match?.lobby_type
+    return lobbyType !== undefined && Number.isFinite(lobbyType) ? lobbyType : null
   }
 
   async getSpectatorCount(): Promise<number | null> {
     const doc = await this.getDelayedGameDoc()
-    const v = (doc as { spectators?: unknown } | null)?.spectators
-    return typeof v === 'number' && Number.isFinite(v) ? v : null
+    const spectatorCount = doc?.spectators
+    return spectatorCount !== undefined && Number.isFinite(spectatorCount) ? spectatorCount : null
   }
 
   // --- Roster projections ---
@@ -243,7 +266,7 @@ export class MatchDataService {
   }
 
   async getSelf(): Promise<RosterPlayer | null> {
-    if (!this.client.steam32Id) {
+    if (this.client.steam32Id === null || this.client.steam32Id === 0) {
       return null
     }
     return await this.findPlayerByAccountId(this.client.steam32Id)
@@ -260,7 +283,7 @@ export class MatchDataService {
     const userIds = new Set<string>()
     const { matchId } = this
 
-    if (matchId) {
+    if (matchId !== undefined) {
       const { data } = await supabase.from('matches').select('userId').eq('matchId', matchId)
       for (const row of data ?? []) {
         if (row.userId) {
@@ -328,7 +351,6 @@ export class MatchDataService {
     if (!raw) {
       return normalize({
         gsi: this.client.gsi,
-        heroesStatus: undefined,
         matchPlayers: [],
         source: 'none',
       })
@@ -356,9 +378,9 @@ export class MatchDataService {
     }
     const hasMissingName = raw.matchPlayers.some(
       (p) =>
-        typeof p.heroid === 'number' &&
+        p.heroid !== undefined &&
         p.heroid > 0 &&
-        !(typeof p.player_name === 'string' && p.player_name.length > 0)
+        !(p.player_name !== undefined && p.player_name.length > 0)
     )
     if (!hasMissingName) {
       return raw
@@ -372,9 +394,9 @@ export class MatchDataService {
     const nameByHeroId = new Map<number, string>()
     for (const p of vision.matchPlayers) {
       if (
-        typeof p.heroid === 'number' &&
+        p.heroid !== undefined &&
         p.heroid > 0 &&
-        typeof p.player_name === 'string' &&
+        p.player_name !== undefined &&
         p.player_name.length > 0
       ) {
         nameByHeroId.set(p.heroid, p.player_name)
@@ -387,14 +409,14 @@ export class MatchDataService {
     return {
       ...raw,
       matchPlayers: raw.matchPlayers.map((p) => {
-        if (typeof p.player_name === 'string' && p.player_name.length > 0) {
+        if (p.player_name !== undefined && p.player_name.length > 0) {
           return p
         }
-        if (typeof p.heroid !== 'number' || p.heroid <= 0) {
+        if (p.heroid === undefined || p.heroid <= 0) {
           return p
         }
         const name = nameByHeroId.get(p.heroid)
-        return name ? { ...p, player_name: name } : p
+        return name === undefined || name.length === 0 ? p : { ...p, player_name: name }
       }),
     }
   }
@@ -409,19 +431,10 @@ export class MatchDataService {
     if (!accountIds.length) {
       return []
     }
-    return await new Promise<Cards[]>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('[MatchDataService] getCards socket timeout after 10s'))
-      }, 10_000)
-      steamSocket.emit('getCards', accountIds, false, (err: unknown, cards: Cards[]) => {
-        clearTimeout(timeout)
-        if (err) {
-          reject(err instanceof Error ? err : new Error(JSON.stringify(err)))
-        } else {
-          resolve(cards ?? [])
-        }
-      })
-    })
+    const response: unknown = await steamSocket
+      .timeout(10_000)
+      .emitWithAck('getCards', accountIds, false)
+    return cardsSchema.parse(response)
   }
 }
 

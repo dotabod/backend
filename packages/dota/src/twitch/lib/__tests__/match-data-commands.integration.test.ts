@@ -1,15 +1,19 @@
 import { t } from 'i18next'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { createPacketStub } from '../../../__tests__/shared-mocks.ts'
 import { LOBBY_TYPE_RANKED } from '../../../db/get-wl.ts'
 import { commandHandler, makeMessage, resetState, state } from './setup-mocks.ts'
 
 // Commands that read live match data from the (mocked) MongoDB delayedGames
 // collection via state.delayedGame.
-const liveGsi = () => ({ map: { matchid: '7777777777' } }) as any
+const liveGsi = () => createPacketStub({ map: { matchid: '7777777777' } })
 const notLive = t('notLive', { emote: 'PauseChamp', lng: 'en' })
 const notPlaying = t('notPlaying', { emote: 'PauseChamp', lng: 'en' })
-const missingMatchData = t('missingMatchData', { emote: 'PauseChamp', lng: 'en' })
+const missingMatchData = t('missingMatchData', {
+  emote: 'PauseChamp',
+  lng: 'en',
+})
 const unknownSteam = t('unknownSteam', { lng: 'en' })
 
 beforeEach(() => {
@@ -20,7 +24,10 @@ beforeEach(() => {
 describe('!spectators', () => {
   it('blocks when the stream is offline', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { stream_online: false }, content: '!spectators' })
+      makeMessage({
+        clientOverrides: { stream_online: false },
+        content: '!spectators',
+      })
     )
     expect(state.chatSayCalls[0].message).toBe(notLive)
   })
@@ -34,7 +41,10 @@ describe('!spectators', () => {
   it('reports missingMatchData when Mongo has no row for the match', async () => {
     state.delayedGame = null
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { gsi: liveGsi() }, content: '!spectators' })
+      makeMessage({
+        clientOverrides: { gsi: liveGsi() },
+        content: '!spectators',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(missingMatchData)
@@ -43,7 +53,10 @@ describe('!spectators', () => {
   it('reports the spectator count from Mongo', async () => {
     state.delayedGame = { spectators: 137 }
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { gsi: liveGsi() }, content: '!spectators' })
+      makeMessage({
+        clientOverrides: { gsi: liveGsi() },
+        content: '!spectators',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(t('spectators.count', { count: 137, lng: 'en' }))
@@ -62,7 +75,7 @@ describe('!ranked', () => {
   it('reports not-ranked for a non-match lobby id of 0', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        clientOverrides: { gsi: { map: { matchid: '0' } } as any },
+        clientOverrides: { gsi: createPacketStub({ map: { matchid: '0' } }) },
         content: '!ranked',
       })
     )

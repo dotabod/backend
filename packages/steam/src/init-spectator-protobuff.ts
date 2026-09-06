@@ -27,8 +27,8 @@ export const initSpectatorProtobuff = function initSpectatorProtobuff() {
     friend: { steam_id: number; live: boolean },
     callback: SpectateFriendGameCallback
   ) {
-    const localCallback = callback || null
-    if (!this._gcReady) {
+    const localCallback = callback
+    if (this._gcReady !== true) {
       logger.info("[STEAM] GC not ready, please listen for the 'ready' event.")
       return null
     }

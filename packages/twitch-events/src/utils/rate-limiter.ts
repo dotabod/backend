@@ -1,23 +1,20 @@
 import { getTwitchHeaders, logger } from '@dotabod/shared-utils'
+import { z } from 'zod'
 
-interface TwitchSubscription {
-  id: string
-  status: string
-  type: string
-  version: string
-}
+const twitchResponseSchema = z.object({
+  data: z.array(z.looseObject({ id: z.string() })),
+  pagination: z.object({ cursor: z.string().optional() }).optional(),
+  total: z.number(),
+})
 
-// Check and repair subscriptions for a specific user
 export const checkAndFixUserSubscriptions = async function checkAndFixUserSubscriptions(
   userId: string
-) {
+): Promise<void> {
   try {
     logger.info('Checking subscription health for user', { userId })
 
-    // Get headers for API calls
     const headers = await getTwitchHeaders()
 
-    // Fetch current subscriptions from Twitch API
     const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
     url.searchParams.append('broadcaster_user_id', userId)
 
@@ -31,20 +28,8 @@ export const checkAndFixUserSubscriptions = async function checkAndFixUserSubscr
       return
     }
 
-    interface TwitchResponse {
-      data: TwitchSubscription[]
-      total: number
-      pagination?: {
-        cursor?: string
-      }
-    }
-
-    const result = (await response.json()) as TwitchResponse
-    logger.info(`Found ${result.data.length} subscriptions for user`, { userId })
-
-    // Process and analyze subscriptions here
-    // Logic for checking and fixing subscriptions will be implemented elsewhere
-    // to avoid circular dependencies
+    const twitchResponse = twitchResponseSchema.parse(await response.json())
+    logger.info(`Found ${twitchResponse.data.length} subscriptions for user`, { userId })
   } catch (error) {
     logger.error('Error checking subscriptions', {
       error: error instanceof Error ? error.message : String(error),

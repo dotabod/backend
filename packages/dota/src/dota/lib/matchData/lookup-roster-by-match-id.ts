@@ -12,8 +12,6 @@ export const lookupRosterByMatchId = async function lookupRosterByMatchId(
   const doc = await fetchDelayedGameDoc(matchId)
   const legacy = extractPlayersFromMongoDoc(doc)
   const { players } = normalize({
-    gsi: undefined,
-    heroesStatus: undefined,
     matchPlayers: legacy,
     source: 'sourcetv',
   })

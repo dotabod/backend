@@ -5,7 +5,7 @@ import commandHandler from '../lib/command-handler'
 import type { MessageType } from '../lib/command-handler'
 
 commandHandler.registerCommand('ping', {
-  handler: (message: MessageType, _args: string[]) => {
+  handler: (message: MessageType) => {
     chatClient.say(
       message.channel.name,
       t('ping', { emote: 'EZ Clap', lng: message.channel.client.locale }),

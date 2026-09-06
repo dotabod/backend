@@ -31,7 +31,11 @@ class EventHandler {
       }
 
       // dont send events if someone is sharing a computer for another steam account
-      if (client.client.multiAccount && !options.allowMultiAccount) {
+      if (
+        client.client.multiAccount !== undefined &&
+        client.client.multiAccount !== 0 &&
+        options.allowMultiAccount !== true
+      ) {
         return
       }
 

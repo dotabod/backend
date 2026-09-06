@@ -5,7 +5,11 @@
 // Filename ends in `Mocks.ts` (not `.test.ts`) so bun's runner skips it.
 import { vi } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/shared-mocks'
+import {
+  buildSharedUtilsMock,
+  createGsiHandlerStub,
+  initTestI18n,
+} from '../../__tests__/shared-mocks'
 
 export type TableResult = { data: unknown; error: unknown } | null
 
@@ -56,7 +60,7 @@ export const resetDbState = function resetDbState() {
 
 const createTableBuilder = function createTableBuilder(table: string) {
   const result = dbState.tableResults[table] ?? { data: null, error: null }
-  const builder: any = {
+  const builder: unknown = {
     eq: () => builder,
     gte: (column: string, value: unknown) => {
       dbState.gteCalls.push({ column, table, value })
@@ -65,7 +69,7 @@ const createTableBuilder = function createTableBuilder(table: string) {
     in: () => builder,
     insert: async (values: unknown) => {
       dbState.inserts.push({ table, values })
-      return { data: null, error: null }
+      return await Promise.resolve({ data: null, error: null })
     },
     is: () => builder,
     limit: () => builder,
@@ -74,18 +78,18 @@ const createTableBuilder = function createTableBuilder(table: string) {
     not: () => builder,
     order: () => builder,
     select: () => builder,
-    single: async () => result,
+    single: async () => await Promise.resolve(result),
     then: async (onFulfilled: (value: TableResult) => unknown) =>
       await Promise.resolve(result).then(onFulfilled),
     update: (values: unknown) => ({
       eq: async (col: string, val: unknown) => {
         dbState.updates.push({ table, values, whereCol: col, whereVal: val })
-        return { data: null, error: null }
+        return await Promise.resolve({ data: null, error: null })
       },
     }),
     upsert: async (values: unknown, options?: unknown) => {
       dbState.upserts.push({ options, table, values })
-      return { data: null, error: null }
+      return await Promise.resolve({ data: null, error: null })
     },
   }
   return builder
@@ -95,7 +99,7 @@ const supabaseMock = {
   from: (table: string) => createTableBuilder(table),
   rpc: async (name: string, args: Record<string, unknown>) => {
     dbState.rpcCalls.push({ args, name })
-    return dbState.rpcResult ?? { data: [], error: null }
+    return await Promise.resolve(dbState.rpcResult ?? { data: [], error: null })
   },
 }
 
@@ -125,7 +129,7 @@ await initTestI18n()
 // pulling in real Dota wiring. Returns the minimal shape that getDBUser stores
 // in `gsiHandlers`: just enough that the cache-hit branch returns the client.
 const { setGSIHandlerConstructor } = await import('../../dota/gsi-handler-factory')
-setGSIHandlerConstructor((client) => ({ client }) as any)
+setGSIHandlerConstructor((client) => createGsiHandlerStub(client))
 
 // Re-export the module-level Maps so each test can reset them in beforeEach.
 // getDBUser mutates these singletons directly.

@@ -49,8 +49,8 @@ export default async function getDBUser({
     return { reason: 'No lookup token provided', result: null }
   }
 
-  let userId = token || null
-  if (providerAccountId) {
+  let userId = token === undefined || token.length === 0 ? null : token
+  if (providerAccountId !== undefined && providerAccountId.length > 0) {
     const { data, error } = await supabase
       .from('accounts')
       .select('userId')
@@ -78,7 +78,7 @@ export default async function getDBUser({
     }
   }
 
-  if (!userId) {
+  if (userId === null || userId.length === 0) {
     invalidTokens.add(lookupToken)
     lookingupToken.delete(lookupToken)
     return { reason: 'No userId found', result: null }
@@ -156,7 +156,7 @@ export default async function getDBUser({
   // short-circuit at the top of getDBUser without re-hitting the DB. The
   // dota watcher's UPDATE:users handler adds to invalidTokens on the
   // null→set banned_at transition so a live ban is effective immediately.
-  if (user.banned_at) {
+  if (user.banned_at !== null && user.banned_at !== undefined && user.banned_at.length > 0) {
     invalidTokens.add(lookupToken)
     lookingupToken.delete(lookupToken)
     return { reason: 'User is banned', result: null }
@@ -164,7 +164,7 @@ export default async function getDBUser({
 
   // If they require a refresh, don't cache them
   const Account = Array.isArray(user?.Account) ? user.Account[0] : user.Account
-  if (Account?.requires_refresh) {
+  if (Account?.requires_refresh === true) {
     invalidTokens.add(lookupToken)
     lookingupToken.delete(lookupToken)
     return { reason: 'Account requires refresh', result: null }
@@ -176,7 +176,7 @@ export default async function getDBUser({
     return { reason: 'Client found by user.id', result: client }
   }
 
-  if (!Account) {
+  if (Account === null || Account === undefined) {
     logger.info('Invalid token missing Account??', { token: lookupToken })
     invalidTokens.add(lookupToken)
     lookingupToken.delete(lookupToken)
@@ -196,24 +196,31 @@ export default async function getDBUser({
     ...user,
     Account: {
       ...Account,
-      obtainment_timestamp: Account.obtainment_timestamp
-        ? new Date(Account.obtainment_timestamp)
-        : null,
+      obtainment_timestamp:
+        Account.obtainment_timestamp === null ||
+        Account.obtainment_timestamp === undefined ||
+        Account.obtainment_timestamp === ''
+          ? null
+          : new Date(Account.obtainment_timestamp),
       requires_refresh: Account.requires_refresh ?? false,
     },
     mmr: user.mmr || user.SteamAccount[0]?.mmr || 0,
-    steam32Id: user.steam32Id || user.SteamAccount[0]?.steam32Id || 0,
-    stream_start_date: user.stream_start_date ? new Date(user.stream_start_date) : null,
+    steam32Id:
+      user.steam32Id === null || user.steam32Id === undefined || user.steam32Id === 0
+        ? (user.SteamAccount[0]?.steam32Id ?? 0)
+        : user.steam32Id,
+    stream_start_date:
+      user.stream_start_date === null ||
+      user.stream_start_date === undefined ||
+      user.stream_start_date.length === 0
+        ? null
+        : new Date(user.stream_start_date),
     subscription,
     token: user.id,
   }
 
-  const gsiHandler = gsiHandlers.get(userInfo.id) || createGSIHandler(userInfo)
-
-  // Check if the handler is valid (not undefined/null)
-  if (gsiHandler) {
-    gsiHandlers.set(userInfo.id, gsiHandler)
-  }
+  const gsiHandler = gsiHandlers.get(userInfo.id) ?? createGSIHandler(userInfo)
+  gsiHandlers.set(userInfo.id, gsiHandler)
 
   twitchIdToToken.set(Account.providerAccountId, userInfo.id)
   twitchNameToToken.set(userInfo.name.toLowerCase(), userInfo.id)

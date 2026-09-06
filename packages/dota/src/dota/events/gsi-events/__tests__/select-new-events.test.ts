@@ -27,8 +27,8 @@ describe('selectNewEvents — basic selection', () => {
 
   it('returns [] for empty or undefined incoming', () => {
     expect(selectNewEvents([], [])).toStrictEqual([])
-    expect(selectNewEvents([])).toStrictEqual([])
-    expect(selectNewEvents([ev(1, DotaEventTypes.Tip)])).toStrictEqual([])
+    expect(selectNewEvents([], undefined)).toStrictEqual([])
+    expect(selectNewEvents([ev(1, DotaEventTypes.Tip)], undefined)).toStrictEqual([])
   })
 })
 

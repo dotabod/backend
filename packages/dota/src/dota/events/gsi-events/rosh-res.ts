@@ -46,15 +46,7 @@ export const emitRoshEvent = function emitRoshEvent(
   token: string,
   client: SocketClient
 ) {
-  if (!res?.minDate) {
-    return
-  }
   res = getNewRoshTime(res)
-
-  // Only check settings if client is provided
-  if (!client) {
-    return
-  }
 
   const tellChatRosh = getValueOrDefault(DBSettings.rosh, client.settings, client.subscription)
   if (!tellChatRosh) {

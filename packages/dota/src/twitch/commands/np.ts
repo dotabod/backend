@@ -8,9 +8,65 @@ import { DBSettings, getValueOrDefault } from '../../settings'
 import MongoDBSingleton from '../../steam/mongo-db-singleton'
 import type { NotablePlayers } from '../../steam/notableplayers'
 import { notablePlayers } from '../../steam/notableplayers'
+import type { SocketClient } from '../../types'
 import { chatClient } from '../chat-client'
 import { clippingDisabledNote } from '../lib/clipping-note'
 import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
+
+type Roster = Awaited<ReturnType<MatchDataService['resolveRoster']>>
+
+const sendNotablePlayers = async function sendNotablePlayers({
+  client,
+  enableCountries,
+  matchDataService,
+  message,
+  roster,
+  twitchChannelId,
+}: {
+  client: SocketClient
+  enableCountries: boolean
+  matchDataService: MatchDataService
+  message: MessageType
+  roster: Roster
+  twitchChannelId: string
+}): Promise<void> {
+  const { name: channel } = message.channel
+  try {
+    const result = await notablePlayers({
+      client,
+      currentMatchId: client.gsi?.map?.matchid,
+      enableFlags: enableCountries,
+      heroesStatus: roster.heroesStatus,
+      locale: client.locale,
+      players: roster.players,
+      rosterSource: roster.source,
+      steam32Id: client.steam32Id,
+      twitchChannelId,
+    })
+    let { description } = result
+    const showStreamers = getValueOrDefault(
+      DBSettings.streamersNpSuffix,
+      client.settings,
+      client.subscription
+    )
+    if (showStreamers) {
+      const count = await matchDataService.getStreamersInMatchCount({
+        excludeUserId: client.token,
+      })
+      if (count > 0) {
+        description = `${description} · ${t('streamersSuffix', { count, lng: client.locale })}`
+      }
+    }
+    chatClient.say(channel, description, message.user.messageId)
+  } catch (error) {
+    chatClient.say(
+      channel,
+      error instanceof Error ? error.message : t('gameNotFound', { lng: client.locale }),
+      message.user.messageId
+    )
+  }
+}
 
 commandHandler.registerCommand('np', {
   dbkey: DBSettings.commandNP,
@@ -21,10 +77,11 @@ commandHandler.registerCommand('np', {
       channel: { client, name: channel, id: twitchChannelId },
     } = message
 
-    if (!client.steam32Id) {
+    if (client.steam32Id === null || client.steam32Id === 0) {
       chatClient.say(
         channel,
-        message.channel.client.multiAccount
+        message.channel.client.multiAccount !== undefined &&
+          message.channel.client.multiAccount !== 0
           ? t('multiAccount', {
               lng: message.channel.client.locale,
               url: 'dotabod.com/dashboard/features',
@@ -51,6 +108,7 @@ commandHandler.registerCommand('np', {
         const db = await mongo.connect()
 
         try {
+          const moderatedName = (await moderateText(forName)) ?? 'Player'
           await db.collection<NotablePlayers>('notablePlayers').updateOne(
             { account_id: Number(forSteam32Id), channel: twitchChannelId },
             {
@@ -59,7 +117,7 @@ commandHandler.registerCommand('np', {
                 addedBy: chatterName,
                 channel: twitchChannelId,
                 createdAt: new Date(),
-                name: (await moderateText(forName)) ?? 'Player',
+                name: moderatedName,
               },
             },
             { upsert: true }
@@ -68,13 +126,12 @@ commandHandler.registerCommand('np', {
             channel,
             t('npAdded', {
               lng: message.channel.client.locale,
-              name: (await moderateText(forName)) ?? 'Player',
+              name: moderatedName,
             }),
             message.user.messageId
           )
-          return
         } finally {
-          await mongo.close()
+          mongo.close()
         }
       }
 
@@ -108,9 +165,8 @@ commandHandler.registerCommand('np', {
               message.user.messageId
             )
           }
-          return
         } finally {
-          await mongo.close()
+          mongo.close()
         }
       }
     }
@@ -136,7 +192,7 @@ commandHandler.registerCommand('np', {
       return
     }
 
-    if (client.gsi && !getCurrentRosterMatchId(client)) {
+    if (client.gsi !== undefined && getCurrentRosterMatchId(client) === undefined) {
       chatClient.say(
         channel,
         t(isCurrentCustomGame(client) ? 'customGameNoRoster' : 'gameNotFound', {
@@ -161,40 +217,13 @@ commandHandler.registerCommand('np', {
       client.settings,
       client.subscription
     )
-    notablePlayers({
+    await sendNotablePlayers({
       client,
-      currentMatchId: client.gsi?.map?.matchid,
-      enableFlags: enableCountries,
-      heroesStatus: roster.heroesStatus,
-      locale: client.locale,
-      players: roster.players,
-      rosterSource: roster.source,
-      steam32Id: client.steam32Id,
+      enableCountries,
+      matchDataService: mds,
+      message,
+      roster,
       twitchChannelId,
     })
-      .then(async (desc) => {
-        let { description } = desc
-        const showStreamers = getValueOrDefault(
-          DBSettings.streamersNpSuffix,
-          client.settings,
-          client.subscription
-        )
-        if (showStreamers) {
-          // Same `mds` instance memoizes the roster across resolveRoster + getStreamersInMatchCount,
-          // so this doesn't pay a second Mongo round-trip.
-          const count = await mds.getStreamersInMatchCount({ excludeUserId: client.token })
-          if (count > 0) {
-            description = `${description} · ${t('streamersSuffix', { count, lng: client.locale })}`
-          }
-        }
-        chatClient.say(channel, description, message.user.messageId)
-      })
-      .catch((error) => {
-        chatClient.say(
-          channel,
-          error?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-          message.user.messageId
-        )
-      })
   },
 })

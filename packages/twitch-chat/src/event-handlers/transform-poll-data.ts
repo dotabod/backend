@@ -22,7 +22,7 @@ export const transformPollData = (data: PollEvent) => {
       title: choice.title,
       totalVotes: choice.votes ?? 0,
     })),
-    endDate: endDateStr ? new Date(endDateStr) : '',
+    endDate: endDateStr !== undefined && endDateStr.length > 0 ? new Date(endDateStr) : '',
     title: data.title,
   }
 }

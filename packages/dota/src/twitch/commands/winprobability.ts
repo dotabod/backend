@@ -7,13 +7,13 @@ import commandHandler from '../lib/command-handler'
 commandHandler.registerCommand('winprobability', {
   aliases: ['win%', 'wp'],
   dbkey: DBSettings.commandWinProbability,
-  handler: async (message) => {
+  handler: (message) => {
     const {
       channel: { name: channel, client },
     } = message
 
     const matchId = client.gsi?.map?.matchid
-    if (!matchId) {
+    if (matchId === undefined || matchId.length === 0) {
       chatClient.say(
         channel,
         t('gameNotFound', { lng: message.channel.client.locale }),

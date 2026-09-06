@@ -12,13 +12,16 @@ export type DocFetcher = (matchId: string) => Promise<DelayedGames | null>
 // `Players` array. Returns null when no doc is present so the chain falls through to Vision /
 // GSI-self.
 export class SourceTvResolver extends RosterResolver {
+  private readonly fetchDoc: DocFetcher
   readonly name = 'sourcetv' as const
-  constructor(private readonly fetchDoc: DocFetcher) {
+
+  constructor(fetchDoc: DocFetcher) {
     super()
+    this.fetchDoc = fetchDoc
   }
 
   async resolve({ matchId }: ResolverContext): Promise<RawRoster | null> {
-    if (!matchId) {
+    if (matchId === undefined || matchId.length === 0) {
       return null
     }
     const doc = await this.fetchDoc(matchId)

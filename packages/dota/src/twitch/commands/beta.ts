@@ -8,7 +8,7 @@ import type { MessageType } from '../lib/command-handler'
 commandHandler.registerCommand('beta', {
   aliases: ['joinbeta', 'leavebeta', 'betaoff', 'betaon'],
   cooldown: 0,
-  handler: (message: MessageType, _args: string[]) => {
+  handler: (message: MessageType) => {
     const handler = async function handler() {
       await supabase
         .from('users')

@@ -87,18 +87,18 @@ export const updateMmr = async function updateMmr({
   token,
 }: UpdateMmrParams) {
   // uncalibrated (0) mmr do not deserve an update
-  if (!currentMmr && !force) {
+  if ((currentMmr === 0 || Number.isNaN(currentMmr)) && !force) {
     return
   }
 
   let mmr = Number(newMmr)
-  if (!newMmr || !mmr || mmr > 20_000 || mmr < 0) {
+  if (newMmr === '' || newMmr === 0 || mmr === 0 || Number.isNaN(mmr) || mmr > 20_000 || mmr < 0) {
     logger.info('Invalid mmr, forcing to 0', { channel, mmr })
     mmr = 0
   }
 
-  if (!steam32Id) {
-    if (!token) {
+  if (steam32Id === null || steam32Id === undefined || steam32Id === 0) {
+    if (token === null || token === undefined || token.length === 0) {
       logger.info('[UPDATE MMR] No token id provided, will not update user table', { channel })
       return
     }
@@ -150,7 +150,7 @@ export const updateMmr = async function updateMmr({
     .select('userId')
 
   const foundToken = data.data?.[0]?.userId
-  if (!foundToken) {
+  if (foundToken === undefined || foundToken.length === 0) {
     logger.info('[UPDATE MMR] No token found, will not update user table', { channel })
     return
   }

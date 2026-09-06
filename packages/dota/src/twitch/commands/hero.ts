@@ -10,6 +10,62 @@ import commandHandler from '../lib/command-handler'
 import type { MessageType } from '../lib/command-handler'
 import { findAccountFromCmd } from '../lib/find-gsi-by-account-id'
 
+const handleNotPlaying = function handleNotPlaying(message: MessageType): void {
+  chatClient.say(
+    message.channel.name,
+    t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
+    message.user.messageId
+  )
+}
+
+const speakHeroStats = function speakHeroStats({
+  heroNameOrColor,
+  hasHero,
+  win,
+  lose,
+  channel,
+  lng,
+  message,
+}: {
+  hasHero: boolean
+  heroNameOrColor?: string
+  lng: string
+  lose: number
+  channel: string
+  win: number
+  message: MessageType
+}): void {
+  const total = (win || 0) + (lose || 0)
+  const timeperiod = t('herostats.timeperiod.days', { count: 30, lng })
+
+  if (!total) {
+    chatClient.say(
+      channel,
+      t(hasHero ? 'herostats.noneStreamer' : 'herostats.noneColor', {
+        color: heroNameOrColor,
+        heroName: heroNameOrColor,
+        lng,
+        timeperiod,
+      }),
+      message.user.messageId
+    )
+    return
+  }
+
+  chatClient.say(
+    channel,
+    t(hasHero ? 'herostats.winrateStreamer' : 'herostats.winrateColor', {
+      color: heroNameOrColor,
+      count: total,
+      heroName: heroNameOrColor,
+      lng,
+      timeperiod,
+      winrate: Math.round(((win || 0) / total) * 100),
+    }),
+    message.user.messageId
+  )
+}
+
 commandHandler.registerCommand('hero', {
   dbkey: DBSettings.commandHero,
   handler: async (message, args, command) => {
@@ -50,75 +106,20 @@ commandHandler.registerCommand('hero', {
       speakHeroStats({
         ...records,
         channel,
-        hasHero: !!hero?.id,
+        hasHero: hero?.id !== undefined && hero.id !== 0,
         heroNameOrColor: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
         lng: locale,
         message,
       })
-      return
     } catch (error) {
       chatClient.say(
         message.channel.name,
-        (error as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        error instanceof Error
+          ? error.message
+          : t('gameNotFound', { lng: message.channel.client.locale }),
         message.user.messageId
       )
     }
   },
   onlyOnline: true,
 })
-
-const handleNotPlaying = function handleNotPlaying(message: MessageType) {
-  chatClient.say(
-    message.channel.name,
-    t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
-    message.user.messageId
-  )
-}
-
-const speakHeroStats = function speakHeroStats({
-  heroNameOrColor,
-  hasHero,
-  win,
-  lose,
-  channel,
-  lng,
-  message,
-}: {
-  hasHero: boolean
-  heroNameOrColor?: string
-  lng: string
-  lose: number
-  channel: string
-  win: number
-  message: MessageType
-}) {
-  const total = (win || 0) + (lose || 0)
-  const timeperiod = t('herostats.timeperiod.days', { count: 30, lng })
-
-  if (!total) {
-    chatClient.say(
-      channel,
-      t(hasHero ? 'herostats.noneStreamer' : 'herostats.noneColor', {
-        color: heroNameOrColor,
-        heroName: heroNameOrColor,
-        lng,
-        timeperiod,
-      }),
-      message.user.messageId
-    )
-    return
-  }
-
-  chatClient.say(
-    channel,
-    t(hasHero ? 'herostats.winrateStreamer' : 'herostats.winrateColor', {
-      color: heroNameOrColor,
-      count: total,
-      heroName: heroNameOrColor,
-      lng,
-      timeperiod,
-      winrate: Math.round(((win || 0) / total) * 100),
-    }),
-    message.user.messageId
-  )
-}

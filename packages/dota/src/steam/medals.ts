@@ -42,7 +42,7 @@ export const gameMedals = async function gameMedals(
     matchPlayers.forEach((player, i: number) => {
       const heroName = getHeroNameOrColor(player.heroId ?? 0, i)
       const medal = medals[i]
-      if (medalsToPlayers[medal]) {
+      if (Object.hasOwn(medalsToPlayers, medal)) {
         medalsToPlayers[medal].push(heroName)
       } else {
         medalsToPlayers[medal] = [heroName]

@@ -1,64 +1,62 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
-// Regression test for the cached-rejection bug: a failed connect() used to leave
-// the rejected promise on the singleton, so every later connect() returned that
-// same rejection until process restart.
+import { MongoConnectionCache } from '../mongo-db-singleton'
 
-let connectAttempts = 0
-const fakeDb = { name: 'fake-db' }
+interface FakeDatabase {
+  name: string
+}
 
-// connect() reads MONGO_URL at call time and parses it with new URL().
-process.env.MONGO_URL = 'mongodb://localhost:27017/dotabod-test'
+const fakeDb: FakeDatabase = { name: 'fake-db' }
 
-vi.doMock(import('mongodb'), () => ({
-  MongoClient: {
-    connect: async () => {
-      connectAttempts += 1
-      if (connectAttempts === 1) {
-        throw new Error('mongo down')
-      }
-      return { db: () => fakeDb }
-    },
-  },
-}))
-
-// Drive every attempt synchronously and treat each failure as final (no real
-// backoff timers in tests).
-vi.doMock(import('retry'), () => ({
-  default: {
-    operation: () => ({
-      attempt: (cb: (currentAttempt: number) => void) => {
-        cb(1)
+describe(MongoConnectionCache, () => {
+  it('starts a fresh attempt after a rejected connection', async () => {
+    let connectAttempts = 0
+    const retryAttempts: number[] = []
+    const cache = new MongoConnectionCache<FakeDatabase>({
+      connectClient: async () => {
+        connectAttempts += 1
+        if (connectAttempts === 1) {
+          throw new Error('mongo down')
+        }
+        return await Promise.resolve({ db: () => fakeDb })
       },
-      retry: () => false,
-    }),
-  },
-}))
+      getMongoUrl: () => 'mongodb://localhost:27017/dotabod-test',
+      maxAttempts: 1,
+      onRetry: (attempt) => {
+        retryAttempts.push(attempt)
+      },
+      waitForRetry: async () => {
+        await Promise.resolve()
+      },
+    })
 
-vi.doMock(import('../utils/logger'), () => ({
-  logger: {
-    debug: () => {},
-    error: () => {},
-    info: () => {},
-    warn: () => {},
-  },
-}))
+    await expect(cache.connect()).rejects.toThrow('mongo down')
+    await expect(cache.connect()).resolves.toBe(fakeDb)
+    expect({ connectAttempts, retryAttempts }).toStrictEqual({
+      connectAttempts: 2,
+      retryAttempts: [1],
+    })
+  })
 
-const { default: mongoSingleton } = await import('../mongo-db-singleton')
+  it('reuses a successful connection', async () => {
+    let connectAttempts = 0
+    const cache = new MongoConnectionCache<FakeDatabase>({
+      connectClient: async () => {
+        connectAttempts += 1
+        return await Promise.resolve({ db: () => fakeDb })
+      },
+      getMongoUrl: () => 'mongodb://localhost:27017/dotabod-test',
+      maxAttempts: 1,
+      onRetry: () => {
+        throw new Error('Successful connection should not retry')
+      },
+      waitForRetry: async () => {
+        await Promise.resolve()
+      },
+    })
 
-describe('MongoDBSingleton.connect', () => {
-  it('starts a fresh attempt after a rejection instead of returning the cached rejection forever', async () => {
-    // First connect exhausts retries and rejects.
-    await expect(mongoSingleton.connect()).rejects.toThrow('mongo down')
+    await expect(cache.connect()).resolves.toBe(fakeDb)
+    await expect(cache.connect()).resolves.toBe(fakeDb)
     expect(connectAttempts).toBe(1)
-
-    // Second connect must create a NEW connection attempt — the bug returned
-    // the same rejected promise here, so connect was never called again.
-    await expect(mongoSingleton.connect()).resolves.toBe(fakeDb)
-    expect(connectAttempts).toBe(2)
-
-    // The resolved client is cached: further calls reuse it without reconnecting.
-    await expect(mongoSingleton.connect()).resolves.toBe(fakeDb)
-    expect(connectAttempts).toBe(2)
   })
 })

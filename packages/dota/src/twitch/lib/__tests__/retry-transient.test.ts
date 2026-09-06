@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 // retryTransient only pulls `logger` from the shared-utils barrel; stub it so
 // the test stays offline and doesn't initialise the real winston/supabase deps.
-vi.doMock(import('@dotabod/shared-utils'), () => ({
+vi.doMock('@dotabod/shared-utils', () => ({
   logger: {
     debug: () => {},
     error: () => {},
@@ -45,7 +45,7 @@ describe('isTransientNetworkError', () => {
       isTransientNetworkError(Object.assign(new Error('Bad Request'), { statusCode: 400 }))
     ).toBeFalsy()
     expect(isTransientNetworkError(new Error('channel points not enabled'))).toBeFalsy()
-    expect(isTransientNetworkError()).toBeFalsy()
+    expect(isTransientNetworkError(undefined)).toBeFalsy()
     expect(isTransientNetworkError('nope')).toBeFalsy()
   })
 })
@@ -58,7 +58,7 @@ describe('retryTransient', () => {
     const result = await retryTransient(
       async () => {
         calls += 1
-        return 'ok'
+        return await Promise.resolve('ok')
       },
       { baseDelayMs: 0 }
     )
@@ -74,7 +74,7 @@ describe('retryTransient', () => {
         if (calls < 3) {
           throw transient()
         }
-        return 'ok'
+        return await Promise.resolve('ok')
       },
       { baseDelayMs: 0, retries: 2 }
     )
@@ -88,7 +88,7 @@ describe('retryTransient', () => {
       retryTransient(
         async () => {
           calls += 1
-          throw transient()
+          return await Promise.reject(transient())
         },
         { baseDelayMs: 0, retries: 2 }
       )
@@ -103,7 +103,7 @@ describe('retryTransient', () => {
       retryTransient(
         async () => {
           calls += 1
-          throw new Error('Bad Request')
+          return await Promise.reject(new Error('Bad Request'))
         },
         { baseDelayMs: 0, retries: 5 }
       )

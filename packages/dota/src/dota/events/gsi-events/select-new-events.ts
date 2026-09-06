@@ -14,7 +14,7 @@ export const selectNewEvents = function selectNewEvents(
   seen: readonly Pick<DotaEvent, 'game_time' | 'event_type'>[],
   incoming: readonly DotaEvent[] | undefined
 ): DotaEvent[] {
-  if (!incoming?.length) {
+  if (incoming === undefined || incoming.length === 0) {
     return []
   }
   const seenSet = new Set(seen.map((e) => `${e.game_time}-${e.event_type}`))

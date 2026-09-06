@@ -11,13 +11,16 @@ import { logger } from '@dotabod/shared-utils'
 
 import { runSubscriptionHealthCheck } from '../utils/subscription-health-check'
 
-runSubscriptionHealthCheck()
-  .then((result) => {
-    process.exit(result.criticalFixCount > 0 ? 1 : 0)
-  })
-  .catch((error) => {
+const run = async function run(): Promise<void> {
+  try {
+    const result = await runSubscriptionHealthCheck()
+    process.exitCode = result.criticalFixCount > 0 ? 1 : 0
+  } catch (error) {
     logger.error('[TWITCHEVENTS] Health check failed', {
       error: error instanceof Error ? error.message : String(error),
     })
-    process.exit(1)
-  })
+    process.exitCode = 1
+  }
+}
+
+await run()

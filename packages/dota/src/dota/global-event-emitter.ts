@@ -1,113 +1,224 @@
-import { EventEmitter } from 'node:events'
+import type { Json } from '@dotabod/shared-utils'
+import type { NextFunction } from 'express'
+import { z } from 'zod'
 
-import type { NextFunction, Request, Response } from 'express'
-
+import type { DotaEvent } from '../types'
 import { gsiHandlers } from './lib/consts'
 import { isPlayingMatch } from './lib/is-playing-match'
+import type { AuthenticatedGsiPacket } from './validate-token'
 
-export const events = new EventEmitter()
-const multiAccountRecoveryPackets = new WeakSet<object>()
+export type GsiEventData = AuthenticatedGsiPacket | DotaEvent | Json
+type GsiEventListener = (data: GsiEventData, token: string) => void
+type TargetListener = (event: Event) => void
+interface GsiEventDetail {
+  data: GsiEventData
+  token: string
+}
+
+const eventDetails = new WeakMap<Event, GsiEventDetail>()
+
+class GsiEventBus {
+  private readonly target = new EventTarget()
+  private readonly listeners = new Map<string, Map<GsiEventListener, TargetListener>>()
+
+  emit(name: string, data: GsiEventData, token: string): boolean {
+    const event = new Event(name)
+    eventDetails.set(event, { data, token })
+    return this.target.dispatchEvent(event)
+  }
+
+  eventNames(): string[] {
+    return [...this.listeners.keys()]
+  }
+
+  listenerCount(name: string): number {
+    return this.listeners.get(name)?.size ?? 0
+  }
+
+  on(name: string, listener: GsiEventListener): this {
+    const registered = this.listeners.get(name) ?? new Map<GsiEventListener, TargetListener>()
+    const eventListener = (event: Event) => {
+      const detail = eventDetails.get(event)
+      if (detail !== undefined) {
+        listener(detail.data, detail.token)
+      }
+    }
+    registered.set(listener, eventListener)
+    this.listeners.set(name, registered)
+    this.target.addEventListener(name, eventListener)
+    return this
+  }
+
+  rawListeners(name: string): GsiEventListener[] {
+    return [...(this.listeners.get(name)?.keys() ?? [])]
+  }
+
+  removeAllListeners(): this {
+    for (const [name, registered] of this.listeners) {
+      for (const eventListener of registered.values()) {
+        this.target.removeEventListener(name, eventListener)
+      }
+    }
+    this.listeners.clear()
+    return this
+  }
+}
+
+export const events = new GsiEventBus()
+const multiAccountRecoveryPackets = new WeakSet<AuthenticatedGsiPacket>()
 const killListSnapshots = new WeakMap<object, { matchId: string; values: Record<string, number> }>()
+const jsonObjectSchema = z.record(z.string(), z.json())
+type JsonObject = z.infer<typeof jsonObjectSchema>
+type GsiChangeSection = 'added' | 'previously'
 
-// I dont think we need 20, but just in case. Default is 11
-events.setMaxListeners(20)
+export interface GsiEventRequest {
+  body: AuthenticatedGsiPacket
+}
+
+export interface GsiEventResponse {
+  json: (body: { status: string }) => GsiEventResponse
+  status: (code: number) => GsiEventResponse
+}
 
 // Snapshot of registered event names + every dotted prefix. Built lazily on
 // the first POST so all gsiEventLoader registrations have run. Audit confirms
 // listeners are never added or removed after startup, so the cache is permanent.
 let known: Set<string> | null = null
 
-const ensureIndex = function ensureIndex() {
-  if (known !== null) {
-    return
-  }
-  known = new Set<string>()
-  for (const n of events.eventNames() as string[]) {
-    known.add(n)
-    let acc = ''
-    for (const part of n.split(':')) {
-      acc = acc ? `${acc}:${part}` : part
-      known.add(acc)
-    }
-  }
+const parseJsonObject = function parseJsonObject(
+  value: AuthenticatedGsiPacket | Json | undefined
+): JsonObject | null {
+  const parsed = jsonObjectSchema.safeParse(value)
+  return parsed.success ? parsed.data : null
 }
 
-const emitAll = function emitAll(prefix: string, obj: Record<string, any>, token: string) {
-  Object.keys(obj).forEach((key) => {
+const ensureIndex = function ensureIndex(): Set<string> {
+  if (known === null) {
+    known = new Set<string>()
+    for (const eventName of events.eventNames()) {
+      const name = eventName
+      known.add(name)
+      let acc = ''
+      for (const part of name.split(':')) {
+        acc = acc.length > 0 ? `${acc}:${part}` : part
+        known.add(acc)
+      }
+    }
+  }
+  return known
+}
+
+const emitAll = function emitAll(
+  prefix: string,
+  obj: JsonObject,
+  token: string,
+  knownEvents: ReadonlySet<string>
+) {
+  for (const key of Object.keys(obj)) {
     const name = prefix + key
-    if (known!.has(name)) {
+    if (knownEvents.has(name)) {
       events.emit(name, obj[key], token)
     }
-  })
+  }
 }
 
 const projectChangedValues = function projectChangedValues(
-  changed: Record<string, any>,
-  body: Record<string, any>
-): Record<string, any> {
-  return Object.fromEntries(
-    Object.keys(changed)
-      .filter((key) => body[key] != null)
-      .map((key) => [key, body[key]])
-  )
+  changed: JsonObject,
+  body: JsonObject
+): JsonObject {
+  const projected: JsonObject = {}
+  for (const key of Object.keys(changed)) {
+    const value = body[key]
+    if (value !== null && value !== undefined) {
+      projected[key] = value
+    }
+  }
+  return projected
+}
+
+interface RecursiveEmitContext {
+  knownEvents: ReadonlySet<string>
+  token: string
+}
+
+interface NestedChange {
+  body: JsonObject
+  changed: JsonObject
+  prefix: string
+}
+
+const emitChangedEntry = function emitChangedEntry(
+  name: string,
+  changedValue: Json | undefined,
+  bodyValue: Json | undefined,
+  context: RecursiveEmitContext
+): NestedChange | null {
+  const changedObject = parseJsonObject(changedValue)
+  const bodyObject = parseJsonObject(bodyValue)
+  if (changedObject !== null && bodyObject !== null) {
+    if (events.listenerCount(name) > 0) {
+      events.emit(name, projectChangedValues(changedObject, bodyObject), context.token)
+    }
+    return { body: bodyObject, changed: changedObject, prefix: `${name}:` }
+  }
+  if (bodyValue === null || bodyValue === undefined) {
+    return null
+  }
+  if (bodyObject === null) {
+    events.emit(name, bodyValue, context.token)
+    return null
+  }
+  if (events.listenerCount(name) > 0) {
+    events.emit(name, bodyObject, context.token)
+  }
+  emitAll(`${name}:`, bodyObject, context.token, context.knownEvents)
+  return null
 }
 
 const recursiveEmit = function recursiveEmit(
   prefix: string,
-  changed: Record<string, any>,
-  body: Record<string, any>,
-  token: string
+  changed: JsonObject,
+  body: JsonObject,
+  context: RecursiveEmitContext
 ) {
-  Object.keys(changed).forEach((key) => {
+  for (const key of Object.keys(changed)) {
     const name = prefix + key
-    if (!known!.has(name)) {
-      return
-    }
-    if (typeof changed[key] === 'object') {
-      if (body[key] != null) {
-        if (events.listenerCount(name) > 0) {
-          events.emit(name, projectChangedValues(changed[key], body[key]), token)
-        }
-        recursiveEmit(`${name}:`, changed[key], body[key], token)
-      }
-    } else if (body[key] != null) {
-      if (typeof body[key] === 'object') {
-        // Edge case on added:item/ability:x where added shows true at the top
-        // level and doesn't contain each of the child keys
-        if (events.listenerCount(name) > 0) {
-          events.emit(name, body[key], token)
-        }
-        emitAll(`${name}:`, body[key], token)
-      } else {
-        events.emit(name, body[key], token)
+    if (context.knownEvents.has(name)) {
+      const nestedChange = emitChangedEntry(name, changed[key], body[key], context)
+      if (nestedChange !== null) {
+        recursiveEmit(nestedChange.prefix, nestedChange.changed, nestedChange.body, context)
       }
     }
-  })
+  }
 }
 
-export const processChanges = function processChanges(section: string) {
-  return function handle(req: Request, _res: Response, next: NextFunction) {
-    if (req.body[section]) {
-      ensureIndex()
-      const token = req.body.auth.token as string
-      recursiveEmit('', req.body[section], req.body, token)
+export const processChanges = function processChanges(section: GsiChangeSection) {
+  return function handle(req: GsiEventRequest, _res: GsiEventResponse, next: NextFunction) {
+    const changed = parseJsonObject(req.body[section])
+    const body = parseJsonObject(req.body)
+    const token = req.body.auth?.token
+    if (changed !== null && body !== null && token !== undefined && token.length > 0) {
+      recursiveEmit('', changed, body, { knownEvents: ensureIndex(), token })
     }
     next()
   }
 }
 
-const getKillListDeltaKeys = function getKillListDeltaKeys(body: Record<string, any>): Set<string> {
+const getKillListDeltaKeys = function getKillListDeltaKeys(body: AuthenticatedGsiPacket) {
   const keys = new Set<string>()
   const current = body.player?.kill_list
 
-  for (const section of ['previously', 'added']) {
-    const changed = body[section]?.player?.kill_list
-    if (changed === true && current && typeof current === 'object') {
+  for (const section of ['previously', 'added'] as const) {
+    const sectionValue = parseJsonObject(body[section])
+    const changedPlayer = parseJsonObject(sectionValue?.player)
+    const changed = changedPlayer?.kill_list
+    if (changed === true && current !== undefined) {
       for (const key of Object.keys(current)) {
         keys.add(key)
       }
-    } else if (changed && typeof changed === 'object') {
-      for (const key of Object.keys(changed)) {
+    } else {
+      const changedObject = parseJsonObject(changed)
+      for (const key of Object.keys(changedObject ?? {})) {
         keys.add(key)
       }
     }
@@ -117,20 +228,24 @@ const getKillListDeltaKeys = function getKillListDeltaKeys(body: Record<string, 
 }
 
 export const processUnmarkedKillListChanges = function processUnmarkedKillListChanges(
-  req: Request,
-  _res: Response,
+  req: GsiEventRequest,
+  _res: GsiEventResponse,
   next: NextFunction
 ): void {
-  const token = req.body?.auth?.token as string | undefined
-  const handler = token ? gsiHandlers.get(token) : undefined
-  const current = req.body?.player?.kill_list
+  const token = req.body.auth?.token
+  if (token === undefined || token.length === 0) {
+    next()
+    return
+  }
+  const handler = gsiHandlers.get(token)
+  const current = req.body.player?.kill_list
 
-  if (!handler || !isPlayingMatch(req.body) || !current || typeof current !== 'object') {
+  if (!handler || !isPlayingMatch(req.body) || current === null || current === undefined) {
     next()
     return
   }
 
-  const matchId = String(req.body?.map?.matchid ?? '')
+  const matchId = req.body.map?.matchid ?? ''
   const previous = killListSnapshots.get(handler)
   const currentValues = Object.fromEntries(
     Object.entries(current).filter(
@@ -160,14 +275,18 @@ export const processUnmarkedKillListChanges = function processUnmarkedKillListCh
 }
 
 export const recoverMultiAccount = async function recoverMultiAccount(
-  req: Request,
-  _res: Response,
+  req: GsiEventRequest,
+  _res: GsiEventResponse,
   next: NextFunction
 ): Promise<void> {
-  const token = req.body?.auth?.token as string | undefined
-  const handler = token ? gsiHandlers.get(token) : undefined
+  const token = req.body.auth?.token
+  const handler = token !== undefined && token.length > 0 ? gsiHandlers.get(token) : undefined
 
-  if (handler?.client.multiAccount) {
+  if (
+    handler !== undefined &&
+    handler.client.multiAccount !== undefined &&
+    handler.client.multiAccount !== 0
+  ) {
     await handler.updateSteam32Id()
     multiAccountRecoveryPackets.add(req.body)
   }
@@ -176,15 +295,17 @@ export const recoverMultiAccount = async function recoverMultiAccount(
 }
 
 export const consumeMultiAccountRecovery = function consumeMultiAccountRecovery(
-  packet: object
+  packet: AuthenticatedGsiPacket
 ): boolean {
   const recovered = multiAccountRecoveryPackets.has(packet)
   multiAccountRecoveryPackets.delete(packet)
   return recovered
 }
 
-export const newData = function newData(req: Request, res: Response) {
-  const token = req.body.auth.token as string
-  events.emit('newdata', req.body, token)
+export const newData = function newData(req: GsiEventRequest, res: GsiEventResponse) {
+  const token = req.body.auth?.token
+  if (token !== undefined && token.length > 0) {
+    events.emit('newdata', req.body, token)
+  }
   res.status(200).json({ status: 'ok' })
 }

@@ -110,6 +110,11 @@ const defaultChatters = {
   },
 } as const
 
+const defaultAutoCommands: string[] = []
+const defaultNullableBoolean: boolean | null = null
+const defaultNullableNumber: number | null = null
+const defaultNullableString: string | null = null
+
 export type ChatterKeys = keyof typeof defaultChatters
 export type ChatterSettingKeys = `chatters.${ChatterKeys}`
 
@@ -134,18 +139,18 @@ export const defaultSettingsStructure = {
   autoOptInNewFeatures: true,
   // New-feature toggle for cosmetic-set announcements. null = follow
   // autoOptInNewFeatures; true/false = explicit streamer choice (always wins).
-  cosmeticsAnnounce: null as boolean | null,
+  cosmeticsAnnounce: defaultNullableBoolean,
   // New-feature toggle for the "team smoked without you" FOMO roast. Same tri-state
   // as cosmeticsAnnounce: null = follow autoOptInNewFeatures; true/false = explicit choice.
-  smokeActivated: null as boolean | null,
+  smokeActivated: defaultNullableBoolean,
   customMmr: '[currentmmr] | [currentrank] | Next rank at [nextmmr] [wins]',
   'minimap-blocker': true,
   minimapRight: false,
   mmr: null,
   'mmr-tracker': true,
   // A duration and start date together define a fixed challenge window.
-  wlStatsDays: null as number | null,
-  wlStatsStartDate: null as string | null,
+  wlStatsDays: defaultNullableNumber,
+  wlStatsStartDate: defaultNullableString,
   'obs-scene-switcher': true,
   'obs-dc': '[dotabod] game disconnected',
   'obs-minimap': '[dotabod] blocking minimap',
@@ -195,13 +200,15 @@ export const defaultSettingsStructure = {
     minimumRankTier: 0,
   },
   translateOnOverlay: false,
-  autoCommandsOnMatchStart: [],
+  autoCommandsOnMatchStart: defaultAutoCommands,
   ...defaultCommands,
 } as const
 
 export type SettingKeys = keyof typeof defaultSettingsStructure
 
-export const settingsKeys = {} as Record<SettingKeys, SettingKeys>
-for (const key of Object.keys(defaultSettingsStructure) as SettingKeys[]) {
-  settingsKeys[key] = key
+function createKeyMap<const Value extends object>(value: Value): { [Key in keyof Value]: Key }
+function createKeyMap(value: object): { [key: string]: string } {
+  return Object.fromEntries(Object.keys(value).map((key) => [key, key]))
 }
+
+export const settingsKeys = createKeyMap(defaultSettingsStructure)

@@ -29,7 +29,7 @@ const { emit } = vi.hoisted(() => ({
   ),
 }))
 
-vi.mock(import('../ws.ts'), () => ({ steamSocket: { emit } }))
+vi.mock('../ws.ts', () => ({ steamSocket: { emit } }))
 
 import { getSteamPlayerSummaries } from '../player-summaries.ts'
 

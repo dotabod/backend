@@ -1,17 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { RateLimiter, resetState } from '../../__tests__/shared-mocks.ts'
 
 const makeHeaders = (h: Record<string, string>) => new Headers(h)
-const realSetTimeout = globalThis.setTimeout
 
 describe(RateLimiter, () => {
   beforeEach(() => {
     resetState()
-  })
-
-  afterEach(() => {
-    globalThis.setTimeout = realSetTimeout
   })
 
   describe('updateLimits', () => {
@@ -42,15 +37,13 @@ describe(RateLimiter, () => {
   describe('schedule', () => {
     it('resolves with the task result', async () => {
       const rl = new RateLimiter()
-      await expect(rl.schedule(async () => 42)).resolves.toBe(42)
+      await expect(rl.schedule(async () => await Promise.resolve(42))).resolves.toBe(42)
     })
 
     it('rejects when the task rejects', async () => {
       const rl = new RateLimiter()
       await expect(
-        rl.schedule(async () => {
-          throw new Error('boom')
-        })
+        rl.schedule(async () => await Promise.reject(new Error('boom')))
       ).rejects.toThrow('boom')
     })
 
@@ -58,9 +51,9 @@ describe(RateLimiter, () => {
       const rl = new RateLimiter()
       const order: number[] = []
       await Promise.all([
-        rl.schedule(async () => order.push(1)),
-        rl.schedule(async () => order.push(2)),
-        rl.schedule(async () => order.push(3)),
+        rl.schedule(async () => await Promise.resolve(order.push(1))),
+        rl.schedule(async () => await Promise.resolve(order.push(2))),
+        rl.schedule(async () => await Promise.resolve(order.push(3))),
       ])
       expect(order).toStrictEqual([1, 2, 3])
     })
@@ -74,26 +67,22 @@ describe(RateLimiter, () => {
     })
 
     it('waits for reset then refills remaining when the budget is exhausted', async () => {
-      // Fire the backoff timer immediately so the wait branch runs without real
-      // elapsed time (and without depending on wall-clock arithmetic).
-      globalThis.setTimeout = ((cb: () => void) => {
-        cb()
-        return 0 as unknown as ReturnType<typeof setTimeout>
-      }) as typeof setTimeout
-
-      const rl = new RateLimiter()
-      // remaining 0, reset well in the future -> always takes the wait branch.
+      const waitDurations: number[] = []
+      const rl = new RateLimiter(async (delayMs) => {
+        waitDurations.push(delayMs)
+        await Promise.resolve()
+      })
       rl.updateLimits(
         makeHeaders({
           'Ratelimit-Limit': '50',
           'Ratelimit-Remaining': '0',
-          'Ratelimit-Reset': String(Math.ceil((Date.now() + 60_000) / 1000)),
+          'Ratelimit-Reset': String(Math.ceil((Date.now() + 100) / 1000)),
         })
       )
 
-      const result = await rl.schedule(async () => 'done')
+      const result = await rl.schedule(async () => await Promise.resolve('done'))
       expect(result).toBe('done')
-      // After refill (50) and one task running, remaining is 49.
+      expect(waitDurations).toHaveLength(1)
       expect(rl.rateLimitStatus.remaining).toBe(49)
     })
 

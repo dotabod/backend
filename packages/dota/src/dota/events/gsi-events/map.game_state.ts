@@ -70,7 +70,7 @@ eventHandler.registerEvent('map:game_state', {
     }
 
     const accountId = dotaClient.client.Account?.providerAccountId
-    if (!accountId) {
+    if (accountId === undefined || accountId.length === 0) {
       logger.error('[Draft Clip] No account ID found', {
         ...logContext,
         client: dotaClient.client.Account,
@@ -80,7 +80,7 @@ eventHandler.registerEvent('map:game_state', {
 
     // Create a clip when the draft starts to get a list of players
     if (gameState === 'DOTA_GAMERULES_STATE_PLAYER_DRAFT') {
-      draftStartByMatchId.set(dotaClient.client.gsi?.map?.matchid || '', true)
+      draftStartByMatchId.set(dotaClient.client.gsi?.map?.matchid ?? '', true)
       // 46 seconds
       const DRAFT_CLIP_DELAY_MS = 46_000
       const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)
@@ -134,8 +134,8 @@ eventHandler.registerEvent('map:game_state', {
     // less likely to be covered by OBS overlays than the pre-game screens, so grab
     // an extra clip once the player has loaded in.
     if (gameState === 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS') {
-      const matchId = dotaClient.client.gsi?.map?.matchid || ''
-      if (gameInProgressClipByMatchId.get(matchId)) {
+      const matchId = dotaClient.client.gsi?.map?.matchid ?? ''
+      if (gameInProgressClipByMatchId.get(matchId) === true) {
         return
       }
       gameInProgressClipByMatchId.set(matchId, true)

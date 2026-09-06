@@ -16,10 +16,14 @@ import getDBUser from './get-db-user'
 import { handleUserOnlineMessages } from './handle-scheduled-messages'
 import { handleStreamStatusTransition } from './handle-stream-status-transition'
 
+const isNonEmptyString = function isNonEmptyString(
+  value: string | null | undefined
+): value is string {
+  return value !== null && value !== undefined && value.length > 0
+}
+
 class SetupSupabase {
-  // supabase realtime `.on('postgres_changes')` overloads require RealtimePostgresChangesPayload
-  // callbacks; typing this properly cascades into every handler, so it stays loose here.
-  channel: any
+  channel: ReturnType<typeof supabase.channel>
   IS_DEV: boolean
 
   constructor() {
@@ -48,7 +52,7 @@ class SetupSupabase {
 
       const client = findUser(userId)
       const accountIds = new Set<string>()
-      if (client?.Account?.providerAccountId) {
+      if (isNonEmptyString(client?.Account?.providerAccountId)) {
         accountIds.add(client.Account.providerAccountId)
       }
       for (const [accountId, token] of twitchIdToToken) {
@@ -79,11 +83,11 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'users' },
-        async (payload: { old: Tables<'users'> }) => {
+        async (payload: { old: Partial<Tables<'users'>> }) => {
           logger.info('Removing user', payload)
 
           const oldObj = payload.old
-          const client = findUser(oldObj.id)
+          const client = findUser(oldObj.id ?? '')
           if (client) {
             logger.info('[WATCHER USER] Deleting user', { name: client.name })
             const accountId = client.Account?.providerAccountId
@@ -91,7 +95,7 @@ class SetupSupabase {
             // User row is gone — allow a future re-onboarding under the same
             // id to bypass the negative cache.
             invalidTokens.delete(client.token)
-            if (accountId) {
+            if (isNonEmptyString(accountId)) {
               invalidTokens.delete(accountId)
             }
             return
@@ -101,7 +105,7 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'subscriptions' },
-        async (payload: { new: Tables<'subscriptions'> }) => {
+        (payload: { new: Tables<'subscriptions'> }) => {
           const newObj = payload.new
           const client = findUser(newObj.userId)
 
@@ -122,7 +126,10 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'subscriptions' },
-        async (payload: { new: Tables<'subscriptions'>; old: Tables<'subscriptions'> }) => {
+        async (payload: {
+          new: Tables<'subscriptions'>
+          old: Partial<Tables<'subscriptions'>>
+        }) => {
           const newObj = payload.new
           const client = findUser(newObj.userId)
 
@@ -181,8 +188,11 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'subscriptions' },
-        async (payload: { old: Tables<'subscriptions'> }) => {
+        async (payload: { old: Partial<Tables<'subscriptions'>> }) => {
           const oldObj = payload.old
+          if (!isNonEmptyString(oldObj.userId) || !isNonEmptyString(oldObj.id)) {
+            return
+          }
           const client = findUser(oldObj.userId)
 
           if (!client) {
@@ -220,7 +230,7 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'accounts' },
-        async (payload: { new: Tables<'accounts'>; old: Tables<'accounts'> }) => {
+        async (payload: { new: Tables<'accounts'>; old: Partial<Tables<'accounts'>> }) => {
           // watch the accounts table for requires_refresh to change from true to false
           // if it does, add the user to twurple authprovider again via addUser()
           const newObj = payload.new
@@ -287,15 +297,15 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'users' },
-        async (payload: { new: Tables<'users'>; old: Tables<'users'> }) => {
+        async (payload: { new: Tables<'users'>; old: Partial<Tables<'users'>> }) => {
           const newObj: Tables<'users'> = payload.new
-          const oldObj: Tables<'users'> = payload.old
+          const oldObj = payload.old
 
           // Live ban: banned_at transitioned null → set. Invalidate cached
           // tokens for both keyspaces (user.id and providerAccountId) and
           // drop the in-memory GSIHandler so the next GSI POST hits
           // getDBUser's banned-check and is rejected.
-          if (!oldObj.banned_at && newObj.banned_at) {
+          if (!isNonEmptyString(oldObj.banned_at) && isNonEmptyString(newObj.banned_at)) {
             const client = findUser(newObj.id)
             const accountId = client?.Account?.providerAccountId
             if (client) {
@@ -306,7 +316,7 @@ class SetupSupabase {
             // cache. (Until clearCacheForUser stopped touching invalidTokens
             // these adds were silently undone.)
             invalidTokens.add(newObj.id)
-            if (accountId) {
+            if (isNonEmptyString(accountId)) {
               invalidTokens.add(accountId)
             }
             return
@@ -316,13 +326,13 @@ class SetupSupabase {
           // entries so the next GSI POST / chat message can resolve normally.
           // clearCacheForUser already ran on ban; the user just needs to be
           // allowed through again.
-          if (oldObj.banned_at && !newObj.banned_at) {
+          if (isNonEmptyString(oldObj.banned_at) && !isNonEmptyString(newObj.banned_at)) {
             invalidTokens.delete(newObj.id)
             // We may not have a live client (it was cleared on ban). Look up
             // the providerAccountId so both keyspaces are cleared.
             const client = findUser(newObj.id)
             const accountId = client?.Account?.providerAccountId
-            if (accountId) {
+            if (isNonEmptyString(accountId)) {
               invalidTokens.delete(accountId)
             }
             logger.info('[WATCHER USER] Unbanning user', { userId: newObj.id })
@@ -351,7 +361,7 @@ class SetupSupabase {
             connectedUser,
             io: server.io,
             logger,
-            oldStreamOnline: oldObj.stream_online,
+            oldStreamOnline: oldObj.stream_online ?? false,
           })
 
           if (streamStatusTransition.wentOffline) {
@@ -410,9 +420,9 @@ class SetupSupabase {
           const client = findUser(subscriptionData.userId)
 
           // Only proceed if the client is found and currently considered online
-          if (!client?.stream_online) {
+          if (client === null || client.stream_online !== true) {
             logger.info('Gift notification skipped: Client not found or not online', {
-              found: !!client,
+              found: client !== null,
               online: client?.stream_online,
               userId: subscriptionData.userId,
             })
@@ -471,10 +481,10 @@ class SetupSupabase {
             if (durationString) {
               detailsParts.push(durationString)
             }
-            if (newObj.giftMessage) {
+            if (isNonEmptyString(newObj.giftMessage)) {
               // Ensure message is trimmed and quoted
               const trimmedMessage = String(newObj.giftMessage).trim()
-              if (trimmedMessage) {
+              if (trimmedMessage.length > 0) {
                 detailsParts.push(`"${trimmedMessage}"`)
               }
             }
@@ -501,23 +511,27 @@ class SetupSupabase {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'settings' },
-        (payload: { new: Tables<'settings'> }) => {
-          const newObj: Tables<'settings'> = payload.new
+        (payload: { new: Partial<Tables<'settings'>> }) => {
+          const newObj = payload.new
+          if (!isNonEmptyString(newObj.userId) || !isNonEmptyString(newObj.key)) {
+            return
+          }
           const client = findUser(newObj.userId)
 
           if (newObj.key === DBSettings.commandDisable) {
+            const enabled = Boolean(newObj.value)
             // Notify twitch-chat package to clear disable cache when user is manually re-enabled
             if (newObj.value === false) {
               twitchChat.emit('clear-disable-cache', { userId: newObj.userId })
             }
 
             if (client) {
-              toggleDotabod(newObj.userId, !!newObj.value, client.name, client.locale)
+              toggleDotabod(newObj.userId, enabled, client.name, client.locale)
             } else {
               // in case they ban dotabod and we reboot server,
               // we'll never have the client cached, so we have to lookup the user again
               try {
-                void this.toggleHandler(newObj.userId, !!newObj.value)
+                void this.toggleHandler(newObj.userId, enabled)
               } catch (error) {
                 logger.error('Error in toggleHandler', { error })
               }
@@ -570,12 +584,12 @@ class SetupSupabase {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'steam_accounts' },
         async (payload: {
-          new: Tables<'steam_accounts'>
-          old: Tables<'steam_accounts'>
+          new: Partial<Tables<'steam_accounts'>>
+          old: Partial<Tables<'steam_accounts'>>
           eventType: string
         }) => {
-          const newObj: Tables<'steam_accounts'> = payload.new
-          const oldObj: Tables<'steam_accounts'> = payload.old
+          const newObj = payload.new
+          const oldObj = payload.old
 
           if (payload.eventType === 'DELETE') {
             logger.info('[WATCHER STEAM] Deleting steam account for', {
@@ -583,10 +597,20 @@ class SetupSupabase {
             })
 
             await this.clearSteamUsers([
-              oldObj.userId,
+              oldObj.userId ?? '',
               ...(Array.isArray(oldObj.connectedUserIds) ? oldObj.connectedUserIds : []),
             ])
 
+            return
+          }
+
+          if (
+            !isNonEmptyString(newObj.userId) ||
+            newObj.leaderboard_rank === undefined ||
+            newObj.mmr === undefined ||
+            newObj.name === undefined ||
+            newObj.steam32Id === undefined
+          ) {
             return
           }
 
@@ -602,11 +626,13 @@ class SetupSupabase {
             }
 
             if (oldObj.userId !== newObj.userId) {
-              affectedUserIds.add(oldObj.userId)
+              if (isNonEmptyString(oldObj.userId)) {
+                affectedUserIds.add(oldObj.userId)
+              }
               affectedUserIds.add(newObj.userId)
             }
 
-            if (affectedUserIds.size) {
+            if (affectedUserIds.size > 0) {
               await this.clearSteamUsers(affectedUserIds)
             }
           }

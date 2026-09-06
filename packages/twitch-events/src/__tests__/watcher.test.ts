@@ -9,29 +9,34 @@ import {
   setupAccountWatcher,
   state,
 } from './shared-mocks.ts'
+import type { TestRecord } from './shared-mocks.ts'
 
 // Fire a recorded postgres_changes handler by event+table key.
 const fire = async function fire(
   event: 'INSERT' | 'UPDATE' | 'DELETE',
   table: 'accounts' | 'users',
-  payload: { new?: Record<string, unknown>; old?: Record<string, unknown> }
-) {
+  payload: { new?: TestRecord; old?: TestRecord }
+): Promise<void> {
   const handler = state.channelHandlers.get(`${event}:${table}`)
   if (!handler) {
     throw new Error(`no handler registered for ${event}:${table}`)
   }
   await handler(payload)
+  const operation = state.watcherOperations.shift()
+  if (operation !== undefined) {
+    await operation
+  }
 }
 
-beforeEach(() => {
-  resetState()
-  clearSubscriptions()
-  fetchState.calls = []
-  fetchState.queue = []
-  setupAccountWatcher()
-})
-
 describe(setupAccountWatcher, () => {
+  beforeEach(() => {
+    resetState()
+    clearSubscriptions()
+    fetchState.calls = []
+    fetchState.queue = []
+    setupAccountWatcher()
+  })
+
   it("UPDATE:users banned_at null→set → stops the user's Twitch subscriptions", async () => {
     // Seed an active EventSub registration for this user so we can verify
     // the teardown actually ran (the no-subs path early-returns inside
@@ -50,7 +55,7 @@ describe(setupAccountWatcher, () => {
     // Each seeded sub triggers a Twitch DELETE call.
     const deleteCalls = fetchState.calls.filter((c) => c.includes('eventsub/subscriptions?id='))
     expect(deleteCalls).toHaveLength(2)
-    expect(eventSubMap['tw-banned']).toBeUndefined()
+    expect(eventSubMap.get('tw-banned')).toBeUndefined()
     // Rename path must NOT also run for this payload (no double-handling).
     expect(state.subscribeCalls).toHaveLength(0)
     expect(state.updates.some((u) => u.table === 'users')).toBeFalsy()
@@ -63,15 +68,13 @@ describe(setupAccountWatcher, () => {
       old: { banned_at: null, displayName: 'Same', id: 'u-still', name: 'same' },
     })
     // Sub map left intact.
-    expect(eventSubMap['tw-still']).toBeDefined()
+    expect(eventSubMap.get('tw-still')).toBeDefined()
   })
 
   it('registers four Realtime listeners and a subscribe callback', () => {
-    expect(state.channelHandlers.size).toBe(4)
-    expect(state.channelHandlers.has('INSERT:accounts')).toBeTruthy()
-    expect(state.channelHandlers.has('UPDATE:accounts')).toBeTruthy()
-    expect(state.channelHandlers.has('DELETE:accounts')).toBeTruthy()
-    expect(state.channelHandlers.has('UPDATE:users')).toBeTruthy()
+    expect(new Set(state.channelHandlers.keys())).toStrictEqual(
+      new Set(['DELETE:accounts', 'INSERT:accounts', 'UPDATE:accounts', 'UPDATE:users'])
+    )
     expect(state.channelSubscribeStatuses).toContain('SUBSCRIBED')
   })
 
@@ -123,7 +126,7 @@ describe(setupAccountWatcher, () => {
     // its `if (!subscriptions) return` guard. The deletion loop was never
     // exercised. Seed the map first so we actually verify the path.
     seedSubscriptions('tw-gone', ['stream.online', 'stream.offline'])
-    expect(eventSubMap['tw-gone']).toBeDefined()
+    expect(eventSubMap.get('tw-gone')).toBeDefined()
 
     await fire('DELETE', 'accounts', {
       old: { provider: 'twitch', providerAccountId: 'tw-gone' },
@@ -133,7 +136,7 @@ describe(setupAccountWatcher, () => {
     const deleteCalls = fetchState.calls.filter((c) => c.includes('eventsub/subscriptions?id='))
     expect(deleteCalls).toHaveLength(2)
     // And the user's entry should be removed from the in-memory map.
-    expect(eventSubMap['tw-gone']).toBeUndefined()
+    expect(eventSubMap.get('tw-gone')).toBeUndefined()
     expect(
       state.logError.some((l) => l.message.includes('DELETE stopUserSubscriptions'))
     ).toBeFalsy()
@@ -246,23 +249,26 @@ describe(setupAccountWatcher, () => {
 
     it('re-subscribes after a CHANNEL_ERROR status', async () => {
       vi.useFakeTimers()
-      // setupAccountWatcher in beforeEach already created the initial channel.
-      expect(state.channelCreationCount).toBe(1)
-      expect(state.channelSubscribeCallbacks).toHaveLength(1)
+      expect({
+        callbacks: state.channelSubscribeCallbacks.length,
+        channels: state.channelCreationCount,
+      }).toStrictEqual({ callbacks: 1, channels: 1 })
 
       // Simulate the WebSocket dropping.
       state.channelSubscribeCallbacks[0]('CHANNEL_ERROR', new Error('connection lost'))
 
-      // Watcher tears down the dead channel immediately.
-      expect(state.removeChannelCount).toBe(1)
-      // ...but does NOT recreate it synchronously (waits for the backoff).
-      expect(state.channelCreationCount).toBe(1)
+      expect({
+        channels: state.channelCreationCount,
+        removed: state.removeChannelCount,
+      }).toStrictEqual({ channels: 1, removed: 1 })
 
       // After the backoff delay, the watcher creates a fresh channel and
       // re-attaches all four handlers.
       await vi.advanceTimersByTimeAsync(5100)
-      expect(state.channelCreationCount).toBe(2)
-      expect(state.channelHandlers.size).toBe(4)
+      expect({
+        channels: state.channelCreationCount,
+        handlers: state.channelHandlers.size,
+      }).toStrictEqual({ channels: 2, handlers: 4 })
     })
 
     it('also reconnects on CLOSED and TIMED_OUT statuses', async () => {

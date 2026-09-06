@@ -32,7 +32,7 @@ export const updateUserEvent = function updateUserEvent({
       if (event.user_name) {
         filteredData.displayName = event.user_name
       }
-      if (event.email) {
+      if (event.email !== undefined && event.email.length > 0) {
         filteredData.email = event.email
       }
 
@@ -43,7 +43,7 @@ export const updateUserEvent = function updateUserEvent({
         .eq('provider', 'twitch')
         .single()
 
-      if (!user?.userId) {
+      if (user?.userId === undefined || user.userId.length === 0) {
         logger.info('[TWITCHEVENTS] user not found', { twitchId: event.user_id })
         return
       }

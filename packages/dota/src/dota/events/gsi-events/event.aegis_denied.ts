@@ -29,14 +29,18 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisDenied}`, {
     // positively matched the player by `slot` in the roster — indexing by
     // raw event.player_id is unreliable in reshuffled high-immortal games.
     const heroName = high
-      ? foundIndex !== -1 && heroId
+      ? foundIndex !== -1 &&
+        heroId !== null &&
+        heroId !== undefined &&
+        heroId !== 0 &&
+        !Number.isNaN(heroId)
         ? getHeroNameOrColor(heroId, playerIdIndex)
         : null
       : getHeroNameOrColor(heroId ?? 0, playerIdIndex)
 
     say(
       dotaClient.client,
-      heroName
+      heroName !== null && heroName.length > 0
         ? t('aegis.denied', {
             emote: 'ICANT',
             heroName,

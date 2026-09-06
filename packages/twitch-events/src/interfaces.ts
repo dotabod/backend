@@ -1,5 +1,11 @@
 import type { TwitchEventTypes } from './twitch-event-types'
 
+interface TwitchEventSubCondition {
+  broadcaster_user_id?: string
+  client_id?: string
+  user_id?: string
+}
+
 export interface TwitchEventSubResponse {
   // A list that contains the single subscription that you created
   data: {
@@ -12,7 +18,7 @@ export interface TwitchEventSubResponse {
     // Version number identifying this subscription definition
     version: string
     // Subscription parameter values as JSON object
-    condition: Record<string, unknown>
+    condition: TwitchEventSubCondition
     // Creation date/time in RFC3339 format
     created_at: string
     // Transport details for notifications
@@ -54,25 +60,28 @@ interface TwitchEventSubSubscriptionTransport {
 }
 
 /** Status values for EventSub subscriptions */
-export type EventSubStatus =
-  | 'enabled'
-  | 'webhook_callback_verification_pending'
-  | 'webhook_callback_verification_failed'
-  | 'notification_failures_exceeded'
-  | 'authorization_revoked'
-  | 'moderator_removed'
-  | 'user_removed'
-  | 'chat_user_banned'
-  | 'version_removed'
-  | 'beta_maintenance'
-  | 'websocket_disconnected'
-  | 'websocket_failed_ping_pong'
-  | 'websocket_received_inbound_traffic'
-  | 'websocket_connection_unused'
-  | 'websocket_internal_error'
-  | 'websocket_network_timeout'
-  | 'websocket_network_error'
-  | 'websocket_failed_to_reconnect'
+export const EVENT_SUB_STATUSES = [
+  'enabled',
+  'webhook_callback_verification_pending',
+  'webhook_callback_verification_failed',
+  'notification_failures_exceeded',
+  'authorization_revoked',
+  'moderator_removed',
+  'user_removed',
+  'chat_user_banned',
+  'version_removed',
+  'beta_maintenance',
+  'websocket_disconnected',
+  'websocket_failed_ping_pong',
+  'websocket_received_inbound_traffic',
+  'websocket_connection_unused',
+  'websocket_internal_error',
+  'websocket_network_timeout',
+  'websocket_network_error',
+  'websocket_failed_to_reconnect',
+] as const
+
+export type EventSubStatus = (typeof EVENT_SUB_STATUSES)[number]
 
 /** Individual EventSub subscription */
 interface TwitchEventSubSubscription {
@@ -85,7 +94,7 @@ interface TwitchEventSubSubscription {
   /** Version of the subscription type */
   version: string
   /** Subscription-specific parameters */
-  condition: Record<string, unknown>
+  condition: TwitchEventSubCondition
   /** RFC3339 timestamp when subscription was created */
   created_at: string
   /** Transport configuration for notifications */

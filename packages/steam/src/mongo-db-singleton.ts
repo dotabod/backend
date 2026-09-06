@@ -1,79 +1,82 @@
+import { setTimeout as delay } from 'node:timers/promises'
+
 import { MongoClient } from 'mongodb'
-import type { Db } from 'mongodb'
-import retry from 'retry'
+import type { Db, MongoClientOptions } from 'mongodb'
 
 import { logger } from './utils/logger'
 
-class MongoDBSingleton {
-  clientPromise: Promise<Db> | null = null
-  // Store the MongoClient object
-  mongoClient: MongoClient | null = null
+interface MongoConnection<TDatabase> {
+  db: () => TDatabase
+}
 
-  async connect(): Promise<Db> {
-    // If the client promise is already resolved, return it
-    if (this.clientPromise) {
-      return await this.clientPromise
-    }
+export interface MongoConnectionDependencies<TDatabase> {
+  connectClient: (
+    mongoUrl: string,
+    options: MongoClientOptions
+  ) => Promise<MongoConnection<TDatabase>>
+  getMongoUrl: () => string | undefined
+  maxAttempts: number
+  onRetry: (attempt: number) => void
+  waitForRetry: (delayMs: number) => Promise<void>
+}
 
-    // Create a new promise that will be resolved with the MongoDB client
-    this.clientPromise = new Promise((resolve, reject) => {
-      // Set up the retry operation
-      const operation = retry.operation({
-        // Exponential backoff factor
-        factor: 3,
-        // Maximum retry timeout (60 seconds)
-        maxTimeout: 60 * 1000,
-        // Minimum retry timeout (1 second)
-        minTimeout: 1 * 1000,
-        // Number of retries
-        retries: 5,
-      })
+const defaultDependencies: MongoConnectionDependencies<Db> = {
+  connectClient: async (mongoUrl, options) => await MongoClient.connect(mongoUrl, options),
+  getMongoUrl: () => process.env.MONGO_URL,
+  maxAttempts: 6,
+  onRetry: (attempt) => {
+    logger.info('Retrying mongo connection', { currentAttempt: attempt })
+  },
+  waitForRetry: async (delayMs) => {
+    await delay(delayMs)
+  },
+}
 
-      // Attempt to connect to MongoDB with the retry operation
-      operation.attempt(async (currentAttempt) => {
-        try {
-          // Connect to MongoDB
-          const mongoURL = process.env.MONGO_URL
-          if (!mongoURL) {
-            throw new Error('MONGO_URL not set')
-          }
-          const parsedUrl = new URL(mongoURL)
-          const { host } = parsedUrl
-          const client = await MongoClient.connect(mongoURL, {
-            // Only use SSL for MongoDB Atlas
-            ssl: host === 'mongodb.net' || host.endsWith('.mongodb.net'),
-          })
-          // Store the MongoClient object
-          this.mongoClient = client
+const keepConnectionOpen = (): void => {
+  // Callers share one long-lived client; closing per query would defeat the cache.
+}
 
-          // Resolve the promise with the client
-          resolve(client.db())
-        } catch (error: unknown) {
-          console.log({ error })
-          logger.info('Retrying mongo connection', { currentAttempt })
-          // If the retry operation has been exhausted, reject the promise with the error
-          if (operation.retry(error as Error)) {
-            return
-          }
-          // Clear the cached promise so future connect() calls can retry with a
-          // fresh attempt instead of returning this rejection forever
-          this.clientPromise = null
-          reject(error)
-        }
-      })
-    })
+export class MongoConnectionCache<TDatabase> {
+  private clientPromise: Promise<TDatabase> | null = null
+  private readonly dependencies: MongoConnectionDependencies<TDatabase>
 
+  constructor(dependencies: MongoConnectionDependencies<TDatabase>) {
+    this.dependencies = dependencies
+  }
+
+  async connect(): Promise<TDatabase> {
+    this.clientPromise ??= this.connectWithRetry(1)
     return await this.clientPromise
   }
 
-  async close(): Promise<void> {
-    // for now, don't close, because we call mongo so often i think it will
-    // cause more problems than it solves
-    // if (this.mongoClient) {
-    //   await this.mongoClient.close()
-    // }
-    return
+  readonly close = keepConnectionOpen
+
+  private async connectWithRetry(attempt: number): Promise<TDatabase> {
+    try {
+      const mongoUrl = this.dependencies.getMongoUrl()
+      if (mongoUrl === undefined || mongoUrl.length === 0) {
+        throw new Error('MONGO_URL not set')
+      }
+
+      const { host } = new URL(mongoUrl)
+      const client = await this.dependencies.connectClient(mongoUrl, {
+        ssl: host === 'mongodb.net' || host.endsWith('.mongodb.net'),
+      })
+      return client.db()
+    } catch (error) {
+      const connectionError =
+        error instanceof Error ? error : new Error('Mongo connection failed', { cause: error })
+      this.dependencies.onRetry(attempt)
+      if (attempt >= this.dependencies.maxAttempts) {
+        this.clientPromise = null
+        throw connectionError
+      }
+
+      const retryDelayMs = Math.min(60_000, 1000 * 3 ** (attempt - 1))
+      await this.dependencies.waitForRetry(retryDelayMs)
+      return await this.connectWithRetry(attempt + 1)
+    }
   }
 }
 
-export default new MongoDBSingleton()
+export default new MongoConnectionCache(defaultDependencies)

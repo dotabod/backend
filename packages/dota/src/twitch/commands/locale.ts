@@ -24,7 +24,7 @@ const contributors = [
 
 commandHandler.registerCommand('locale', {
   aliases: ['translation', 'translatedby'],
-  handler: (message: MessageType, _args: string[]) => {
+  handler: (message: MessageType) => {
     const translators = contributors.find((c) => c.locale === message.channel.client.locale)
     if (!translators) {
       chatClient.say(

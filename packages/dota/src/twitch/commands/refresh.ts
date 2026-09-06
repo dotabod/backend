@@ -6,7 +6,7 @@ import commandHandler from '../lib/command-handler'
 import type { MessageType } from '../lib/command-handler'
 
 commandHandler.registerCommand('refresh', {
-  handler: (message: MessageType, _args: string[]) => {
+  handler: (message: MessageType) => {
     const {
       channel: { name: channel, client },
     } = message

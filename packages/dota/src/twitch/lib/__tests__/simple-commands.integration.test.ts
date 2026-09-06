@@ -1,13 +1,17 @@
 import { t } from 'i18next'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { createPacketStub } from '../../../__tests__/shared-mocks.ts'
 import { commandHandler, makeMessage, resetState, state } from './setup-mocks.ts'
 
 // Covers the simple, formatting-only commands (no GSI/DB coupling) dispatched
 // via commandHandler.handleMessage(). Companion to commands.integration.test.ts.
 const notLive = t('notLive', { emote: 'PauseChamp', lng: 'en' })
 const unknownSteam = t('unknownSteam', { lng: 'en' })
-const multiAccount = t('multiAccount', { lng: 'en', url: 'dotabod.com/dashboard/features' })
+const multiAccount = t('multiAccount', {
+  lng: 'en',
+  url: 'dotabod.com/dashboard/features',
+})
 
 beforeEach(() => {
   resetState()
@@ -75,7 +79,7 @@ describe('!steam', () => {
   it('reports the multiAccount message when no steam32Id and multiAccount is set', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        clientOverrides: { multiAccount: true, steam32Id: null } as any,
+        clientOverrides: { multiAccount: 440_614_454, steam32Id: null },
         content: '!steam',
       })
     )
@@ -95,16 +99,16 @@ describe('!match', () => {
     await commandHandler.handleMessage(
       makeMessage({
         clientOverrides: {
-          gsi: {
+          gsi: createPacketStub({
             map: {
               game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
               matchid: '7777777777',
               win_team: 'none',
             },
             player: { activity: 'playing' },
-          },
+          }),
           gsiUpdatedAt: Date.now(),
-        } as any,
+        },
         content: '!match',
       })
     )
@@ -116,7 +120,7 @@ describe('!match', () => {
     await commandHandler.handleMessage(
       makeMessage({
         clientOverrides: {
-          gsi: {
+          gsi: createPacketStub({
             hero: { team2: {} },
             map: {
               game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
@@ -124,9 +128,9 @@ describe('!match', () => {
               win_team: 'none',
             },
             player: { activity: 'watching', team2: {}, team_name: 'spectator' },
-          },
+          }),
           gsiUpdatedAt: Date.now(),
-        } as any,
+        },
         content: '!match',
       })
     )
@@ -138,7 +142,7 @@ describe('!match', () => {
     await commandHandler.handleMessage(
       makeMessage({
         clientOverrides: {
-          gsi: {
+          gsi: createPacketStub({
             hero: { id: 1 },
             map: {
               customgamename: 'hero_demo',
@@ -147,9 +151,9 @@ describe('!match', () => {
               win_team: 'none',
             },
             player: { activity: 'playing' },
-          },
+          }),
           gsiUpdatedAt: Date.now(),
-        } as any,
+        },
         content: '!match',
       })
     )
@@ -197,7 +201,10 @@ describe('!match', () => {
     ],
   ])('reports that no current match id exists for a %s', async (_label, gsi, gsiUpdatedAt) => {
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { gsi, gsiUpdatedAt } as any, content: '!match' })
+      makeMessage({
+        clientOverrides: { gsi: createPacketStub(gsi), gsiUpdatedAt },
+        content: '!match',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(t('currentMatchIdNotFound', { lng: 'en' }))
@@ -205,7 +212,10 @@ describe('!match', () => {
 
   it('blocks when the stream is offline (onlyOnline gate)', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { stream_online: false }, content: '!match' })
+      makeMessage({
+        clientOverrides: { stream_online: false },
+        content: '!match',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(notLive)
@@ -222,10 +232,15 @@ describe('!song', () => {
   ]
 
   const mockLastFm = function mockLastFm(payload: unknown) {
-    globalThis.fetch = (async () => ({
-      json: async () => payload,
-      ok: true,
-    })) as unknown as typeof fetch
+    globalThis.fetch = vi.fn<typeof fetch>(
+      async () =>
+        await Promise.resolve(
+          new Response(JSON.stringify(payload), {
+            headers: { 'Content-Type': 'application/json' },
+            status: 200,
+          })
+        )
+    )
   }
 
   beforeAll(() => {
@@ -257,7 +272,10 @@ describe('!song', () => {
 
   it('blocks when the stream is offline (onlyOnline gate)', async () => {
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { stream_online: false }, content: '!song' })
+      makeMessage({
+        clientOverrides: { stream_online: false },
+        content: '!song',
+      })
     )
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toBe(notLive)
@@ -284,7 +302,10 @@ describe('!song', () => {
     })
 
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { settings: lastFmSettings }, content: '!song' })
+      makeMessage({
+        clientOverrides: { settings: lastFmSettings },
+        content: '!song',
+      })
     )
 
     expect(state.chatSayCalls).toHaveLength(1)
@@ -328,7 +349,10 @@ describe('!song', () => {
     })
 
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { settings: lastFmSettings }, content: '!song' })
+      makeMessage({
+        clientOverrides: { settings: lastFmSettings },
+        content: '!song',
+      })
     )
 
     expect(state.chatSayCalls).toHaveLength(1)
@@ -356,7 +380,10 @@ describe('!song', () => {
     })
 
     await commandHandler.handleMessage(
-      makeMessage({ clientOverrides: { settings: lastFmSettings }, content: '!song' })
+      makeMessage({
+        clientOverrides: { settings: lastFmSettings },
+        content: '!song',
+      })
     )
 
     expect(state.chatSayCalls).toHaveLength(1)

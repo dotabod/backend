@@ -13,15 +13,16 @@ import type { MessageType } from '../lib/command-handler'
 commandHandler.registerCommand('wl', {
   aliases: ['score', 'winrate', 'wr'],
   dbkey: DBSettings.commandWL,
-  handler: async (message: MessageType, _args: string[]) => {
+  handler: async (message: MessageType) => {
     const {
       channel: { name: channel, id: channelId, client },
     } = message
 
-    if (!client.steam32Id) {
+    if (client.steam32Id === null || client.steam32Id === 0) {
       chatClient.say(
         channel,
-        message.channel.client.multiAccount
+        message.channel.client.multiAccount !== undefined &&
+          message.channel.client.multiAccount !== 0
           ? t('multiAccount', {
               lng: message.channel.client.locale,
               url: 'dotabod.com/dashboard/features',
@@ -40,14 +41,15 @@ commandHandler.registerCommand('wl', {
 
     // Check if user is currently in a game to determine which game type to show
     const currentMatchId = client.gsi?.map?.matchid
+    const numericMatchId = Number(currentMatchId)
+    const hasValidMatchId =
+      currentMatchId !== undefined &&
+      currentMatchId.length > 0 &&
+      numericMatchId !== 0 &&
+      !Number.isNaN(numericMatchId)
     let currentGameIsRanked: boolean | null = null
 
-    if (
-      currentMatchId &&
-      Number(currentMatchId) &&
-      !isArcade(client.gsi) &&
-      !isSpectator(client.gsi)
-    ) {
+    if (hasValidMatchId && !isArcade(client.gsi) && !isSpectator(client.gsi)) {
       const lobbyType = await getRedisNumberValue(`${currentMatchId}:${client.token}:lobbyType`)
       if (lobbyType !== null) {
         currentGameIsRanked = lobbyType === LOBBY_TYPE_RANKED
@@ -66,7 +68,7 @@ commandHandler.registerCommand('wl', {
         userId: client.token,
       })
 
-      if (res?.msg) {
+      if (res?.msg !== null && res?.msg !== undefined && res.msg.length > 0) {
         chatClient.say(channel, res.msg, message.user.messageId)
       }
     } catch (error) {

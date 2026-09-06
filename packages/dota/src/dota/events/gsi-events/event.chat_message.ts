@@ -21,7 +21,7 @@ import {
 } from './translation-message-format'
 
 const disableTranslation = false
-const authKey = process.env.DEEPL_KEY || ''
+const authKey = process.env.DEEPL_KEY ?? ''
 const deeplClient = new deepl.DeepLClient(authKey)
 
 // Mapping from app language codes to DeepL-supported target language codes
@@ -155,7 +155,7 @@ const shouldTriggerChattingAlert = function shouldTriggerChattingAlert(
 ): number {
   const compositeKey = `${clientName}-${playerId}`
   const now = Date.now()
-  const messages = playerMessages.get(compositeKey) || []
+  const messages = playerMessages.get(compositeKey) ?? []
 
   // Clean old messages outside the time window
   const recentMessages = messages.filter((msg) => now - msg.timestamp < CHATTING_TIME_WINDOW)
@@ -165,7 +165,7 @@ const shouldTriggerChattingAlert = function shouldTriggerChattingAlert(
   playerMessages.set(compositeKey, recentMessages)
 
   // Check if we've sent a "Chatting" message recently
-  const lastMessageTime = lastChattingMessage.get(compositeKey) || 0
+  const lastMessageTime = lastChattingMessage.get(compositeKey) ?? 0
   if (now - lastMessageTime < CHATTING_COOLDOWN) {
     return 0
   }
@@ -248,7 +248,11 @@ const processTranslationBuffer = async function processTranslationBuffer(
   // Group translations by hero and merge messages from same hero
   const heroMessages = new Map<string, string[]>()
   for (const translation of validTranslations) {
-    if (translation?.translation) {
+    if (
+      translation.translation !== null &&
+      translation.translation !== undefined &&
+      translation.translation.length > 0
+    ) {
       if (!heroMessages.has(translation.speakerLabel)) {
         heroMessages.set(translation.speakerLabel, [])
       }
@@ -297,14 +301,16 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
     }
 
     const message = await moderateText(event.message?.trim())
-    if (!message || typeof message !== 'string' || message === '***') {
+    if (message === null || message === undefined || message.length === 0 || message === '***') {
       return
     }
 
     // Check for chatting behavior
     if (!disableChatterMessage && dotaClient.client.gsi?.player?.player_slot === event.player_id) {
       // Check global chatter access
-      const chattingEmoteEnabled = getValueOrDefault(
+      const {
+        chattingSpamEmote: { enabled: chattingEmoteEnabled },
+      } = getValueOrDefault(
         DBSettings.chatters,
         dotaClient.client.settings,
         dotaClient.client.subscription,
@@ -325,7 +331,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
     }
 
     // Translation logic with debouncing
-    if (disableTranslation || !authKey) {
+    if (disableTranslation || authKey.length === 0) {
       return
     }
 
@@ -354,7 +360,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
 
     // Validate and convert language code to DeepL-supported format
     const deeplLanguage = getDeepLLanguage(toLanguage)
-    if (!deeplLanguage) {
+    if (deeplLanguage === null || deeplLanguage.length === 0) {
       // Language not supported by DeepL, skip translation to avoid API errors
       return
     }

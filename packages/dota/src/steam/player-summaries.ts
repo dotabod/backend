@@ -28,7 +28,7 @@ export const getSteamPlayerSummaries = async function getSteamPlayerSummaries(
       uniqueAccountIds,
       (error: string | null, data: SteamPlayerSummaryResponse[] | null | undefined) => {
         clearTimeout(timeout)
-        if (error) {
+        if (error !== null && error.length > 0) {
           reject(new Error(error))
         } else {
           resolve(data ?? [])

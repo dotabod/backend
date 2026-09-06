@@ -1,11 +1,16 @@
-import type { Server } from 'socket.io'
-
 import type { GSIHandlerType } from '../dota/gsi-handler-types'
+import type { GsiSocketServer } from '../dota/gsi-server-types'
 import { GSI_STALE_AFTER_MS } from '../dota/lib/get-current-match-id'
 import type { SocketClient } from '../types'
 
 interface Logger {
-  error: (message: string, meta?: Record<string, unknown>) => void
+  error: (message: string, meta?: TransitionLoggerMetadata) => void
+}
+
+interface TransitionLoggerMetadata {
+  error: unknown
+  name: string
+  token: string
 }
 
 interface StreamStatusTransitionResult {
@@ -32,7 +37,7 @@ export const handleStreamStatusTransition = function handleStreamStatusTransitio
     | 'token'
   >
   connectedUser?: Partial<Pick<GSIHandlerType, 'disable' | 'enable'>> | null
-  io: Pick<Server, 'to'>
+  io: Pick<GsiSocketServer, 'to'>
   logger: Logger
   oldStreamOnline: boolean
 }): StreamStatusTransitionResult {
@@ -44,14 +49,15 @@ export const handleStreamStatusTransition = function handleStreamStatusTransitio
   if (client.stream_online) {
     if (
       client.pendingGsi &&
-      client.pendingGsiUpdatedAt &&
+      client.pendingGsiUpdatedAt !== undefined &&
+      client.pendingGsiUpdatedAt !== 0 &&
       Date.now() - client.pendingGsiUpdatedAt <= GSI_STALE_AFTER_MS
     ) {
       client.gsi = client.pendingGsi
       client.gsiUpdatedAt = client.pendingGsiUpdatedAt
     }
-    client.pendingGsi = undefined
-    client.pendingGsiUpdatedAt = undefined
+    delete client.pendingGsi
+    delete client.pendingGsiUpdatedAt
 
     try {
       connectedUser?.enable?.()
@@ -65,8 +71,8 @@ export const handleStreamStatusTransition = function handleStreamStatusTransitio
   } else {
     // Never leave a finished match visible after an offline transition. Incoming offline GSI
     // packets may buffer a newer snapshot, but handlers stay disabled until the stream is live.
-    client.gsi = undefined
-    client.gsiUpdatedAt = undefined
+    delete client.gsi
+    delete client.gsiUpdatedAt
     try {
       connectedUser?.disable?.()
     } catch (error) {
