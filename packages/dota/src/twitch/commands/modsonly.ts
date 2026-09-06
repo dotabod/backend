@@ -23,7 +23,7 @@ commandHandler.registerCommand('modsonly', {
         message.user.messageId
       )
       if (!(await checkBotStatus())) {
-        const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID!)
+        const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID)
         await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {
           await ctx.chat.updateSettings(channelId, {
             emoteOnlyModeEnabled: false,
@@ -37,7 +37,7 @@ commandHandler.registerCommand('modsonly', {
     // Delete all messages that are not from a mod
     modMode.add(channelId)
     if (!(await checkBotStatus())) {
-      const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID!)
+      const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID)
       await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {
         await ctx.chat.updateSettings(channelId, {
           emoteOnlyModeEnabled: true,

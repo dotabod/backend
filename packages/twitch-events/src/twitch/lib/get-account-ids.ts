@@ -38,7 +38,7 @@ export const getAccountIds = async function getAccountIds(): Promise<string[]> {
       throw error
     }
 
-    providerIds.push(...pluckProviderIds(data as AccountRow[] | null))
+    providerIds.push(...pluckProviderIds(data))
 
     if (!data || data.length < PAGE_SIZE) {
       break

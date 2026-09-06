@@ -37,7 +37,7 @@ const findSessionMatch = async function findSessionMatch(
     .single()
 
   if (match) {
-    return { error: null, match: match as SessionMatch }
+    return { error: null, match }
   }
 
   const { data: olderMatch } = await supabase
@@ -85,7 +85,7 @@ export const findResolvedMatchesInSession = async function findResolvedMatchesIn
     return []
   }
 
-  return (data ?? []) as ResolvedMatchRow[]
+  return data ?? []
 }
 
 export const findMostRecentResolvedMatch = async function findMostRecentResolvedMatch(

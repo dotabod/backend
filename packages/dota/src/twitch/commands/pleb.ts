@@ -14,7 +14,7 @@ commandHandler.registerCommand('pleb', {
       channel: { name: channel, id: channelId },
     } = message
     if (!(await checkBotStatus())) {
-      const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID!)
+      const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID)
       await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {
         const settings = await ctx.chat.getSettings(channelId)
 

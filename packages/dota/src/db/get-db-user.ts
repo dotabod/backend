@@ -220,5 +220,5 @@ export default async function getDBUser({
   lookingupToken.delete(lookupToken)
   invalidTokens.delete(userInfo.id)
 
-  return { reason: 'User successfully retrieved', result: userInfo as SocketClient }
+  return { reason: 'User successfully retrieved', result: userInfo }
 }

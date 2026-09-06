@@ -132,7 +132,7 @@ twitchChat.on(
       // If they don't meet the rank requirement, delete the message
       if (userRankTier < rankOnlySettings.minimumRankTier) {
         try {
-          const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID!)
+          const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID)
 
           // Do this as the bot which should be a moderator in the channel
           await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {
@@ -191,7 +191,7 @@ twitchChat.on(
       !(userInfo.isMod || userInfo.isBroadcaster || userInfo.isSubscriber)
     ) {
       plebMode.delete(channelId)
-      const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID!)
+      const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID)
       await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {
         await ctx.chat.updateSettings(channelId, {
           emoteOnlyModeEnabled: false,
