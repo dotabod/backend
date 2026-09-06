@@ -128,6 +128,7 @@ class CommandHandler {
   cooldowns = new Map<string, number>()
   // List of users that are allowed to bypass the cooldown
   bypassCooldownUsers: string[] = []
+  readonly parseMessage = parseMessage
 
   constructor() {
     // Adjust this interval as needed
@@ -189,7 +190,7 @@ class CommandHandler {
   // Function for handling incoming Twitch chat messages
   async handleMessage(message: MessageType) {
     // Parse the message to get the command and its arguments
-    const [command, ...args] = parseMessage(message)
+    const [command, ...args] = this.parseMessage(message)
 
     // Check if the command is registered
     if (!this.commands.has(command) && !this.aliases.has(command)) {

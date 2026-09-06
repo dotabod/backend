@@ -17,6 +17,11 @@ describe('CommandHandler dispatch (integration)', () => {
   })
 
   describe('parsing', () => {
+    it('exposes command parsing to isolated diagnostic runners', () => {
+      expect(commandHandler.parseMessage).toBeTypeOf('function')
+      expect(commandHandler.parseMessage(makeMessage({ content: '!np' }))).toStrictEqual(['np'])
+    })
+
     it('dispatches !recent and the handler emits chat output', async () => {
       state.recentList = [{ hero_name: 'npc_dota_hero_lina', matchId: '7777777777', won: true }]
       await commandHandler.handleMessage(makeMessage({ content: '!recent', permission: 2 }))
