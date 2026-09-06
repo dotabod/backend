@@ -2,13 +2,13 @@ import { logger } from '@dotabod/shared-utils'
 
 import { DBSettings, getValueOrDefault } from '../../../settings'
 import { is8500Plus } from '../../../utils/index'
-import { getStreamDelay } from '../../getStreamDelay'
-import { announceCapturedCosmetics } from '../../lib/announceCosmetics'
-import { DRAFT_CLIP_OPTS, GAMEPLAY_CLIP_OPTS, scheduleClip } from '../../lib/clipSchedule'
+import { getStreamDelay } from '../../get-stream-delay'
+import { announceCapturedCosmetics } from '../../lib/announce-cosmetics'
+import { DRAFT_CLIP_OPTS, GAMEPLAY_CLIP_OPTS, scheduleClip } from '../../lib/clip-schedule'
 import { draftStartByMatchId, GLOBAL_DELAY, gameInProgressClipByMatchId } from '../../lib/consts'
 import type { allStates } from '../../lib/consts'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
-import eventHandler from '../EventHandler'
+import { isPlayingMatch } from '../../lib/is-playing-match'
+import eventHandler from '../event-handler'
 
 eventHandler.registerEvent('map:game_state', {
   handler: async (dotaClient, gameState: (typeof allStates)[number]) => {
@@ -70,7 +70,7 @@ eventHandler.registerEvent('map:game_state', {
     }
 
     const accountId = dotaClient.client.Account?.providerAccountId
-    if (!accountId) {
+    if (accountId === undefined || accountId.length === 0) {
       logger.error('[Draft Clip] No account ID found', {
         ...logContext,
         client: dotaClient.client.Account,
@@ -80,8 +80,9 @@ eventHandler.registerEvent('map:game_state', {
 
     // Create a clip when the draft starts to get a list of players
     if (gameState === 'DOTA_GAMERULES_STATE_PLAYER_DRAFT') {
-      draftStartByMatchId.set(dotaClient.client.gsi?.map?.matchid || '', true)
-      const DRAFT_CLIP_DELAY_MS = 46_000 // 46 seconds
+      draftStartByMatchId.set(dotaClient.client.gsi?.map?.matchid ?? '', true)
+      // 46 seconds
+      const DRAFT_CLIP_DELAY_MS = 46_000
       const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)
       logger.info(
         '[Draft Clip] Draft started, creating clip in 46 seconds + stream delay',
@@ -133,13 +134,14 @@ eventHandler.registerEvent('map:game_state', {
     // less likely to be covered by OBS overlays than the pre-game screens, so grab
     // an extra clip once the player has loaded in.
     if (gameState === 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS') {
-      const matchId = dotaClient.client.gsi?.map?.matchid || ''
-      if (gameInProgressClipByMatchId.get(matchId)) {
+      const matchId = dotaClient.client.gsi?.map?.matchid ?? ''
+      if (gameInProgressClipByMatchId.get(matchId) === true) {
         return
       }
       gameInProgressClipByMatchId.set(matchId, true)
 
-      const IN_GAME_CLIP_DELAY_MS = 60_000 // settle ~1 min in; top bar is up all game
+      // settle ~1 min in; top bar is up all game
+      const IN_GAME_CLIP_DELAY_MS = 60_000
       const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)
 
       await scheduleClip(IN_GAME_CLIP_DELAY_MS + streamDelay - GLOBAL_DELAY, {

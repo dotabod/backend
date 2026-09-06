@@ -1,10 +1,10 @@
 import { t } from 'i18next'
 
-import { getPlayers } from '../dota/lib/getPlayers'
+import { getPlayers } from '../dota/lib/get-players'
 import { getHeroNameOrColor } from '../dota/lib/heroes'
 import type { RosterPlayer } from '../dota/lib/matchData'
 
-export async function smurfs(
+export const smurfs = async function smurfs(
   locale: string,
   currentMatchId?: string,
   players?: RosterPlayer[]

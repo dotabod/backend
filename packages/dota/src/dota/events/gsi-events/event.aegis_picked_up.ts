@@ -1,14 +1,14 @@
-import RedisClient from '../../../db/RedisClient'
+import RedisClient from '../../../db/redis-client'
 import { DotaEventTypes } from '../../../types'
 import type { AegisPickedUpEvent } from '../../../types'
 import { fmtMSS, is8500Plus } from '../../../utils/index'
 import { getHeroNameOrColor } from '../../lib/heroes'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { isPlayingMatch } from '../../lib/is-playing-match'
 import { MatchDataService } from '../../lib/matchData'
 import { say } from '../../say'
-import eventHandler from '../EventHandler'
-import { emitAegisEvent } from './emitAegisEvent'
-import { generateAegisMessage } from './generateAegisMessage'
+import eventHandler from '../event-handler'
+import { emitAegisEvent } from './emit-aegis-event'
+import { generateAegisMessage } from './generate-aegis-message'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
   handler: async (dotaClient, event: AegisPickedUpEvent) => {
@@ -44,7 +44,11 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisPickedUp}`, {
     // wrong side). For <8500 we keep the existing behavior — hero from the
     // index fallback if the roster carries one, otherwise the slot color.
     const heroName = high
-      ? foundIndex !== -1 && heroId
+      ? foundIndex !== -1 &&
+        heroId !== null &&
+        heroId !== undefined &&
+        heroId !== 0 &&
+        !Number.isNaN(heroId)
         ? getHeroNameOrColor(heroId, playerIdIndex)
         : null
       : getHeroNameOrColor(heroId ?? 0, playerIdIndex)

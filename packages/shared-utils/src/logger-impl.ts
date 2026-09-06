@@ -36,7 +36,7 @@ const devFormats = combine(
   customFormat
 )
 
-export function createAppLogger() {
+export const createAppLogger = function createAppLogger() {
   const isDev = process.env.DOTABOD_ENV === 'development'
   return createLogger({
     format: isDev ? devFormats : prodFormats,

@@ -5,9 +5,9 @@ import { getHeroNameOrColor } from '../dota/lib/heroes'
 import { lookupRosterByMatchId } from '../dota/lib/matchData'
 import type { RosterPlayer } from '../dota/lib/matchData'
 import type { DelayedGames, SocketClient } from '../types'
-import CustomError from '../utils/customError'
+import CustomError from '../utils/custom-error'
 import { dotabodMatchHistoryUrl } from '../utils/index'
-import MongoDBSingleton from './MongoDBSingleton'
+import MongoDBSingleton from './mongo-db-singleton'
 
 const generateMessage = (
   locale: string,
@@ -44,7 +44,9 @@ interface LastgameParams {
 // their GSI). delayedGames is fed by Valve's realtime spectator API, which returns
 // nothing for 8500+/Immortal players, so its newest cached entry can be a stale
 // older match. Prefer Supabase for the "last game" link.
-async function getLatestFinishedMatchId(steam32Id: number): Promise<string | null> {
+const getLatestFinishedMatchId = async function getLatestFinishedMatchId(
+  steam32Id: number
+): Promise<string | null> {
   const { data } = await supabase
     .from('matches')
     .select('matchId')
@@ -54,7 +56,7 @@ async function getLatestFinishedMatchId(steam32Id: number): Promise<string | nul
     .limit(1)
     .single()
 
-  return data?.matchId == null ? null : String(data.matchId)
+  return data?.matchId ?? null
 }
 
 export default async function lastgame({
@@ -70,21 +72,18 @@ export default async function lastgame({
   try {
     const gameHistory = await db
       .collection<DelayedGames>('delayedGames')
-      .find(
-        {
-          $or: [
-            { 'players.accountid': Number(steam32Id) },
-            { 'teams.players.accountid': Number(steam32Id) },
-          ],
-        },
-        { limit: 2, sort: { createdAt: -1 } }
-      )
+      .find({
+        $or: [{ 'players.accountid': steam32Id }, { 'teams.players.accountid': steam32Id }],
+      })
+      .sort({ createdAt: -1 })
+      .limit(2)
       .toArray()
 
     if (!Number(currentMatchId)) {
-      const msg = currentMatchId
-        ? t('gameNotFound', { lng: locale })
-        : t('notPlaying', { emote: 'PauseChamp', lng: locale })
+      const msg =
+        currentMatchId !== undefined && currentMatchId.length > 0
+          ? t('gameNotFound', { lng: locale })
+          : t('notPlaying', { emote: 'PauseChamp', lng: locale })
       const lastMatchId =
         (await getLatestFinishedMatchId(steam32Id)) ?? gameHistory[0]?.match?.match_id ?? null
       const url = lastMatchId ? dotabodMatchHistoryUrl(client) : ''
@@ -113,7 +112,7 @@ export default async function lastgame({
     const [gameOne, gameTwo] = gameHistory
     const oldGame = gameOne.match.match_id === currentMatchId ? gameTwo : gameOne
 
-    if (!currentPlayers?.length) {
+    if (currentPlayers === undefined || currentPlayers.length === 0) {
       throw new CustomError(t('missingMatchData', { emote: 'PauseChamp', lng: locale }))
     }
 
@@ -157,6 +156,6 @@ export default async function lastgame({
     const linkSegment = url ? ` ${t('lastgame.link', { lng: locale, url })}` : ''
     return `${totalPlayers} ${msg}.${linkSegment}`.trim()
   } finally {
-    await mongo.close()
+    mongo.close()
   }
 }

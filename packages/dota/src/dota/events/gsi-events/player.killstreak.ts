@@ -1,12 +1,12 @@
 import { t } from 'i18next'
 
-import { redisClient } from '../../../db/redisInstance'
-import { delayedQueue } from '../../lib/DelayedQueue'
-import getHero from '../../lib/getHero'
-import type { HeroNames } from '../../lib/getHero'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { redisClient } from '../../../db/redis-instance'
+import { delayedQueue } from '../../lib/delayed-queue'
+import getHero from '../../lib/get-hero'
+import type { HeroNames } from '../../lib/get-hero'
+import { isPlayingMatch } from '../../lib/is-playing-match'
 import { say } from '../../say'
-import eventHandler from '../EventHandler'
+import eventHandler from '../event-handler'
 
 eventHandler.registerEvent('player:kill_streak', {
   handler: async (dotaClient, streak: number) => {
@@ -26,7 +26,7 @@ eventHandler.registerEvent('player:kill_streak', {
     const previousStreak = Number(dotaClient.client.gsi?.previously?.player?.kill_streak)
     const lostStreak = previousStreak >= 3 && !streak
     if (lostStreak) {
-      if (dotaClient.killstreakTaskId) {
+      if (dotaClient.killstreakTaskId !== undefined && dotaClient.killstreakTaskId.length > 0) {
         delayedQueue.removeTask(dotaClient.killstreakTaskId)
         dotaClient.killstreakTaskId = undefined
       }
@@ -48,7 +48,7 @@ eventHandler.registerEvent('player:kill_streak', {
       return
     }
 
-    if (dotaClient.killstreakTaskId) {
+    if (dotaClient.killstreakTaskId !== undefined && dotaClient.killstreakTaskId.length > 0) {
       delayedQueue.removeTask(dotaClient.killstreakTaskId)
     }
     dotaClient.killstreakTaskId = delayedQueue.addTask(15_000, () => {

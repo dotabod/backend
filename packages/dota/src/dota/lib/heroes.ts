@@ -1,27 +1,13 @@
-import type { HeroNames } from './getHero'
-import { heroes } from './heroList'
+import type { HeroNames } from './get-hero'
+import { heroes } from './hero-list'
 // Dota's fixed slot→color order (0-4 Radiant, 5-9 Dire). WARNING: indexing this
 // by a GSI events[].player_id is unreliable — Dota reshuffles player_id, mostly in
 // high-immortal / ranked-roles games (live: ~57% of 8500+ vs ~0% of confirmed
 // sub-8500), so it can resolve the wrong player/side. Only trust it when a real
 // hero (from clip/vision or own GSI) couldn't be found.
 export const heroColors = 'Blue,Teal,Purple,Yellow,Orange,Pink,Olive,Cyan,Green,Brown'.split(',')
-export function getHeroNameOrColor(id?: number, index?: number) {
-  if (!id && typeof index === 'number') {
-    return heroColors[index]
-  }
-
-  const hero = getHeroById(id)
-  const name = hero?.localized_name
-  if (!name && typeof index === 'number') {
-    return heroColors[index]
-  }
-
-  return name ?? 'Unknown'
-}
-
-export function getHeroById(id?: number) {
-  if (!id) {
+export const getHeroById = function getHeroById(id?: number) {
+  if (id === undefined || id === 0 || Number.isNaN(id)) {
     return null
   }
 
@@ -34,13 +20,27 @@ export function getHeroById(id?: number) {
   return null
 }
 
+export const getHeroNameOrColor = function getHeroNameOrColor(id?: number, index?: number) {
+  if ((id === undefined || id === 0 || Number.isNaN(id)) && index !== undefined) {
+    return heroColors[index]
+  }
+
+  const hero = getHeroById(id)
+  const name = hero?.localized_name
+  if ((name === undefined || name.length === 0) && index !== undefined) {
+    return heroColors[index]
+  }
+
+  return name ?? 'Unknown'
+}
+
 // dota2.com renamed this hero to "Outworld Destroyer", but dotaconstants still
 // reports the old localized name "Outworld Devourer" — override its slug.
 const heroPageSlugOverrides: Partial<Record<HeroNames, string>> = {
   npc_dota_hero_obsidian_destroyer: 'outworlddestroyer',
 }
 
-export function getHeroPageUrl(id?: number): string | null {
+export const getHeroPageUrl = function getHeroPageUrl(id?: number): string | null {
   const hero = getHeroById(id)
   if (!hero) {
     return null
@@ -53,27 +53,31 @@ export function getHeroPageUrl(id?: number): string | null {
   return `dota2.com/hero/${slug}`
 }
 
-export function withHeroLink(text: string, id?: number): string {
+export const withHeroLink = function withHeroLink(text: string, id?: number): string {
   const url = getHeroPageUrl(id)
-  return url ? `${text} · ${url}` : text
+  return url !== null && url.length > 0 ? `${text} · ${url}` : text
 }
 
-export function getHeroByName(name: string, heroIdsInMatch?: (number | undefined)[]) {
-  if (!name) {
+export const getHeroByName = function getHeroByName(
+  name: string,
+  heroIdsInMatch?: (number | undefined)[]
+) {
+  if (name.length === 0) {
     return null
   }
 
   // only keep a-z in name
   const localName = name
-    .replaceAll(/[^a-z]/gi, '')
+    .replaceAll(/[^a-z]/giu, '')
     .toLowerCase()
     .trim()
 
   let lookInHeroes = Object.values(heroes)
   if (
-    heroIdsInMatch?.length &&
-    heroIdsInMatch.filter(Boolean).length > 1 &&
-    heroIdsInMatch.length !== 1
+    heroIdsInMatch !== undefined &&
+    heroIdsInMatch.length > 1 &&
+    heroIdsInMatch.filter((heroId) => heroId !== undefined && heroId !== 0 && !Number.isNaN(heroId))
+      .length > 1
   ) {
     lookInHeroes = Object.values(heroes).filter((hero) => heroIdsInMatch.includes(hero.id))
   }
@@ -83,7 +87,7 @@ export function getHeroByName(name: string, heroIdsInMatch?: (number | undefined
     const hasAlias = h.alias.some(
       (alias) =>
         alias
-          .replaceAll(/[^a-z]/gi, '')
+          .replaceAll(/[^a-z]/giu, '')
           .toLowerCase()
           .trim() === localName
     )
@@ -96,7 +100,7 @@ export function getHeroByName(name: string, heroIdsInMatch?: (number | undefined
     hero = lookInHeroes.find((h) => {
       const inName = h.localized_name
         // replace all spaces with nothing, and only keep a-z
-        .replaceAll(/[^a-z]/gi, '')
+        .replaceAll(/[^a-z]/giu, '')
         .toLowerCase()
         .trim()
 

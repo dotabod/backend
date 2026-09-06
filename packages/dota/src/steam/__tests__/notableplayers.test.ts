@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks.ts'
+import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/shared-mocks.ts'
 import type { RosterPlayer } from '../../dota/lib/matchData'
 
 const noopLogger = {
@@ -10,39 +10,43 @@ const noopLogger = {
   warn: () => {},
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () =>
-  buildSharedUtilsMock({ logger: noopLogger, supabase: {} })
-)
+vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ logger: noopLogger, supabase: {} }))
 
-vi.doMock(import('@dotabod/profanity-filter'), () => ({
-  moderateText: async (text: string) => text,
+vi.doMock('@dotabod/profanity-filter', () => ({
+  moderateText: async (text: string) => await Promise.resolve(text),
 }))
 
 // Mongo yields no game mode and no DB-stored notable players, so output reflects
 // only the players passed in.
-vi.doMock(import('../MongoDBSingleton'), () => ({
+vi.doMock('../mongo-db-singleton', () => ({
   default: {
-    close: async () => {},
-    connect: async () => ({
-      collection: () => ({
-        find: () => ({ toArray: async () => [] }),
-        findOne: async () => null,
+    close: async () => await Promise.resolve(),
+    connect: async () =>
+      await Promise.resolve({
+        collection: () => ({
+          find: () => ({ toArray: async () => await Promise.resolve([]) }),
+          findOne: async () => await Promise.resolve(null),
+        }),
       }),
-    }),
   },
 }))
 
 // getPlayers / calculateAvg are only reached on the non-draft path. Stub them so
 // importing notableplayers doesn't pull in their transitive deps (steam socket).
-const getPlayersMock = vi.fn(async () => ({
-  accountIds: [] as number[],
-  gameMode: undefined,
-  matchPlayers: [] as RosterPlayer[],
+const getPlayersMock = vi.fn(
+  async () =>
+    await Promise.resolve({
+      accountIds: [] as number[],
+      gameMode: undefined,
+      matchPlayers: [] as RosterPlayer[],
+    })
+)
+vi.doMock('../../dota/lib/get-players', () => ({ getPlayers: getPlayersMock }))
+vi.doMock(import('../../dota/lib/calculate-avg'), () => ({
+  calculateAvg: async () => await Promise.resolve('Divine'),
 }))
-vi.doMock(import('../../dota/lib/getPlayers'), () => ({ getPlayers: getPlayersMock }))
-vi.doMock(import('../../dota/lib/calculateAvg'), () => ({ calculateAvg: async () => 'Divine' }))
-const getSteamPlayerSummariesMock = vi.fn(async () => new Map())
-vi.doMock(import('../playerSummaries'), () => ({
+const getSteamPlayerSummariesMock = vi.fn(async () => await Promise.resolve(new Map()))
+vi.doMock(import('../player-summaries'), () => ({
   getSteamPlayerSummaries: getSteamPlayerSummariesMock,
 }))
 

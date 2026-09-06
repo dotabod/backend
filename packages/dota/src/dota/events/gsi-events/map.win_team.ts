@@ -1,7 +1,7 @@
 import { logger } from '@dotabod/shared-utils'
 
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
-import eventHandler from '../EventHandler'
+import { isPlayingMatch } from '../../lib/is-playing-match'
+import eventHandler from '../event-handler'
 
 // This won’t get triggered if they click disconnect and don’t wait for the ancient to reach 0
 eventHandler.registerEvent('map:win_team', {

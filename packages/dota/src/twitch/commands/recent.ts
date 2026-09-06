@@ -1,17 +1,17 @@
 import { t } from 'i18next'
 
-import getHero from '../../dota/lib/getHero'
-import type { HeroNames } from '../../dota/lib/getHero'
+import getHero from '../../dota/lib/get-hero'
 import { DBSettings } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
-import { findResolvedMatchesInSession } from '../lib/resolveMatch'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
+import { findResolvedMatchesInSession } from '../lib/resolve-match'
 
 commandHandler.registerCommand('recent', {
   aliases: ['history', 'matches'],
   cooldown: 10_000,
-  dbkey: DBSettings.commandWon, // Reuse the same setting as won/lost commands
+  // Reuse the same setting as won/lost commands
+  dbkey: DBSettings.commandWon,
   handler: async (message: MessageType) => {
     const {
       channel: { name: channel, client },
@@ -33,7 +33,7 @@ commandHandler.registerCommand('recent', {
 
     const matchList = matches
       .map((m) => {
-        const hero = getHero(m.hero_name as HeroNames)
+        const hero = getHero(m.hero_name)
         const heroName = hero?.localized_name ?? m.hero_name ?? 'Unknown'
         const result = m.won ? 'W' : 'L'
         return `${m.matchId} ${result} (${heroName})`
@@ -50,5 +50,6 @@ commandHandler.registerCommand('recent', {
       message.user.messageId
     )
   },
-  permission: 2, // Mods and broadcaster only,
+  // Mods and broadcaster only,
+  permission: 2,
 })

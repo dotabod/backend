@@ -3,11 +3,11 @@ import { t } from 'i18next'
 import { ChatMessageType, DotaEventTypes } from '../../../types'
 import type { ChatEventData, DotaEvent } from '../../../types'
 import { getRedisNumberValue } from '../../../utils/index'
-import { isFeatureEnabled } from '../../lib/announceFeatures'
-import { delayedQueue } from '../../lib/DelayedQueue'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { isFeatureEnabled } from '../../lib/announce-features'
+import { delayedQueue } from '../../lib/delayed-queue'
+import { isPlayingMatch } from '../../lib/is-playing-match'
 import { say } from '../../say'
-import eventHandler from '../EventHandler'
+import eventHandler from '../event-handler'
 
 // How long after a team smoke to check whether the streamer's own hero got the buff.
 const SMOKE_FOMO_DELAY_MS = 3000
@@ -59,7 +59,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.GenericEvent}`, {
         // hero:smoked handler already announces it ("<hero> is smoked!") — staying silent here
         // is what keeps the two paths from double-posting. After the buff settles (~3s), roast
         // only if a teammate smoked and the streamer got left behind.
-        delayedQueue.addTask(SMOKE_FOMO_DELAY_MS, async () => {
+        delayedQueue.addTask(SMOKE_FOMO_DELAY_MS, () => {
           const { client } = dotaClient
           if (!client.stream_online) {
             return
@@ -76,7 +76,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.GenericEvent}`, {
           }
 
           // Caught out: a teammate smoked, the streamer is alive, but never got the buff.
-          const caughtOut = client.gsi?.hero?.alive !== false && !client.gsi?.hero?.smoked
+          const caughtOut = client.gsi?.hero?.alive !== false && client.gsi?.hero?.smoked !== true
           if (caughtOut) {
             say(client, t('chatters.smokeWithoutYou', { emote: 'HAH', lng: client.locale }))
           }

@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { hasSteamData } from '../hasSteamData'
+import { hasSteamData } from '../has-steam-data'
 import type { DelayedGames } from '../types/index'
 
 const player = (overrides: Record<string, unknown> = {}) => ({
@@ -13,7 +13,7 @@ const player = (overrides: Record<string, unknown> = {}) => ({
 
 const fiveFull = () => Array.from({ length: 5 }, () => player())
 
-function game(teams: DelayedGames['teams']): DelayedGames {
+const game = function game(teams: DelayedGames['teams']): DelayedGames {
   return {
     _id: 'x',
     match: { game_mode: 0, lobby_type: 0, match_id: '0', server_steam_id: '0' },

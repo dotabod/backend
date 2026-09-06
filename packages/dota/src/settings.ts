@@ -7,6 +7,22 @@ export { type ChatterKeys, DBSettings, type SettingKeys }
 
 export const defaultSettings = defaultSettingsStructure
 
+type WidenSettingValue<T> = T extends string
+  ? string
+  : T extends number
+    ? number
+    : T extends boolean
+      ? boolean
+      : T extends readonly (infer Item)[]
+        ? WidenSettingValue<Item>[]
+        : T extends object
+          ? { -readonly [Key in keyof T]: WidenSettingValue<T[Key]> }
+          : T
+
+export type SettingValue<Key extends SettingKeys> = WidenSettingValue<
+  (typeof defaultSettingsStructure)[Key]
+>
+
 // Feature flag for the spectate-friend → GetRealTimeStats chain. KEEP the gated code intact —
 // it's preserved on purpose pending a future bot↔streamer Steam friend-management initiative,
 // not dead. See memory `keep-spectate-friend-path` for the revival plan + what to leave alone.
@@ -14,7 +30,54 @@ export const defaultSettings = defaultSettingsStructure
 // at either MMR tier; can't tell if Valve killed it or just our missing-friendship.
 export const ENABLE_SPECTATE_FRIEND_GAME = false
 
-export const getRawSettingValue = (key: SettingKeys, data?: { key: string; value: unknown }[]) => {
+const isPlainObject = function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+const normalizeNullDefault = function normalizeNullDefault(
+  key: SettingKeys,
+  value: unknown
+): unknown {
+  if (value === null) {
+    return null
+  }
+  if (key === 'cosmeticsAnnounce' || key === 'smokeActivated') {
+    return typeof value === 'boolean' ? value : null
+  }
+  if (key === 'mmr' || key === 'wlStatsDays') {
+    return typeof value === 'number' ? value : null
+  }
+  if (key === 'wlStatsStartDate') {
+    return typeof value === 'string' ? value : null
+  }
+  return null
+}
+
+const normalizeSettingValue = function normalizeSettingValue(
+  key: SettingKeys,
+  value: unknown,
+  defaultValue: unknown
+): unknown {
+  if (defaultValue === null) {
+    return normalizeNullDefault(key, value)
+  }
+  if (Array.isArray(defaultValue)) {
+    return Array.isArray(value) ? value : defaultValue
+  }
+  if (isPlainObject(defaultValue)) {
+    return isPlainObject(value) ? { ...defaultValue, ...value } : defaultValue
+  }
+  return typeof value === typeof defaultValue ? value : defaultValue
+}
+
+export function getRawSettingValue<Key extends SettingKeys>(
+  key: Key,
+  data?: { key: string; value: unknown }[]
+): SettingValue<Key>
+export function getRawSettingValue(
+  key: SettingKeys,
+  data?: { key: string; value: unknown }[]
+): unknown {
   // Rest of existing logic for handling settings
   if (!Array.isArray(data) || !data.length || !data.filter(Boolean).length) {
     return defaultSettings[key]
@@ -29,41 +92,30 @@ export const getRawSettingValue = (key: SettingKeys, data?: { key: string; value
     return defaultValue
   }
 
-  const isPlainObject = (v: unknown): boolean =>
-    typeof v === 'object' && v !== null && !Array.isArray(v)
+  if (typeof dbVal !== 'string') {
+    return normalizeSettingValue(key, dbVal, defaultValue)
+  }
 
   try {
-    if (typeof dbVal === 'string') {
-      const val = JSON.parse(dbVal)
-      if (isPlainObject(val) && isPlainObject(defaultValue)) {
-        return {
-          ...(defaultValue as object),
-          ...(val as object),
-        }
-      }
-
-      return val
-    }
-
-    if (isPlainObject(dbVal) && isPlainObject(defaultValue)) {
-      return {
-        ...(defaultValue as object),
-        ...(dbVal as object),
-      }
-    }
-
-    return dbVal
+    const parsed: unknown = JSON.parse(dbVal)
+    return normalizeSettingValue(key, parsed, defaultValue)
   } catch {
-    return dbVal
+    return normalizeSettingValue(key, dbVal, defaultValue)
   }
 }
 
-export const getValueOrDefault = (
+export function getValueOrDefault<Key extends SettingKeys>(
+  key: Key,
+  data?: { key: string; value: unknown }[],
+  subscription?: SubscriptionRow,
+  chatterKey?: ChatterKeys
+): SettingValue<Key>
+export function getValueOrDefault(
   key: SettingKeys,
   data?: { key: string; value: unknown }[],
   subscription?: SubscriptionRow,
   chatterKey?: ChatterKeys
-) => {
+): unknown {
   // Check subscription access
   const featureKey = chatterKey ? (`chatters.${chatterKey}` as const) : key
   const { hasAccess } = canAccessFeature(featureKey, subscription)

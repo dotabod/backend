@@ -1,26 +1,26 @@
 import { t } from 'i18next'
 
 import { DBSettings } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
 
 commandHandler.registerCommand('steam', {
   aliases: ['steamid', 'account'],
   dbkey: DBSettings.commandSteam,
-  handler: (message: MessageType, _args: string[]) => {
+  handler: (message: MessageType) => {
     const {
       channel: { name: channel, client },
     } = message
 
-    if (client.steam32Id && Number(client.steam32Id)) {
+    if (client.steam32Id !== null && client.steam32Id !== 0) {
       chatClient.say(channel, `steamid.xyz/${client.steam32Id.toString()}`, message.user.messageId)
       return
     }
 
     chatClient.say(
       channel,
-      message.channel.client.multiAccount
+      message.channel.client.multiAccount !== undefined && message.channel.client.multiAccount !== 0
         ? t('multiAccount', {
             lng: message.channel.client.locale,
             url: 'dotabod.com/dashboard/features',

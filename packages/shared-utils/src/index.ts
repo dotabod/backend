@@ -5,13 +5,13 @@ export type { Database, Json, Tables } from './db/supabase-types'
 // Disable reason tracking
 export * from './disableReason/index'
 // Uptime monitoring
-export { checkSupabaseHealth } from './checkSupabaseHealth'
+export { checkSupabaseHealth } from './check-supabase-health'
 export { startHeartbeat } from './heartbeat'
 // Logger
 export { logger } from './logger'
 
 // Bot status tracking
-export { botStatus, checkBotStatus } from './twitch/botBanStatus'
+export { botStatus, checkBotStatus } from './twitch/bot-ban-status'
 
 // Conduit management
 export {
@@ -19,11 +19,11 @@ export {
   type TwitchConduitCreateResponse,
   type TwitchConduitResponse,
   updateConduitShard,
-} from './twitch/conduitManager'
+} from './twitch/conduit-manager'
 
 // Twitch utilities
-export { getAuthProvider } from './twitch/getAuthProvider'
-export { getTwitchAPI } from './twitch/getTwitchAPI'
-export { getTwitchHeaders } from './twitch/getTwitchHeaders'
-export { getTwitchTokens, type TwitchTokens } from './twitch/getTwitchTokens'
-export { hasTokens } from './twitch/hasTokens'
+export { getAuthProvider } from './twitch/get-auth-provider'
+export { getTwitchAPI } from './twitch/get-twitch-api'
+export { getTwitchHeaders } from './twitch/get-twitch-headers'
+export { getTwitchTokens, type TwitchTokens } from './twitch/get-twitch-tokens'
+export { hasTokens } from './twitch/has-tokens'

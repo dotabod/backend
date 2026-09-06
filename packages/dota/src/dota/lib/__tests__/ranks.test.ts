@@ -5,7 +5,7 @@
 // that harness's spread, so they're stable no matter the suite run order.
 import { describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock } from '../../../__tests__/sharedMocks.ts'
+import { buildSharedUtilsMock } from '../../../__tests__/shared-mocks.ts'
 
 const noopLogger = {
   debug: () => {},
@@ -16,9 +16,7 @@ const noopLogger = {
 
 // ranks.ts -> getWL imports `supabase`/`logger` from shared-utils at load time;
 // these helpers never touch it at runtime, so a no-op surface is enough.
-vi.doMock(import('@dotabod/shared-utils'), () =>
-  buildSharedUtilsMock({ logger: noopLogger, supabase: {} })
-)
+vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ logger: noopLogger, supabase: {} }))
 
 const { rankTierToMmr, mmrToRankTier, estimateMMR, getRankDetail } = await import('../ranks.ts')
 
@@ -34,9 +32,12 @@ describe('mmrToRankTier', () => {
   })
 
   it('maps mmr into the medal*10+stars tier', () => {
-    expect(mmrToRankTier(100)).toBe(11) // Herald 1
-    expect(mmrToRankTier(3080)).toBe(51) // Legend 1
-    expect(mmrToRankTier(5000)).toBe(72) // Divine 2
+    // Herald 1
+    expect(mmrToRankTier(100)).toBe(11)
+    // Legend 1
+    expect(mmrToRankTier(3080)).toBe(51)
+    // Divine 2
+    expect(mmrToRankTier(5000)).toBe(72)
   })
 })
 
@@ -51,8 +52,10 @@ describe('rankTierToMmr', () => {
   })
 
   it('returns the midpoint of the rank range', () => {
-    expect(rankTierToMmr(11)).toBe((0 + 153) / 2) // Herald 1
-    expect(rankTierToMmr(15)).toBe((616 + 769) / 2) // Herald 5
+    // Herald 1
+    expect(rankTierToMmr(11)).toBe((0 + 153) / 2)
+    // Herald 5
+    expect(rankTierToMmr(15)).toBe((616 + 769) / 2)
   })
 
   it('floors stars above 5 to 5', () => {
@@ -82,12 +85,14 @@ describe('getRankDetail', () => {
 
   it('returns rank progression details for an in-range mmr', async () => {
     const detail = await getRankDetail(100)
-    expect(detail).not.toBeNull()
-    const d = detail as Exclude<typeof detail, null>
-    expect((d as any).myRank.title).toBe('Herald☆1')
-    expect((d as any).nextMMR).toBe(154)
-    expect((d as any).mmrToNextRank).toBe(54)
-    expect((d as any).winsToNextRank).toBe(3) // ceil(54 / 25)
+    if (!detail || 'standing' in detail) {
+      throw new Error('Expected an in-range rank detail')
+    }
+    expect(detail.myRank?.title).toBe('Herald☆1')
+    expect(detail.nextMMR).toBe(154)
+    expect(detail.mmrToNextRank).toBe(54)
+    // ceil(54 / 25)
+    expect(detail.winsToNextRank).toBe(3)
   })
 
   it('routes to the leaderboard lookup at the exact top-of-range boundary, matching mmrToRankTier(5619) === 80 (immortal)', async () => {

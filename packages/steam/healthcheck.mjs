@@ -30,7 +30,7 @@ try {
     console.error(`gc-health stale by ${Math.round(age / 1000)}s`)
     process.exit(1)
   }
-  if (!snap.gcReady) {
+  if (snap.gcReady !== true) {
     console.error('gc not ready')
     process.exit(1)
   }

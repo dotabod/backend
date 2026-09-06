@@ -1,14 +1,15 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
+import { z } from 'zod'
 
-import { MULTIPLIER_SOLO } from '../../db/getWL'
-import RedisClient from '../../db/RedisClient'
+import { MULTIPLIER_SOLO } from '../../db/get-wl'
+import RedisClient from '../../db/redis-client'
 import { steamSocket } from '../../steam/ws'
-import type { Cards } from '../../types'
-import CustomError from '../../utils/customError'
 import { leaderRanks, ranks } from './consts'
 
-export function rankTierToMmr(rankTier: string | number) {
+const leaderboardCardSchema = z.object({ leaderboard_rank: z.number() })
+
+export const rankTierToMmr = function rankTierToMmr(rankTier: string | number) {
   if (!Number(rankTier)) {
     return 0
   }
@@ -21,42 +22,37 @@ export function rankTierToMmr(rankTier: string | number) {
 
   // Floor to 5
   const stars = intRankTier % 10 > 5 ? 5 : intRankTier % 10
-  const rank = ranks.find((rank) =>
-    rank.image.startsWith(`${Math.floor(Number(intRankTier / 10))}${stars}`)
+  const matchedRank = ranks.find((candidate) =>
+    candidate.image.startsWith(`${Math.floor(intRankTier / 10)}${stars}`)
   )
 
   // Middle of range
-  return ((rank?.range[0] ?? 0) + (rank?.range[1] ?? 0)) / 2
+  return ((matchedRank?.range[0] ?? 0) + (matchedRank?.range[1] ?? 0)) / 2
 }
 
-/**
- * Converts MMR to rank tier
- * @param mmr - The MMR value to convert
- * @returns The rank tier value (e.g. 71 for Legend 1, 80 for Immortal)
- */
-export function mmrToRankTier(mmr: number): number {
+export const mmrToRankTier = function mmrToRankTier(mmr: number): number {
   if (mmr <= 0) {
     return 0
-  } // Uncalibrated
+    // Uncalibrated
+  }
 
   // Immortal rank (rank tier 80)
   // Get the highest MMR from the ranks array
-  const highestRankMMR = ranks.at(-1)?.range[1] || 5619
+  const highestRankMMR = ranks.at(-1)?.range[1] ?? 5619
   if (mmr >= highestRankMMR) {
     return 80
   }
 
   // Find the rank based on MMR
-  for (let i = 0; i < ranks.length; i++) {
-    const rank = ranks[i]
+  for (const rank of ranks) {
     const [min, max] = rank.range
 
     // If MMR falls within this rank's range
     if (mmr >= min && mmr <= max) {
       // Extract the medal number from the image (first digit)
-      const medal = Number.parseInt(rank.image.charAt(0), 10)
+      const medal = Math.trunc(Number(rank.image.charAt(0)))
       // Extract the stars from the image (second digit)
-      const stars = Number.parseInt(rank.image.charAt(1), 10)
+      const stars = Math.trunc(Number(rank.image.charAt(1)))
 
       // Calculate rank tier (medal * 10 + stars)
       return medal * 10 + stars
@@ -67,7 +63,7 @@ export function mmrToRankTier(mmr: number): number {
   return 0
 }
 
-export function getRankTitle(rankTier: string | number): string {
+export const getRankTitle = function getRankTitle(rankTier: string | number): string {
   if (!Number(rankTier) || Number(rankTier) <= 0) {
     return 'Uncalibrated'
   }
@@ -83,11 +79,11 @@ export function getRankTitle(rankTier: string | number): string {
   // If the stars value is greater than 5, cap it at 5 since ranks only go up to 5 stars
   // For example: rank tier 53 means Legend 3, where 5 is the medal and 3 is the stars
   const stars = intRankTier % 10 > 5 ? 5 : intRankTier % 10
-  const rank = ranks.find((rank) =>
-    rank.image.startsWith(`${Math.floor(Number(intRankTier / 10))}${stars}`)
+  const matchedRank = ranks.find((candidate) =>
+    candidate.image.startsWith(`${Math.floor(intRankTier / 10)}${stars}`)
   )
 
-  return rank?.title ?? 'Unknown'
+  return matchedRank?.title ?? 'Unknown'
 }
 
 interface LeaderRankData {
@@ -100,7 +96,10 @@ interface LeaderRankData {
   standing: number | null
 }
 
-async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise<LeaderRankData> {
+const lookupLeaderRank = async function lookupLeaderRank(
+  mmr: number,
+  steam32Id?: number | null
+): Promise<LeaderRankData> {
   const lowestLeaderRank = leaderRanks.at(-1)
   if (!lowestLeaderRank) {
     throw new Error('Leader ranks must not be empty')
@@ -112,7 +111,7 @@ async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise
   }
 
   // Return default values if steam32Id is undefined or null
-  if (!steam32Id) {
+  if (steam32Id === null || steam32Id === undefined || steam32Id === 0) {
     return defaultNotFound
   }
 
@@ -126,27 +125,11 @@ async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise
     result = medalCache
   } else {
     try {
-      const getCardPromise = new Promise<Cards>((resolve, reject) => {
-        const timeoutId = setTimeout(() => {
-          reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: 'en' })))
-        }, 10_000) // 5 second timeout
-
-        steamSocket.emit('getCard', steam32Id, (err: unknown, card: Cards) => {
-          clearTimeout(timeoutId)
-          if (err) {
-            reject(err)
-          } else {
-            resolve(card)
-          }
-        })
-      })
-
-      // Fetch the leaderboard rank from the Dota 2 server
-      const data = await getCardPromise
-      const standing: number = data?.leaderboard_rank
+      const response: unknown = await steamSocket.timeout(10_000).emitWithAck('getCard', steam32Id)
+      const { leaderboard_rank: standing } = leaderboardCardSchema.parse(response)
 
       // If the rank is not available, return default values
-      if (!standing || typeof standing !== 'number') {
+      if (standing === 0) {
         return defaultNotFound
       }
 
@@ -166,7 +149,10 @@ async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise
   return result
 }
 
-export async function getRankDetail(mmr: string | number, steam32Id?: number | null) {
+export const getRankDetail = async function getRankDetail(
+  mmr: string | number,
+  steam32Id?: number | null
+) {
   const mmrNum = Number(mmr)
 
   if (!mmrNum || mmrNum < 0) {
@@ -185,7 +171,7 @@ export async function getRankDetail(mmr: string | number, steam32Id?: number | n
   const [myRank, nextRank] = ranks.filter((rank) => mmrNum <= rank.range[1])
 
   // Its not always truthy, nextRank can be beyond the range
-  const nextMMR = nextRank?.range[0] || myRank?.range[1]
+  const nextMMR = nextRank?.range[0] ?? myRank?.range[1]
   const mmrToNextRank = nextMMR - mmrNum
   const winsToNextRank = Math.ceil(mmrToNextRank / MULTIPLIER_SOLO)
 
@@ -207,7 +193,7 @@ interface RankDescription {
 }
 
 // Used for chatting !mmr
-export async function getRankDescription({
+export const getRankDescription = async function getRankDescription({
   locale,
   mmr,
   steam32Id,
@@ -221,14 +207,17 @@ export async function getRankDescription({
 
   if ('standing' in rankResponse) {
     const rankTitle = 'Immortal'
-    const standing = rankResponse.standing && `#${rankResponse.standing}`
+    const standing =
+      rankResponse.standing === null || rankResponse.standing === 0
+        ? null
+        : `#${rankResponse.standing}`
     const msgs: string[] = []
 
     if (showRankMmr) {
       msgs.push(`${mmr} MMR`)
     }
     msgs.push(rankTitle)
-    if (standing) {
+    if (standing !== null && standing.length > 0) {
       msgs.push(standing)
     }
 
@@ -250,7 +239,8 @@ export async function getRankDescription({
   })
 
   const msgs: string[] = []
-  msgs.push(String(mmr), myRank.title, `${nextAt} ${nextMMR}${count === 1 ? '' : ` ${nextIn}`}`)
+  const nextRankSuffix = count === 1 ? '' : ` ${nextIn}`
+  msgs.push(String(mmr), myRank.title, `${nextAt} ${nextMMR}${nextRankSuffix}`)
   if (count === 1) {
     msgs.push(nextIn)
   }
@@ -269,14 +259,14 @@ type Region =
   | 'PERU'
   | 'BRAZIL'
 
-export function estimateMMR(leaderboard_rank: number, region: Region): number {
+export const estimateMMR = function estimateMMR(leaderboardRank: number, region: Region): number {
   // Max leaderboard rank is 5000
-  if (leaderboard_rank <= 0 || leaderboard_rank > 5000) {
+  if (leaderboardRank <= 0 || leaderboardRank > 5000) {
     return 8500
   }
 
   let baseMMR: number
-  const x = leaderboard_rank
+  const x = leaderboardRank
 
   if (region === 'EUROPE') {
     baseMMR = 15_300 - 8.2 * Math.log(x) * x ** 0.6
@@ -308,10 +298,14 @@ const rankProfileCache = new Map<
   { data: { rank_tier: number; leaderboard_rank: number } | null; timestamp: number }
 >()
 
-const RANK_CACHE_TTL = 30 * 60 * 1000 // 30 minutes in milliseconds for users with rank
-const NO_RANK_CACHE_TTL = 30 * 1000 // 30 seconds in milliseconds for users without rank
+// 30 minutes in milliseconds for users with rank
+const RANK_CACHE_TTL = 30 * 60 * 1000
+// 30 seconds in milliseconds for users without rank
+const NO_RANK_CACHE_TTL = 30 * 1000
 
-export async function getDotabodRankProfile(twitchUsername: string): Promise<{
+export const getDotabodRankProfile = async function getDotabodRankProfile(
+  twitchUsername: string
+): Promise<{
   rank_tier: number
   leaderboard_rank: number
 } | null> {
@@ -322,7 +316,7 @@ export async function getDotabodRankProfile(twitchUsername: string): Promise<{
 
   if (cachedResult) {
     const hasRank =
-      cachedResult.data &&
+      cachedResult.data !== null &&
       (cachedResult.data.rank_tier > 0 || cachedResult.data.leaderboard_rank > 0)
     const ttl = hasRank ? RANK_CACHE_TTL : NO_RANK_CACHE_TTL
 
@@ -347,7 +341,7 @@ export async function getDotabodRankProfile(twitchUsername: string): Promise<{
 
     let steamAccount: { leaderboard_rank: number | null; mmr: number } | null = null
 
-    if (userData.steam32Id) {
+    if (userData.steam32Id !== null && userData.steam32Id !== 0) {
       // If steam32Id exists directly on the user, use it
       const { data: account } = await supabase
         .from('steam_accounts')
@@ -366,7 +360,7 @@ export async function getDotabodRankProfile(twitchUsername: string): Promise<{
         .limit(1)
 
       // Get the account with the highest MMR
-      steamAccount = accounts?.[0] || null
+      steamAccount = accounts?.[0] ?? null
     }
 
     if (!steamAccount) {

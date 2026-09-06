@@ -1,11 +1,11 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
-import { MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/getWL'
-import { updateMmr } from '../../dota/lib/updateMmr'
+import { MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/get-wl'
+import { updateMmr } from '../../dota/lib/update-mmr'
 import { dotabodMatchHistoryUrl } from '../../utils/index'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
 
 interface DoubledownMmr {
   currentMmr: number
@@ -14,7 +14,12 @@ interface DoubledownMmr {
   wasDoubledown: boolean
 }
 
-export function toggleDoubledownMmr({ currentMmr, isParty, didWin, wasDoubledown }: DoubledownMmr) {
+export const toggleDoubledownMmr = function toggleDoubledownMmr({
+  currentMmr,
+  isParty,
+  didWin,
+  wasDoubledown,
+}: DoubledownMmr) {
   const change = isParty ? MULTIPLIER_PARTY : MULTIPLIER_SOLO
   return currentMmr + change * (didWin === wasDoubledown ? -1 : 1)
 }
@@ -22,7 +27,7 @@ export function toggleDoubledownMmr({ currentMmr, isParty, didWin, wasDoubledown
 commandHandler.registerCommand('fixdbl', {
   aliases: ['fixdd'],
   cooldown: 0,
-  handler: async (message, _args) => {
+  handler: async (message) => {
     const { data } = await supabase
       .from('matches')
       .select('won, is_party, id, is_doubledown')
@@ -56,7 +61,7 @@ commandHandler.registerCommand('fixdbl', {
       currentMmr: message.channel.client.mmr,
       newMmr: toggleDoubledownMmr({
         currentMmr: message.channel.client.mmr,
-        didWin: !!bet.won,
+        didWin: bet.won,
         isParty: bet.is_party,
         wasDoubledown: bet.is_doubledown,
       }),

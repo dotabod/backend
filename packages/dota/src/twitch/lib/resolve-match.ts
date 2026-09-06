@@ -1,0 +1,413 @@
+import { getTwitchAPI, logger, supabase } from '@dotabod/shared-utils'
+import { t } from 'i18next'
+
+import { LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/get-wl'
+import { getSessionStartDate } from '../../db/stream-window'
+import { gsiHandlers } from '../../dota/lib/consts'
+import { updateMmr } from '../../dota/lib/update-mmr'
+import { steamSocket } from '../../steam/ws'
+import type { MatchMinimalDetailsResponse, SocketClient } from '../../types'
+import { chatClient } from '../chat-client'
+import { retryTransient } from './retry-transient'
+
+interface SessionMatch {
+  id: string
+  matchId: string
+  myTeam: string
+  predictionId: string | null
+  steam32Id: number | null
+  lobby_type: number | null
+  is_party: boolean | null
+  won: boolean | null
+}
+
+const findSessionMatch = async function findSessionMatch(
+  userId: string,
+  matchId: string,
+  streamStartDate?: Date | null
+): Promise<{ match: SessionMatch | null; error: string | null }> {
+  const startDate = getSessionStartDate(streamStartDate)
+
+  const { data: match } = await supabase
+    .from('matches')
+    .select('id, matchId, myTeam, predictionId, steam32Id, lobby_type, is_party, won')
+    .eq('matchId', matchId)
+    .eq('userId', userId)
+    .gte('created_at', startDate.toISOString())
+    .single()
+
+  if (match) {
+    return { error: null, match }
+  }
+
+  const { data: olderMatch } = await supabase
+    .from('matches')
+    .select('id')
+    .eq('matchId', matchId)
+    .eq('userId', userId)
+    .single()
+
+  if (olderMatch) {
+    return { error: 'expired', match: null }
+  }
+
+  return { error: 'notFound', match: null }
+}
+
+export interface ResolvedMatchRow {
+  matchId: string
+  hero_name: string | null
+  won: boolean
+}
+
+export const findResolvedMatchesInSession = async function findResolvedMatchesInSession(
+  userId: string,
+  streamStartDate: Date | null,
+  opts: { limit: number; excludeMatchId?: string } = { limit: 5 }
+): Promise<ResolvedMatchRow[]> {
+  const startDate = getSessionStartDate(streamStartDate)
+
+  let query = supabase
+    .from('matches')
+    .select('matchId, hero_name, won')
+    .eq('userId', userId)
+    .not('won', 'is', null)
+    .gte('created_at', startDate.toISOString())
+
+  if (opts.excludeMatchId !== undefined && opts.excludeMatchId.length > 0) {
+    query = query.neq('matchId', opts.excludeMatchId)
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false }).limit(opts.limit)
+
+  if (error) {
+    logger.warn('[BETS] findResolvedMatchesInSession query failed', { error, userId })
+    return []
+  }
+
+  return data ?? []
+}
+
+export const findMostRecentResolvedMatch = async function findMostRecentResolvedMatch(
+  userId: string,
+  streamStartDate: Date | null,
+  excludeMatchId?: string
+): Promise<{ matchId: string } | null> {
+  const match = (
+    await findResolvedMatchesInSession(userId, streamStartDate, {
+      excludeMatchId,
+      limit: 1,
+    })
+  ).at(0)
+  return match === undefined ? null : { matchId: match.matchId }
+}
+
+export const resolveByMostRecentMatch = async function resolveByMostRecentMatch(
+  client: SocketClient,
+  won: boolean,
+  username: string,
+  channel: string,
+  messageId: string
+): Promise<boolean> {
+  const recent = await findMostRecentResolvedMatch(
+    client.token,
+    client.stream_start_date,
+    client.gsi?.map?.matchid
+  )
+  if (!recent) {
+    return false
+  }
+
+  await resolveMatchRetroactively(client, recent.matchId, won, username, channel, messageId)
+  return true
+}
+
+const getMatchDetails = async function getMatchDetails(
+  matchId: string
+): Promise<MatchMinimalDetailsResponse | null> {
+  return await new Promise((resolve) => {
+    steamSocket.emit(
+      'getMatchMinimalDetails',
+      { match_id: Number(matchId) },
+      (err: unknown, response: MatchMinimalDetailsResponse) => {
+        if (err !== null && err !== undefined) {
+          logger.info('[BETS] Could not get match details for retroactive resolution', {
+            error: err,
+            matchId,
+          })
+          resolve(null)
+        } else {
+          resolve(response)
+        }
+      }
+    )
+  })
+}
+
+interface ResolveMatchResult {
+  success: boolean
+  errorKey?: string
+}
+
+const closeTwitchBetById = async function closeTwitchBetById(
+  won: boolean,
+  twitchId: string,
+  predictionId: string,
+  matchId: string
+): Promise<boolean> {
+  try {
+    const api = await getTwitchAPI(twitchId)
+
+    // Fetch recent predictions and find the one matching our ID
+    // We fetch more than 1 since the current game might have a different prediction
+    const { data: predictions } = await retryTransient(
+      async () => await api.predictions.getPredictions(twitchId, { limit: 10 }),
+      { label: 'resolveMatch:getPredictions' }
+    )
+
+    if (!Array.isArray(predictions) || !predictions.length) {
+      logger.info('[BETS] Retroactive resolution - no predictions found', {
+        matchId,
+        predictionId,
+        twitchId,
+      })
+      return false
+    }
+
+    // Find the specific prediction by ID
+    const prediction = predictions.find((p) => p.id === predictionId)
+
+    if (!prediction) {
+      logger.info('[BETS] Retroactive resolution - specific prediction not found in recent list', {
+        availablePredictions: predictions.map((p) => ({ id: p.id, status: p.status })),
+        matchId,
+        predictionId,
+        twitchId,
+      })
+      return false
+    }
+
+    // Check if prediction is in a state that can be resolved
+    // ACTIVE or LOCKED predictions can be resolved
+    if (!['ACTIVE', 'LOCKED'].includes(prediction.status)) {
+      logger.info('[BETS] Retroactive resolution - prediction already resolved or canceled', {
+        matchId,
+        predictionId,
+        status: prediction.status,
+        twitchId,
+      })
+      return false
+    }
+
+    const [wonOutcome, lossOutcome] = prediction.outcomes
+
+    await retryTransient(
+      async () =>
+        await api.predictions.resolvePrediction(
+          twitchId,
+          predictionId,
+          won ? wonOutcome.id : lossOutcome.id
+        ),
+      { label: 'resolveMatch:resolvePrediction' }
+    )
+
+    logger.info('[BETS] Retroactive resolution - prediction resolved successfully', {
+      matchId,
+      predictionId,
+      twitchId,
+      won,
+    })
+
+    return true
+  } catch (error) {
+    logger.info('[BETS] Retroactive resolution - could not resolve prediction', {
+      error,
+      matchId,
+      predictionId,
+      twitchId,
+    })
+    return false
+  }
+}
+
+export const resolveMatchRetroactively = async function resolveMatchRetroactively(
+  client: SocketClient,
+  matchId: string,
+  won: boolean,
+  resolvedByUsername: string,
+  channel: string,
+  messageId: string
+): Promise<ResolveMatchResult> {
+  // Check if trying to resolve the current ongoing match
+  const currentMatchId = client.gsi?.map?.matchid
+  if (currentMatchId !== undefined && currentMatchId.length > 0 && matchId === currentMatchId) {
+    chatClient.say(channel, t('bets.cannotResolveCurrentMatch', { lng: client.locale }), messageId)
+    return { errorKey: 'currentMatch', success: false }
+  }
+
+  // Find the match (resolved or not) within the session window
+  const { match, error } = await findSessionMatch(client.token, matchId, client.stream_start_date)
+
+  logger.info('[BETS] Retroactive resolution requested', {
+    matchId,
+    name: client.name,
+    previousWon: match?.won ?? null,
+    resolvedBy: resolvedByUsername,
+    won,
+  })
+
+  if (error === 'expired') {
+    chatClient.say(
+      channel,
+      t('bets.retroactiveMatchExpired', {
+        emote: 'PauseChamp',
+        lng: client.locale,
+        matchId,
+      }),
+      messageId
+    )
+    return { errorKey: 'expired', success: false }
+  }
+
+  if (error === 'notFound' || !match) {
+    chatClient.say(
+      channel,
+      t('bets.retroactiveMatchNotFound', {
+        emote: 'PauseChamp',
+        lng: client.locale,
+        matchId,
+      }),
+      messageId
+    )
+    return { errorKey: 'notFound', success: false }
+  }
+
+  // No-op: match is already marked the way the mod asked for.
+  if (match.won === won) {
+    chatClient.say(
+      channel,
+      t('bets.retroactiveAlreadyMatches', {
+        context: won ? 'won' : 'lost',
+        emote: 'PauseChamp',
+        lng: client.locale,
+        matchId,
+      }),
+      messageId
+    )
+    return { success: true }
+  }
+
+  const previousWon = match.won
+  const isCorrection = previousWon !== null
+  const isParty = match.is_party ?? false
+  const handler = gsiHandlers.get(client.token)
+
+  let lobbyType: number
+  if (isCorrection) {
+    // The row's lobby_type/scores were set at original resolution. Re-fetching
+    // from Steam risks clobbering them with null if Steam no longer has the
+    // match (common for older matches), so a flip only touches won + updated_at.
+    lobbyType = match.lobby_type ?? LOBBY_TYPE_RANKED
+
+    await supabase
+      .from('matches')
+      .update({ updated_at: new Date().toISOString(), won })
+      .eq('id', match.id)
+  } else {
+    const gcData = await getMatchDetails(matchId)
+    const matchData = gcData?.matches?.[0]
+    lobbyType = matchData?.lobby_type ?? match.lobby_type ?? LOBBY_TYPE_RANKED
+
+    await supabase
+      .from('matches')
+      .update({
+        dire_score: matchData?.dire_score ?? null,
+        game_mode: matchData?.game_mode ?? 22,
+        lobby_type: lobbyType,
+        radiant_score: matchData?.radiant_score ?? null,
+        updated_at: new Date().toISOString(),
+        won,
+      })
+      .eq('id', match.id)
+  }
+
+  const isRanked = lobbyType === LOBBY_TYPE_RANKED
+
+  logger.info('[BETS] Retroactive resolution - match updated in database', {
+    isRanked,
+    lobbyType,
+    matchId,
+    name: client.name,
+    previousWon,
+    won,
+  })
+
+  // Update MMR if it's a ranked game. For a flip we need to reverse the old
+  // delta AND apply the new one, so the magnitude doubles.
+  if (isRanked && match.steam32Id !== null && match.steam32Id !== 0) {
+    const mmrSize = isParty ? MULTIPLIER_PARTY : MULTIPLIER_SOLO
+    const mmrDelta = (won ? mmrSize : -mmrSize) * (isCorrection ? 2 : 1)
+    const newMMR = client.mmr + mmrDelta
+
+    await updateMmr({
+      channel: client.name,
+      currentMmr: client.mmr,
+      newMmr: newMMR,
+      steam32Id: match.steam32Id,
+      token: client.token,
+    })
+
+    logger.info('[BETS] Retroactive resolution - MMR updated', {
+      isCorrection,
+      isParty,
+      matchId,
+      name: client.name,
+      newMmr: newMMR,
+      oldMmr: client.mmr,
+    })
+  }
+
+  // Close the specific Twitch prediction only on a first-time resolution.
+  // Already-resolved predictions can't be re-resolved on Twitch's side,
+  // so we don't try when flipping a previously recorded result.
+  if (!isCorrection && match.predictionId !== null && match.predictionId.length > 0) {
+    const channelId = handler?.getChannelId() ?? client.Account?.providerAccountId
+
+    if (channelId !== undefined && channelId.length > 0) {
+      const closed = await closeTwitchBetById(won, channelId, match.predictionId, matchId)
+      if (closed) {
+        logger.info('[BETS] Retroactive resolution - Twitch prediction closed', {
+          matchId,
+          name: client.name,
+          predictionId: match.predictionId,
+        })
+      }
+    }
+  }
+
+  handler?.emitWLUpdate()
+
+  // Send success message
+  chatClient.say(
+    channel,
+    t(isCorrection ? 'bets.retroactiveCorrection' : 'bets.retroactiveResolutionSuccess', {
+      context: won ? 'won' : 'lost',
+      lng: client.locale,
+      matchId,
+      previousContext: previousWon === true ? 'won' : 'lost',
+      username: resolvedByUsername,
+    }),
+    messageId
+  )
+
+  logger.info('[BETS] Retroactive resolution completed successfully', {
+    isCorrection,
+    matchId,
+    name: client.name,
+    previousWon,
+    resolvedBy: resolvedByUsername,
+    won,
+  })
+
+  return { success: true }
+}

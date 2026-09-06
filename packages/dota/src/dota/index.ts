@@ -1,4 +1,4 @@
-import './events/gsiEventLoader'
+import './events/gsi-event-loader'
 import { lstatSync, readdirSync } from 'node:fs'
 import path, { join } from 'node:path'
 
@@ -8,11 +8,11 @@ import i18next from 'i18next'
 import FsBackend from 'i18next-fs-backend'
 import type { FsBackendOptions } from 'i18next-fs-backend'
 
-import RedisClient from '../db/RedisClient'
+import RedisClient from '../db/redis-client'
 import SetupSupabase from '../db/watcher'
-import GSIServer from './GSIServer'
-import { rearmPersistedClips } from './lib/clipSchedule'
-import { hydrateInvalidTokens } from './lib/invalidTokens'
+import GSIServer from './gsi-server'
+import { rearmPersistedClips } from './lib/clip-schedule'
+import { hydrateInvalidTokens } from './lib/invalid-tokens'
 import { server } from './server'
 
 logger.info("Starting 'dota' package")

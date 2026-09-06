@@ -1,5 +1,5 @@
-import { announceCapturedCosmetics } from '../../lib/announceCosmetics'
-import eventHandler from '../EventHandler'
+import { announceCapturedCosmetics } from '../../lib/announce-cosmetics'
+import eventHandler from '../event-handler'
 
 // A hero:id change is a fresh pick or a mid-game swap (GSI only emits on change). Hand off to
 // the shared announcer, which snapshots the equipped cosmetics and — only once the hero is

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { createSocketClientStub } from '../../__tests__/shared-mocks.ts'
 import {
   dotabodMatchHistoryUrl,
   dotabodProfileUrl,
@@ -30,23 +31,27 @@ describe(fmtMSS, () => {
 })
 
 describe(is8500Plus, () => {
-  const client = (overrides: Record<string, unknown>) => overrides as any
-
   it('is true when client mmr exceeds 8500', () => {
-    expect(is8500Plus(client({ SteamAccount: [], mmr: 9000 }))).toBeTruthy()
+    expect(is8500Plus(createSocketClientStub({ SteamAccount: [], mmr: 9000 }))).toBeTruthy()
   })
 
   it('is true when the matching steam account is at or above 8500', () => {
     expect(
-      is8500Plus(client({ SteamAccount: [{ mmr: 8500, steam32Id: 1 }], mmr: 0, steam32Id: 1 }))
+      is8500Plus(
+        createSocketClientStub({
+          SteamAccount: [{ leaderboard_rank: null, mmr: 8500, name: null, steam32Id: 1 }],
+          mmr: 0,
+          steam32Id: 1,
+        })
+      )
     ).toBeTruthy()
   })
 
   it('is true when the matching steam account has a leaderboard rank', () => {
     expect(
       is8500Plus(
-        client({
-          SteamAccount: [{ leaderboard_rank: 42, mmr: 100, steam32Id: 1 }],
+        createSocketClientStub({
+          SteamAccount: [{ leaderboard_rank: 42, mmr: 100, name: null, steam32Id: 1 }],
           mmr: 0,
           steam32Id: 1,
         })
@@ -56,31 +61,29 @@ describe(is8500Plus, () => {
 
   it('is false for a normal sub-8500 account', () => {
     expect(
-      is8500Plus(client({ SteamAccount: [{ mmr: 3000, steam32Id: 1 }], mmr: 3000, steam32Id: 1 }))
+      is8500Plus(
+        createSocketClientStub({
+          SteamAccount: [{ leaderboard_rank: null, mmr: 3000, name: null, steam32Id: 1 }],
+          mmr: 3000,
+          steam32Id: 1,
+        })
+      )
     ).toBeFalsy()
   })
 })
 
 describe('Dotabod profile URLs', () => {
-  const client = (overrides: Record<string, unknown>) => overrides as any
-  const normal = client({ SteamAccount: [{ mmr: 3000, steam32Id: 1 }], mmr: 3000, steam32Id: 1 })
-  const high = client({ SteamAccount: [], mmr: 9000 })
-
   it('normalizes channel names for profile and match-history routes', () => {
     expect(dotabodProfileUrl('Streamer')).toBe('dotabod.com/streamer')
-    expect(dotabodMatchHistoryUrl({ ...normal, name: '#Streamer' })).toBe(
-      'dotabod.com/streamer/matches'
-    )
+    expect(dotabodMatchHistoryUrl({ name: '#Streamer' })).toBe('dotabod.com/streamer/matches')
   })
 
   it('returns the first-party URL for 8500+ accounts', () => {
-    expect(dotabodMatchHistoryUrl({ ...high, name: 'streamer' })).toBe(
-      'dotabod.com/streamer/matches'
-    )
+    expect(dotabodMatchHistoryUrl({ name: 'streamer' })).toBe('dotabod.com/streamer/matches')
   })
 
   it('returns empty when the channel name is missing', () => {
     expect(dotabodProfileUrl('')).toBe('')
-    expect(dotabodMatchHistoryUrl({ ...normal, name: '' })).toBe('')
+    expect(dotabodMatchHistoryUrl({ name: '' })).toBe('')
   })
 })

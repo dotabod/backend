@@ -3,11 +3,11 @@ import { t } from 'i18next'
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { dotabodProfileUrl } from '../../utils/index'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
-import { getDotabodProfileUrl } from '../lib/getDotabodProfile'
-import { profileLink } from './profileLink'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
+import { getDotabodProfileUrl } from '../lib/get-dotabod-profile'
+import { profileLink } from './profile-link'
 
 commandHandler.registerCommand('dotabuff', {
   dbkey: DBSettings.commandDotabuff,
@@ -37,9 +37,9 @@ commandHandler.registerCommand('dotabuff', {
         locale: channelClient.locale,
       })
 
-      if (player?.accountid) {
+      if (player?.accountid !== null && player?.accountid !== undefined && player.accountid !== 0) {
         const url = await getDotabodProfileUrl(channelClient, Number(player.accountid))
-        if (!url) {
+        if (url === null || url.length === 0) {
           chatClient.say(
             channelName,
             t('dotabodProfileNotFound', {
@@ -63,12 +63,13 @@ commandHandler.registerCommand('dotabuff', {
           }),
           message.user.messageId
         )
-        return
       }
     } catch (error) {
       chatClient.say(
         message.channel.name,
-        (error as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        error instanceof Error
+          ? error.message
+          : t('gameNotFound', { lng: message.channel.client.locale }),
         message.user.messageId
       )
     }

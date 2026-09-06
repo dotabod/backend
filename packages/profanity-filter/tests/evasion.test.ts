@@ -4,7 +4,7 @@ import { getProfanityDetails, moderateText } from '../src/utils/moderation'
 import { detectAgeRestrictions } from '../src/utils/profanity-wordlists'
 
 // Helper function for testing
-function testBadPhrase(phrase: string, description: string) {
+const testBadPhrase = function testBadPhrase(phrase: string, description: string) {
   test(`should detect ${description}`, async () => {
     const moderated = await moderateText(phrase)
     expect(moderated).not.toBe(phrase)

@@ -1,19 +1,129 @@
-process.on('SIGTERM', () => process.exit(0))
-process.on('SIGINT', () => process.exit(0))
-
 import { checkBotStatus, checkSupabaseHealth, logger, startHeartbeat } from '@dotabod/shared-utils'
 
-import { fetchExistingSubscriptions, subsToCleanup } from './fetchExistingSubscriptions'
-import { subscribeToEvents } from './subscribeToEvents'
-import { deleteSubscription } from './twitch/lib/revokeEvent'
-import { setupHealthServer } from './utils/healthServer'
-import { rateLimiter } from './utils/rateLimiterCore'
+import { fetchExistingSubscriptions, subsToCleanup } from './fetch-existing-subscriptions'
+import { subscribeToEvents } from './subscribe-to-events'
+import { deleteSubscription } from './twitch/lib/revoke-event'
+import { setupHealthServer } from './utils/health-server'
+import { rateLimiter } from './utils/rate-limiter-core'
 import { scheduleNonOverlapping } from './utils/scheduler'
-import { setupSocketIO } from './utils/socketUtils'
-import { runSubscriptionHealthCheck } from './utils/subscriptionHealthCheck'
+import { setupSocketIO } from './utils/socket-utils'
+import { runSubscriptionHealthCheck } from './utils/subscription-health-check'
 import { setupAccountWatcher } from './watcher'
 
 const HEALTH_CHECK_INTERVAL_MS = 5 * 60 * 1000
+const CLEANUP_CHUNK_SIZE = 30
+
+interface CleanupProgress {
+  completed: number
+  lastLogTime: number
+  startTime: number
+}
+
+const logDeletionProgress = function logDeletionProgress(
+  progress: CleanupProgress,
+  total: number
+): void {
+  const now = Date.now()
+  const shouldLog =
+    progress.completed % 500 === 0 ||
+    now - progress.lastLogTime > 10_000 ||
+    progress.completed === total
+  if (!shouldLog) {
+    return
+  }
+
+  progress.lastLogTime = now
+  const percentComplete = Math.round((progress.completed / total) * 100)
+  const elapsedSec = (now - progress.startTime) / 1000
+  const estimatedTotalSec = elapsedSec / (progress.completed / total)
+  const remainingSec = Math.max(0, estimatedTotalSec - elapsedSec)
+
+  logger.info('[TWITCHEVENTS] Deletion progress', {
+    completed: progress.completed,
+    percent: `${percentComplete}%`,
+    rateLimit: {
+      queueLength: rateLimiter.queueLength,
+      remaining: rateLimiter.rateLimitStatus.remaining,
+    },
+    timeElapsed: `${Math.round(elapsedSec / 60)}m ${Math.round(elapsedSec % 60)}s`,
+    timeRemaining: `~${Math.round(remainingSec / 60)} minutes`,
+    total,
+  })
+}
+
+const deleteSubscriptionChunk = async function deleteSubscriptionChunk(
+  subscriptionIds: readonly string[],
+  progress: CleanupProgress
+): Promise<void> {
+  await Promise.all(
+    subscriptionIds.map(async (subscriptionId) => {
+      await rateLimiter.schedule(async () => {
+        await deleteSubscription(subscriptionId)
+        progress.completed += 1
+        logDeletionProgress(progress, subsToCleanup.length)
+      })
+    })
+  )
+}
+
+const deleteSubscriptionChunks = async function deleteSubscriptionChunks(
+  startIndex: number,
+  progress: CleanupProgress
+): Promise<void> {
+  if (startIndex >= subsToCleanup.length) {
+    return
+  }
+
+  await deleteSubscriptionChunk(
+    subsToCleanup.slice(startIndex, startIndex + CLEANUP_CHUNK_SIZE),
+    progress
+  )
+  await deleteSubscriptionChunks(startIndex + CLEANUP_CHUNK_SIZE, progress)
+}
+
+const cleanUpSubscriptions = async function cleanUpSubscriptions(): Promise<void> {
+  logger.info('[TWITCHEVENTS] Deleting old subscriptions', { count: subsToCleanup.length })
+  if (subsToCleanup.length === 0) {
+    logger.info('[TWITCHEVENTS] No subscriptions to clean up')
+    return
+  }
+
+  const startTime = Date.now()
+  await deleteSubscriptionChunks(0, {
+    completed: 0,
+    lastLogTime: startTime,
+    startTime,
+  })
+
+  const totalTime = (Date.now() - startTime) / 1000
+  logger.info('[TWITCHEVENTS] Deletion completed', {
+    timing: {
+      averageRate: `${Math.round(subsToCleanup.length / totalTime)} deletions/sec`,
+      totalTime: `${Math.floor(totalTime / 60)}m ${Math.round(totalTime % 60)}s`,
+    },
+    total: subsToCleanup.length,
+  })
+}
+
+const reconcileSubscriptions = async function reconcileSubscriptions(): Promise<void> {
+  try {
+    await fetchExistingSubscriptions()
+    await subscribeToEvents()
+    await cleanUpSubscriptions()
+  } catch (error) {
+    logger.error('[TWITCHEVENTS] Background reconciliation failed', {
+      count: subsToCleanup.length,
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+process.on('SIGTERM', () => {
+  process.exit(0)
+})
+process.on('SIGINT', () => {
+  process.exit(0)
+})
 
 const isBanned = await checkBotStatus()
 if (isBanned) {
@@ -54,74 +164,4 @@ scheduleNonOverlapping(async () => {
   }
 }, HEALTH_CHECK_INTERVAL_MS)
 
-void (async () => {
-  try {
-    await fetchExistingSubscriptions()
-
-    await subscribeToEvents()
-
-    logger.info('[TWITCHEVENTS] Deleting old subscriptions', { count: subsToCleanup.length })
-
-    if (subsToCleanup.length > 0) {
-      const CHUNK_SIZE = 30
-      let completed = 0
-      const startTime = Date.now()
-      let lastLogTime = Date.now()
-
-      for (let i = 0; i < subsToCleanup.length; i += CHUNK_SIZE) {
-        const chunk = subsToCleanup.slice(i, i + CHUNK_SIZE)
-        await Promise.all(
-          chunk.map(async (subId) => {
-            await rateLimiter.schedule(async () => {
-              await deleteSubscription(subId)
-              completed++
-
-              const now = Date.now()
-              const shouldLog =
-                completed % 500 === 0 ||
-                now - lastLogTime > 10_000 ||
-                completed === subsToCleanup.length
-
-              if (shouldLog) {
-                lastLogTime = now
-
-                const percentComplete = Math.round((completed / subsToCleanup.length) * 100)
-                const elapsedSec = (now - startTime) / 1000
-                const estimatedTotalSec = elapsedSec / (completed / subsToCleanup.length)
-                const remainingSec = Math.max(0, estimatedTotalSec - elapsedSec)
-
-                logger.info('[TWITCHEVENTS] Deletion progress', {
-                  completed,
-                  percent: `${percentComplete}%`,
-                  rateLimit: {
-                    queueLength: rateLimiter.queueLength,
-                    remaining: rateLimiter.rateLimitStatus.remaining,
-                  },
-                  timeElapsed: `${Math.round(elapsedSec / 60)}m ${Math.round(elapsedSec % 60)}s`,
-                  timeRemaining: `~${Math.round(remainingSec / 60)} minutes`,
-                  total: subsToCleanup.length,
-                })
-              }
-            })
-          })
-        )
-      }
-
-      const totalTime = (Date.now() - startTime) / 1000
-      logger.info('[TWITCHEVENTS] Deletion completed', {
-        timing: {
-          averageRate: `${Math.round(subsToCleanup.length / totalTime)} deletions/sec`,
-          totalTime: `${Math.floor(totalTime / 60)}m ${Math.round(totalTime % 60)}s`,
-        },
-        total: subsToCleanup.length,
-      })
-    } else {
-      logger.info('[TWITCHEVENTS] No subscriptions to clean up')
-    }
-  } catch (error) {
-    logger.error('[TWITCHEVENTS] Background reconciliation failed', {
-      count: subsToCleanup.length,
-      error: error instanceof Error ? error.message : String(error),
-    })
-  }
-})()
+void reconcileSubscriptions()

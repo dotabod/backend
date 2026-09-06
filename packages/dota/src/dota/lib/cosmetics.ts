@@ -18,14 +18,16 @@ const cosmetics = COSMETICS as Record<string, CosmeticMeta>
 // hero's equipped cosmetics. Defindexes absent from cosmetics.json are default
 // model parts (e.g. Invoker's base arms) and are skipped, leaving only the
 // player-equipped wearables.
-export function resolveCosmetics(wearables?: Record<string, number>): ResolvedCosmetic[] {
+export const resolveCosmetics = function resolveCosmetics(
+  wearables?: Record<string, number>
+): ResolvedCosmetic[] {
   if (!wearables) {
     return []
   }
 
   const items: ResolvedCosmetic[] = []
   for (const [key, defindex] of Object.entries(wearables)) {
-    if (!/^wearable\d+$/.test(key)) {
+    if (!/^wearable\d+$/u.test(key)) {
       continue
     }
     if (typeof defindex !== 'number') {
@@ -33,7 +35,7 @@ export function resolveCosmetics(wearables?: Record<string, number>): ResolvedCo
     }
 
     const meta = cosmetics[String(defindex)]
-    if (!meta) {
+    if (!Object.hasOwn(cosmetics, String(defindex))) {
       continue
     }
 

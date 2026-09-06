@@ -1,8 +1,8 @@
-import type { GSIServerInterface } from './GSIServerTypes'
+import type { GSIServerInterface, GsiSocketServer } from './gsi-server-types'
 
 // Create a global variable to hold the server instance
 // This avoids the top-level await export that's causing issues
-let _server: GSIServerInterface | null = null
+let _server: Pick<GSIServerInterface, 'io'> | null = null
 
 // Export a server object with accessor methods
 export const server = {
@@ -12,7 +12,7 @@ export const server = {
     }
     return _server.io
   },
-  setServer(serverInstance: GSIServerInterface) {
+  setServer(serverInstance: { io: GsiSocketServer }) {
     _server = serverInstance
   },
 }

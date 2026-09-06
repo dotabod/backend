@@ -10,12 +10,14 @@ export const SUBSCRIPTION_TIERS = {
   PRO: 'PRO',
 } as const
 
-export function isSubscriptionActive(subscription?: SubscriptionRow): boolean {
+export const isSubscriptionActive = function isSubscriptionActive(
+  subscription?: SubscriptionRow
+): boolean {
   // The credits need to be applied to be active
   // Dotabod creates a subscription for the gift, and the credits are immediately applied
   // But in rare cases, the subscription is not created in time, or they could not have enough
   // credits to activate immediately.
-  if (subscription?.isGift) {
+  if (subscription?.isGift === true) {
     return false
   }
   if (!subscription?.status) {

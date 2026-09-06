@@ -1,18 +1,19 @@
 import { moderateText } from '@dotabod/profanity-filter'
 import { t } from 'i18next'
+import { z } from 'zod'
 
 import { DBSettings, getValueOrDefault } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
 
 // Last.fm's JSON API returns track/artist/album names with HTML-encoded entities
 // (e.g. "&#39;" for "'", "&amp;" for "&"). Twitch chat doesn't render HTML, so
 // we decode the common entities before emitting.
 const decodeHtmlEntities = (s: string): string =>
   s
-    .replaceAll(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
-    .replaceAll(/&#x([0-9a-fA-F]+);/g, (_, hex: string) =>
+    .replaceAll(/&#(?<decimalCode>\d+);/gu, (_, code: string) => String.fromCodePoint(Number(code)))
+    .replaceAll(/&#x(?<hexCode>[0-9a-fA-F]+);/gu, (_, hex: string) =>
       String.fromCodePoint(Number.parseInt(hex, 16))
     )
     .replaceAll('&quot;', '"')
@@ -21,51 +22,57 @@ const decodeHtmlEntities = (s: string): string =>
     .replaceAll('&gt;', '>')
     .replaceAll('&amp;', '&')
 
-interface LastFmImage {
-  size: 'small' | 'medium' | 'large' | 'extralarge'
-  '#text': string
+const lastFmTrackSchema = z.object({
+  '@attr': z.object({ nowplaying: z.string() }).optional(),
+  album: z.object({ '#text': z.string() }),
+  artist: z.object({ '#text': z.string() }),
+  name: z.string(),
+})
+
+const lastFmResponseSchema = z.object({
+  recenttracks: z.object({
+    track: z.array(lastFmTrackSchema),
+  }),
+})
+
+type LastFmTrack = z.infer<typeof lastFmTrackSchema>
+
+const getRecentTrack = async function getRecentTrack(
+  lastFmUsername: string,
+  apiKey: string
+): Promise<LastFmTrack | null> {
+  const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${lastFmUsername}&api_key=${apiKey}&format=json&limit=1`
+  const response = await fetch(url)
+  const payload: unknown = await response.json()
+  const parsedResponse = lastFmResponseSchema.parse(payload)
+  return parsedResponse.recenttracks.track.at(0) ?? null
 }
 
-interface LastFmTrack {
-  artist: {
-    mbid: string
-    '#text': string
-  }
-  streamable: string
-  image: LastFmImage[]
-  mbid: string
-  album: {
-    mbid: string
-    '#text': string
-  }
-  name: string
-  '@attr'?: {
-    nowplaying: string
-  }
-  url: string
-  date?: {
-    uts: string
-    '#text': string
-  }
+const withFallback = function withFallback(value: string | undefined, fallback: string): string {
+  return value !== undefined && value.length > 0 ? value : fallback
 }
 
-interface LastFmResponse {
-  recenttracks: {
-    track: LastFmTrack[]
-    '@attr': {
-      user: string
-      totalPages: string
-      page: string
-      perPage: string
-      total: string
-    }
+const getModeratedTrack = async function getModeratedTrack(track: LastFmTrack): Promise<{
+  album: string
+  artist: string
+  title: string
+}> {
+  const [artist, title, album] = await Promise.all([
+    moderateText(decodeHtmlEntities(withFallback(track.artist['#text'], 'Unknown'))),
+    moderateText(decodeHtmlEntities(withFallback(track.name, 'Unknown'))),
+    moderateText(decodeHtmlEntities(track.album['#text'])),
+  ])
+  return {
+    album: album !== undefined && album.length > 0 ? ` [${album}]` : '',
+    artist: withFallback(artist, 'Unknown'),
+    title: withFallback(title, 'Unknown'),
   }
 }
 
 commandHandler.registerCommand('song', {
   aliases: ['lastfm', 'music', 'nowplaying'],
   dbkey: DBSettings.commandLastFm,
-  handler: async (message: MessageType, _args: string[]) => {
+  handler: async (message: MessageType) => {
     const {
       channel: { name: channel, client },
     } = message
@@ -78,7 +85,7 @@ commandHandler.registerCommand('song', {
         client.subscription
       )
 
-      if (!lastFmUsername) {
+      if (lastFmUsername === null || lastFmUsername === undefined || lastFmUsername.length === 0) {
         chatClient.say(
           channel,
           t('lastFmNotConfigured', { lng: client.locale }),
@@ -89,28 +96,17 @@ commandHandler.registerCommand('song', {
 
       // Call the Last.fm API to get the current song
       const apiKey = process.env.LASTFM_API_KEY
-      if (!apiKey) {
+      if (apiKey === undefined || apiKey.length === 0) {
         chatClient.say(channel, t('songError', { lng: client.locale }), message.user.messageId)
         return
       }
 
-      const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${lastFmUsername}&api_key=${apiKey}&format=json&limit=1`
-
-      const response = await fetch(url)
-      const data = (await response.json()) as LastFmResponse
-
-      if (data && 'error' in data) {
-        chatClient.say(channel, t('songError', { lng: client.locale }), message.user.messageId)
-        return
-      }
-
-      const tracks = data.recenttracks?.track
-      if (!tracks?.length) {
+      const recentTrack = await getRecentTrack(lastFmUsername, apiKey)
+      if (recentTrack === null) {
         chatClient.say(channel, t('songNotPlaying', { lng: client.locale }), message.user.messageId)
         return
       }
 
-      const recentTrack = tracks[0]
       const isNowPlaying = recentTrack['@attr']?.nowplaying === 'true'
 
       if (!isNowPlaying) {
@@ -118,23 +114,20 @@ commandHandler.registerCommand('song', {
         return
       }
 
-      const [artist, title, albumText] = await Promise.all([
-        moderateText(decodeHtmlEntities(recentTrack.artist['#text'] || 'Unknown')),
-        moderateText(decodeHtmlEntities(recentTrack.name || 'Unknown')),
-        moderateText(decodeHtmlEntities(recentTrack.album['#text'] || '')),
-      ])
+      const track = await getModeratedTrack(recentTrack)
 
       // Twitch chat isn't HTML, so disable i18next's default HTML-escape —
       // otherwise the decoded apostrophes get re-encoded back to "&#39;".
       chatClient.say(
         channel,
         t('currentSong', {
-          album: albumText ? ` [${albumText}]` : '',
-          artist: artist || 'Unknown',
+          album: track.album,
+          artist: track.artist,
           interpolation: { escapeValue: false },
           lng: client.locale,
-          title: title || 'Unknown',
-          url: '', // dont show the url,
+          title: track.title,
+          // dont show the url,
+          url: '',
         }),
         message.user.messageId
       )

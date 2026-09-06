@@ -1,6 +1,10 @@
-import { Elysia } from 'elysia'
+import { Elysia, t } from 'elysia'
 
 import { getProfanityDetails, moderateText } from './utils/moderation'
+
+const textRequestSchema = t.Object({
+  text: t.Union([t.String(), t.Array(t.String())]),
+})
 
 // Create Elysia app
 const app = new Elysia()
@@ -23,81 +27,83 @@ const app = new Elysia()
     name: 'Profanity Filter API',
     version: '1.0.0',
   }))
-  .post('/moderate', async ({ body }) => {
-    const { text } = body as { text: string | string[] }
+  .post(
+    '/moderate',
+    async ({ body }) => {
+      const { text } = body
 
-    if (!text) {
-      return {
-        error: 'Missing text parameter',
-      }
-    }
-    try {
-      let moderatedText: string | string[] | undefined
-
-      if (Array.isArray(text)) {
-        moderatedText = await moderateText(text)
-        // Handle array input
+      if (text.length === 0) {
         return {
-          containsProfanity: (moderatedText as string[]).some(
-            (moderated, index) => moderated !== text[index]
-          ),
+          error: 'Missing text parameter',
+        }
+      }
+      try {
+        if (Array.isArray(text)) {
+          const moderatedText = (await moderateText(text)) ?? text
+          return {
+            containsProfanity: moderatedText.some((moderated, index) => moderated !== text[index]),
+            moderated: moderatedText,
+            original: text,
+          }
+        }
+
+        const moderatedText = await moderateText(text)
+        return {
+          containsProfanity: moderatedText !== text,
           moderated: moderatedText,
           original: text,
         }
-      }
-
-      moderatedText = await moderateText(text)
-
-      // Handle single string input
-      return {
-        containsProfanity: moderatedText !== text,
-        moderated: moderatedText,
-        original: text,
-      }
-    } catch (error) {
-      return {
-        error: 'Error moderating text',
-        message: error instanceof Error ? error.message : String(error),
-      }
-    }
-  })
-  .post('/check', ({ body }) => {
-    const { text } = body as { text: string | string[] }
-
-    if (!text) {
-      return {
-        error: 'Missing text parameter',
-      }
-    }
-
-    try {
-      const details = getProfanityDetails(text)
-
-      if (Array.isArray(text)) {
-        // Handle array input
+      } catch (error) {
         return {
-          containsProfanity: (details as { isFlagged: boolean }[]).some((item) => item.isFlagged),
-          details,
-          original: text,
+          error: 'Error moderating text',
+          message: error instanceof Error ? error.message : String(error),
+        }
+      }
+    },
+    { body: textRequestSchema }
+  )
+  .post(
+    '/check',
+    ({ body }) => {
+      const { text } = body
+
+      if (text.length === 0) {
+        return {
+          error: 'Missing text parameter',
         }
       }
 
-      // Handle single string input
-      return {
-        containsProfanity: (details as { isFlagged: boolean }).isFlagged,
-        details,
-        original: text,
+      try {
+        if (Array.isArray(text)) {
+          const details = getProfanityDetails(text)
+          return {
+            containsProfanity: details.some((item) => item.isFlagged),
+            details,
+            original: text,
+          }
+        }
+
+        const details = getProfanityDetails(text)
+        return {
+          containsProfanity: details.isFlagged,
+          details,
+          original: text,
+        }
+      } catch (error) {
+        return {
+          error: 'Error checking text',
+          message: error instanceof Error ? error.message : String(error),
+        }
       }
-    } catch (error) {
-      return {
-        error: 'Error checking text',
-        message: error instanceof Error ? error.message : String(error),
-      }
-    }
-  })
+    },
+    { body: textRequestSchema }
+  )
 
 // Start the server
-const port = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 3000
+const port =
+  process.env.PORT !== undefined && process.env.PORT.length > 0
+    ? Math.trunc(Number(process.env.PORT))
+    : 3000
 app.listen(port)
 
 console.log(`🚀 Profanity Filter API running at http://localhost:${port}`)

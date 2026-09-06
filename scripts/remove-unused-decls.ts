@@ -46,13 +46,13 @@ for (const [filename, diags] of byFile) {
     const ident = source.getDescendantAtPos(offset)
     if (!ident) {
       console.warn(`  skip (no node): ${filename}:${d.labels[0].span.line}`)
-      skipped++
+      skipped += 1
       continue
     }
 
     const parent = ident.getParent()
     if (!parent) {
-      skipped++
+      skipped += 1
       continue
     }
 
@@ -62,7 +62,7 @@ for (const [filename, diags] of byFile) {
     if (isParam) {
       const name = ident.getText()
       ident.replaceWithText(`_${name}`)
-      renamed++
+      renamed += 1
       continue
     }
 
@@ -76,12 +76,12 @@ for (const [filename, diags] of byFile) {
 
     try {
       ;(toRemove as unknown as { remove: () => void }).remove()
-      removed++
+      removed += 1
     } catch (error) {
       console.warn(
         `  failed to remove ${filename}:${d.labels[0].span.line} — ${(error as Error).message}`
       )
-      skipped++
+      skipped += 1
     }
   }
 

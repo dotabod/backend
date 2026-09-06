@@ -16,12 +16,20 @@ afterEach(() => {
 // Winston delivers to transports via a stream, so flush a tick before asserting.
 const flush = async () => await new Promise((resolve) => setTimeout(resolve, 0))
 
-async function captureLogs(emit: (logger: any) => void) {
+const isLogInfo = function isLogInfo(value: unknown): value is Record<PropertyKey, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+const captureLogs = async function captureLogs(
+  emit: (logger: ReturnType<typeof createAppLogger>) => void
+) {
   const logger = createAppLogger()
   const transport = logger.transports[0]
-  const captured: any[] = []
-  vi.spyOn(transport, 'log').mockImplementation((info: any, next?: () => void) => {
-    captured.push(info)
+  const captured: Record<PropertyKey, unknown>[] = []
+  vi.spyOn(transport, 'log').mockImplementation((info: unknown, next?: () => void) => {
+    if (isLogInfo(info)) {
+      captured.push(info)
+    }
     next?.()
   })
   emit(logger)
@@ -35,11 +43,11 @@ describe('shared-utils logger', () => {
 
     expect(captured).toHaveLength(1)
     const info = captured[0]
-    expect(info.level).toContain('error')
-    expect(info.message).toBe('boom')
-    expect(info.requestId).toBe('abc-123')
+    expect(info?.level).toContain('error')
+    expect(info?.message).toBe('boom')
+    expect(info?.requestId).toBe('abc-123')
     // The printf format renders a single line carrying message + metadata.
-    const line = String(info[Symbol.for('message')])
+    const line = String(info?.[Symbol.for('message')])
     expect(line).toContain('boom')
     expect(line).toContain('abc-123')
   })
@@ -49,6 +57,6 @@ describe('shared-utils logger', () => {
     const captured = await captureLogs((logger) => logger.error('failed', { e: err }))
 
     expect(captured).toHaveLength(1)
-    expect(captured[0]['e.stack']).toContain('kaboom')
+    expect(captured[0]?.['e.stack']).toContain('kaboom')
   })
 })

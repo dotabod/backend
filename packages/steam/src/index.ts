@@ -4,10 +4,10 @@ process.on('SIGINT', () => process.exit(0))
 import { startHeartbeat } from '@dotabod/shared-utils'
 import type { Socket } from 'socket.io'
 
-import { initSpectatorProtobuff } from './initSpectatorProtobuff'
-import { getSocketIoServer } from './socketServer'
+import { initSpectatorProtobuff } from './init-spectator-protobuff'
+import { getSocketIoServer } from './socket-server'
 import Dota, { GetRealTimeStats } from './steam'
-import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails'
+import type { MatchMinimalDetailsResponse } from './types/match-minimal-details'
 import { logger } from './utils/logger'
 
 let _hasDotabodSocket = false
@@ -42,6 +42,10 @@ dota.dota2.on('unready', () => {
 })
 
 type callback = (err: string | null, response: unknown) => void
+
+const getErrorMessage = function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
 
 // Store active sockets with cleanup capability
 const activeSockets = new Set()
@@ -107,13 +111,14 @@ socketIoServer.on('connection', (socket) => {
       const result = await withTimeout(dota.getCards(accountIds, refetchCards))
       callback(null, result)
     } catch (error) {
+      const errorMessage = getErrorMessage(error)
       logger.error('[STEAM] Error getting cards', {
         accountIds,
-        error: (error as Error).message,
+        error: errorMessage,
         errorAll: error,
         refetchCards,
       })
-      callback((error as Error).message, null)
+      callback(errorMessage, null)
     }
   })
 
@@ -126,7 +131,7 @@ socketIoServer.on('connection', (socket) => {
       const result = await withTimeout(dota.getCard(accountId))
       callback(null, result)
     } catch (error) {
-      callback((error as Error).message, null)
+      callback(getErrorMessage(error), null)
     }
   })
 
@@ -139,7 +144,7 @@ socketIoServer.on('connection', (socket) => {
       const result = await withTimeout(dota.getPlayerSummaries(accountIds))
       callback(null, result)
     } catch (error) {
-      callback((error as Error).message, null)
+      callback(getErrorMessage(error), null)
     }
   })
 
@@ -158,12 +163,13 @@ socketIoServer.on('connection', (socket) => {
       logger.info('[STEAM] Got user steam server', { result, steam32Id })
       callback(null, result)
     } catch (error) {
+      const errorMessage = getErrorMessage(error)
       logger.error('[STEAM] Error getting user steam server, unknown error', {
         caughtError: error,
-        error: (error as Error).message,
+        error: errorMessage,
         steam32Id,
       })
-      callback((error as Error).message, null)
+      callback(errorMessage, null)
     }
   })
 
@@ -178,7 +184,7 @@ socketIoServer.on('connection', (socket) => {
         const result = await withTimeout(GetRealTimeStats(data))
         callback(null, result)
       } catch (error) {
-        callback((error as Error).message, null)
+        callback(getErrorMessage(error), null)
       }
     }
   )
@@ -194,7 +200,7 @@ socketIoServer.on('connection', (socket) => {
       )
       callback(null, response)
     } catch (error) {
-      callback((error as Error).message, null)
+      callback(getErrorMessage(error), null)
     }
   })
 })

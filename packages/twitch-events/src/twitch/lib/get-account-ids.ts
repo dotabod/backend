@@ -1,0 +1,51 @@
+import { logger, supabase } from '@dotabod/shared-utils'
+
+interface AccountRow {
+  providerAccountId: string | null
+  users: { followers: number | null } | { followers: number | null }[] | null
+}
+
+const pluckProviderIds = function pluckProviderIds(rows: AccountRow[] | null): string[] {
+  return (rows ?? []).map((r) => r.providerAccountId).filter((id): id is string => Boolean(id))
+}
+
+// PostgREST caps unpaginated selects at 1000 rows. Ordering by followers desc
+// meant only the top ~1000 most-followed channels were ever health-checked -
+// any account below that cutoff could lose a subscription (e.g. a failed,
+// non-retried channel.chat.message subscribe) and never get auto-repaired.
+// Page through with .range() so every account is covered.
+const PAGE_SIZE = 1000
+
+const fetchAccountPage = async function fetchAccountPage(from: number): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('accounts')
+    .select('providerAccountId, users!inner(followers)')
+    .eq('provider', 'twitch')
+    .neq('requires_refresh', true)
+    .ilike('scope', '%channel:bot%')
+    .order('followers', { ascending: false, nullsFirst: false, referencedTable: 'users' })
+    .order('providerAccountId', { ascending: true })
+    .range(from, from + PAGE_SIZE - 1)
+
+  if (error !== null) {
+    logger.error('[TWITCHEVENTS] getAccountIds query failed', { error: error.message })
+    throw error
+  }
+
+  const providerIds = pluckProviderIds(data)
+  if (data.length < PAGE_SIZE) {
+    return providerIds
+  }
+  return [...providerIds, ...(await fetchAccountPage(from + PAGE_SIZE))]
+}
+
+export const getAccountIds = async function getAccountIds(): Promise<string[]> {
+  logger.info('[TWITCHSETUP] Running getAccountIds')
+  const providerIds = await fetchAccountPage(0)
+
+  if (providerIds.length < 10) {
+    logger.info(`[TWITCHEVENTS] joining ${providerIds.length} channels`, { providerIds })
+  }
+  logger.info(`[TWITCHEVENTS] joining ${providerIds.length} channels`)
+  return providerIds
+}

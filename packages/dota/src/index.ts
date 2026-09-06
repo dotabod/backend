@@ -3,10 +3,10 @@ process.on('SIGINT', () => process.exit(0))
 
 import { checkSupabaseHealth, startHeartbeat } from '@dotabod/shared-utils'
 
-import { redisClient } from './db/redisInstance'
+import { redisClient } from './db/redis-instance'
 import { steamSocket } from './steam/ws'
 
-function initServer() {
+const initServer = function initServer() {
   Promise.all([import('./dota/index'), import('./twitch/index')])
     .then(() => {
       // All imports are now loaded

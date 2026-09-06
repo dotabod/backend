@@ -1,26 +1,27 @@
 import { t } from 'i18next'
 
-import { LOBBY_TYPE_RANKED } from '../../db/getWL'
-import { isArcade } from '../../dota/lib/isArcade'
-import { isSpectator } from '../../dota/lib/isSpectator'
+import { LOBBY_TYPE_RANKED } from '../../db/get-wl'
+import { isArcade } from '../../dota/lib/is-arcade'
+import { isSpectator } from '../../dota/lib/is-spectator'
 import { DBSettings } from '../../settings'
-import MongoDBSingleton from '../../steam/MongoDBSingleton'
+import MongoDBSingleton from '../../steam/mongo-db-singleton'
 import type { DelayedGames } from '../../types'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('ranked', {
   aliases: ['isranked'],
   dbkey: DBSettings.commandRanked,
-  handler: async (message, _args) => {
+  handler: async (message) => {
     const {
       channel: { name: channel, client },
     } = message
 
-    if (!client.steam32Id) {
+    if (client.steam32Id === null || client.steam32Id === 0) {
       chatClient.say(
         channel,
-        message.channel.client.multiAccount
+        message.channel.client.multiAccount !== undefined &&
+          message.channel.client.multiAccount !== 0
           ? t('multiAccount', {
               lng: message.channel.client.locale,
               url: 'dotabod.com/dashboard/features',
@@ -42,7 +43,13 @@ commandHandler.registerCommand('ranked', {
       return
     }
 
-    if (!currentMatchId || !Number(currentMatchId) || isSpectator(client.gsi)) {
+    const numericMatchId = Number(currentMatchId)
+    const hasValidMatchId =
+      currentMatchId !== undefined &&
+      currentMatchId.length > 0 &&
+      numericMatchId !== 0 &&
+      !Number.isNaN(numericMatchId)
+    if (!hasValidMatchId || isSpectator(client.gsi)) {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
@@ -77,7 +84,7 @@ commandHandler.registerCommand('ranked', {
         return
       }
     } finally {
-      await mongo.close()
+      mongo.close()
     }
     chatClient.say(
       channel,

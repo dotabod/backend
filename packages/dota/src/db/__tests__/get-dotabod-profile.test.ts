@@ -1,0 +1,37 @@
+import { beforeEach, describe, expect, it } from 'vitest'
+
+import { createSocketClientStub } from '../../__tests__/shared-mocks'
+import { dbState, resetDbState } from './db-mocks.ts'
+
+const { getDotabodProfileUrl } = await import('../../twitch/lib/get-dotabod-profile')
+
+const client = createSocketClientStub({
+  SteamAccount: [{ leaderboard_rank: null, mmr: 0, name: null, steam32Id: 99_999 }],
+  name: '#Streamer',
+  steam32Id: 99_999,
+})
+
+describe('getDotabodProfileUrl', () => {
+  beforeEach(() => {
+    resetDbState()
+  })
+
+  it('returns the current streamer profile without a database lookup', async () => {
+    await expect(getDotabodProfileUrl(client, 99_999)).resolves.toBe('dotabod.com/streamer')
+  })
+
+  it('resolves another tracked player through their Steam account', async () => {
+    dbState.tableResults.steam_accounts = {
+      data: { users: { name: 'OtherStreamer' } },
+      error: null,
+    }
+
+    await expect(getDotabodProfileUrl(client, 88_888)).resolves.toBe('dotabod.com/otherstreamer')
+  })
+
+  it('returns null when the selected player has no Dotabod profile', async () => {
+    dbState.tableResults.steam_accounts = { data: null, error: { message: 'not found' } }
+
+    await expect(getDotabodProfileUrl(client, 88_888)).resolves.toBeNull()
+  })
+})

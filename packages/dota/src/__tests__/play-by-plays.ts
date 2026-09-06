@@ -1,1 +1,1 @@
-export { gameEnd } from './fixtures/gameEnd'
+export { gameEnd } from './fixtures/game-end'

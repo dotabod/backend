@@ -1,7 +1,7 @@
-import RedisClient from '../db/RedisClient'
+import RedisClient from '../db/redis-client'
 import type { SocketClient } from '../types'
 
-export function steamID64toSteamID32(steamID64: string) {
+export const steamID64toSteamID32 = function steamID64toSteamID32(steamID64: string) {
   if (!steamID64) {
     return null
   }
@@ -13,7 +13,7 @@ export function steamID64toSteamID32(steamID64: string) {
 }
 
 const STEAMID64_OFFSET = 76_561_197_960_265_728n
-export function steamID32toSteamID64(steam32Id: number) {
+export const steamID32toSteamID64 = function steamID32toSteamID64(steam32Id: number) {
   try {
     return (BigInt(steam32Id) + STEAMID64_OFFSET).toString()
   } catch {
@@ -21,14 +21,14 @@ export function steamID32toSteamID64(steam32Id: number) {
   }
 }
 
-export function fmtMSS(totalSeconds: number) {
+export const fmtMSS = function fmtMSS(totalSeconds: number) {
   // 👇️ get number of full minutes
   const minutes = Math.floor(totalSeconds / 60)
 
   // 👇️ get remainder of seconds
   const seconds = totalSeconds % 60
 
-  function padTo2Digits(num: number) {
+  const padTo2Digits = function padTo2Digits(num: number) {
     return num.toString().padStart(2, '0')
   }
 
@@ -58,7 +58,11 @@ export const is8500Plus = (dotaClient: SocketClient) => {
     return true
   }
 
-  if (currentSteamAccount?.leaderboard_rank) {
+  if (
+    currentSteamAccount?.leaderboard_rank !== null &&
+    currentSteamAccount?.leaderboard_rank !== undefined &&
+    currentSteamAccount.leaderboard_rank !== 0
+  ) {
     return true
   }
 
@@ -67,16 +71,18 @@ export const is8500Plus = (dotaClient: SocketClient) => {
   return false
 }
 
-function normalizeDotabodUsername(username: string): string {
-  return username.replace(/^#/, '').trim().toLowerCase()
+const normalizeDotabodUsername = function normalizeDotabodUsername(username: string): string {
+  return username.replace(/^#/u, '').trim().toLowerCase()
 }
 
-export function dotabodProfileUrl(username: string): string {
+export const dotabodProfileUrl = function dotabodProfileUrl(username: string): string {
   const normalized = normalizeDotabodUsername(username)
   return normalized ? `dotabod.com/${normalized}` : ''
 }
 
-export function dotabodMatchHistoryUrl(client: Pick<SocketClient, 'name'>): string {
+export const dotabodMatchHistoryUrl = function dotabodMatchHistoryUrl(
+  client: Pick<SocketClient, 'name'>
+): string {
   const profile = dotabodProfileUrl(client.name)
   return profile ? `${profile}/matches` : ''
 }

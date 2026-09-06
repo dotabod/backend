@@ -1,19 +1,19 @@
 import { t } from 'i18next'
 
-import RedisClient from '../../db/RedisClient'
-import type { AegisRes } from '../../dota/events/gsi-events/AegisRes'
-import { generateAegisMessage } from '../../dota/events/gsi-events/generateAegisMessage'
-import type { RoshRes } from '../../dota/events/gsi-events/RoshRes'
-import { generateRoshanMessage } from '../../dota/events/gsi-events/RoshRes'
-import { isPlayingMatch } from '../../dota/lib/isPlayingMatch'
+import RedisClient from '../../db/redis-client'
+import type { AegisRes } from '../../dota/events/gsi-events/aegis-res'
+import { generateAegisMessage } from '../../dota/events/gsi-events/generate-aegis-message'
+import type { RoshRes } from '../../dota/events/gsi-events/rosh-res'
+import { generateRoshanMessage } from '../../dota/events/gsi-events/rosh-res'
+import { isPlayingMatch } from '../../dota/lib/is-playing-match'
 import { DBSettings } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('roshan', {
   aliases: ['rosh', 'aegis'],
   dbkey: DBSettings.commandRosh,
-  handler: async (message, _args) => {
+  handler: async (message) => {
     const {
       channel: { name: channel, client },
     } = message
@@ -27,7 +27,7 @@ commandHandler.registerCommand('roshan', {
       return
     }
 
-    if (!client.gsi?.hero?.name) {
+    if (client.gsi?.hero?.name === undefined || client.gsi.hero.name.length === 0) {
       chatClient.say(channel, t('noHero', { lng: client.locale }), message.user.messageId)
       return
     }
@@ -38,7 +38,10 @@ commandHandler.registerCommand('roshan', {
       redisClient.getJson<AegisRes>(`${client.token}:aegis`),
     ])
 
-    if (!roshJson?.minS && !roshJson?.maxS) {
+    if (
+      (roshJson?.minS === undefined || roshJson.minS === 0) &&
+      (roshJson?.maxS === undefined || roshJson.maxS === 0)
+    ) {
       chatClient.say(
         channel,
         t('roshanAlive', { emote: 'Happi', lng: client.locale }),

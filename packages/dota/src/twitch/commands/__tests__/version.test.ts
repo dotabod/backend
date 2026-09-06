@@ -1,139 +1,158 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n } from '../../../__tests__/sharedMocks.ts'
-import type { MessageType } from '../../lib/CommandHandler.ts'
+import { createSocketClientStub, initTestI18n } from '../../../__tests__/shared-mocks.ts'
+import type { MessageType } from '../../lib/command-handler.ts'
+import { fetchSocketVersion, runVersionCommand } from '../version-handler.ts'
+import type {
+  VersionCommandDependencies,
+  VersionSnapshot,
+  VersionSocket,
+} from '../version-handler.ts'
 
-const noopLogger = {
-  debug: () => {},
-  error: () => {},
-  info: () => {},
-  warn: () => {},
+interface SayCall {
+  channel: string
+  messageId: string | undefined
+  text: string
 }
 
-interface FakeSocket {
-  connected: boolean
-  emit: (event: string, ack: (commitHash: string | null) => void) => void
+const sayCalls: SayCall[] = []
+let versions: VersionSnapshot
+const completed = Promise.resolve()
+
+const dependencies: VersionCommandDependencies = {
+  getVersions: async () => {
+    await completed
+    return versions
+  },
+  say: (channel, text, messageId) => {
+    sayCalls.push({ channel, messageId, text })
+  },
 }
 
-const sockets = {
-  chat: { connected: true, hash: 'aaaaaaa' as string | null },
-  events: { connected: true, hash: 'aaaaaaa' as string | null },
-  steam: { connected: true, hash: 'aaaaaaa' as string | null },
-}
-
-function makeSocket(target: { connected: boolean; hash: string | null }): FakeSocket {
+const makeMessage = function makeMessage(): MessageType {
+  const client = createSocketClientStub({ locale: 'en' })
   return {
-    get connected() {
-      return target.connected
+    channel: {
+      client,
+      id: 'chan-1',
+      name: 'streamer',
+      settings: client.settings,
     },
-    set connected(v: boolean) {
-      target.connected = v
-    },
-    emit: (_event: string, ack: (commitHash: string | null) => void) => {
-      ack(target.hash)
-    },
+    content: '!version',
+    user: { messageId: 'msg-1', name: 'viewer', permission: 0, userId: 'u-1' },
   }
 }
 
-vi.doMock(import('@dotabod/shared-utils'), () =>
-  buildSharedUtilsMock({ logger: noopLogger, supabase: {} })
-)
-
-vi.doMock(import('../../../steam/ws'), () => ({
-  steamSocket: makeSocket(sockets.steam),
-  twitchChat: makeSocket(sockets.chat),
-  twitchEvents: makeSocket(sockets.events),
-}))
-
-const sayMock = vi.fn()
-vi.doMock(import('../../chatClient'), () => ({
-  chatClient: { say: sayMock },
-}))
-
-let registeredHandler:
-  | ((m: MessageType, args: string[], used: string) => Promise<void> | void)
-  | undefined
-vi.doMock(import('../../lib/CommandHandler'), () => ({
-  default: {
-    registerCommand: (_name: string, opts: { handler: typeof registeredHandler }) => {
-      registeredHandler = opts.handler
-    },
-  },
-}))
-
 await initTestI18n()
 
-// Import after mocks so registerCommand fires against the mock.
-await import('../version.ts')
+describe(fetchSocketVersion, () => {
+  it('returns the acknowledged commit hash from a connected service', async () => {
+    const socket = {
+      connected: true,
+      timeout: () => ({
+        emitWithAck: async () => {
+          await completed
+          return 'aaaaaaa'
+        },
+      }),
+    } satisfies VersionSocket
 
-const baseMessage: MessageType = {
-  channel: {
-    client: { locale: 'en' } as MessageType['channel']['client'],
-    id: 'chan-1',
-    name: 'tester',
-    settings: {} as MessageType['channel']['settings'],
-  },
-  content: '!version',
-  user: { messageId: 'msg-1', name: 'tester', permission: 0, userId: 'u-1' },
-}
+    await expect(fetchSocketVersion(socket)).resolves.toBe('aaaaaaa')
+  })
+
+  it('does not request a version from a disconnected service', async () => {
+    const socket = {
+      connected: false,
+      timeout: () => {
+        throw new Error('A disconnected socket must not emit getVersion')
+      },
+    } satisfies VersionSocket
+
+    await expect(fetchSocketVersion(socket)).resolves.toBeNull()
+  })
+
+  it('returns null when the service does not acknowledge before the timeout', async () => {
+    const socket = {
+      connected: true,
+      timeout: () => ({
+        emitWithAck: async () => {
+          await completed
+          throw new Error('operation has timed out')
+        },
+      }),
+    } satisfies VersionSocket
+
+    await expect(fetchSocketVersion(socket)).resolves.toBeNull()
+  })
+})
 
 describe('!version — multi-service reporting', () => {
   beforeEach(() => {
-    sayMock.mockReset()
-    sockets.steam.connected = true
-    sockets.chat.connected = true
-    sockets.events.connected = true
-    sockets.steam.hash = 'aaaaaaa'
-    sockets.chat.hash = 'aaaaaaa'
-    sockets.events.hash = 'aaaaaaa'
-    process.env.COMMIT_HASH = 'aaaaaaa'
+    sayCalls.length = 0
+    versions = {
+      dota: 'aaaaaaa',
+      steam: 'aaaaaaa',
+      twitchChat: 'aaaaaaa',
+      twitchEvents: 'aaaaaaa',
+    }
   })
 
-  it('reports a single version + compare URL when all 4 services match', async () => {
-    expect(registeredHandler).toBeDefined()
-    await registeredHandler!(baseMessage, [], 'version')
+  it('reports one version and a compare URL when every service matches', async () => {
+    await runVersionCommand(makeMessage(), dependencies)
 
-    expect(sayMock).toHaveBeenCalledOnce()
-    const [, text] = sayMock.mock.calls[0]
-    expect(text).toContain('Server running version aaaaaaa')
-    expect(text).toContain('github.com/dotabod/backend/compare/aaaaaaa...master')
+    expect(sayCalls).toStrictEqual([
+      {
+        channel: 'streamer',
+        messageId: 'msg-1',
+        text: "Server running version aaaaaaa, here's what's missing compared to the latest version: github.com/dotabod/backend/compare/aaaaaaa...master",
+      },
+    ])
   })
 
-  it('lists per-service versions and a commits URL when SHAs differ', async () => {
-    sockets.steam.hash = 'bbbbbbb'
-    sockets.events.hash = 'ccccccc'
-    process.env.COMMIT_HASH = 'aaaaaaa'
+  it('reports each service version and the commit log when versions differ', async () => {
+    versions = {
+      dota: 'aaaaaaa',
+      steam: 'bbbbbbb',
+      twitchChat: 'aaaaaaa',
+      twitchEvents: 'ccccccc',
+    }
 
-    await registeredHandler!(baseMessage, [], 'version')
+    await runVersionCommand(makeMessage(), dependencies)
 
-    const [, text] = sayMock.mock.calls[0]
-    expect(text).toContain('dota:aaaaaaa')
-    expect(text).toContain('steam:bbbbbbb')
-    expect(text).toContain('twitch-chat:aaaaaaa')
-    expect(text).toContain('twitch-events:ccccccc')
-    expect(text).toContain('github.com/dotabod/backend/commits/master')
-    expect(text).not.toContain('/compare/')
+    expect(sayCalls).toStrictEqual([
+      {
+        channel: 'streamer',
+        messageId: 'msg-1',
+        text: "Server running version dota:aaaaaaa, steam:bbbbbbb, twitch-chat:aaaaaaa, twitch-events:ccccccc, here's what's missing compared to the latest version: github.com/dotabod/backend/commits/master",
+      },
+    ])
   })
 
-  it('renders "?" for a disconnected service', async () => {
-    sockets.chat.connected = false
+  it('marks a disconnected service as unknown', async () => {
+    versions.twitchChat = null
 
-    await registeredHandler!(baseMessage, [], 'version')
+    await runVersionCommand(makeMessage(), dependencies)
 
-    const [, text] = sayMock.mock.calls[0]
-    expect(text).toContain('twitch-chat:?')
+    expect(sayCalls).toStrictEqual([
+      {
+        channel: 'streamer',
+        messageId: 'msg-1',
+        text: "Server running version dota:aaaaaaa, steam:aaaaaaa, twitch-chat:?, twitch-events:aaaaaaa, here's what's missing compared to the latest version: github.com/dotabod/backend/commits/master",
+      },
+    ])
   })
 
-  it('falls back to version.unknown when COMMIT_HASH is unset and no peer responds', async () => {
-    delete process.env.COMMIT_HASH
-    sockets.steam.connected = false
-    sockets.chat.connected = false
-    sockets.events.connected = false
+  it('reports an unknown version when no service has a commit hash', async () => {
+    versions = { dota: null, steam: null, twitchChat: null, twitchEvents: null }
 
-    await registeredHandler!(baseMessage, [], 'version')
+    await runVersionCommand(makeMessage(), dependencies)
 
-    const [, text] = sayMock.mock.calls[0]
-    expect(text).toContain("Couldn't find the last git commit")
-    expect(text).toContain('github.com/dotabod/backend')
+    expect(sayCalls).toStrictEqual([
+      {
+        channel: 'streamer',
+        messageId: 'msg-1',
+        text: "Couldn't find the last git commit, here's the repo github.com/dotabod/backend",
+      },
+    ])
   })
 })

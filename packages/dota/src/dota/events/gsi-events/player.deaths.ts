@@ -1,14 +1,14 @@
 import { t } from 'i18next'
 
-import { redisClient } from '../../../db/redisInstance'
+import { redisClient } from '../../../db/redis-instance'
 import type { Item } from '../../../types'
-import type { GSIHandlerType } from '../../GSIHandlerTypes'
-import { findItem } from '../../lib/findItem'
-import handleGetHero from '../../lib/getHero'
-import type { HeroNames } from '../../lib/getHero'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import type { GSIHandlerType } from '../../gsi-handler-types'
+import { findItem } from '../../lib/find-item'
+import handleGetHero from '../../lib/get-hero'
+import type { HeroNames } from '../../lib/get-hero'
+import { isPlayingMatch } from '../../lib/is-playing-match'
 import { say } from '../../say'
-import eventHandler from '../EventHandler'
+import eventHandler from '../event-handler'
 
 const passiveItemNames = [
   { charges: true, name: 'item_magic_stick', title: 'magic stick' },
@@ -45,15 +45,17 @@ eventHandler.registerEvent('player:deaths', {
   },
 })
 
-async function firstBloodChat(dotaClient: GSIHandlerType, heroName: string) {
+const firstBloodChat = async function firstBloodChat(dotaClient: GSIHandlerType, heroName: string) {
   const playingTeam =
     (await redisClient.client.get(`${dotaClient.client.token}:playingTeam`)) ??
     dotaClient.client.gsi?.player?.team_name
 
+  if (playingTeam !== 'radiant' && playingTeam !== 'dire') {
+    return
+  }
   const otherTeam = playingTeam === 'radiant' ? 'dire' : 'radiant'
   const wasFirstBlood =
-    playingTeam &&
-    dotaClient.client.gsi?.map?.[`${playingTeam as 'radiant' | 'dire'}_score`] === 0 &&
+    dotaClient.client.gsi?.map?.[`${playingTeam}_score`] === 0 &&
     dotaClient.client.gsi.map[`${otherTeam}_score`] === 1
 
   if (!wasFirstBlood) {
@@ -67,17 +69,17 @@ async function firstBloodChat(dotaClient: GSIHandlerType, heroName: string) {
   )
 }
 
-function cantCastItem(item: Item, dotaClient: GSIHandlerType) {
+const cantCastItem = function cantCastItem(item: Item, dotaClient: GSIHandlerType) {
   return (
     Number(item.cooldown) > 0 ||
-    !item.can_cast ||
-    dotaClient.client.gsi?.previously?.hero?.muted ||
-    dotaClient.client.gsi?.previously?.hero?.hexed ||
-    dotaClient.client.gsi?.previously?.hero?.stunned
+    item.can_cast !== true ||
+    dotaClient.client.gsi?.previously?.hero?.muted === true ||
+    dotaClient.client.gsi?.previously?.hero?.hexed === true ||
+    dotaClient.client.gsi?.previously?.hero?.stunned === true
   )
 }
 
-function passiveDeathChat(dotaClient: GSIHandlerType, heroName: string) {
+const passiveDeathChat = function passiveDeathChat(dotaClient: GSIHandlerType, heroName: string) {
   const couldHaveLivedWith = findItem({
     data: dotaClient.client.gsi,
     itemName: passiveItemNames.map((i) => i.name),
@@ -99,12 +101,12 @@ function passiveDeathChat(dotaClient: GSIHandlerType, heroName: string) {
           return false
         }
 
-        if (i.charges) {
+        if (i.charges === true) {
           return Number(item.charges) >= 10
         }
         return true
       })
-      if (found) {
+      if (found !== undefined) {
         return found.title
       }
       return null
@@ -112,7 +114,7 @@ function passiveDeathChat(dotaClient: GSIHandlerType, heroName: string) {
     .flatMap((f) => f ?? [])
     .join(', ')
 
-  if (!itemNames) {
+  if (itemNames.length === 0) {
     return
   }
 

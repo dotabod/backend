@@ -1,10 +1,10 @@
 import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../../settings'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { isPlayingMatch } from '../../lib/is-playing-match'
 import { say } from '../../say'
 import { server } from '../../server'
-import eventHandler from '../EventHandler'
+import eventHandler from '../event-handler'
 
 eventHandler.registerEvent('map:paused', {
   handler: (dotaClient, isPaused: boolean) => {
@@ -16,13 +16,13 @@ eventHandler.registerEvent('map:paused', {
       return
     }
 
-    const tellChatPause = getValueOrDefault(
+    const chatterSettings = getValueOrDefault(
       DBSettings.chatters,
       dotaClient.client.settings,
       dotaClient.client.subscription,
       'pause'
     )
-    if (!tellChatPause) {
+    if (!chatterSettings.pause.enabled) {
       return
     }
 

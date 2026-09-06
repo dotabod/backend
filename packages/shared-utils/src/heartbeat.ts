@@ -13,7 +13,7 @@ interface HeartbeatOptions {
   name?: string
 }
 
-export function startHeartbeat(opts: HeartbeatOptions = {}): void {
+export const startHeartbeat = function startHeartbeat(opts: HeartbeatOptions = {}): void {
   const {
     url = process.env.KUMA_PUSH_URL,
     getStatus = () => ({ msg: 'OK', up: true }),
@@ -22,7 +22,7 @@ export function startHeartbeat(opts: HeartbeatOptions = {}): void {
     name = 'uptime heartbeat',
   } = opts
 
-  if (!url) {
+  if (url === undefined || url.length === 0) {
     logger.warn(`${name}: push URL not set, heartbeat disabled`)
     return
   }

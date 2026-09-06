@@ -1,0 +1,104 @@
+// Regression tests for the inverted date subtraction in checkAltAccount: the
+// diff used to be `creation - follow`, which is always <= 0 (an account must
+// exist before it can follow), so the 0-10 day "alt" window almost never fired.
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import {
+  buildSharedUtilsMock,
+  createSocketClientStub,
+  initTestI18n,
+} from '../../__tests__/shared-mocks'
+
+const state: {
+  creationDate: Date
+  followDate: Date | null
+  sayCalls: { channel: string; text: string; messageId?: string }[]
+} = {
+  creationDate: new Date('2026-01-01T00:00:00Z'),
+  followDate: new Date('2026-01-06T00:00:00Z'),
+  sayCalls: [],
+}
+
+const reinstallMocks = function reinstallMocks() {
+  vi.doMock('@dotabod/shared-utils', () =>
+    buildSharedUtilsMock({
+      getTwitchAPI: async () =>
+        await Promise.resolve({
+          channels: {
+            getChannelFollowers: async () =>
+              await Promise.resolve({
+                data: state.followDate ? [{ followDate: state.followDate }] : [],
+              }),
+          },
+          users: {
+            getUserByName: async () => await Promise.resolve({ creationDate: state.creationDate }),
+          },
+        }),
+      logger: {
+        debug: () => {},
+        error: () => {},
+        info: () => {},
+        warn: () => {},
+      },
+      supabase: {},
+    })
+  )
+
+  vi.doMock(import('../chat-client'), () => ({
+    chatClient: {
+      say: (channel: string, text: string, messageId?: string) => {
+        state.sayCalls.push({ channel, messageId, text })
+      },
+      sayWithoutSuggestion: () => {},
+      whisper: () => {},
+    },
+  }))
+}
+reinstallMocks()
+
+await initTestI18n()
+
+const { checkAltAccount } = await import('../check-alt-account')
+
+const client = createSocketClientStub({ locale: 'en' })
+const DAYS = 24 * 60 * 60 * 1000
+
+beforeEach(() => {
+  state.creationDate = new Date('2026-01-01T00:00:00Z')
+  state.followDate = new Date('2026-01-06T00:00:00Z')
+  state.sayCalls = []
+  reinstallMocks()
+})
+
+describe('checkAltAccount', () => {
+  it('flags a chatter whose account was created 5 days before following', async () => {
+    // 5-day gap is inside the 0-10 day alt window. The inverted subtraction
+    // computed -5 days here, so this user was never flagged.
+    await checkAltAccount('chan', 'alt-user-5d', '40754777', { userId: 'u1' }, 'msg-1', client)
+    expect(state.sayCalls).toHaveLength(1)
+    expect(state.sayCalls[0].channel).toBe('chan')
+  })
+
+  it('flags an account created hours before following (same-day boundary)', async () => {
+    state.followDate = new Date(state.creationDate.getTime() + 2 * 60 * 60 * 1000)
+    await checkAltAccount('chan', 'alt-user-2h', '40754777', { userId: 'u2' }, 'msg-2', client)
+    expect(state.sayCalls).toHaveLength(1)
+  })
+
+  it('flags an account created 9 days before following but not one created 10+ days before', async () => {
+    state.followDate = new Date(state.creationDate.getTime() + 9 * DAYS)
+    await checkAltAccount('chan', 'alt-user-9d', '40754777', { userId: 'u3' }, 'msg-3', client)
+    expect(state.sayCalls).toHaveLength(1)
+
+    state.followDate = new Date(state.creationDate.getTime() + 10 * DAYS)
+    await checkAltAccount('chan', 'alt-user-10d', '40754777', { userId: 'u4' }, 'msg-4', client)
+    // unchanged — 10 days is outside the window
+    expect(state.sayCalls).toHaveLength(1)
+  })
+
+  it('does not flag a long-standing account created 30 days before following', async () => {
+    state.followDate = new Date(state.creationDate.getTime() + 30 * DAYS)
+    await checkAltAccount('chan', 'regular-user-30d', '40754777', { userId: 'u5' }, 'msg-5', client)
+    expect(state.sayCalls).toHaveLength(0)
+  })
+})

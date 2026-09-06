@@ -1,7 +1,7 @@
 #!/usr/bin/env -S pnpm dlx tsx
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { dirname, extname, join, relative, resolve } from 'node:path'
+import path from 'node:path'
 
 // Tracks dependencies between files
 const dependencies = new Map<string, Set<string>>()
@@ -22,21 +22,21 @@ const externalModules = new Set([
 ])
 
 // Regular expressions for extracting imports
-const importRegex = /import\s+(?:(?:[\w*\s{},]*)\s+from\s+)?['"]([@\w\-./\\]+)['"]/g
-const dynamicImportRegex = /import\s*\(\s*['"]([@\w\-./\\]+)['"]\s*\)/g
-const requireRegex = /require\s*\(\s*['"]([@\w\-./\\]+)['"]\s*\)/g
+const importRegex = /import\s+(?:(?:[\w*\s{},]*)\s+from\s+)?['"](?<modulePath>[@\w\-./\\]+)['"]/gu
+const dynamicImportRegex = /import\s*\(\s*['"](?<modulePath>[@\w\-./\\]+)['"]\s*\)/gu
+const requireRegex = /require\s*\(\s*['"](?<modulePath>[@\w\-./\\]+)['"]\s*\)/gu
 
 // Function to determine if a path is a directory
-function isDirectory(path: string): boolean {
+const isDirectory = function isDirectory(candidatePath: string): boolean {
   try {
-    return statSync(path).isDirectory()
+    return statSync(candidatePath).isDirectory()
   } catch {
     return false
   }
 }
 
 // Function to check if a module is internal or external
-function isInternalModule(modulePath: string): boolean {
+const isInternalModule = function isInternalModule(modulePath: string): boolean {
   return (
     modulePath.startsWith('./') ||
     modulePath.startsWith('../') ||
@@ -45,90 +45,75 @@ function isInternalModule(modulePath: string): boolean {
   )
 }
 
-// Function to resolve a relative import to an absolute path
-function resolveImport(importPath: string, currentFile: string): string | null {
-  if (!isInternalModule(importPath)) {
-    // If it's not an internal module, skip it
-    if (importPath.startsWith('@dotabod/')) {
-      // Handle workspace packages
-      const packageName = importPath.split('/')[1]
-      return join(process.cwd(), 'packages', packageName, 'src')
+const findPathWithExtension = function findPathWithExtension(basePath: string): string | null {
+  for (const extension of extensions) {
+    const candidatePath = `${basePath}${extension}`
+    if (existsSync(candidatePath)) {
+      return candidatePath
     }
-    return null
   }
-
-  // Handle relative paths
-  const currentDir = dirname(currentFile)
-  const resolvedPath = resolve(currentDir, importPath)
-
-  // Check if the path exists, if not try adding extensions
-  if (!existsSync(resolvedPath)) {
-    // Try with extensions
-    for (const ext of extensions) {
-      const pathWithExt = resolvedPath + ext
-      if (existsSync(pathWithExt)) {
-        return pathWithExt
-      }
-    }
-
-    // Try as directory with index file
-    if (isDirectory(resolvedPath)) {
-      for (const ext of extensions) {
-        const indexPath = join(resolvedPath, `index${ext}`)
-        if (existsSync(indexPath)) {
-          return indexPath
-        }
-      }
-    }
-
-    // Try without .js extension in import (TypeScript often omits it)
-    if (importPath.endsWith('.js')) {
-      const pathWithoutJs = resolve(currentDir, importPath.slice(0, -3))
-      for (const ext of extensions) {
-        const pathWithExt = pathWithoutJs + ext
-        if (existsSync(pathWithExt)) {
-          return pathWithExt
-        }
-      }
-    }
-
-    return null
-  }
-
-  return resolvedPath
+  return null
 }
 
-// Function to extract imports from a file
-function extractImports(filePath: string): string[] {
+const findDirectoryIndex = function findDirectoryIndex(directoryPath: string): string | null {
+  if (!isDirectory(directoryPath)) {
+    return null
+  }
+  for (const extension of extensions) {
+    const candidatePath = path.join(directoryPath, `index${extension}`)
+    if (existsSync(candidatePath)) {
+      return candidatePath
+    }
+  }
+  return null
+}
+
+const resolveImport = function resolveImport(
+  importPath: string,
+  currentFile: string
+): string | null {
+  if (importPath.startsWith('@dotabod/')) {
+    const [, packageName] = importPath.split('/')
+    return packageName === undefined
+      ? null
+      : path.join(process.cwd(), 'packages', packageName, 'src')
+  }
+  if (!isInternalModule(importPath)) {
+    return null
+  }
+
+  const currentDirectory = path.dirname(currentFile)
+  const resolvedPath = path.resolve(currentDirectory, importPath)
+  if (existsSync(resolvedPath)) {
+    return resolvedPath
+  }
+
+  const directMatch = findPathWithExtension(resolvedPath) ?? findDirectoryIndex(resolvedPath)
+  if (directMatch !== null || !importPath.endsWith('.js')) {
+    return directMatch
+  }
+  return findPathWithExtension(path.resolve(currentDirectory, importPath.slice(0, -3)))
+}
+
+const extractRegexMatches = function extractRegexMatches(
+  content: string,
+  expression: RegExp
+): string[] {
+  expression.lastIndex = 0
+  return [...content.matchAll(expression)].flatMap((match) => {
+    const modulePath = match.groups?.modulePath
+    return modulePath === undefined ? [] : [modulePath]
+  })
+}
+
+const extractImports = function extractImports(filePath: string): string[] {
   try {
     const content = readFileSync(filePath, 'utf-8')
-    const imports: string[] = []
-
-    // Find all import statements
-    let match: RegExpExecArray | null
-
-    importRegex.lastIndex = 0
-    match = importRegex.exec(content)
-    while (match !== null) {
-      imports.push(match[1])
-      match = importRegex.exec(content)
-    }
-
-    dynamicImportRegex.lastIndex = 0
-    match = dynamicImportRegex.exec(content)
-    while (match !== null) {
-      imports.push(match[1])
-      match = dynamicImportRegex.exec(content)
-    }
-
-    requireRegex.lastIndex = 0
-    match = requireRegex.exec(content)
-    while (match !== null) {
-      imports.push(match[1])
-      match = requireRegex.exec(content)
-    }
-
-    return imports
+    return [
+      ...extractRegexMatches(content, importRegex),
+      ...extractRegexMatches(content, dynamicImportRegex),
+      ...extractRegexMatches(content, requireRegex),
+    ]
   } catch (error) {
     console.error(`Error reading file ${filePath}:`, error)
     return []
@@ -136,14 +121,14 @@ function extractImports(filePath: string): string[] {
 }
 
 // Function to process a file and extract its dependencies
-function processFile(filePath: string): void {
+const processFile = function processFile(filePath: string): void {
   if (processedFiles.has(filePath)) {
     return
   }
   processedFiles.add(filePath)
 
   // Skip non-source files
-  const ext = extname(filePath)
+  const ext = path.extname(filePath)
   if (!extensions.has(ext)) {
     return
   }
@@ -153,48 +138,35 @@ function processFile(filePath: string): void {
   dependencies.set(filePath, fileDeps)
 
   for (const importPath of imports) {
-    if (!isInternalModule(importPath)) {
-      // Skip external modules
-      if (externalModules.has(importPath)) {
-        continue
-      }
-
-      // Skip node built-ins and other external packages
-      if (!importPath.startsWith('@dotabod/')) {
-        continue
-      }
+    if (!isInternalModule(importPath) || externalModules.has(importPath)) {
+      continue
     }
 
     const resolvedImport = resolveImport(importPath, filePath)
-    if (resolvedImport) {
+    if (resolvedImport !== null && resolvedImport.length > 0) {
       fileDeps.add(resolvedImport)
-      // Recursively process this import if we haven't already
       processFile(resolvedImport)
     }
   }
 }
 
 // Function to scan a directory recursively
-function scanDirectory(dir: string, ignorePatterns: RegExp[] = []): void {
+const scanDirectory = function scanDirectory(dir: string, ignorePatterns: RegExp[] = []): void {
   try {
     const entries = readdirSync(dir, { withFileTypes: true })
 
     for (const entry of entries) {
-      const fullPath = join(dir, entry.name)
-
-      // Skip ignored patterns
-      if (ignorePatterns.some((pattern) => pattern.test(fullPath))) {
-        continue
-      }
-
-      if (entry.isDirectory()) {
-        // Skip node_modules and .git directories
-        if (entry.name === 'node_modules' || entry.name === '.git') {
-          continue
+      const fullPath = path.join(dir, entry.name)
+      const isIgnored =
+        ignorePatterns.some((pattern) => pattern.test(fullPath)) ||
+        entry.name === 'node_modules' ||
+        entry.name === '.git'
+      if (!isIgnored) {
+        if (entry.isDirectory()) {
+          scanDirectory(fullPath, ignorePatterns)
+        } else if (entry.isFile() && extensions.has(path.extname(entry.name))) {
+          processFile(fullPath)
         }
-        scanDirectory(fullPath, ignorePatterns)
-      } else if (entry.isFile() && extensions.has(extname(entry.name))) {
-        processFile(fullPath)
       }
     }
   } catch (error) {
@@ -203,20 +175,20 @@ function scanDirectory(dir: string, ignorePatterns: RegExp[] = []): void {
 }
 
 // Function to find cycles in the dependency graph using DFS
-function findCycles(): Map<string, string[]> {
+const findCycles = function findCycles(): Map<string, string[]> {
   const cycles = new Map<string, string[]>()
   const visited = new Set<string>()
   const stack = new Set<string>()
 
-  function dfs(node: string, path: string[] = []): void {
+  const dfs = function dfs(node: string, traversalPath: string[] = []): void {
     if (stack.has(node)) {
       // Found a cycle
-      const cycleStart = path.indexOf(node)
-      const cycle = [...path.slice(cycleStart), node]
+      const cycleStart = traversalPath.indexOf(node)
+      const cycle = [...traversalPath.slice(cycleStart), node]
 
       // Store the cycle with the alphabetically first file as the key
-      const firstFile = [...cycle].sort()[0]
-      if (!cycles.has(firstFile)) {
+      const [firstFile] = cycle.toSorted()
+      if (firstFile !== undefined && !cycles.has(firstFile)) {
         cycles.set(firstFile, cycle)
       }
       return
@@ -228,12 +200,12 @@ function findCycles(): Map<string, string[]> {
 
     visited.add(node)
     stack.add(node)
-    path.push(node)
+    traversalPath.push(node)
 
     const deps = dependencies.get(node)
     if (deps) {
       for (const dep of deps) {
-        dfs(dep, [...path])
+        dfs(dep, [...traversalPath])
       }
     }
 
@@ -249,22 +221,25 @@ function findCycles(): Map<string, string[]> {
 }
 
 // Function to format a path for display
-function formatPath(path: string): string {
-  return relative(process.cwd(), path)
+const formatPath = function formatPath(filePath: string): string {
+  return path.relative(process.cwd(), filePath)
 }
 
 // Function to generate a visualization of the circular dependency
-function visualizeCycle(cycle: string[]): string {
-  return `${cycle.map(formatPath).join(' → ')} → ${formatPath(cycle[0])}`
+const visualizeCycle = function visualizeCycle(cycle: string[]): string {
+  const [firstFile] = cycle
+  return firstFile === undefined
+    ? ''
+    : `${cycle.map(formatPath).join(' → ')} → ${formatPath(firstFile)}`
 }
 
 // Main function
-async function main() {
+const main = function main(): void {
   const startTime = Date.now()
   console.log('Scanning for circular dependencies...')
 
   // Scan all packages
-  const packagesDir = join(process.cwd(), 'packages')
+  const packagesDir = path.join(process.cwd(), 'packages')
   scanDirectory(packagesDir)
 
   console.log(
@@ -280,35 +255,35 @@ async function main() {
     console.log(`Found ${cycles.size} circular dependencies:`)
     console.log('-'.repeat(80))
 
-    const sortedCycles = [...cycles.entries()].sort((a, b) =>
+    const sortedCycles = [...cycles.entries()].toSorted((a, b) =>
       formatPath(a[0]).localeCompare(formatPath(b[0]))
     )
 
-    sortedCycles.forEach(([file, cycle], index) => {
+    for (const [index, [file, cycle]] of sortedCycles.entries()) {
       console.log(`${index + 1}. Circular dependency involving ${formatPath(file)}:`)
       console.log(`   ${visualizeCycle(cycle)}`)
       console.log('-'.repeat(80))
-    })
+    }
 
     // Group cycles by package
     const cyclesByPackage = new Map<string, number>()
     for (const [file] of sortedCycles) {
-      const packageMatch = /^packages\/([^/]+)/.exec(formatPath(file))
-      if (packageMatch) {
-        const packageName = packageMatch[1]
-        cyclesByPackage.set(packageName, (cyclesByPackage.get(packageName) || 0) + 1)
+      const packageMatch = /^packages\/(?<packageName>[^/]+)/u.exec(formatPath(file))
+      const packageName = packageMatch?.groups?.packageName
+      if (packageName !== undefined) {
+        cyclesByPackage.set(packageName, (cyclesByPackage.get(packageName) ?? 0) + 1)
       }
     }
 
     console.log('Circular dependencies by package:')
-    const sortedPackages = [...cyclesByPackage.entries()].sort((a, b) => b[1] - a[1])
-    sortedPackages.forEach(([pkg, count]) => {
+    const sortedPackages = [...cyclesByPackage.entries()].toSorted((a, b) => b[1] - a[1])
+    for (const [pkg, count] of sortedPackages) {
       console.log(`- ${pkg}: ${count} circular dependencies`)
-    })
+    }
   }
 
   const endTime = Date.now()
   console.log(`Analysis completed in ${(endTime - startTime) / 1000} seconds.`)
 }
 
-main().catch(console.error)
+main()

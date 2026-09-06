@@ -2,65 +2,54 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { scheduleNonOverlapping } from '../scheduler.ts'
 
-beforeEach(() => {
-  vi.useFakeTimers()
-})
-
-afterEach(() => {
-  vi.useRealTimers()
-})
-
 describe(scheduleNonOverlapping, () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('skips a tick if the previous invocation is still in flight', async () => {
     let active = 0
     let maxConcurrent = 0
     let runs = 0
-    const resolvers: (() => void)[] = []
+    const completions: WritableStreamDefaultWriter<boolean>[] = []
 
     const stop = scheduleNonOverlapping(async () => {
-      runs++
-      active++
+      runs += 1
+      active += 1
       maxConcurrent = Math.max(maxConcurrent, active)
-      await new Promise<void>((r) => {
-        resolvers.push(() => {
-          active--
-          r()
-        })
-      })
+      const completion = new TransformStream<boolean, boolean>()
+      completions.push(completion.writable.getWriter())
+      await completion.readable.getReader().read()
+      active -= 1
     }, 1000)
 
-    // First tick fires.
     await vi.advanceTimersByTimeAsync(1000)
-    expect(runs).toBe(1)
-    expect(active).toBe(1)
+    expect({ active, maxConcurrent, runs }).toStrictEqual({ active: 1, maxConcurrent: 1, runs: 1 })
 
-    // Second tick fires while first is still in flight → must be skipped.
     await vi.advanceTimersByTimeAsync(1000)
-    expect(runs).toBe(1)
-    expect(maxConcurrent).toBe(1)
+    expect({ active, maxConcurrent, runs }).toStrictEqual({ active: 1, maxConcurrent: 1, runs: 1 })
 
-    // Complete the first run.
-    resolvers.shift()?.()
+    await completions.shift()?.write(true)
     await vi.advanceTimersByTimeAsync(0)
-
-    // Third tick fires; previous is done so this one runs.
     await vi.advanceTimersByTimeAsync(1000)
-    expect(runs).toBe(2)
-    expect(maxConcurrent).toBe(1)
+    expect({ maxConcurrent, runs }).toStrictEqual({ maxConcurrent: 1, runs: 2 })
 
-    resolvers.shift()?.()
+    await completions.shift()?.write(true)
     stop()
   })
 
   it('continues firing after a rejected promise (does not get stuck)', async () => {
     let runs = 0
     const stop = scheduleNonOverlapping(async () => {
-      runs++
-      throw new Error('boom')
+      runs += 1
+      await Promise.reject(new Error('boom'))
     }, 500)
 
     await vi.advanceTimersByTimeAsync(500)
-    // Let the rejection flush.
     await vi.advanceTimersByTimeAsync(0)
     expect(runs).toBe(1)
 
@@ -74,7 +63,8 @@ describe(scheduleNonOverlapping, () => {
   it('stop() prevents future invocations', async () => {
     let runs = 0
     const stop = scheduleNonOverlapping(async () => {
-      runs++
+      runs += 1
+      await Promise.resolve()
     }, 100)
 
     await vi.advanceTimersByTimeAsync(100)

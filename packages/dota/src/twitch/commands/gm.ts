@@ -1,12 +1,12 @@
 import { t } from 'i18next'
 
-import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/getCurrentMatchId'
+import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/get-current-match-id'
 import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import { gameMedals } from '../../steam/medals'
-import { chatClient } from '../chatClient'
-import { clippingDisabledNote } from '../lib/clippingNote'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import { clippingDisabledNote } from '../lib/clipping-note'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('gm', {
   aliases: ['medals', 'ranks'],
@@ -15,10 +15,11 @@ commandHandler.registerCommand('gm', {
     const {
       channel: { client },
     } = message
-    if (!message.channel.client.steam32Id) {
+    if (message.channel.client.steam32Id === null || message.channel.client.steam32Id === 0) {
       chatClient.say(
         message.channel.name,
-        message.channel.client.multiAccount
+        message.channel.client.multiAccount !== undefined &&
+          message.channel.client.multiAccount !== 0
           ? t('multiAccount', {
               lng: message.channel.client.locale,
               url: 'dotabod.com/dashboard/features',
@@ -29,7 +30,7 @@ commandHandler.registerCommand('gm', {
       return
     }
 
-    if (client.gsi && !getCurrentRosterMatchId(client)) {
+    if (client.gsi !== undefined && getCurrentRosterMatchId(client) === undefined) {
       chatClient.say(
         message.channel.name,
         t(isCurrentCustomGame(client) ? 'customGameNoRoster' : 'gameNotFound', {
@@ -49,17 +50,22 @@ commandHandler.registerCommand('gm', {
       return
     }
 
-    gameMedals(client.locale, message.channel.client.gsi?.map?.matchid, roster.players)
-      .then((desc) => {
-        chatClient.say(message.channel.name, desc, message.user.messageId)
-      })
-      .catch((error) => {
-        chatClient.say(
-          message.channel.name,
-          error?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
-          message.user.messageId
-        )
-      })
+    try {
+      const medals = await gameMedals(
+        client.locale,
+        message.channel.client.gsi?.map?.matchid,
+        roster.players
+      )
+      chatClient.say(message.channel.name, medals, message.user.messageId)
+    } catch (error) {
+      chatClient.say(
+        message.channel.name,
+        error instanceof Error
+          ? error.message
+          : t('gameNotFound', { lng: message.channel.client.locale }),
+        message.user.messageId
+      )
+    }
   },
   onlyOnline: true,
 })

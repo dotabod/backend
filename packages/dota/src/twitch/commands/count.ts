@@ -2,12 +2,13 @@ import { t } from 'i18next'
 
 import { gsiHandlers } from '../../dota/lib/consts'
 import { server } from '../../dota/server'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('count', {
-  handler: async (message, _args) => {
-    const sockets = (await server.io.fetchSockets()).length
+  handler: async (message) => {
+    const connectedSockets = await server.io.fetchSockets()
+    const sockets = connectedSockets.length
     const gsiSize = gsiHandlers.size
 
     const bothParts = `${t('connections.gsi', {

@@ -1,14 +1,33 @@
 import DOTA_AGHS from 'dotaconstants/build/aghs_desc.json' with { type: 'json' }
 import { t } from 'i18next'
+import { z } from 'zod'
 
-import type { GSIHandlerType } from '../../dota/GSIHandlerTypes'
+import type { GSIHandlerType } from '../../dota/gsi-handler-types'
 import { gsiHandlers } from '../../dota/lib/consts'
-import { hasCurrentGameContext } from '../../dota/lib/getCurrentMatchId'
+import { hasCurrentGameContext } from '../../dota/lib/get-current-match-id'
 import { getHeroById, getHeroNameOrColor, withHeroLink } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import { findAccountFromCmd } from '../lib/findGSIByAccountId'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import { findAccountFromCmd } from '../lib/find-gsi-by-account-id'
+
+const heroSchema = z.object({ id: z.number() })
+
+const isValidGSIHandler = function isValidGSIHandler(
+  gsiHandler: GSIHandlerType | undefined,
+  hasCurrentGame: boolean
+): boolean {
+  return gsiHandler !== undefined && hasCurrentGame
+}
+
+const isValidHero = function isValidHero(hero: { id?: number } | null | undefined): boolean {
+  const parsedHero = heroSchema.safeParse(hero)
+  if (!parsedHero.success) {
+    return false
+  }
+  const heroData = getHeroById(parsedHero.data.id)
+  return heroData !== null && heroData !== undefined
+}
 
 commandHandler.registerCommand('aghs', {
   dbkey: DBSettings.commandAghs,
@@ -87,18 +106,10 @@ commandHandler.registerCommand('aghs', {
     } catch (error) {
       chatClient.say(
         channelName,
-        (error as Error).message ?? t('gameNotFound', { lng: channelClient.locale }),
+        error instanceof Error ? error.message : t('gameNotFound', { lng: channelClient.locale }),
         message.user.messageId
       )
     }
   },
   onlyOnline: true,
 })
-
-const isValidGSIHandler = (
-  gsiHandler: GSIHandlerType | undefined,
-  hasCurrentGame: boolean
-): boolean => !!gsiHandler && hasCurrentGame
-
-const isValidHero = (hero: { id?: number } | null | undefined): boolean =>
-  typeof hero?.id === 'number' && !!getHeroById(hero.id)

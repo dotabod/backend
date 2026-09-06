@@ -1,6 +1,6 @@
 import type { Entity, MapData, Packet, Player } from '../../../types'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
-import type { DataBroadcasterInterface } from './DataBroadcasterTypes'
+import { isPlayingMatch } from '../../lib/is-playing-match'
+import type { DataBroadcasterInterface } from './data-broadcaster-types'
 
 class MinimapParser {
   lastBroadcastTime = 0
@@ -97,11 +97,8 @@ class MinimapParser {
   }
 
   isGameOnGoing(mapData: MapData): boolean {
-    return (
-      mapData &&
-      ['DOTA_GAMERULES_STATE_GAME_IN_PROGRESS', 'DOTA_GAMERULES_STATE_PRE_GAME'].includes(
-        mapData.game_state
-      )
+    return ['DOTA_GAMERULES_STATE_GAME_IN_PROGRESS', 'DOTA_GAMERULES_STATE_PRE_GAME'].includes(
+      mapData.game_state
     )
   }
 
@@ -110,7 +107,7 @@ class MinimapParser {
   }
 
   isPlaying(playerData: Player): boolean {
-    return playerData && playerData.steamid !== undefined
+    return playerData.steamid !== undefined
   }
 
   isEntityAlive(entity: Entity): boolean {
@@ -172,7 +169,7 @@ class MinimapParser {
     }
 
     // Simplify hero names
-    if (entity.name) {
+    if (entity.name !== undefined && entity.name.length > 0) {
       entity.name = entity.name.replace('npc_dota_hero_', '')
     }
 
@@ -195,17 +192,13 @@ class MinimapParser {
   }
 
   parse(data: Packet) {
-    const currentCfgFile = data.map && this.isGameOnGoing(data.map) && data.player && data.hero
-    const betaCfgFile = data.minimap
-    if (!currentCfgFile || !betaCfgFile) {
-      return {
-        status: {
-          active: false,
-        },
-      }
-    }
-
-    if (!data.hero || !data.player || !data.map || !data.minimap) {
+    if (
+      data.map === undefined ||
+      !this.isGameOnGoing(data.map) ||
+      data.player === undefined ||
+      data.hero === undefined ||
+      data.minimap === undefined
+    ) {
       return {
         status: {
           active: false,
@@ -291,7 +284,8 @@ class MinimapParser {
       if (
         entity.image &&
         entity.image === 'minimap_ping_teleporting' &&
-        entity.eventduration &&
+        entity.eventduration !== undefined &&
+        entity.eventduration !== 0 &&
         entity.eventduration > 1
       ) {
         minimap.tp.push(this.cleanData(entity))
@@ -301,7 +295,7 @@ class MinimapParser {
       if (
         entity.image &&
         entity.image === 'minimap_ping_teleporting' &&
-        entity.eventduration &&
+        entity.eventduration !== undefined &&
         entity.eventduration === 1
       ) {
         minimap.scan.push(this.cleanData(entity))

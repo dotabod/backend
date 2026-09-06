@@ -1,0 +1,192 @@
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+
+import {
+  clearSubscriptions,
+  ensureBotIsModerator,
+  handleNewUser,
+  resetState,
+  state,
+} from './shared-mocks.ts'
+
+const botEnv = { bot: process.env.TWITCH_BOT_PROVIDERID, client: process.env.TWITCH_CLIENT_ID }
+const immediateRetry = {
+  waitForRetry: async () => {
+    await Promise.resolve()
+  },
+}
+
+describe(handleNewUser, () => {
+  beforeEach(() => {
+    resetState()
+    clearSubscriptions()
+  })
+
+  it('returns early without a providerAccountId', async () => {
+    await handleNewUser('')
+    expect(state.updates).toHaveLength(0)
+    expect(state.subscribeCalls).toHaveLength(0)
+  })
+
+  it('updates the user profile from Twitch and resubscribes events', async () => {
+    state.stream = { startDate: new Date('2026-05-20T00:00:00.000Z') }
+    state.streamer = { displayName: 'Cool', name: 'cool' }
+    state.dbUser = { userId: 'user-1' }
+
+    await handleNewUser('111')
+
+    expect(state.updates.some((u) => u.table === 'users' && u.values.name === 'cool')).toBeTruthy()
+    // resubscribeEvents defaults true -> initUserSubscriptions ran.
+    expect(state.subscribeCalls.length).toBeGreaterThan(0)
+  })
+
+  it('skips the profile update and logs at ERROR level when the account is not found after retry', async () => {
+    // The lookup retries once to mitigate Realtime/replica races.
+    // Persistent null (both attempts) means either a bogus providerAccountId
+    // or replica lag >REPLICA_LAG_RETRY_MS — surface at error level so the
+    // alert pipeline picks it up. (Previously logged as warn, which made
+    // genuine replication problems invisible.)
+    state.dbUser = null
+    await handleNewUser('111', false, immediateRetry)
+    expect(state.updates).toHaveLength(0)
+    expect(
+      state.logError.some(
+        (l) => l.message === '[TWITCHEVENTS] handleNewUser: no accounts row after retry'
+      )
+    ).toBeTruthy()
+    // The legacy warn must NOT fire — observability would miss the issue.
+    expect(state.logWarn.some((l) => l.message.includes('no accounts row'))).toBeFalsy()
+  })
+
+  it('throws when initUserSubscriptions returns false (critical subscription failed)', async () => {
+    state.dbUser = { userId: 'user-1' }
+    state.streamer = { displayName: 'Streamer', name: 'streamer' }
+    // Force a critical type to fail so initUserSubscriptions returns false.
+    state.subscribeResult = (_userId, type) => type !== 'stream.online'
+
+    await expect(handleNewUser('222')).rejects.toThrow(
+      /initUserSubscriptions: critical subscription failed/u
+    )
+  })
+
+  it('recovers when the accounts row appears on the second lookup (replica lag)', async () => {
+    state.streamer = { displayName: 'L8', name: 'l8' }
+    // Script per-call lookup behavior: first call returns null (row not yet
+    // visible), second call returns the row (replica caught up). The mocked
+    // mutation-after-call approach used previously did NOT exercise the retry
+    // — state.dbUser was set synchronously before the first await drained, so
+    // attempt 0 already saw the row.
+    state.accountsLookupResults = [
+      { data: null, error: null },
+      { data: { userId: 'user-3' }, error: null },
+    ]
+    await handleNewUser('333', false, immediateRetry)
+
+    expect(state.updates.some((u) => u.table === 'users' && u.values.name === 'l8')).toBeTruthy()
+    // Both queued results were consumed → the retry path actually ran.
+    expect(state.accountsLookupResults).toHaveLength(0)
+  })
+
+  it('logs at error level (not as silent missing-row) on a transient DB error', async () => {
+    // Both attempts return a postgrest error. The wrapper used to drop the
+    // error field and treat this identically to "row not found", logging the
+    // misleading warn "no accounts row for providerAccountId". The fix bubbles
+    // the error up so the outer catch logs at error level with the actual
+    // error attached — observability now sees the real cause.
+    state.accountsLookupResults = [
+      { data: null, error: new Error('connection reset by peer') },
+      { data: null, error: new Error('connection reset by peer') },
+    ]
+    await handleNewUser('111', false, immediateRetry)
+
+    // The misleading warn must NOT fire — the row isn't missing, the lookup
+    // errored.
+    expect(
+      state.logWarn.some((l) => l.message.includes('no accounts row for providerAccountId'))
+    ).toBeFalsy()
+    // Instead, the error path is logged with the real cause.
+    expect(
+      state.logError.some((l) => {
+        const loggedError = l.meta.error
+        return (
+          l.message.includes('profile update failed') &&
+          loggedError instanceof Error &&
+          loggedError.message.includes('connection reset')
+        )
+      })
+    ).toBeTruthy()
+    // And the users row was NOT updated (we never got a userId).
+    expect(state.updates).toHaveLength(0)
+  })
+
+  it('skips a banned user entirely (no Twitch API hit, no subscription registration)', async () => {
+    // Ban gate runs after we resolve userId via accounts → before we hit the
+    // Twitch profile API. A user with users.banned_at set must not get a
+    // profile update OR EventSub registration — they're off the platform.
+    state.dbUser = { userId: 'user-banned' }
+    state.usersLookupResults = [{ data: { banned_at: '2026-05-24T00:00:00.000Z' }, error: null }]
+    state.streamer = { displayName: 'ShouldNotBeFetched', name: 'shouldnot' }
+
+    await handleNewUser('555', true)
+
+    // No profile update.
+    expect(state.updates.some((u) => u.table === 'users')).toBeFalsy()
+    // No EventSub subscription calls.
+    expect(state.subscribeCalls).toHaveLength(0)
+    // Banned-skip log line fired.
+    expect(
+      state.logInfo.some((l) => l.message.includes('handleNewUser: skipping banned user'))
+    ).toBeTruthy()
+  })
+
+  it('still attempts subscriptions when the Twitch profile-fetch step fails', async () => {
+    // Old: throw-in-catch from the Twitch API try block skipped the
+    // resubscribe step entirely. New: profile-fetch failures are logged and
+    // we continue into subscription registration so the user is at least
+    // subscribed to events even during a transient Twitch /helix/streams
+    // outage.
+    state.dbUser = { userId: 'user-1' }
+    state.streamError = new Error('Twitch /helix/streams 503')
+    state.streamer = { displayName: 'X', name: 'x' }
+
+    await handleNewUser('444', true)
+
+    // Profile update never ran (Twitch fetch threw before reaching it).
+    expect(state.updates.some((u) => u.table === 'users')).toBeFalsy()
+    // But subscription registration DID run.
+    expect(state.subscribeCalls.some((c) => c.userId === '444')).toBeTruthy()
+    // And the failure was surfaced at error level for observability.
+    expect(
+      state.logError.some((l) => l.message.includes('handleNewUser: profile update failed'))
+    ).toBeTruthy()
+  })
+})
+
+describe(ensureBotIsModerator, () => {
+  beforeEach(() => {
+    resetState()
+    clearSubscriptions()
+    process.env.TWITCH_BOT_PROVIDERID = 'bot-1'
+    process.env.TWITCH_CLIENT_ID = 'client-1'
+  })
+  afterEach(() => {
+    process.env.TWITCH_BOT_PROVIDERID = botEnv.bot
+    process.env.TWITCH_CLIENT_ID = botEnv.client
+  })
+
+  it('adds the bot as a moderator', async () => {
+    await ensureBotIsModerator('999')
+    expect(state.addModeratorCalls).toContain('999')
+  })
+
+  it('swallows the "already a mod" error', async () => {
+    state.addModeratorError = { _body: 'user is already a mod' }
+    await ensureBotIsModerator('999')
+    expect(state.logError).toHaveLength(0)
+  })
+
+  it('warns and returns when bot/client env is missing', async () => {
+    delete process.env.TWITCH_BOT_PROVIDERID
+    await ensureBotIsModerator('999')
+    expect(state.addModeratorCalls).toHaveLength(0)
+  })
+})

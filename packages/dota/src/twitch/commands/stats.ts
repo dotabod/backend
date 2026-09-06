@@ -2,16 +2,47 @@ import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
-import { isSpectator } from '../../dota/lib/isSpectator'
+import { isSpectator } from '../../dota/lib/is-spectator'
 import { DBSettings } from '../../settings'
-import { findRealtimePlayer, getRealtimeStats } from '../../steam/realtimeStats'
+import { findRealtimePlayer, getRealtimeStats } from '../../steam/realtime-stats'
 import type { SocketClient } from '../../types'
-import CustomError from '../../utils/customError'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import { profileLink } from './profileLink'
+import CustomError from '../../utils/custom-error'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import { profileLink } from './profile-link'
 
-async function getStats({
+const getRealtimeStatsOrThrow = async function getRealtimeStatsOrThrow({
+  client,
+  locale,
+  matchId,
+  token,
+}: {
+  client: SocketClient
+  locale: string
+  matchId?: string
+  token: string
+}): Promise<Awaited<ReturnType<typeof getRealtimeStats>>> {
+  try {
+    return await getRealtimeStats({
+      client,
+      forceRefetchAll: true,
+      locale,
+      token,
+    })
+  } catch (error) {
+    logger.error('Error getting stats', {
+      error,
+      match_id: matchId ?? '',
+      token,
+    })
+    if (error instanceof CustomError) {
+      throw error
+    }
+    throw new CustomError(t('gameNotFound', { lng: locale }))
+  }
+}
+
+const getStats = async function getStats({
   client,
   token,
   args,
@@ -33,26 +64,12 @@ async function getStats({
   })
 
   if (!isSpectator(packet)) {
-    const delayedData = await getRealtimeStats({
+    const delayedData = await getRealtimeStatsOrThrow({
       client,
-      forceRefetchAll: true,
       locale,
+      matchId: packet?.map?.matchid,
       token,
-    }).catch((error) => {
-      logger.error('Error getting stats', {
-        error,
-        match_id: packet?.map?.matchid ?? '',
-        token,
-      })
-      if (error instanceof CustomError) {
-        throw error
-      }
-      throw new CustomError(t('gameNotFound', { lng: locale }))
     })
-
-    if (!delayedData) {
-      throw new CustomError(t('matchData8500', { emote: 'PoroSad', lng: locale }))
-    }
 
     const playerData = findRealtimePlayer(delayedData, accountIdFromArgs, playerIdx)
     if (!playerData) {
@@ -78,13 +95,13 @@ async function getStats({
   }
 
   return {
-    denies: playerData?.denies,
-    gold: playerData?.gold,
+    denies: playerData.denies,
+    gold: playerData.gold,
     heroName: getHeroNameOrColor(hero?.id ?? 0, playerIdx),
-    kda: `${playerData?.kills}/${playerData?.deaths}/${playerData?.assists}`,
-    lasthits: playerData?.last_hits,
-    level: heroData?.level,
-    net_worth: playerData?.net_worth,
+    kda: `${playerData.kills}/${playerData.deaths}/${playerData.assists}`,
+    lasthits: playerData.last_hits,
+    level: heroData.level,
+    net_worth: playerData.net_worth,
   }
 }
 
@@ -97,7 +114,7 @@ commandHandler.registerCommand('stats', {
     } = message
 
     const currentMatchId = client.gsi?.map?.matchid
-    if (!currentMatchId) {
+    if (currentMatchId === undefined || currentMatchId.length === 0) {
       chatClient.say(
         channel,
         t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
@@ -125,9 +142,7 @@ commandHandler.registerCommand('stats', {
 
       chatClient.say(client.name, msg, message.user.messageId)
     } catch (error) {
-      const msg = (error as Error)?.message
-        ? (error as Error)?.message
-        : t('gameNotFound', { lng: client.locale })
+      const msg = error instanceof Error ? error.message : t('gameNotFound', { lng: client.locale })
       chatClient.say(client.name, msg, message.user.messageId)
     }
   },

@@ -3,19 +3,20 @@ import { t } from 'i18next'
 
 import { plebMode } from '../../dota/lib/consts'
 import { DBSettings } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
 
 commandHandler.registerCommand('pleb', {
   dbkey: DBSettings.commandPleb,
-  handler: async (message: MessageType, _args: string[]) => {
+  handler: async (message: MessageType) => {
     const {
       channel: { name: channel, id: channelId },
     } = message
+    const botProviderId = process.env.TWITCH_BOT_PROVIDERID ?? ''
     if (!(await checkBotStatus())) {
-      const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID!)
-      await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {
+      const api = await getTwitchAPI(botProviderId)
+      await api.asUser(botProviderId, async (ctx) => {
         const settings = await ctx.chat.getSettings(channelId)
 
         if (!settings.subscriberOnlyModeEnabled) {
@@ -32,7 +33,6 @@ commandHandler.registerCommand('pleb', {
         chatClient.say(channel, t('pleb', { emote: '👇', lng: message.channel.client.locale }))
       })
     }
-    return
   },
   permission: 2,
 })

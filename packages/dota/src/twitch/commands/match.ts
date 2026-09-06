@@ -1,19 +1,19 @@
 import { t } from 'i18next'
 
-import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/getCurrentMatchId'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
+import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/get-current-match-id'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
 
 commandHandler.registerCommand('match', {
   aliases: ['matchid'],
-  handler: (message: MessageType, _args: string[]) => {
+  handler: (message: MessageType) => {
     const {
       channel: { name: channel, client },
     } = message
     const matchId = getCurrentRosterMatchId(client)
 
-    if (!matchId) {
+    if (matchId === undefined || matchId.length === 0) {
       chatClient.say(
         channel,
         t(isCurrentCustomGame(client) ? 'customGameNoMatchId' : 'currentMatchIdNotFound', {

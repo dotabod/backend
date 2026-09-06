@@ -5,15 +5,22 @@ import { resolveCosmetics } from '../cosmetics.ts'
 // Wearables block from the gameEnd fixture (an Invoker loadout): a mix of
 // player-equipped cosmetics and default/base model parts.
 const FIXTURE_WEARABLES: Record<string, number> = {
-  wearable0: 5867, // Iceforged Hair (head, marketable)
-  wearable1: 23_683, // 10th Anniversary Heaven-Piercing Pauldrons (shoulder, not marketable)
+  // Iceforged Hair (head, marketable)
+  wearable0: 5867,
+  // 10th Anniversary Heaven-Piercing Pauldrons (shoulder, not marketable)
+  wearable1: 23_683,
   wearable15: 766,
-  wearable2: 98, // base part
+  // base part
+  wearable2: 98,
   wearable25: 683,
-  wearable3: 48, // base part
-  wearable4: 4289, // Bracers of Profound Perfection (arms, marketable)
-  wearable5: 8626, // default_item
-  wearable6: 6079, // Wraps of the Eastern Range (belt, marketable)
+  // base part
+  wearable3: 48,
+  // Bracers of Profound Perfection (arms, marketable)
+  wearable4: 4289,
+  // default_item
+  wearable5: 8626,
+  // Wraps of the Eastern Range (belt, marketable)
+  wearable6: 6079,
   wearable7: 8632,
   wearable8: 13_043,
 }

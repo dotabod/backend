@@ -2,9 +2,9 @@ import { t } from 'i18next'
 
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import { findAccountFromCmd } from '../lib/findGSIByAccountId'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import { findAccountFromCmd } from '../lib/find-gsi-by-account-id'
 
 commandHandler.registerCommand('d2pt', {
   aliases: ['dota2pt', 'build', 'builds', 'getbuild'],
@@ -30,7 +30,9 @@ commandHandler.registerCommand('d2pt', {
     } catch (error) {
       chatClient.say(
         message.channel.name,
-        (error as Error)?.message ?? t('gameNotFound', { lng: message.channel.client.locale }),
+        error instanceof Error
+          ? error.message
+          : t('gameNotFound', { lng: message.channel.client.locale }),
         message.user.messageId
       )
     }

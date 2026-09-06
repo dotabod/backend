@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { GcWatchdog } from '../utils/gcWatchdog'
+import { GcWatchdog } from '../utils/gc-watchdog'
+import type { GcAction } from '../utils/gc-watchdog'
 
 // Deterministic injectable clock: advance() moves virtual time forward so the
 // escalation ladder (spacing + dead-exit ceiling) is exact and non-flaky.
-function makeClock(start = 1_000_000) {
+const makeClock = function makeClock(start = 1_000_000) {
   let t = start
   return {
     advance: (ms: number) => {
@@ -19,6 +20,13 @@ const opts = (clock: ReturnType<typeof makeClock>) => ({
   now: clock.now,
   relaunchIntervalMs: 30_000,
 })
+
+const getExitReason = function getExitReason(action: GcAction): string {
+  if (action.type !== 'exit') {
+    throw new Error(`Expected exit action, received ${action.type}`)
+  }
+  return action.reason
+}
 
 describe(GcWatchdog, () => {
   it('starts not-ready and becomes ready on gcReady', () => {
@@ -48,7 +56,8 @@ describe(GcWatchdog, () => {
     expect(wd.step({ type: 'tick' }).type).toBe('noop')
 
     // Only once the interval elapses again do we permit the next relaunch.
-    clock.advance(20_000) // 30s since last relaunch
+    // 30s since last relaunch
+    clock.advance(20_000)
     expect(wd.step({ type: 'helloTimeout' }).type).toBe('relaunch')
   })
 
@@ -65,19 +74,21 @@ describe(GcWatchdog, () => {
     }
 
     // At/after deadExitMs of continuous not-ready, we exit instead of relaunch.
-    clock.advance(30_000) // now 180_000 since unready
+    // now 180_000 since unready
+    clock.advance(30_000)
     const action = wd.step({ type: 'helloTimeout' })
-    expect(action.type).toBe('exit')
-    if (action.type === 'exit') {
-      expect(action.reason).toContain('exiting')
-    }
+    expect({ reason: getExitReason(action), type: action.type }).toStrictEqual({
+      reason: 'GC not ready for 180s (>= 180s ceiling); exiting for a clean restart',
+      type: 'exit',
+    })
   })
 
   it('a gcReady resets the ladder so later trouble starts fresh', () => {
     const clock = makeClock()
     const wd = new GcWatchdog(opts(clock))
     wd.step({ type: 'gcUnready' })
-    clock.advance(170_000) // almost dead
+    // almost dead
+    clock.advance(170_000)
 
     // Recovered.
     wd.step({ type: 'gcReady' })

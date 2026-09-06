@@ -1,8 +1,8 @@
 import { t } from 'i18next'
 
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
 
 const contributors = [
   { contributors: ['@techleed'], language: 'English', locale: 'en' },
@@ -24,7 +24,7 @@ const contributors = [
 
 commandHandler.registerCommand('locale', {
   aliases: ['translation', 'translatedby'],
-  handler: (message: MessageType, _args: string[]) => {
+  handler: (message: MessageType) => {
     const translators = contributors.find((c) => c.locale === message.channel.client.locale)
     if (!translators) {
       chatClient.say(

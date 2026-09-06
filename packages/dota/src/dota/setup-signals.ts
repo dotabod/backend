@@ -1,0 +1,129 @@
+import { logger, supabase } from '@dotabod/shared-utils'
+
+import { SETUP_SIGNAL_KEYS } from './setup-signal-keys'
+import type { SetupSignalKey } from './setup-signal-keys'
+
+// Bounded LRU-ish dedupe. Capped per-process so a long uptime with many users
+// can't grow these unboundedly. On eviction the next packet pays one redundant
+// idempotent upsert — harmless. Sized for ~10k active users per pod.
+const CACHE_MAX = 10_000
+const LAST_SEEN_WRITE_INTERVAL_MS = 60_000
+
+class BoundedSet {
+  private readonly set = new Set<string>()
+  has(key: string) {
+    return this.set.has(key)
+  }
+  add(key: string) {
+    if (this.set.size >= CACHE_MAX) {
+      const oldest = this.set.values().next().value
+      if (oldest !== undefined) {
+        this.set.delete(oldest)
+      }
+    }
+    this.set.add(key)
+  }
+}
+
+const gsiSeenCache = new BoundedSet()
+const overlaySeenCache = new BoundedSet()
+const lastSeenWrites = new Map<string, number>()
+
+const recordFirstSeen = async function recordFirstSeen(userId: string, key: SetupSignalKey) {
+  const now = new Date().toISOString()
+  const { error } = await supabase
+    .from('settings')
+    .upsert(
+      { key, updated_at: now, userId, value: true },
+      { ignoreDuplicates: true, onConflict: 'userId, key' }
+    )
+  if (error) {
+    logger.info('[setup-signals] upsert failed', { error, key, userId })
+  }
+}
+
+const recordLastSeen = async function recordLastSeen(userId: string, key: SetupSignalKey) {
+  const now = new Date().toISOString()
+  const { error } = await supabase
+    .from('settings')
+    .upsert(
+      { key, updated_at: now, userId, value: true },
+      { ignoreDuplicates: false, onConflict: 'userId, key' }
+    )
+  if (error) {
+    logger.info('[setup-signals] last-seen upsert failed', { error, key, userId })
+  }
+}
+
+const recordFirstSeenSafely = async function recordFirstSeenSafely(
+  userId: string,
+  key: SetupSignalKey
+): Promise<void> {
+  try {
+    await recordFirstSeen(userId, key)
+  } catch (error) {
+    logger.info('[setup-signals] first-seen recording failed', { error, key, userId })
+  }
+}
+
+const recordLastSeenSafely = async function recordLastSeenSafely(
+  userId: string,
+  key: SetupSignalKey
+): Promise<void> {
+  try {
+    await recordLastSeen(userId, key)
+  } catch (error) {
+    logger.info('[setup-signals] last-seen recording failed', { error, key, userId })
+  }
+}
+
+// Cache populates before the upsert resolves: on the GSI hot path (5/sec/user) we'd
+// rather accept one missed signal on transient failure than let duplicate writes pile up.
+const recordOnce = function recordOnce(userId: string, cache: BoundedSet, key: SetupSignalKey) {
+  if (!userId || cache.has(userId)) {
+    return
+  }
+  cache.add(userId)
+  void recordFirstSeenSafely(userId, key)
+}
+
+const recordThrottled = function recordThrottled(userId: string, key: SetupSignalKey) {
+  if (!userId) {
+    return
+  }
+  const cacheKey = `${key}:${userId}`
+  const now = Date.now()
+  const previous = lastSeenWrites.get(cacheKey)
+  if (previous !== undefined && now - previous < LAST_SEEN_WRITE_INTERVAL_MS) {
+    return
+  }
+
+  if (lastSeenWrites.size >= CACHE_MAX * 2) {
+    const oldest = lastSeenWrites.keys().next().value
+    if (oldest !== undefined) {
+      lastSeenWrites.delete(oldest)
+    }
+  }
+  lastSeenWrites.set(cacheKey, now)
+  void recordLastSeenSafely(userId, key)
+}
+
+export const recordGsiFirstSeen = function recordGsiFirstSeen(userId: string): void {
+  recordOnce(userId, gsiSeenCache, SETUP_SIGNAL_KEYS.gsi)
+}
+
+export const recordOverlayFirstSeen = function recordOverlayFirstSeen(userId: string): void {
+  recordOnce(userId, overlaySeenCache, SETUP_SIGNAL_KEYS.overlay)
+}
+
+export const recordGsiActivity = function recordGsiActivity(userId: string): void {
+  recordGsiFirstSeen(userId)
+  recordThrottled(userId, SETUP_SIGNAL_KEYS.gsiLastSeen)
+}
+
+export const recordOverlaySocketActivity = function recordOverlaySocketActivity(
+  userId: string
+): void {
+  recordOverlayFirstSeen(userId)
+  recordThrottled(userId, SETUP_SIGNAL_KEYS.overlaySocketLastSeen)
+}

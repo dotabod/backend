@@ -4,10 +4,10 @@ import { DotaEventTypes } from '../../../types'
 import type { AegisDeniedEvent } from '../../../types'
 import { is8500Plus } from '../../../utils/index'
 import { getHeroNameOrColor } from '../../lib/heroes'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { isPlayingMatch } from '../../lib/is-playing-match'
 import { MatchDataService } from '../../lib/matchData'
 import { say } from '../../say'
-import eventHandler from '../EventHandler'
+import eventHandler from '../event-handler'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.AegisDenied}`, {
   handler: async (dotaClient, event: AegisDeniedEvent) => {
@@ -29,14 +29,18 @@ eventHandler.registerEvent(`event:${DotaEventTypes.AegisDenied}`, {
     // positively matched the player by `slot` in the roster — indexing by
     // raw event.player_id is unreliable in reshuffled high-immortal games.
     const heroName = high
-      ? foundIndex !== -1 && heroId
+      ? foundIndex !== -1 &&
+        heroId !== null &&
+        heroId !== undefined &&
+        heroId !== 0 &&
+        !Number.isNaN(heroId)
         ? getHeroNameOrColor(heroId, playerIdIndex)
         : null
       : getHeroNameOrColor(heroId ?? 0, playerIdIndex)
 
     say(
       dotaClient.client,
-      heroName
+      heroName !== null && heroName.length > 0
         ? t('aegis.denied', {
             emote: 'ICANT',
             heroName,

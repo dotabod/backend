@@ -1,16 +1,5 @@
-/**
- * text-normalization.ts
- *
- * Utilities for text normalization and preprocessing to enhance profanity detection
- * by handling common obfuscation techniques.
- */
-
-/**
- * Compresses repeated characters to single characters
- * e.g., "fuuuuck" becomes "fuck"
- */
-function compressRepeatedCharacters(text: string): string {
-  return text.replaceAll(/(.)\1+/g, '$1')
+const compressRepeatedCharacters = function compressRepeatedCharacters(text: string): string {
+  return text.replaceAll(/(.)\1+/gu, '$1')
 }
 
 /**
@@ -50,23 +39,18 @@ const CHAR_SUBSTITUTIONS: Record<string, string[]> = {
 // When normalizing text for profanity detection, we want to catch obfuscation
 // without causing excessive false positives
 
-/**
- * Normalizes text by replacing common character substitutions
- * to their standard form, but only for known profanity patterns
- *
- * @param text Input text to normalize
- * @returns Normalized text
- */
-export function normalizeText(text: string): string {
+export const normalizeText = function normalizeText(text: string): string {
   let normalized = text.toLowerCase()
 
   // Only apply aggressive normalization to suspicious patterns
   // Check for potential obfuscation markers first
   const hasPotentialObfuscation =
-    /[^\w\s]|[0-9]|(.)\1{2,}/g.test(normalized) || /\w\s\w\s\w/.test(normalized) // Spaced out letters
+    // Spaced out letters
+    /[^\w\s]|[0-9]|(.)\1{2,}/gu.test(normalized) || /\w\s\w\s\w/u.test(normalized)
 
   if (!hasPotentialObfuscation) {
-    return normalized // Skip normalization for normal-looking text
+    // Skip normalization for normal-looking text
+    return normalized
   }
 
   // Replace each character with its standard form
@@ -78,66 +62,42 @@ export function normalizeText(text: string): string {
       }
 
       // Special characters need to be escaped in regular expressions
-      const escapeRegExp = (str: string) => str.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const escapeRegExp = (str: string) => str.replaceAll(/[.*+?^${}()|[\]\\]/gu, '\\$&')
       const safeSubstitute = escapeRegExp(substitute)
 
       // Replace all occurrences of the substitute with the standard char
-      normalized = normalized.replaceAll(new RegExp(safeSubstitute, 'g'), char)
+      normalized = normalized.replaceAll(new RegExp(safeSubstitute, 'ug'), char)
     }
   }
 
   return normalized
 }
 
-/**
- * Removes repeated characters to handle stretching
- * e.g., "fuuuuuck" becomes "fuck"
- *
- * @param text Input text to normalize
- * @returns Text with repeated characters normalized
- */
-export function normalizeRepeatedChars(text: string): string {
+export const normalizeRepeatedChars = function normalizeRepeatedChars(text: string): string {
   // Replace 3 or more repetitions with just 1
-  return text.replaceAll(/(.)\1{2,}/g, '$1')
+  return text.replaceAll(/(.)\1{2,}/gu, '$1')
 }
 
-/**
- * Removes common separators used to obfuscate words
- * e.g., "f*u*c*k" becomes "fuck"
- *
- * @param text Input text to normalize
- * @returns Text with separators removed
- */
-export function removeSeparators(text: string): string {
+export const removeSeparators = function removeSeparators(text: string): string {
   // Common separators: spaces, dots, asterisks, underscores, hyphens
-  return text.replaceAll(/[\s.*_-]/g, '')
+  return text.replaceAll(/[\s.*_-]/gu, '')
 }
 
-/**
- * Removes non-alphanumeric characters to get the core text
- *
- * @param text Input text
- * @returns Text with only alphanumeric characters
- */
-export function stripNonAlphanumeric(text: string): string {
-  return text.replaceAll(/[^a-zA-Z0-9\s]/g, '')
+export const stripNonAlphanumeric = function stripNonAlphanumeric(text: string): string {
+  return text.replaceAll(/[^a-zA-Z0-9\s]/gu, '')
 }
 
-/**
- * Fully prepares text for profanity detection by applying all normalizations
- *
- * @param text Input text to process
- * @returns Processed text ready for profanity checking
- */
-export function prepareText(text: string): string {
+export const prepareText = function prepareText(text: string): string {
   // First, normalize international characters and leetspeak substitutions
   let prepared = normalizeText(text)
 
   // Check for potential obfuscation markers first
-  const hasPotentialObfuscation = /[^\w\s]|[0-9]|(.)\1{2,}/g.test(text) || /\w\s\w\s\w/.test(text) // Spaced out letters
+  // Spaced out letters
+  const hasPotentialObfuscation = /[^\w\s]|[0-9]|(.)\1{2,}/gu.test(text) || /\w\s\w\s\w/u.test(text)
 
   if (!hasPotentialObfuscation) {
-    return prepared // Skip further processing for normal-looking text
+    // Skip further processing for normal-looking text
+    return prepared
   }
 
   // Remove separators to handle obfuscation like "f*u*c*k" or "f.u.c.k"
@@ -149,15 +109,10 @@ export function prepareText(text: string): string {
   return prepared
 }
 
-/**
- * Creates variations of the input text to check against profanity lists
- *
- * @param text Input text
- * @returns Array of text variations to check
- */
-export function createTextVariations(text: string): string[] {
+export const createTextVariations = function createTextVariations(text: string): string[] {
   // Check for potential obfuscation markers first
-  const hasPotentialObfuscation = /[^\w\s]|[0-9]|(.)\1{2,}/g.test(text) || /\w\s\w\s\w/.test(text) // Spaced out letters
+  // Spaced out letters
+  const hasPotentialObfuscation = /[^\w\s]|[0-9]|(.)\1{2,}/gu.test(text) || /\w\s\w\s\w/u.test(text)
 
   // Create compressed version of text (e.g., "fuuuuck" becomes "fuck")
   const compressedText = compressRepeatedCharacters(text)
@@ -172,16 +127,22 @@ export function createTextVariations(text: string): string[] {
 
   // For suspect text, apply all transformations
   const variations: string[] = [
-    text, // Original text
-    text.toLowerCase(), // Lowercase
-    normalizeText(text), // Normalized character substitutions
-    prepareText(text), // Fully processed text
-    stripNonAlphanumeric(text), // Alphanumeric-only version
+    // Original text
+    text,
+    // Lowercase
+    text.toLowerCase(),
+    // Normalized character substitutions
+    normalizeText(text),
+    // Fully processed text
+    prepareText(text),
+    // Alphanumeric-only version
+    stripNonAlphanumeric(text),
   ]
 
   if (needsCompressedCheck) {
     variations.push(compressedText)
   }
 
-  return [...new Set(variations)] // Remove duplicates
+  // Remove duplicates
+  return [...new Set(variations)]
 }

@@ -5,7 +5,10 @@ import type { Coverage, ResolvedRoster, RosterPlayer } from '../types'
 // 'partial', not 'all', even though 1/1 of its entries is filled.
 const ROSTER_SLOTS = 10
 
-export function coverage(players: RosterPlayer[], pred: (p: RosterPlayer) => boolean): Coverage {
+export const coverage = function coverage(
+  players: RosterPlayer[],
+  pred: (p: RosterPlayer) => boolean
+): Coverage {
   const matches = players.filter(pred).length
   if (matches === 0) {
     return 'none'
@@ -16,7 +19,7 @@ export function coverage(players: RosterPlayer[], pred: (p: RosterPlayer) => boo
   return 'partial'
 }
 
-export function emptyRoster(): ResolvedRoster {
+export const emptyRoster = function emptyRoster(): ResolvedRoster {
   return {
     completeness: {
       accountIds: 'none',

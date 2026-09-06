@@ -1,16 +1,20 @@
 import { t } from 'i18next'
 
-import { getTodayHeroStats } from '../../db/getTodayHeroStats'
+import { getTodayHeroStats } from '../../db/get-today-hero-stats'
 import { DBSettings } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
 
 // Twitch chat limit is 500 characters
 const TWITCH_CHAR_LIMIT = 500
 
 // Format a single hero stat: "Hero 3W 1L", "Hero 2W", or "Hero 1L"
-function formatHeroStat(heroName: string, wins: number, losses: number): string {
+const formatHeroStat = function formatHeroStat(
+  heroName: string,
+  wins: number,
+  losses: number
+): string {
   if (wins && losses) {
     return `${heroName} ${wins}W ${losses}L`
   }
@@ -21,7 +25,11 @@ function formatHeroStat(heroName: string, wins: number, losses: number): string 
 }
 
 // Split message into chunks that fit within Twitch's character limit
-function splitIntoMessages(parts: string[], separator: string, limit: number): string[] {
+const splitIntoMessages = function splitIntoMessages(
+  parts: string[],
+  separator: string,
+  limit: number
+): string[] {
   const messages: string[] = []
   let current = ''
 
@@ -51,10 +59,10 @@ commandHandler.registerCommand('today', {
       channel: { name: channel, client },
     } = message
 
-    if (!client.steam32Id) {
+    if (client.steam32Id === null || client.steam32Id === 0) {
       chatClient.say(
         channel,
-        client.multiAccount
+        client.multiAccount !== undefined && client.multiAccount !== 0
           ? t('multiAccount', {
               lng: client.locale,
               url: 'dotabod.com/dashboard/features',
@@ -125,7 +133,7 @@ commandHandler.registerCommand('today', {
     const chunks = splitIntoMessages(formattedStats, separator, effectiveLimit)
 
     // Send hero stat chunks
-    for (let i = 0; i < chunks.length; i++) {
+    for (let i = 0; i < chunks.length; i += 1) {
       const isLast = i === chunks.length - 1
       const msg = isLast ? `${chunks[i]} · ${summaryStr}` : chunks[i]
 

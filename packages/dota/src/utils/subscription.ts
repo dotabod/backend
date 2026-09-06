@@ -160,10 +160,10 @@ const GENERIC_FEATURE_TIERS = {
 
 export type GenericFeature = keyof typeof GENERIC_FEATURE_TIERS
 
-export function getRequiredTier(
-  feature?: FeatureTier | GenericFeature
+export const getRequiredTier = function getRequiredTier(
+  feature?: string
 ): Database['public']['Enums']['SubscriptionTier'] {
-  if (!feature) {
+  if (feature === undefined || feature.length === 0) {
     return SUBSCRIPTION_TIERS.PRO
   }
 
@@ -175,19 +175,19 @@ export function getRequiredTier(
 }
 
 // Add helper to check if a key is a chatter key
-export function isChatterKey(key: string): boolean {
+export const isChatterKey = function isChatterKey(key: string): boolean {
   return key.startsWith('chatters.')
 }
 
 const GRACE_PERIOD_END = new Date('2025-04-30T23:59:59.999Z')
 
 // Add a function to check if we're in the grace period
-export function isInGracePeriod(): boolean {
+export const isInGracePeriod = function isInGracePeriod(): boolean {
   return new Date() < GRACE_PERIOD_END
 }
 
 // Update canAccessFeature to handle chatter keys
-export function canAccessFeature(
+export const canAccessFeature = function canAccessFeature(
   feature: FeatureTier | GenericFeature,
   subscription: SubscriptionRow | null | undefined
 ): { hasAccess: boolean; requiredTier: Database['public']['Enums']['SubscriptionTier'] } {
@@ -198,7 +198,8 @@ export function canAccessFeature(
   // Grant Pro access to all users during this period
   if (isInGracePeriod()) {
     return {
-      hasAccess: true, // All features are accessible during grace period
+      // All features are accessible during grace period
+      hasAccess: true,
       requiredTier,
     }
   }
@@ -218,7 +219,7 @@ export function canAccessFeature(
   }
 
   // Return early if feature is free or subscription is invalid
-  if (isFreeFeature || !subscription || !isSubscriptionActive(subscription)) {
+  if (!isSubscriptionActive(subscription)) {
     return {
       hasAccess: isFreeFeature,
       requiredTier,

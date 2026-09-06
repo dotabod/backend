@@ -1,60 +1,48 @@
-import type { AddressInfo, Server as HttpServer } from 'node:net'
-
+import type { Server } from 'socket.io'
 import { io as ioClient } from 'socket.io-client'
+import type { Socket } from 'socket.io-client'
 import { afterAll, describe, expect, it } from 'vitest'
+import { z } from 'zod'
 
-import { createSocketServer } from '../socketServer'
+import { createSocketServer } from '../socket-server'
 
-const server = createSocketServer(0)
-const httpServer = server.httpServer as HttpServer & {
-  closeAllConnections?: () => void
+interface ClientToServerEvents {
+  ping: (payload: string, acknowledge: (reply: string) => void) => void
 }
-const { port } = httpServer.address() as AddressInfo
 
-afterAll(async () => {
-  server.disconnectSockets(true)
-  await new Promise<void>((resolve) => {
-    void server.close(() => {
-      resolve()
-    })
-    httpServer.closeAllConnections?.()
-  })
-}, 10_000)
+interface ServerToClientEvents {
+  serverReady: () => void
+}
+
+const server: Server<ClientToServerEvents, ServerToClientEvents> = createSocketServer(0)
+const addressResult = z.object({ port: z.number() }).safeParse(server.httpServer.address())
+if (!addressResult.success) {
+  throw new Error('Socket test server did not bind to a TCP port')
+}
+const { port } = addressResult.data
 
 describe('createSocketServer round-trip', () => {
+  afterAll(async () => {
+    server.disconnectSockets(true)
+    await server.close()
+  }, 10_000)
+
   it('accepts a client connection and echoes an event', async () => {
-    server.on('connection', (sock) => {
-      sock.on('ping', (payload, ack) => ack(`pong:${payload}`))
+    server.on('connection', (socket) => {
+      socket.on('ping', (payload, acknowledge) => {
+        acknowledge(`pong:${payload}`)
+      })
     })
 
-    const client = ioClient(`http://127.0.0.1:${port}`, {
-      reconnection: false,
-      transports: ['websocket'],
-    })
+    const client: Socket<ServerToClientEvents, ClientToServerEvents> = ioClient(
+      `http://127.0.0.1:${port}`,
+      {
+        reconnection: false,
+        transports: ['websocket'],
+      }
+    )
     try {
-      await new Promise<void>((resolve, reject) => {
-        const timer = setTimeout(() => {
-          reject(new Error('connect timeout'))
-        }, 5000)
-        client.on('connect', () => {
-          clearTimeout(timer)
-          resolve()
-        })
-        client.on('connect_error', (err) => {
-          clearTimeout(timer)
-          reject(err)
-        })
-      })
-
-      const reply = await new Promise<string>((resolve, reject) => {
-        const timer = setTimeout(() => {
-          reject(new Error('ack timeout'))
-        }, 5000)
-        client.emit('ping', 'hello', (msg: string) => {
-          clearTimeout(timer)
-          resolve(msg)
-        })
-      })
+      const reply = await client.emitWithAck('ping', 'hello')
       expect(reply).toBe('pong:hello')
     } finally {
       client.disconnect()

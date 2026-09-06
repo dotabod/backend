@@ -5,7 +5,7 @@
 // The internal/ subfolder is implementation detail. Anything not re-exported here is not part of
 // the API contract.
 
-export { getStreamersInMatch } from './getStreamersInMatch'
-export { lookupRosterByMatchId } from './lookupRosterByMatchId'
-export { MatchDataService } from './MatchDataService'
+export { getStreamersInMatch } from './get-streamers-in-match'
+export { lookupRosterByMatchId } from './lookup-roster-by-match-id'
+export { MatchDataService } from './match-data-service'
 export type { RosterPlayer, RosterSource } from './types'

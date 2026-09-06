@@ -1,0 +1,12 @@
+// Fallback window for session-scoped match queries when the stream isn't
+// currently online (or `stream_start_date` is missing). 12 hours matches the
+// longest realistic Dota streaming session and is shared by the default win/loss
+// counter, recent / unresolved / won / lost commands, and the retroactive match
+// resolver. !today uses a fixed calendar-day window.
+const DEFAULT_STREAM_WINDOW_MS = 12 * 60 * 60 * 1000
+
+export const getSessionStartDate = function getSessionStartDate(
+  streamStartDate?: Date | null
+): Date {
+  return streamStartDate ?? new Date(Date.now() - DEFAULT_STREAM_WINDOW_MS)
+}

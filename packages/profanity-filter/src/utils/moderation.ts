@@ -36,12 +36,33 @@ interface ModerationResponse {
   }[]
 }
 
+export interface ProfanityDetails {
+  isFlagged: boolean
+  source: string
+  matches?: string[]
+  language?: string
+}
+
+export interface TextProfanityDetails extends ProfanityDetails {
+  text: string
+}
+
+interface WashProfanityResult {
+  detected: boolean
+  locale?: string
+  matchingWords?: string[]
+}
+
+const HATE_SPEECH_SOURCE = 'hate-speech'
+
 // Initialize libraries
 const badWords = new Filter()
 
 // Initialize leo-profanity with only English and Russian dictionaries
-leoProfanity.loadDictionary('en') // English
-leoProfanity.loadDictionary('ru') // Russian
+// English
+leoProfanity.loadDictionary('en')
+// Russian
+leoProfanity.loadDictionary('ru')
 
 // Add Russian bad words from the russian-bad-words library to leo-profanity
 leoProfanity.add(russianBadWordsList)
@@ -83,11 +104,7 @@ const SAFE_WORDS_WHITELIST = [
   // Add other safe words as needed
 ]
 
-/**
- * Helper function to check if a text contains only whitelisted words
- * or is part of common legitimate language
- */
-function isSafeText(text: string): boolean {
+const isSafeText = function isSafeText(text: string): boolean {
   // Convert to lowercase for case-insensitive matching
   const lower = text.toLowerCase()
 
@@ -102,60 +119,45 @@ function isSafeText(text: string): boolean {
   }
 
   // Check if text only contains whitelisted words
-  const words = lower.split(/\s+/)
+  const words = lower.split(/\s+/u)
   const allWordsAreSafe = words.every((word) => {
     // Remove any punctuation before checking
-    const cleanWord = word.replaceAll(/[.,?!;:'"()[\]{}]/g, '')
+    const cleanWord = word.replaceAll(/[.,?!;:'"()[\]{}]/gu, '')
     return cleanWord.length === 0 || SAFE_WORDS_WHITELIST.includes(cleanWord)
   })
 
   return allWordsAreSafe
 }
 
-/**
- * Helper function to check text against Russian bad words list
- */
-function checkRussianBadWords(text: string): boolean {
+const checkRussianBadWords = function checkRussianBadWords(text: string): boolean {
   const lowerText = text.toLowerCase()
   return russianBadWordsList.some((word) => lowerText.includes(word.toLowerCase()))
 }
 
-/**
- * Helper function to extract Russian bad words from text
- */
-function extractRussianBadWords(text: string): string[] {
+const extractRussianBadWords = function extractRussianBadWords(text: string): string[] {
   const lowerText = text.toLowerCase()
   return russianBadWordsList.filter((word) => lowerText.includes(word.toLowerCase()))
 }
 
-/**
- * Helper function to check text against washyourmouthoutwithsoap for all locales
- */
-function checkWashProfanity(text: string): {
-  detected: boolean
-  locale?: string
-  matchingWords?: string[]
-} {
+const checkWashProfanity = function checkWashProfanity(text: string): WashProfanityResult {
   for (const locale of supportedLocales) {
     if (wash.check(locale, text)) {
       // Get the actual words for diagnostic purposes
       const wordList = wash.words(locale)
 
       // The actual words that matched using washyourmouthoutwithsoap's tokenize method
-      const tokens = new Set(
-        text
+      const tokens = new Set([
+        ...text
           .toLowerCase()
-          .replaceAll(/[\s+]+/g, ' ')
+          .replaceAll(/[\s+]+/gu, ' ')
           .replace('/ {2,}/', ' ')
-          .split(' ')
-          .concat(
-            text
-              .toLowerCase()
-              .replaceAll(/[^\w\s]/g, '')
-              .replace('/ {2,}/', ' ')
-              .split(' ')
-          )
-      )
+          .split(' '),
+        ...text
+          .toLowerCase()
+          .replaceAll(/[^\w\s]/gu, '')
+          .replace('/ {2,}/', ' ')
+          .split(' '),
+      ])
 
       const matchingWords = wordList.filter((word: string) => tokens.has(word.toLowerCase()))
 
@@ -168,6 +170,175 @@ function checkWashProfanity(text: string): {
   }
 
   return { detected: false }
+}
+
+interface NaughtyWordsMatch {
+  language: string
+  words: string[]
+}
+
+type TextDetector = (text: string) => boolean
+type VariationDetector = (variations: readonly string[]) => boolean
+
+const NAUGHTY_WORD_LANGUAGES = new Set(['en', 'ru'])
+
+const findNaughtyWords = function findNaughtyWords(text: string): NaughtyWordsMatch | null {
+  const lowerText = text.toLowerCase()
+  for (const [language, wordList] of Object.entries(naughtyWords)) {
+    if (!NAUGHTY_WORD_LANGUAGES.has(language)) {
+      continue
+    }
+
+    const words = wordList.filter((word) => {
+      if (word.length < 4) {
+        return new RegExp(`\\b${word}\\b`, 'ui').test(text)
+      }
+      return lowerText.includes(word.toLowerCase())
+    })
+    if (words.length > 0) {
+      return { language, words }
+    }
+  }
+  return null
+}
+
+const detectsWashProfanity = function detectsWashProfanity(text: string): boolean {
+  try {
+    return checkWashProfanity(text).detected
+  } catch (error) {
+    console.error('Error using washyourmouthoutwithsoap library:', error)
+    return false
+  }
+}
+
+const detectsRussianBadWords = function detectsRussianBadWords(text: string): boolean {
+  try {
+    return checkRussianBadWords(text)
+  } catch (error) {
+    console.error('Error using russian-bad-words library:', error)
+    return false
+  }
+}
+
+const detectsBadWords = function detectsBadWords(text: string): boolean {
+  try {
+    return badWords.isProfane(text)
+  } catch (error) {
+    console.error('Error using bad-words library:', error)
+    return false
+  }
+}
+
+const detectsLeoProfanity = function detectsLeoProfanity(text: string): boolean {
+  try {
+    return leoProfanity.check(text)
+  } catch (error) {
+    console.error('Error using leo-profanity library:', error)
+    return false
+  }
+}
+
+const detectsProfanityUtil = function detectsProfanityUtil(text: string): boolean {
+  try {
+    return profanityUtil.check(text)[1] > 0
+  } catch (error) {
+    console.error('Error using profanity-util library:', error)
+    return false
+  }
+}
+
+const detectsNaughtyWords = function detectsNaughtyWords(text: string): boolean {
+  try {
+    return findNaughtyWords(text) !== null
+  } catch (error) {
+    console.error('Error using naughty-words library:', error)
+    return false
+  }
+}
+
+const detectsCurseFilter = function detectsCurseFilter(variations: readonly string[]): boolean {
+  return variations.some((variation) => detect(variation))
+}
+
+const detectsToadProfanity = function detectsToadProfanity(variations: readonly string[]): boolean {
+  return variations.some((variation) => profanity.exists(variation))
+}
+
+const detectsObscenity = function detectsObscenity(variations: readonly string[]): boolean {
+  return variations.some((variation) => matcher.getAllMatches(variation).length > 0)
+}
+
+const detectsCustomProfanity = function detectsCustomProfanity(text: string): boolean {
+  return (
+    detectRussianProfanity(text) ||
+    detectEvasionTactics(text) ||
+    detectAgeRestrictions(text) ||
+    detectTransphobicContent(text)
+  )
+}
+
+const directTextDetectors = [
+  detectsWashProfanity,
+  detectsRussianBadWords,
+  detectsBadWords,
+  detectsLeoProfanity,
+  detectsProfanityUtil,
+  detectsNaughtyWords,
+] satisfies TextDetector[]
+
+const variationDetectors = [
+  detectsCurseFilter,
+  detectsToadProfanity,
+  detectsObscenity,
+] satisfies VariationDetector[]
+
+const isFlaggedByOpenAi = async function isFlaggedByOpenAi(text: string): Promise<boolean> {
+  try {
+    const response = await axios.post<ModerationResponse>(
+      'https://api.openai.com/v1/moderations',
+      {
+        input: text,
+        model: 'omni-moderation-latest',
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+    return response.data.results[0]?.flagged ?? false
+  } catch (error) {
+    console.error('Error using OpenAI moderation API:', error)
+    return false
+  }
+}
+
+const moderateTextSingle = async function moderateTextSingle(
+  text?: string
+): Promise<string | undefined> {
+  if (text === undefined || text.trim().length === 0) {
+    return text
+  }
+
+  if (isSafeText(text) || text.length <= 2) {
+    return text
+  }
+
+  const textVariations = createTextVariations(text)
+  if (
+    directTextDetectors.some((detector) => detector(text)) ||
+    variationDetectors.some((detector) => detector(textVariations)) ||
+    detectsCustomProfanity(text)
+  ) {
+    return '***'
+  }
+
+  if (process.env.OPENAI_API_KEYS === undefined || process.env.OPENAI_API_KEYS.length === 0) {
+    return text
+  }
+
+  return (await isFlaggedByOpenAi(text)) ? '***' : text
 }
 
 /**
@@ -190,210 +361,284 @@ export async function moderateText(input: string[] | undefined): Promise<string[
 export async function moderateText(
   input?: string | string[]
 ): Promise<string | (undefined | string)[] | undefined> {
-  // Handle array of strings
   if (Array.isArray(input)) {
-    const results = await Promise.all(input.map(async (text) => await moderateTextSingle(text)))
-    return results
+    return await Promise.all(input.map(async (text) => await moderateTextSingle(text)))
   }
 
-  // Handle single string
   return await moderateTextSingle(input)
 }
 
-/**
- * Helper function to moderate a single text string
- * @param text Text to moderate
- * @returns Filtered text
- */
-async function moderateTextSingle(text?: string): Promise<string | undefined> {
-  // If text is empty, return as is
-  if (!text?.trim()) {
-    return text
+interface ProfanityDetailContext {
+  lowerText: string
+  text: string
+  variations: string[]
+}
+
+type ProfanityDetailDetector = (context: ProfanityDetailContext) => ProfanityDetails | null
+
+const getTestCompatibilityDetails = function getTestCompatibilityDetails({
+  lowerText,
+}: ProfanityDetailContext): ProfanityDetails | null {
+  if (process.env.NODE_ENV !== 'test') {
+    return null
   }
-
-  // Check if this is safe text that should be whitelisted
-  if (isSafeText(text)) {
-    return text
+  if (lowerText.includes('transsexual')) {
+    return { isFlagged: true, matches: ['transsexual'], source: HATE_SPEECH_SOURCE }
   }
-
-  // If text is only 2 letters, return as is
-  if (text.length <= 2) {
-    return text
+  if (lowerText.includes('trannies are sick')) {
+    return { isFlagged: true, matches: ['tranny'], source: HATE_SPEECH_SOURCE }
   }
+  return null
+}
 
-  // Create text variations to enhance detection
-  const textVariations = createTextVariations(text)
-
-  // Layer 1: Check with washyourmouthoutwithsoap (English and Russian only)
+const getWashDetails = function getWashDetails({
+  text,
+}: ProfanityDetailContext): ProfanityDetails | null {
   try {
     const washResult = checkWashProfanity(text)
-    if (washResult.detected) {
-      return '***'
-    }
-  } catch (error) {
-    console.error('Error using washyourmouthoutwithsoap library:', error)
-  }
-
-  // Layer 2: Russian-specific profanity check using russian-bad-words package
-  try {
-    if (checkRussianBadWords(text)) {
-      return '***'
-    }
-  } catch (error) {
-    console.error('Error using russian-bad-words library:', error)
-  }
-
-  // Layer 3: Check with bad-words library (English-focused)
-  try {
-    if (badWords.isProfane(text)) {
-      return '***'
-    }
-  } catch (error) {
-    console.error('Error using bad-words library:', error)
-  }
-
-  // Layer 4: Check with leo-profanity (using EN, RU)
-  try {
-    if (leoProfanity.check(text)) {
-      return '***'
-    }
-  } catch (error) {
-    console.error('Error using leo-profanity library:', error)
-  }
-
-  // Layer 5: Check with profanity-util (provides a score)
-  try {
-    const profanityScore = profanityUtil.check(text)
-    if (profanityScore[1] > 0) {
-      // If any profanity detected
-      return '***'
-    }
-  } catch (error) {
-    console.error('Error using profanity-util library:', error)
-  }
-
-  // Layer 6: Check with naughty-words (English and Russian only)
-  try {
-    const allowedLangs = new Set(['en', 'ru'])
-    for (const lang of Object.keys(naughtyWords)) {
-      // Skip non-array properties and non-English/Russian languages
-      if (
-        !Array.isArray(naughtyWords[lang as keyof typeof naughtyWords]) ||
-        !allowedLangs.has(lang)
-      ) {
-        continue
-      }
-
-      // For each language's word list
-      const wordList = naughtyWords[lang as keyof typeof naughtyWords] as string[]
-
-      // Only match very short words (less than 4 chars) if they're standalone words
-      // This prevents false positives when a short profane word is part of a regular word
-      const matchedWords = wordList.filter((word) => {
-        if (word.length < 4) {
-          // For short words, require word boundaries or exact match
-          const regex = new RegExp(`\\b${word}\\b`, 'i')
-          return regex.test(text)
+    return washResult.detected
+      ? {
+          isFlagged: true,
+          language: washResult.locale,
+          matches: washResult.matchingWords,
+          source: 'washyourmouthoutwithsoap',
         }
-        // For longer words, keep the existing includes check
-        return text.toLowerCase().includes(word.toLowerCase())
-      })
-
-      if (matchedWords.length > 0) {
-        return '***'
-      }
-    }
+      : null
   } catch (error) {
-    console.error('Error using naughty-words library:', error)
-  }
-
-  // Layer 7: Check each variation with curse-filter (English-focused)
-  for (const variation of textVariations) {
-    if (detect(variation)) {
-      return '***'
-    }
-  }
-
-  // Layer 8: Check each variation with @2toad/profanity (configure for English)
-  for (const variation of textVariations) {
-    if (profanity.exists(variation)) {
-      return '***'
-    }
-  }
-
-  // Layer 9: Check with obscenity (better pattern matching for evasion tactics)
-  for (const variation of textVariations) {
-    const matches = matcher.getAllMatches(variation)
-    if (matches.length > 0) {
-      return '***'
-    }
-  }
-
-  // Layer 10: Custom detection - Russian profanity, evasion tactics, age restrictions, transphobic content
-  if (
-    detectRussianProfanity(text) ||
-    detectEvasionTactics(text) ||
-    detectAgeRestrictions(text) ||
-    detectTransphobicContent(text)
-  ) {
-    return '***'
-  }
-
-  // Layer 11: If no OPENAI_API_KEY is set, return as is after all local checks
-  if (!process.env.OPENAI_API_KEYS) {
-    return text
-  }
-
-  // Layer 12: OpenAI's moderation API as final check
-  try {
-    const response = await axios.post<ModerationResponse>(
-      'https://api.openai.com/v1/moderations',
-      {
-        input: text,
-        model: 'omni-moderation-latest',
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
-
-    // If content is flagged, replace with asterisks
-    if (response.data.results[0]?.flagged) {
-      return '***'
-    }
-
-    // If not flagged, return original text
-    return text
-  } catch (error) {
-    console.error('Error using OpenAI moderation API:', error)
-    // Fallback to returning original text if API call fails
-    return text
+    console.error('Error using washyourmouthoutwithsoap library in details:', error)
+    return null
   }
 }
 
-/**
- * Get detailed information about profanity detection
- * @param input Text or array of texts to check
- * @returns Object with profanity details
- */
-export function getProfanityDetails(input: string | string[]):
-  | {
-      isFlagged: boolean
-      source: string
-      matches?: string[]
-      language?: string
+const getRussianBadWordsDetails = function getRussianBadWordsDetails({
+  text,
+}: ProfanityDetailContext): ProfanityDetails | null {
+  try {
+    if (!checkRussianBadWords(text)) {
+      return null
     }
-  | {
-      text: string
-      isFlagged: boolean
-      source: string
-      matches?: string[]
-      language?: string
-    }[] {
-  // Handle array of strings
+    const extracted = extractRussianBadWords(text)
+    return {
+      isFlagged: true,
+      language: 'russian',
+      matches: extracted.length > 0 ? extracted : undefined,
+      source: 'russian-bad-words',
+    }
+  } catch (error) {
+    console.error('Error using russian-bad-words library in details:', error)
+    return null
+  }
+}
+
+const getBadWordsDetails = function getBadWordsDetails({
+  text,
+}: ProfanityDetailContext): ProfanityDetails | null {
+  try {
+    return badWords.isProfane(text)
+      ? {
+          isFlagged: true,
+          matches: text.split(' ').filter((word) => badWords.isProfane(word)),
+          source: 'bad-words',
+        }
+      : null
+  } catch (error) {
+    console.error('Error using bad-words library in details:', error)
+    return null
+  }
+}
+
+const getLeoProfanityDetails = function getLeoProfanityDetails({
+  text,
+}: ProfanityDetailContext): ProfanityDetails | null {
+  try {
+    return leoProfanity.check(text)
+      ? {
+          isFlagged: true,
+          matches: text.split(' ').filter((word) => leoProfanity.check(word)),
+          source: 'leo-profanity',
+        }
+      : null
+  } catch (error) {
+    console.error('Error using leo-profanity library in details:', error)
+    return null
+  }
+}
+
+const getProfanityUtilDetails = function getProfanityUtilDetails({
+  text,
+}: ProfanityDetailContext): ProfanityDetails | null {
+  try {
+    const profanityScore = profanityUtil.check(text)
+    return profanityScore[1] > 0
+      ? { isFlagged: true, matches: profanityScore[0], source: 'profanity-util' }
+      : null
+  } catch (error) {
+    console.error('Error using profanity-util library in details:', error)
+    return null
+  }
+}
+
+const getNaughtyWordsDetails = function getNaughtyWordsDetails({
+  text,
+}: ProfanityDetailContext): ProfanityDetails | null {
+  try {
+    const match = findNaughtyWords(text)
+    return match === null
+      ? null
+      : {
+          isFlagged: true,
+          language: match.language,
+          matches: match.words,
+          source: 'naughty-words',
+        }
+  } catch (error) {
+    console.error('Error using naughty-words library in details:', error)
+    return null
+  }
+}
+
+const findVariation = function findVariation(
+  variations: readonly string[],
+  detector: (variation: string) => boolean
+): string | null {
+  return variations.find((variation) => detector(variation)) ?? null
+}
+
+const getCurseFilterDetails = function getCurseFilterDetails({
+  variations,
+}: ProfanityDetailContext): ProfanityDetails | null {
+  const variation = findVariation(variations, detect)
+  return variation === null
+    ? null
+    : { isFlagged: true, matches: [variation], source: 'curse-filter' }
+}
+
+const getToadProfanityDetails = function getToadProfanityDetails({
+  variations,
+}: ProfanityDetailContext): ProfanityDetails | null {
+  const variation = findVariation(variations, (candidate) => profanity.exists(candidate))
+  return variation === null
+    ? null
+    : { isFlagged: true, matches: [variation], source: '@2toad/profanity' }
+}
+
+const getObscenityDetails = function getObscenityDetails({
+  variations,
+}: ProfanityDetailContext): ProfanityDetails | null {
+  for (const variation of variations) {
+    const matches = matcher.getAllMatches(variation)
+    if (matches.length > 0) {
+      return {
+        isFlagged: true,
+        matches: matches.map((match) => variation.slice(match.startIndex, match.endIndex)),
+        source: 'obscenity',
+      }
+    }
+  }
+  return null
+}
+
+const transphobicTerms = [
+  'transsexual',
+  'transgender',
+  'transvestite',
+  'tranny',
+  'shemale',
+  'trans',
+] as const
+
+const getTransphobicDetails = function getTransphobicDetails({
+  lowerText,
+  text,
+}: ProfanityDetailContext): ProfanityDetails | null {
+  if (!detectTransphobicContent(text)) {
+    return null
+  }
+  const matchedTerm = transphobicTerms.find((term) => lowerText.includes(term))
+  return {
+    isFlagged: true,
+    matches: [matchedTerm ?? text],
+    source: HATE_SPEECH_SOURCE,
+  }
+}
+
+const getCustomRussianDetails = function getCustomRussianDetails({
+  text,
+}: ProfanityDetailContext): ProfanityDetails | null {
+  return detectRussianProfanity(text)
+    ? { isFlagged: true, language: 'russian', source: 'custom-wordlist' }
+    : null
+}
+
+const getEvasionDetails = function getEvasionDetails({
+  text,
+}: ProfanityDetailContext): ProfanityDetails | null {
+  return detectEvasionTactics(text) ? { isFlagged: true, source: 'evasion-tactics' } : null
+}
+
+const getAgeRestrictionDetails = function getAgeRestrictionDetails({
+  text,
+}: ProfanityDetailContext): ProfanityDetails | null {
+  if (!detectAgeRestrictions(text)) {
+    return null
+  }
+  const agePrefix = /\b(?:i'?m|i\s+am|iam|age)(?=\s|:|=|\d|$)/iu.exec(text)
+  const ageSuffix = agePrefix === null ? null : text.slice(agePrefix.index + agePrefix[0].length)
+  const ageMatch = ageSuffix === null || ageSuffix.length === 0 ? null : /^\D*\d+/u.exec(ageSuffix)
+  const matchText =
+    agePrefix !== null && ageMatch !== null
+      ? text.slice(agePrefix.index, agePrefix.index + agePrefix[0].length + ageMatch[0].length)
+      : text
+  return { isFlagged: true, matches: [matchText], source: 'age-restriction' }
+}
+
+const profanityDetailDetectors = [
+  getTestCompatibilityDetails,
+  getWashDetails,
+  getRussianBadWordsDetails,
+  getBadWordsDetails,
+  getLeoProfanityDetails,
+  getProfanityUtilDetails,
+  getNaughtyWordsDetails,
+  getCurseFilterDetails,
+  getToadProfanityDetails,
+  getObscenityDetails,
+  getTransphobicDetails,
+  getCustomRussianDetails,
+  getEvasionDetails,
+  getAgeRestrictionDetails,
+] satisfies ProfanityDetailDetector[]
+
+const getProfanityDetailsSingle = function getProfanityDetailsSingle(
+  text: string
+): ProfanityDetails {
+  if (isSafeText(text) || text.length <= 2) {
+    return { isFlagged: false, source: 'none' }
+  }
+
+  const context = {
+    lowerText: text.toLowerCase(),
+    text,
+    variations: createTextVariations(text),
+  }
+  for (const detector of profanityDetailDetectors) {
+    const details = detector(context)
+    if (details !== null) {
+      return details
+    }
+  }
+
+  return { isFlagged: false, source: 'none' }
+}
+
+export function getProfanityDetails(input: string): ProfanityDetails
+export function getProfanityDetails(input: string[]): TextProfanityDetails[]
+export function getProfanityDetails(
+  input: string | string[]
+): ProfanityDetails | TextProfanityDetails[]
+export function getProfanityDetails(
+  input: string | string[]
+): ProfanityDetails | TextProfanityDetails[] {
   if (Array.isArray(input)) {
     return input.map((text) => ({
       text,
@@ -401,236 +646,7 @@ export function getProfanityDetails(input: string | string[]):
     }))
   }
 
-  // Handle single string
   return getProfanityDetailsSingle(input)
-}
-
-/**
- * Helper function to get profanity details for a single text string
- */
-function getProfanityDetailsSingle(text: string): {
-  isFlagged: boolean
-  source: string
-  matches?: string[]
-  language?: string
-} {
-  // Check if this is a safe text that should be whitelisted
-  if (isSafeText(text)) {
-    return { isFlagged: false, source: 'none' }
-  }
-
-  // If text is only 2 letters, return as is
-  if (text.length <= 2) {
-    return { isFlagged: false, source: 'none' }
-  }
-
-  // Create text variations for enhanced detection
-  const textVariations = createTextVariations(text)
-
-  // SPECIAL CASE FOR TEST COMPATIBILITY: Handle specific test phrases
-  // This is needed because we want consistent output for our tests
-  const lowerText = text.toLowerCase()
-  if (process.env.NODE_ENV === 'test') {
-    if (lowerText.includes('transsexual')) {
-      return { isFlagged: true, matches: ['transsexual'], source: 'hate-speech' }
-    }
-
-    if (lowerText.includes('trannies are sick')) {
-      return { isFlagged: true, matches: ['tranny'], source: 'hate-speech' }
-    }
-  }
-
-  // Check with washyourmouthoutwithsoap (English and Russian only)
-  try {
-    const washResult = checkWashProfanity(text)
-    if (washResult.detected) {
-      return {
-        isFlagged: true,
-        language: washResult.locale,
-        matches: washResult.matchingWords,
-        source: 'washyourmouthoutwithsoap',
-      }
-    }
-  } catch (error) {
-    console.error('Error using washyourmouthoutwithsoap library in details:', error)
-  }
-
-  // Check with russian-bad-words
-  try {
-    if (checkRussianBadWords(text)) {
-      const extracted = extractRussianBadWords(text)
-      return {
-        isFlagged: true,
-        language: 'russian',
-        matches: extracted.length > 0 ? extracted : undefined,
-        source: 'russian-bad-words',
-      }
-    }
-  } catch (error) {
-    console.error('Error using russian-bad-words library in details:', error)
-  }
-
-  // Check with bad-words
-  try {
-    if (badWords.isProfane(text)) {
-      return {
-        isFlagged: true,
-        matches: text.split(' ').filter((word) => badWords.isProfane(word)),
-        source: 'bad-words',
-      }
-    }
-  } catch (error) {
-    console.error('Error using bad-words library in details:', error)
-  }
-
-  // Check with leo-profanity
-  try {
-    if (leoProfanity.check(text)) {
-      const words = text.split(' ')
-      const profaneWords = words.filter((word) => leoProfanity.check(word))
-      return {
-        isFlagged: true,
-        matches: profaneWords,
-        source: 'leo-profanity',
-      }
-    }
-  } catch (error) {
-    console.error('Error using leo-profanity library in details:', error)
-  }
-
-  // Check with profanity-util
-  try {
-    const profanityScore = profanityUtil.check(text)
-    if (profanityScore[1] > 0) {
-      return {
-        isFlagged: true,
-        matches: profanityScore[0],
-        source: 'profanity-util',
-      }
-    }
-  } catch (error) {
-    console.error('Error using profanity-util library in details:', error)
-  }
-
-  // Check with naughty-words (English and Russian only)
-  try {
-    const allowedLangs = new Set(['en', 'ru'])
-    for (const lang of Object.keys(naughtyWords)) {
-      // Skip non-array properties and non-English/Russian languages
-      if (
-        !Array.isArray(naughtyWords[lang as keyof typeof naughtyWords]) ||
-        !allowedLangs.has(lang)
-      ) {
-        continue
-      }
-
-      // For each language's word list
-      const wordList = naughtyWords[lang as keyof typeof naughtyWords] as string[]
-
-      // Use the same modified check as in moderateTextSingle
-      const matchedWords = wordList.filter((word) => {
-        if (word.length < 4) {
-          // For short words, require word boundaries or exact match
-          const regex = new RegExp(`\\b${word}\\b`, 'i')
-          return regex.test(text)
-        }
-        // For longer words, keep the existing includes check
-        return text.toLowerCase().includes(word.toLowerCase())
-      })
-
-      if (matchedWords.length > 0) {
-        return {
-          isFlagged: true,
-          language: lang,
-          matches: matchedWords,
-          source: 'naughty-words',
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Error using naughty-words library in details:', error)
-  }
-
-  // Check with curse-filter
-  for (const variation of textVariations) {
-    if (detect(variation)) {
-      return { isFlagged: true, matches: [variation], source: 'curse-filter' }
-    }
-  }
-
-  // Check with @2toad/profanity
-  for (const variation of textVariations) {
-    if (profanity.exists(variation)) {
-      const _censored = profanity.censor(variation)
-      return { isFlagged: true, matches: [variation], source: '@2toad/profanity' }
-    }
-  }
-
-  // Check with obscenity
-  for (const variation of textVariations) {
-    const matches = matcher.getAllMatches(variation)
-    if (matches.length > 0) {
-      return {
-        isFlagged: true,
-        matches: matches.map((match) => variation.substring(match.startIndex, match.endIndex)),
-        source: 'obscenity',
-      }
-    }
-  }
-
-  // Check for transphobic content - check this FIRST to ensure consistent results in tests
-  if (detectTransphobicContent(text)) {
-    // Extract the transphobic term or use the whole text as fallback
-    // Sort by length (descending) to match the longest term first (e.g., "transgender" before "trans")
-    // Force naughty-words and other libraries to defer to our hate-speech detection
-    const lowerText = text.toLowerCase()
-
-    // Prioritize these specific matches to handle the test cases
-    if (lowerText.includes('transsexual')) {
-      return { isFlagged: true, matches: ['transsexual'], source: 'hate-speech' }
-    }
-    if (lowerText.includes('transgender')) {
-      return { isFlagged: true, matches: ['transgender'], source: 'hate-speech' }
-    }
-    if (lowerText.includes('transvestite')) {
-      return { isFlagged: true, matches: ['transvestite'], source: 'hate-speech' }
-    }
-    if (lowerText.includes('tranny')) {
-      return { isFlagged: true, matches: ['tranny'], source: 'hate-speech' }
-    }
-    if (lowerText.includes('shemale')) {
-      return { isFlagged: true, matches: ['shemale'], source: 'hate-speech' }
-    }
-    if (lowerText.includes('trans')) {
-      return { isFlagged: true, matches: ['trans'], source: 'hate-speech' }
-    }
-
-    // Fallback to the whole text
-    return { isFlagged: true, matches: [text], source: 'hate-speech' }
-  }
-
-  // Check with custom wordlists
-  if (detectRussianProfanity(text)) {
-    return { isFlagged: true, language: 'russian', source: 'custom-wordlist' }
-  }
-
-  if (detectEvasionTactics(text)) {
-    return { isFlagged: true, source: 'evasion-tactics' }
-  }
-
-  // Check for age restrictions (underage users)
-  if (detectAgeRestrictions(text)) {
-    // Extract the actual text for matching purposes rather than using a generic "underage" label
-    const agePrefix = /\b(?:i'?m|i\s+am|iam|age)(?=\s|:|=|\d|$)/i.exec(text)
-    const ageSuffix = agePrefix && text.slice(agePrefix.index + agePrefix[0].length)
-    const ageMatch = ageSuffix && /^\D*\d+/.exec(ageSuffix)
-    const matchText = ageMatch
-      ? text.slice(agePrefix.index, agePrefix.index + agePrefix[0].length + ageMatch[0].length)
-      : text
-    return { isFlagged: true, matches: [matchText], source: 'age-restriction' }
-  }
-
-  return { isFlagged: false, source: 'none' }
 }
 
 // Example usage:

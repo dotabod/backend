@@ -2,13 +2,14 @@ import { moderateText } from '@dotabod/profanity-filter'
 import { countryCodeEmoji } from 'country-code-emoji'
 import { t } from 'i18next'
 
-import { calculateAvg } from '../dota/lib/calculateAvg'
-import { getPlayers } from '../dota/lib/getPlayers'
+import { calculateAvg } from '../dota/lib/calculate-avg'
+import { getPlayers } from '../dota/lib/get-players'
 import { getHeroNameOrColor } from '../dota/lib/heroes'
 import type { RosterPlayer, RosterSource } from '../dota/lib/matchData'
 import type { HeroesStatus, NotablePlayer, SocketClient } from '../types'
-import MongoDBSingleton from './MongoDBSingleton'
-import { getSteamPlayerSummaries } from './playerSummaries'
+import MongoDBSingleton from './mongo-db-singleton'
+import { getSteamPlayerSummaries } from './player-summaries'
+import type { SteamPlayerSummary } from './player-summaries'
 
 export interface NotablePlayers {
   account_id: number
@@ -16,7 +17,15 @@ export interface NotablePlayers {
   country_code: string
 }
 
-export async function notablePlayers({
+const firstNonEmptyString = function firstNonEmptyString(
+  ...values: (string | null | undefined)[]
+): string | undefined {
+  return values.find(
+    (value): value is string => value !== null && value !== undefined && value.length > 0
+  )
+}
+
+export const notablePlayers = async function notablePlayers({
   client,
   locale,
   twitchChannelId,
@@ -56,11 +65,12 @@ export async function notablePlayers({
   const db = await mongo.connect()
 
   try {
-    const mode = gameMode
-      ? await db
-          .collection('gameModes')
-          .findOne({ id: gameMode }, { projection: { _id: 0, name: 1 } })
-      : { name: null }
+    const mode =
+      gameMode !== undefined && gameMode !== 0
+        ? await db
+            .collection('gameModes')
+            .findOne({ id: gameMode }, { projection: { _id: 0, name: 1 } })
+        : { name: null }
 
     // Draft-only players have accountid 0, which can never match a stored
     // record, so skip the lookup entirely when there are no real account ids.
@@ -92,7 +102,9 @@ export async function notablePlayers({
     // SourceTV gives authoritative account_id + hero_id pairs but no display identity. Resolve
     // names and optional countries by account ID instead of mixing OCR text into that roster.
     const steamSummaries =
-      rosterSource === 'sourcetv' ? await getSteamPlayerSummaries(accountIds) : new Map()
+      rosterSource === 'sourcetv'
+        ? await getSteamPlayerSummaries(accountIds)
+        : new Map<number, SteamPlayerSummary>()
 
     // Description text. When only draft player names are available (no heroes
     // yet) there are no ranks to average, so skip the avg lookup entirely.
@@ -112,6 +124,13 @@ export async function notablePlayers({
       const steamSummary =
         player.accountId === null ? undefined : steamSummaries.get(player.accountId)
       const isCurrentPlayer = player.accountId === steam32Id
+      const fallbackHeroId = matchPlayers[i]?.heroId ?? 0
+      const playerName =
+        firstNonEmptyString(
+          np?.name,
+          steamSummary?.personaName,
+          rosterSource === 'sourcetv' ? undefined : matchPlayers[i]?.playerName
+        ) ?? `Player ${i + 1}`
 
       // Determine hero name based on available data
       let heroName = '?'
@@ -128,22 +147,16 @@ export async function notablePlayers({
 
       const playerData = {
         account_id: player.accountId ?? 0,
-        country_code: np?.country_code || steamSummary?.countryCode || '',
+        country_code: firstNonEmptyString(np?.country_code, steamSummary?.countryCode) ?? '',
         heroId: player.heroId ?? 0,
         heroName:
           heroName === '?'
-            ? matchPlayers?.[i]?.heroId && (matchPlayers?.[i]?.heroId ?? 0) > 0
-              ? getHeroNameOrColor(matchPlayers[i].heroId ?? 0, i)
+            ? fallbackHeroId > 0
+              ? getHeroNameOrColor(fallbackHeroId, i)
               : '?'
             : heroName,
         isMe: isCurrentPlayer,
-        name:
-          (await moderateText(
-            np?.name ||
-              steamSummary?.personaName ||
-              (rosterSource === 'sourcetv' ? undefined : matchPlayers[i].playerName) ||
-              `Player ${i + 1}`
-          )) ?? `Player ${i + 1}`,
+        name: (await moderateText(playerName)) ?? `Player ${i + 1}`,
         position: i,
       }
 
@@ -154,7 +167,12 @@ export async function notablePlayers({
       // must not vanish just because its name OCR came back empty.
       const isVisionHero = player.accountId === null && (player.heroId ?? 0) > 0
       const isSourceTvPlayer = rosterSource === 'sourcetv' && player.accountId !== null
-      if (np || isSourceTvPlayer || matchPlayers[i].playerName || isVisionHero) {
+      if (
+        np !== undefined ||
+        isSourceTvPlayer ||
+        firstNonEmptyString(matchPlayers[i]?.playerName) !== undefined ||
+        isVisionHero
+      ) {
         proPlayers.push(playerData)
       }
     }
@@ -170,7 +188,9 @@ export async function notablePlayers({
     const proPlayersString = proPlayers
       .map((m) => {
         const country: string =
-          enableFlags && m.country_code ? `${countryCodeEmoji(m.country_code)} ` : ''
+          enableFlags === true && m.country_code.length > 0
+            ? `${countryCodeEmoji(m.country_code)} `
+            : ''
         // Draft-only: heroes unknown, show names without the "(Hero)" suffix.
         return heroesStatus ? `${country}${m.name}` : `${country}${m.name} (${m.heroName})`
       })

@@ -1,7 +1,7 @@
 import { beforeEach } from 'node:test'
 
-import { calculateAvg } from '../../dota/lib/calculateAvg.js'
-import { getPlayers } from '../../dota/lib/getPlayers.js'
+import { calculateAvg } from '../../dota/lib/calculate-avg.js'
+import { getPlayers } from '../../dota/lib/get-players.js'
 import { getHeroNameById } from '../../dota/lib/heroes.js'
 import { gameMedals } from '../medals.js'
 import mongo from '../mongo.js'

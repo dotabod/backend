@@ -18,22 +18,33 @@ import { use } from 'i18next'
 import FsBackend from 'i18next-fs-backend'
 import type { FsBackendOptions } from 'i18next-fs-backend'
 
-import { ensureEventSubInitialized } from './conduitSetup'
-import { clearDisableCache, DISABLE_CACHE_EXPIRY, disableUserCache } from './disableCache'
-import { isEventsubConnected } from './eventSubSocket'
-import { sendTwitchChatMessage } from './handleChat'
-import { io, setupSocketServer } from './utils/socketManager'
+import { ensureEventSubInitialized } from './conduit-setup'
+import { clearDisableCache, DISABLE_CACHE_EXPIRY, disableUserCache } from './disable-cache'
+import { isEventsubConnected } from './event-sub-socket'
+import { sendTwitchChatMessage } from './handle-chat'
+import { io, setupSocketServer } from './utils/socket-manager'
 
-if (!process.env.TWITCH_BOT_PROVIDERID) {
+const isNonEmptyText = function isNonEmptyText(value: string | null | undefined): value is string {
+  return value !== null && value !== undefined && value.length > 0
+}
+
+const textOrFallback = function textOrFallback(
+  value: string | null | undefined,
+  fallback: string
+): string {
+  return isNonEmptyText(value) ? value : fallback
+}
+
+if (!isNonEmptyText(process.env.TWITCH_BOT_PROVIDERID)) {
   throw new Error('TWITCH_BOT_PROVIDERID not set')
 }
 
-if (!process.env.TWITCH_BOT_USERNAME) {
+if (!isNonEmptyText(process.env.TWITCH_BOT_USERNAME)) {
   logger.warn('TWITCH_BOT_USERNAME not set, using "dotabod" as default')
   process.env.TWITCH_BOT_USERNAME = 'dotabod'
 }
 
-async function startup() {
+const startup = async function startup() {
   try {
     const isBanned = await checkBotStatus()
     if (isBanned) {
@@ -163,7 +174,7 @@ async function startup() {
                     message: text,
                   }
                 )
-              } else if (dropReason?.code) {
+              } else if (isNonEmptyText(dropReason?.code)) {
                 // Only disable for actual permission issues
                 await disableUser(providerAccountId, dropReason)
               } else {
@@ -197,7 +208,7 @@ async function startup() {
   }
 }
 
-async function disableUser(
+const disableUser = async function disableUser(
   providerAccountId: string,
   dropReason?: { code: string; message: string }
 ) {
@@ -207,13 +218,15 @@ async function disableUser(
     .eq('providerAccountId', providerAccountId)
     .single()
 
-  if (!user?.userId) {
+  const userId = user?.userId
+  if (!isNonEmptyText(userId)) {
     logger.error('Failed to send chat message: no user found', providerAccountId)
     return
   }
 
   // Check if we've already disabled this user recently to prevent duplicate calls
-  const cacheKey = `${user.userId}:${dropReason?.code || 'unknown'}`
+  const dropReasonCode = textOrFallback(dropReason?.code, 'unknown')
+  const cacheKey = `${userId}:${dropReasonCode}`
   const cached = disableUserCache.get(cacheKey)
   const now = Date.now()
 
@@ -222,14 +235,14 @@ async function disableUser(
       cachedAt: new Date(cached.timestamp).toISOString(),
       dropReason: dropReason?.code,
       providerAccountId,
-      userId: user.userId,
+      userId,
     })
     return
   }
 
   // Add to cache to prevent duplicates
   disableUserCache.set(cacheKey, {
-    dropReason: dropReason?.code || 'unknown',
+    dropReason: dropReasonCode,
     providerAccountId,
     timestamp: now,
   })
@@ -243,8 +256,8 @@ async function disableUser(
 
   // Create metadata based on the drop reason
   let metadata: DisableReasonMetadata = {
-    drop_reason: dropReason?.code || 'unknown',
-    drop_reason_message: dropReason?.message || 'Unknown chat permission issue',
+    drop_reason: dropReasonCode,
+    drop_reason_message: textOrFallback(dropReason?.message, 'Unknown chat permission issue'),
   }
 
   // Add specific details based on drop reason code
@@ -269,13 +282,13 @@ async function disableUser(
     default: {
       metadata = {
         ...metadata,
-        additional_info: `Chat message blocked due to: ${dropReason?.message || 'Unknown reason'}`,
+        additional_info: `Chat message blocked due to: ${textOrFallback(dropReason?.message, 'Unknown reason')}`,
       }
       break
     }
   }
 
-  await commandDisable.disable(user.userId, 'CHAT_PERMISSION_DENIED', metadata)
+  await commandDisable.disable(userId, 'CHAT_PERMISSION_DENIED', metadata)
 
   logger.error('Failed to send chat message. Disabled user', {
     dropReason: dropReason?.code,

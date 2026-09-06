@@ -1,11 +1,11 @@
 import { t } from 'i18next'
 
-import { redisClient } from '../../../db/redisInstance'
-import getHero from '../../lib/getHero'
-import type { HeroNames } from '../../lib/getHero'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { redisClient } from '../../../db/redis-instance'
+import getHero from '../../lib/get-hero'
+import type { HeroNames } from '../../lib/get-hero'
+import { isPlayingMatch } from '../../lib/is-playing-match'
 import { say } from '../../say'
-import eventHandler from '../EventHandler'
+import eventHandler from '../event-handler'
 
 eventHandler.registerEvent('hero:smoked', {
   handler: async (dotaClient, isSmoked: boolean) => {

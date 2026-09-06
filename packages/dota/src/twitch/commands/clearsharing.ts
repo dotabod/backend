@@ -1,14 +1,14 @@
 import { commandDisable } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
-import { redisClient } from '../../db/redisInstance'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
+import { redisClient } from '../../db/redis-instance'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('clearsharing', {
   aliases: ['forcelink'],
   cooldown: 30,
-  handler: async (message, _args) => {
+  handler: async (message) => {
     const {
       channel: { client },
     } = message

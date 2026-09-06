@@ -1,0 +1,57 @@
+import { t } from 'i18next'
+
+import { DBSettings, getValueOrDefault } from '../../../settings'
+import type { SocketClient } from '../../../types'
+import { server } from '../../server'
+import { getRoshCountMessage } from './get-rosh-count-message'
+
+export interface RoshRes {
+  minS: number
+  maxS: number
+  minTime: string
+  maxTime: string
+  minDate: Date
+  maxDate: Date
+  count: number
+}
+const getNewRoshTime = function getNewRoshTime(res: RoshRes) {
+  // Recalculate using server time for seconds left
+  const min = Math.floor((new Date(res.minDate).getTime() - Date.now()) / 1000)
+  const max = Math.floor((new Date(res.maxDate).getTime() - Date.now()) / 1000)
+  res.minS = min > 0 ? min : 0
+  res.maxS = max > 0 ? max - res.minS : 0
+
+  return res
+}
+export const generateRoshanMessage = function generateRoshanMessage(res: RoshRes, lng: string) {
+  res = getNewRoshTime(res)
+
+  const msgs: string[] = []
+  if (res.maxS > 0) {
+    msgs.push(
+      t('roshanKilled', {
+        lng,
+        max: res.maxTime,
+        min: res.minTime,
+      })
+    )
+  }
+
+  msgs.push(getRoshCountMessage({ count: res.count, lng }))
+
+  return msgs.join(' · ')
+}
+export const emitRoshEvent = function emitRoshEvent(
+  res: RoshRes,
+  token: string,
+  client: SocketClient
+) {
+  res = getNewRoshTime(res)
+
+  const tellChatRosh = getValueOrDefault(DBSettings.rosh, client.settings, client.subscription)
+  if (!tellChatRosh) {
+    return
+  }
+
+  server.io.to(token).emit('roshan-killed', res)
+}
