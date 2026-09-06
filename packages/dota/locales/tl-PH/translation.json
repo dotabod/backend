@@ -107,6 +107,7 @@
     "overlay_one": "{{count}} streamer using the overlay",
     "overlay_other": "{{count}} streamers gamit ang overlay"
   },
+  "dotabodProfileNotFound": "No tracked Dotabod profile found for {{- player}}.",
   "cosmetics": {
     "empty": "{{- heroName}} has no cosmetics equipped",
     "captured_one": "Playing {{- heroName}} Pog new card unlocked, {{count}} cosmetic saved → {{- url}}",
@@ -122,6 +123,9 @@
     "newPatch": "{{emote}} A new Dota 2 patch has been released: {{version}}. Check out the patch notes at https://www.dota2.com/patches"
   },
   "gameNotFound": "Walang nakitang laro",
+  "currentMatchIdNotFound": "No current match ID was found.",
+  "customGameNoMatchId": "Hero Demo and custom games do not have a public match ID.",
+  "customGameNoRoster": "Hero Demo and custom games do not have public roster data.",
   "giftSub": "A gift sub for Dotabod Pro was just gifted by {{- senderName}}!",
   "giftSubAnonymous": "A gift sub for Dotabod Pro was just gifted anonymously!",
   "heroItems": {
@@ -304,6 +308,12 @@
   "winprobability": {
     "winProbability": "{{winRate}}% win probability at {{gameTime}}:00 · Next update in {{remainingCooldown}}s",
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
+  },
+  "wl": {
+    "statsWindow_stream": "This stream",
+    "statsChallenge": "{{elapsed}} of {{count}} days",
+    "statsWindow_one": "Last {{count}} day",
+    "statsWindow_other": "Last {{count}} days"
   },
   "xpm": "Live XPM for {{- heroName}}: {{num}}",
   "apm_one": "Kasalukuyang APM ni {{- heroName}}: {{count}} {{emote}}",
