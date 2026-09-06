@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n } from '../../../__tests__/sharedMocks.ts'
-import type { MessageType } from '../../lib/CommandHandler.ts'
+import { buildSharedUtilsMock, initTestI18n } from '../../../__tests__/shared-mocks.ts'
+import type { MessageType } from '../../lib/command-handler.ts'
 
 const noopLogger = {
   debug: () => {},
@@ -21,7 +21,10 @@ const sockets = {
   steam: { connected: true, hash: 'aaaaaaa' as string | null },
 }
 
-function makeSocket(target: { connected: boolean; hash: string | null }): FakeSocket {
+const makeSocket = function makeSocket(target: {
+  connected: boolean
+  hash: string | null
+}): FakeSocket {
   return {
     get connected() {
       return target.connected
@@ -46,14 +49,14 @@ vi.doMock(import('../../../steam/ws'), () => ({
 }))
 
 const sayMock = vi.fn()
-vi.doMock(import('../../chatClient'), () => ({
+vi.doMock(import('../../chat-client'), () => ({
   chatClient: { say: sayMock },
 }))
 
 let registeredHandler:
   | ((m: MessageType, args: string[], used: string) => Promise<void> | void)
   | undefined
-vi.doMock(import('../../lib/CommandHandler'), () => ({
+vi.doMock(import('../../lib/command-handler'), () => ({
   default: {
     registerCommand: (_name: string, opts: { handler: typeof registeredHandler }) => {
       registeredHandler = opts.handler

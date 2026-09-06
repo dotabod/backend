@@ -25,7 +25,8 @@ export default {
   // see below for more details
   lexers: {
     default: ['JavascriptLexer'],
-    js: ['JavascriptLexer'], // if you're writing jsx inside .js files, change this to JsxLexer
+    // if you're writing jsx inside .js files, change this to JsxLexer
+    js: ['JavascriptLexer'],
     ts: ['JavascriptLexer'],
   },
 

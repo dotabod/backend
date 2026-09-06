@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks.ts'
+import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/shared-mocks.ts'
 
 const noopLogger = {
   debug: () => {},
@@ -28,7 +28,7 @@ vi.doMock(import('@dotabod/shared-utils'), () =>
   buildSharedUtilsMock({ logger: noopLogger, supabase: supabaseChain })
 )
 
-vi.doMock(import('../MongoDBSingleton'), () => ({
+vi.doMock(import('../mongo-db-singleton'), () => ({
   default: {
     close: async () => {},
     connect: async () => ({

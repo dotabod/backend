@@ -179,7 +179,8 @@ export const defaultSettingsStructure = {
   showGiftAlerts: true,
   lastFmOverlay: false,
   lastFmUsername: '',
-  lastFmRefreshRate: 30, // in seconds
+  // in seconds
+  lastFmRefreshRate: 30,
   disableAutoClipping: false,
   autoTranslate: false,
   translationLanguage: 'en',

@@ -1,12 +1,12 @@
-import RedisClient from '../../../db/RedisClient'
+import RedisClient from '../../../db/redis-client'
 import { DotaEventTypes } from '../../../types'
 import type { RoshanKilledEvent } from '../../../types'
 import { fmtMSS, getRedisNumberValue } from '../../../utils/index'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { isPlayingMatch } from '../../lib/is-playing-match'
 import { say } from '../../say'
-import eventHandler from '../EventHandler'
-import { emitRoshEvent, generateRoshanMessage } from './RoshRes'
-import type { RoshRes } from './RoshRes'
+import eventHandler from '../event-handler'
+import { emitRoshEvent, generateRoshanMessage } from './rosh-res'
+import type { RoshRes } from './rosh-res'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
   handler: async (dotaClient, event: RoshanKilledEvent) => {

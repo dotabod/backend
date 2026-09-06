@@ -1,15 +1,15 @@
 import { t } from 'i18next'
 
-import { redisClient } from '../../../db/redisInstance'
+import { redisClient } from '../../../db/redis-instance'
 import { DotaEventTypes } from '../../../types'
 import type { BountyRunePickupEvent } from '../../../types'
 import { is8500Plus } from '../../../utils/index'
-import { delayedQueue } from '../../lib/DelayedQueue'
+import { delayedQueue } from '../../lib/delayed-queue'
 import { getHeroNameOrColor } from '../../lib/heroes'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { isPlayingMatch } from '../../lib/is-playing-match'
 import { MatchDataService } from '../../lib/matchData'
 import { say } from '../../say'
-import eventHandler from '../EventHandler'
+import eventHandler from '../event-handler'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
   handler: async (dotaClient, event: BountyRunePickupEvent) => {
@@ -64,7 +64,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.BountyPickup}`, {
     const bountyHeroNames = dotaClient.bountyHeroNames.reduce<Record<string, number>>(
       (acc, cur) => {
         if (acc[cur]) {
-          acc[cur]++
+          acc[cur] += 1
         } else {
           acc[cur] = 1
         }

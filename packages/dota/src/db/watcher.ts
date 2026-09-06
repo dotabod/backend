@@ -2,19 +2,19 @@ import type { Tables } from '@dotabod/shared-utils'
 import { getAuthProvider, getTwitchAPI, logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
-import { clearCacheForUser } from '../dota/clearCacheForUser'
-import findUser from '../dota/lib/connectedStreamers'
+import { clearCacheForUser } from '../dota/clear-cache-for-user'
+import findUser from '../dota/lib/connected-streamers'
 import { gsiHandlers, invalidTokens, twitchIdToToken, twitchNameToToken } from '../dota/lib/consts'
 import { getRankDetail } from '../dota/lib/ranks'
 import { server } from '../dota/server'
 import { DBSettings } from '../settings'
 import { twitchChat } from '../steam/ws'
-import { chatClient } from '../twitch/chatClient'
-import { toggleDotabod } from '../twitch/toggleDotabod'
+import { chatClient } from '../twitch/chat-client'
+import { toggleDotabod } from '../twitch/toggle-dotabod'
 import { isSubscriptionActive } from '../types/subscription'
-import getDBUser from './getDBUser'
-import { handleUserOnlineMessages } from './handleScheduledMessages'
-import { handleStreamStatusTransition } from './handleStreamStatusTransition'
+import getDBUser from './get-db-user'
+import { handleUserOnlineMessages } from './handle-scheduled-messages'
+import { handleStreamStatusTransition } from './handle-stream-status-transition'
 
 class SetupSupabase {
   // supabase realtime `.on('postgres_changes')` overloads require RealtimePostgresChangesPayload
@@ -395,7 +395,8 @@ class SetupSupabase {
             .select('userId')
             .eq('id', newObj.subscriptionId)
             .eq('isGift', true)
-            .maybeSingle() // Use maybeSingle to handle potential null result gracefully
+            // Use maybeSingle to handle potential null result gracefully
+            .maybeSingle()
 
           if (subError || !subscriptionData) {
             logger.error('Error fetching subscription or subscription not found for gift', {
@@ -485,7 +486,8 @@ class SetupSupabase {
             }
 
             // Send notification message to chat
-            logger.info(`Sending gift notification: ${fullMessage}`) // Add logging
+            // Add logging
+            logger.info(`Sending gift notification: ${fullMessage}`)
             chatClient.say(client.name, fullMessage)
           } catch (error) {
             logger.error('Error constructing or sending gift notification to chat', {

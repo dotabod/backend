@@ -22,7 +22,7 @@ import {
   twitchIdToToken,
   twitchNameToToken,
   watcherState,
-} from './watcherMocks.ts'
+} from './watcher-mocks.ts'
 
 beforeEach(() => {
   resetWatcherState()

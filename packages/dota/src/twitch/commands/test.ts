@@ -5,12 +5,12 @@ import { t } from 'i18next'
 import type { DelayedGames } from '../../../../steam/src/types/index'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { MatchDataService } from '../../dota/lib/matchData'
-import MongoDBSingleton from '../../steam/MongoDBSingleton'
+import MongoDBSingleton from '../../steam/mongo-db-singleton'
 import { steamSocket } from '../../steam/ws'
-import CustomError from '../../utils/customError'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
+import CustomError from '../../utils/custom-error'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
 
 const fetchUserByName = async (name: string) => {
   const { data: user, error } = await supabase
@@ -100,7 +100,8 @@ const handleCardsCommand = async (message: MessageType) => {
   const getCardsPromise = new Promise<unknown>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: channel.client.locale })))
-    }, 10_000) // 5 second timeout
+      // 5 second timeout
+    }, 10_000)
 
     steamSocket.emit('getCards', accountIds, false, (err: unknown, response: unknown) => {
       clearTimeout(timeoutId)
@@ -134,7 +135,8 @@ const handleCardCommand = (message: MessageType, args: string[]) => {
           t('matchData8500', { emote: 'PoroSad', lng: message.channel.client.locale })
         )
       )
-    }, 5000) // 5 second timeout
+      // 5 second timeout
+    }, 5000)
 
     steamSocket.emit('getCard', Number(accountId), (err: unknown, response: unknown) => {
       clearTimeout(timeoutId)
@@ -174,7 +176,8 @@ const handleServerCommand = async (message: MessageType, args: string[]) => {
   const getDelayedDataPromise = new Promise<string>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       reject(new CustomError('timed out getting steam server'))
-    }, 10_000) // 10 second timeout
+      // 10 second timeout
+    }, 10_000)
 
     logger.info('[STEAM] Getting user steam server', {
       channelClientSteam32Id: channel.client.steam32Id,

@@ -9,23 +9,23 @@ import steamErrors from 'steam-errors'
 // @ts-expect-error no types exist for steam-user
 import SteamUser from 'steam-user'
 
-import { PROFILE_CARD_CACHE_TTL_MS, shouldRefreshCard } from './cardCache'
-import { hasSteamData } from './hasSteamData'
-import MongoDBSingleton from './MongoDBSingleton'
-import { SteamPlayerSummaryService } from './playerSummaries'
-import type { SteamPlayerSummary } from './playerSummaries'
-import { getSocketIoServer } from './socketServer'
+import { PROFILE_CARD_CACHE_TTL_MS, shouldRefreshCard } from './card-cache'
+import { hasSteamData } from './has-steam-data'
+import MongoDBSingleton from './mongo-db-singleton'
+import { SteamPlayerSummaryService } from './player-summaries'
+import type { SteamPlayerSummary } from './player-summaries'
+import { getSocketIoServer } from './socket-server'
 import type { Cards, DelayedGames } from './types/index'
-import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails'
-import type { SteamMatchDetails } from './types/SteamMatchDetails'
-import CustomError from './utils/customError'
-import { patchNodeDota2GcForSteamUser } from './utils/dota2SteamUser'
-import type { SteamLogOnDetails, SteamUserClient } from './utils/dota2SteamUser'
-import { GcWatchdog } from './utils/gcWatchdog'
-import type { GcEvent } from './utils/gcWatchdog'
-import { getAccountsFromMatch } from './utils/getAccountsFromMatch'
+import type { MatchMinimalDetailsResponse } from './types/match-minimal-details'
+import type { SteamMatchDetails } from './types/steam-match-details'
+import CustomError from './utils/custom-error'
+import { patchNodeDota2GcForSteamUser } from './utils/dota2-steam-user'
+import type { SteamLogOnDetails, SteamUserClient } from './utils/dota2-steam-user'
+import { GcWatchdog } from './utils/gc-watchdog'
+import type { GcEvent } from './utils/gc-watchdog'
+import { getAccountsFromMatch } from './utils/get-accounts-from-match'
 import { logger } from './utils/logger'
-import { computeReconnectDelay } from './utils/reconnectBackoff'
+import { computeReconnectDelay } from './utils/reconnect-backoff'
 import { retryCustom } from './utils/retry'
 
 interface CacheEntry {
@@ -56,7 +56,7 @@ const GC_HEALTH_PATH = `${VOLUME_DIR}/gc-health.json`
 // we can skip an obviously-expired token and log in with password instead of
 // burning a reconnect cycle on a guaranteed rejection. Defensive: any parsing
 // failure returns false so steam-user gets to make the final call.
-function isRefreshTokenExpired(token: string): boolean {
+const isRefreshTokenExpired = function isRefreshTokenExpired(token: string): boolean {
   try {
     const [, payload] = token.split('.')
     if (!payload) {
@@ -138,7 +138,7 @@ const saveMatch = async ({
   }
 }
 
-function sortPlayersBySlot(game: DelayedGames) {
+const sortPlayersBySlot = function sortPlayersBySlot(game: DelayedGames) {
   if (!game.teams || !Array.isArray(game.teams) || game.teams.length !== 2) {
     return
   }
@@ -661,8 +661,10 @@ class Dota {
     // Set up the retry operation
     const operation = retry.operation({
       factor: 1.1,
-      maxTimeout: 10_000, // Maximum retry timeout (10 seconds)
-      minTimeout: 5000, // Minimum retry timeout (1 second)
+      // Maximum retry timeout (10 seconds)
+      maxTimeout: 10_000,
+      // Minimum retry timeout (1 second)
+      minTimeout: 5000,
       retries: 35,
     })
 
@@ -783,13 +785,15 @@ class Dota {
       'Error getting medal'
     )
 
-    this.evictOldCacheEntries() // Evict entries based on time
+    // Evict entries based on time
+    this.evictOldCacheEntries()
     this.cache.set(account, {
       card,
       timestamp: now,
     })
 
-    this.evictExtraCacheEntries() // Evict extra entries if cache size exceeds MAX_CACHE_SIZE
+    // Evict extra entries if cache size exceeds MAX_CACHE_SIZE
+    this.evictExtraCacheEntries()
 
     return card
   }
@@ -961,8 +965,10 @@ export const GetRealTimeStats = async ({
 
   const operation = retry.operation({
     factor: 1.1,
-    maxTimeout: 10_000, // Maximum retry timeout (10 seconds)
-    minTimeout: 5000, // Minimum retry timeout (1 second)
+    // Maximum retry timeout (10 seconds)
+    maxTimeout: 10_000,
+    // Minimum retry timeout (1 second)
+    minTimeout: 5000,
     retries: 35,
   })
 
@@ -989,7 +995,8 @@ export const GetRealTimeStats = async ({
             operation.retry(rateLimitError)
           }, backoffDelay)
 
-          return // Don't immediately retry, wait for the timeout
+          // Don't immediately retry, wait for the timeout
+          return
         }
 
         if (!response.ok) {

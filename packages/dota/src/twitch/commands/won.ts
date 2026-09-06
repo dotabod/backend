@@ -1,15 +1,15 @@
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
-import { redisClient } from '../../db/redisInstance'
+import { redisClient } from '../../db/redis-instance'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { DBSettings } from '../../settings'
 import { steamSocket } from '../../steam/ws'
 import type { MatchMinimalDetailsResponse } from '../../types'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
-import { resolveByMostRecentMatch, resolveMatchRetroactively } from '../lib/resolveMatch'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
+import { resolveByMostRecentMatch, resolveMatchRetroactively } from '../lib/resolve-match'
 
 commandHandler.registerCommand('won', {
   cooldown: 0,
@@ -24,7 +24,7 @@ commandHandler.registerCommand('won', {
     const matchIdArg = args[0]?.trim()
     if (matchIdArg) {
       // Validate that it looks like a match ID (numeric)
-      if (!/^\d+$/.test(matchIdArg)) {
+      if (!/^\d+$/u.test(matchIdArg)) {
         chatClient.say(
           channel,
           t('bets.retroactiveMatchNotFound', {
@@ -40,7 +40,8 @@ commandHandler.registerCommand('won', {
       await resolveMatchRetroactively(
         client,
         matchIdArg,
-        true, // won
+        // won
+        true,
         username,
         channel,
         message.user.messageId
@@ -183,5 +184,6 @@ commandHandler.registerCommand('won', {
       )
     }
   },
-  permission: 2, // Mods and broadcaster only,
+  // Mods and broadcaster only,
+  permission: 2,
 })

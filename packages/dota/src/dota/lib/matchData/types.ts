@@ -7,18 +7,28 @@ import type { HeroesStatus } from '../../../types'
 // can branch deterministically on any of these — that's the "state machine" contract.
 
 export type RosterSource =
-  | 'gsi-spectator' // observer/spectator client — GSI has all 10 (team2/team3)
-  | 'sourcetv' // delayedGames doc from SourceTV broadcast feed
-  | 'vision-heroes' // Vision API returned heroes (any of detect_draft/detect/detect_in_game)
-  | 'vision-draft' // Vision API returned only draft names, no heroes yet
-  | 'gsi-self' // only the streamer's own hero/account (no other source available)
-  | 'none' // no current match
+  // observer/spectator client — GSI has all 10 (team2/team3)
+  | 'gsi-spectator'
+  // delayedGames doc from SourceTV broadcast feed
+  | 'sourcetv'
+  // Vision API returned heroes (any of detect_draft/detect/detect_in_game)
+  | 'vision-heroes'
+  // Vision API returned only draft names, no heroes yet
+  | 'vision-draft'
+  // only the streamer's own hero/account (no other source available)
+  | 'gsi-self'
+  // no current match
+  | 'none'
 
 export type MatchStage =
-  | 'roster-draft' // CM / player-draft — lobby members known but teams not yet split
-  | 'hero-draft' // teams split + heroes being picked
-  | 'in-progress' // all heroes locked, game underway
-  | 'unknown' // no signal
+  // CM / player-draft — lobby members known but teams not yet split
+  | 'roster-draft'
+  // teams split + heroes being picked
+  | 'hero-draft'
+  // all heroes locked, game underway
+  | 'in-progress'
+  // no signal
+  | 'unknown'
 
 export type Coverage = 'all' | 'partial' | 'none'
 

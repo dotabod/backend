@@ -8,10 +8,10 @@ import {
   seedSubscriptions,
   setupAccountWatcher,
   state,
-} from './sharedMocks.ts'
+} from './shared-mocks.ts'
 
 // Fire a recorded postgres_changes handler by event+table key.
-async function fire(
+const fire = async function fire(
   event: 'INSERT' | 'UPDATE' | 'DELETE',
   table: 'accounts' | 'users',
   payload: { new?: Record<string, unknown>; old?: Record<string, unknown> }
@@ -38,7 +38,8 @@ describe(setupAccountWatcher, () => {
     // stopUserSubscriptions and would yield a false-pass).
     seedSubscriptions('tw-banned', ['stream.online', 'channel.chat.message'])
     state.accountsLookupResults = [
-      { data: { providerAccountId: 'tw-banned' }, error: null }, // watcher's ban-branch lookup
+      // watcher's ban-branch lookup
+      { data: { providerAccountId: 'tw-banned' }, error: null },
     ]
 
     await fire('UPDATE', 'users', {
@@ -194,8 +195,10 @@ describe(setupAccountWatcher, () => {
     //      write) will have matching old/new and short-circuit at the guard.
     state.streamer = { displayName: 'JAMESLEED', name: 'jamesleed' }
     state.accountsLookupResults = [
-      { data: { providerAccountId: 'tw-rename' }, error: null }, // watcher's lookup
-      { data: { userId: 'u-rename' }, error: null }, // handleNewUser's findUserIdByProviderAccount
+      // watcher's lookup
+      { data: { providerAccountId: 'tw-rename' }, error: null },
+      // handleNewUser's findUserIdByProviderAccount
+      { data: { userId: 'u-rename' }, error: null },
     ]
     await fire('UPDATE', 'users', {
       new: { displayName: 'JAMESLEED', id: 'u-rename', name: 'techleed' },

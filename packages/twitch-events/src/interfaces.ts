@@ -1,4 +1,4 @@
-import type { TwitchEventTypes } from './TwitchEventTypes'
+import type { TwitchEventTypes } from './twitch-event-types'
 
 export interface TwitchEventSubResponse {
   // A list that contains the single subscription that you created

@@ -1,14 +1,14 @@
 import DOTA_AGHS from 'dotaconstants/build/aghs_desc.json' with { type: 'json' }
 import { t } from 'i18next'
 
-import type { GSIHandlerType } from '../../dota/GSIHandlerTypes'
+import type { GSIHandlerType } from '../../dota/gsi-handler-types'
 import { gsiHandlers } from '../../dota/lib/consts'
-import { hasCurrentGameContext } from '../../dota/lib/getCurrentMatchId'
+import { hasCurrentGameContext } from '../../dota/lib/get-current-match-id'
 import { getHeroById, getHeroNameOrColor, withHeroLink } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import { findAccountFromCmd } from '../lib/findGSIByAccountId'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import { findAccountFromCmd } from '../lib/find-gsi-by-account-id'
 
 commandHandler.registerCommand('aghs', {
   dbkey: DBSettings.commandAghs,

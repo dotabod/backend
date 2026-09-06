@@ -1,12 +1,13 @@
 import { commandDisable, logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
-import { redisClient } from '../../../db/redisInstance'
+import { redisClient } from '../../../db/redis-instance'
 import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME, getValueOrDefault } from '../../../settings'
-import MongoDBSingleton from '../../../steam/MongoDBSingleton'
+import MongoDBSingleton from '../../../steam/mongo-db-singleton'
 import { steamSocket } from '../../../steam/ws'
-import commandHandler from '../../../twitch/lib/CommandHandler' // Import commandHandler here
-import { findSpectatorIdx } from '../../../twitch/lib/findGSIByAccountId'
+// Import commandHandler here
+import commandHandler from '../../../twitch/lib/command-handler'
+import { findSpectatorIdx } from '../../../twitch/lib/find-gsi-by-account-id'
 import { ChatMessageType, validEventTypes } from '../../../types'
 import type {
   Abilities,
@@ -18,28 +19,28 @@ import type {
   Packet,
   SocketClient,
 } from '../../../types'
-import CustomError from '../../../utils/customError'
+import CustomError from '../../../utils/custom-error'
 import { getRedisNumberValue, is8500Plus } from '../../../utils/index'
-import { consumeMultiAccountRecovery, events } from '../../globalEventEmitter'
-import type { GSIHandlerType } from '../../GSIHandlerTypes'
-import { checkPassiveMidas } from '../../lib/checkMidas'
-import { checkPassiveTp } from '../../lib/checkPassiveTp'
-import { calculateManaSaved } from '../../lib/checkTreadToggle'
+import { consumeMultiAccountRecovery, events } from '../../global-event-emitter'
+import type { GSIHandlerType } from '../../gsi-handler-types'
+import { checkPassiveMidas } from '../../lib/check-midas'
+import { checkPassiveTp } from '../../lib/check-passive-tp'
+import { calculateManaSaved } from '../../lib/check-tread-toggle'
 import { draftStartByMatchId } from '../../lib/consts'
-import { DelayedCommands } from '../../lib/DelayedCommands'
-import { getSpectatorPlayers } from '../../lib/getSpectatorPlayers'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
-import { isSpectator } from '../../lib/isSpectator'
+import { DelayedCommands } from '../../lib/delayed-commands'
+import { getSpectatorPlayers } from '../../lib/get-spectator-players'
+import { isPlayingMatch } from '../../lib/is-playing-match'
+import { isSpectator } from '../../lib/is-spectator'
 import { MatchDataService } from '../../lib/matchData'
 import { say } from '../../say'
-import eventHandler from '../EventHandler'
+import eventHandler from '../event-handler'
 // minimap overlay is unused in prod — disabled to skip per-tick parse; revive by uncommenting
 // import { minimapParser } from '../minimap/parser'
-import { selectNewEvents } from './selectNewEvents'
-import { sendExtensionPubSubBroadcastMessageIfChanged } from './sendExtensionPubSubBroadcastMessageIfChanged'
-import { shouldLogUnknownGsiEvent } from './unknownEventDiagnostics'
+import { selectNewEvents } from './select-new-events'
+import { sendExtensionPubSubBroadcastMessageIfChanged } from './send-extension-pub-sub-broadcast-message-if-changed'
+import { shouldLogUnknownGsiEvent } from './unknown-event-diagnostics'
 
-async function chatterMatchFound(client: SocketClient) {
+const chatterMatchFound = async function chatterMatchFound(client: SocketClient) {
   if (!client.stream_online) {
     return
   }
@@ -101,7 +102,8 @@ async function chatterMatchFound(client: SocketClient) {
               user: {
                 messageId: '',
                 name: client.name,
-                permission: 3, // Broadcaster permission
+                // Broadcaster permission
+                permission: 3,
                 userId: client.Account?.providerAccountId || '',
               },
             })
@@ -140,7 +142,8 @@ const steamDelayDataLookupMap = new Set<string>()
 // Debounce map to limit how often we call saveMatchData per client
 const saveMatchDataDebounceMap = new Map<string, { lastExecuted: number; inProgress: boolean }>()
 // Debounce interval in milliseconds
-const DEBOUNCE_INTERVAL = 5000 // 5 seconds
+// 5 seconds
+const DEBOUNCE_INTERVAL = 5000
 
 // Cache results in memory for quick lookup
 const matchDataCache = new Map<
@@ -153,10 +156,11 @@ const matchDataCache = new Map<
 >()
 const chatMessageTypesSet = new Set<string>(Object.values(ChatMessageType))
 // Cache expiration time in milliseconds
-const CACHE_EXPIRATION = 60_000 // 1 minute
+// 1 minute
+const CACHE_EXPIRATION = 60_000
 
 // Runs every gametick
-async function saveMatchData(client: SocketClient) {
+const saveMatchData = async function saveMatchData(client: SocketClient) {
   // This now waits for the bet to complete before checking match data
   // Since match data is delayed it will run far fewer than before, when checking actual match id of an ingame match
   // the matchid is saved when the hero is selected
@@ -251,7 +255,8 @@ async function saveMatchData(client: SocketClient) {
         const getDelayedDataPromise = new Promise<string>((resolve, reject) => {
           const timeoutId = setTimeout(() => {
             reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: client.locale })))
-          }, 10_000) // 10 second timeout
+            // 10 second timeout
+          }, 10_000)
 
           steamSocket.emit(
             'getUserSteamServer',
@@ -325,7 +330,8 @@ async function saveMatchData(client: SocketClient) {
         const getDelayedDataPromise = new Promise<DelayedGames>((resolve, reject) => {
           const timeoutId = setTimeout(() => {
             reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: client.locale })))
-          }, 10_000) // 10 second timeout
+            // 10 second timeout
+          }, 10_000)
 
           steamSocket.emit(
             'getRealTimeStats',
@@ -389,13 +395,14 @@ async function saveMatchData(client: SocketClient) {
           // 5 minutes
           saveMatchDataDebounceMap.delete(debounceKey)
         }
-      }, 300_000) // 5 minutes
+        // 5 minutes
+      }, 300_000)
     }
   }
 }
 
 // Implement a cleanup function to periodically clear expired cache entries
-function cleanupMatchDataCache() {
+const cleanupMatchDataCache = function cleanupMatchDataCache() {
   const now = Date.now()
   for (const [key, value] of matchDataCache.entries()) {
     if (now - value.timestamp > CACHE_EXPIRATION) {
@@ -411,15 +418,16 @@ cleanupMatchDataCache()
 
 // Cache to prevent excessive account sharing logging
 const accountSharingLogCache = new Map<string, number>()
-const ACCOUNT_SHARING_LOG_INTERVAL = 300_000 // 5 minutes
+// 5 minutes
+const ACCOUNT_SHARING_LOG_INTERVAL = 300_000
 
-/** Test-only: reset the per-token rate-limit cache used by checkAccountSharing. */
-export function __resetAccountSharingLogCacheForTests(): void {
-  accountSharingLogCache.clear()
-}
+export const __resetAccountSharingLogCacheForTests =
+  function __resetAccountSharingLogCacheForTests(): void {
+    accountSharingLogCache.clear()
+  }
 
 // Cleanup function for account sharing log cache
-function cleanupAccountSharingLogCache() {
+const cleanupAccountSharingLogCache = function cleanupAccountSharingLogCache() {
   const now = Date.now()
   for (const [key, timestamp] of accountSharingLogCache.entries()) {
     if (now - timestamp > ACCOUNT_SHARING_LOG_INTERVAL * 2) {
@@ -434,7 +442,10 @@ function cleanupAccountSharingLogCache() {
 cleanupAccountSharingLogCache()
 
 // Account sharing detection - blocks processing for multiple Steam accounts per token
-export async function checkAccountSharing(client: SocketClient, matchId: string): Promise<boolean> {
+export const checkAccountSharing = async function checkAccountSharing(
+  client: SocketClient,
+  matchId: string
+): Promise<boolean> {
   if (!client.steam32Id || !matchId) {
     return false
   }
@@ -462,7 +473,8 @@ export async function checkAccountSharing(client: SocketClient, matchId: string)
       // Update Redis with new list
       await redisClient.client.setEx(
         redisKey,
-        60, // Expire after 1 minute of inactivity
+        // Expire after 1 minute of inactivity
+        60,
         JSON.stringify(activeSteamIds)
       )
     }
@@ -515,10 +527,12 @@ export async function checkAccountSharing(client: SocketClient, matchId: string)
         })
       )
 
-      return true // Block processing for this Steam account
+      // Block processing for this Steam account
+      return true
     }
 
-    return false // No blocking needed
+    // No blocking needed
+    return false
   } catch (error) {
     logger.error('[ACCOUNT_SHARING] Error checking account sharing', {
       error: error instanceof Error ? error.message : String(error),
@@ -526,23 +540,21 @@ export async function checkAccountSharing(client: SocketClient, matchId: string)
       steam32Id,
       token: currentToken,
     })
-    return false // Allow processing on error
+    // Allow processing on error
+    return false
   }
 }
 
 // Track the last time we saved data for each match
 const lastSaveTimeByMatch = new Map<string, number>()
-const SAVE_INTERVAL = 60_000 // 1 minute in milliseconds
+// 1 minute in milliseconds
+const SAVE_INTERVAL = 60_000
 
 // In-memory cache for playingHeroSlot to reduce Redis calls
 // Key: token, Value: hero slot number (or null if not set)
 const playingHeroSlotCache = new Map<string, number | null>()
 
-/**
- * Clear the hero slot cache for a specific token.
- * Should be called when a match ends.
- */
-export function clearPlayingHeroSlotCache(token: string): void {
+export const clearPlayingHeroSlotCache = function clearPlayingHeroSlotCache(token: string): void {
   playingHeroSlotCache.delete(token)
 }
 
@@ -795,7 +807,7 @@ eventHandler.registerEvent('newdata', {
   },
 })
 
-function handleNewEvents(data: Packet, dotaClient: GSIHandlerType) {
+const handleNewEvents = function handleNewEvents(data: Packet, dotaClient: GSIHandlerType) {
   // Deduped against already-seen events by `${game_time}-${event_type}`.
   const newEvents = selectNewEvents(dotaClient.events, data.events)
 

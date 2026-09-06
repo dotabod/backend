@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/sharedMocks.ts'
+import { buildSharedUtilsMock, initTestI18n } from '../../__tests__/shared-mocks.ts'
 import type { RosterPlayer } from '../../dota/lib/matchData'
 
 const noopLogger = {
@@ -20,7 +20,7 @@ vi.doMock(import('@dotabod/profanity-filter'), () => ({
 
 // Mongo yields no game mode and no DB-stored notable players, so output reflects
 // only the players passed in.
-vi.doMock(import('../MongoDBSingleton'), () => ({
+vi.doMock(import('../mongo-db-singleton'), () => ({
   default: {
     close: async () => {},
     connect: async () => ({
@@ -39,10 +39,10 @@ const getPlayersMock = vi.fn(async () => ({
   gameMode: undefined,
   matchPlayers: [] as RosterPlayer[],
 }))
-vi.doMock(import('../../dota/lib/getPlayers'), () => ({ getPlayers: getPlayersMock }))
-vi.doMock(import('../../dota/lib/calculateAvg'), () => ({ calculateAvg: async () => 'Divine' }))
+vi.doMock(import('../../dota/lib/get-players'), () => ({ getPlayers: getPlayersMock }))
+vi.doMock(import('../../dota/lib/calculate-avg'), () => ({ calculateAvg: async () => 'Divine' }))
 const getSteamPlayerSummariesMock = vi.fn(async () => new Map())
-vi.doMock(import('../playerSummaries'), () => ({
+vi.doMock(import('../player-summaries'), () => ({
   getSteamPlayerSummaries: getSteamPlayerSummariesMock,
 }))
 

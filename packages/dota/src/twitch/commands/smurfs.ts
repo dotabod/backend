@@ -3,8 +3,8 @@ import { t } from 'i18next'
 import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import { smurfs } from '../../steam/smurfs'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('smurfs', {
   aliases: ['lifetimes', 'totals', 'games', 'smurf'],

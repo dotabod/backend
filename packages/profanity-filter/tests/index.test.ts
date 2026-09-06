@@ -460,14 +460,22 @@ describe('Profanity Filter', () => {
         '555',
         'fax666.',
         'fakejoker',
-        'Classic', // contains "ass"
-        'Scunthorpe', // contains "cunt"
-        'Assassin', // contains "ass" twice
-        'Cockpit', // contains "cock"
-        'Shuttlecock', // contains "cock"
-        'Analysis', // contains "anal"
-        'Grape', // contains "rape"
-        'Therapist', // contains "rapist"
+        // contains "ass"
+        'Classic',
+        // contains "cunt"
+        'Scunthorpe',
+        // contains "ass" twice
+        'Assassin',
+        // contains "cock"
+        'Cockpit',
+        // contains "cock"
+        'Shuttlecock',
+        // contains "anal"
+        'Analysis',
+        // contains "rape"
+        'Grape',
+        // contains "rapist"
+        'Therapist',
       ]
 
       for (const word of words) {

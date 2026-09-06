@@ -1,17 +1,17 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
-import { WL_RESET_SETTING_KEY } from '../../db/winLossWindow'
+import { WL_RESET_SETTING_KEY } from '../../db/win-loss-window'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { server } from '../../dota/server'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
 
 commandHandler.registerCommand('resetwl', {
   cooldown: 0,
   handler: (message: MessageType, _args: string[]) => {
-    async function handler() {
+    const handler = async function handler() {
       const {
         channel: { name: channel, client },
       } = message

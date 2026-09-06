@@ -3,8 +3,8 @@ import { t } from 'i18next'
 import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import lastgame from '../../steam/lastgame'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('lg', {
   aliases: ['lastgame'],

@@ -2,12 +2,12 @@ import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../settings'
 import type { defaultSettings, SettingKeys } from '../settings'
-import { chatClient } from '../twitch/chatClient'
+import { chatClient } from '../twitch/chat-client'
 import type { SocketClient } from '../types'
-import { getStreamDelay } from './getStreamDelay'
-import { delayedQueue } from './lib/DelayedQueue'
+import { getStreamDelay } from './get-stream-delay'
+import { delayedQueue } from './lib/delayed-queue'
 
-export function say(
+export const say = function say(
   client: SocketClient,
   message: string,
   {

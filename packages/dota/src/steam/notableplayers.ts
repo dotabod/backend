@@ -2,13 +2,13 @@ import { moderateText } from '@dotabod/profanity-filter'
 import { countryCodeEmoji } from 'country-code-emoji'
 import { t } from 'i18next'
 
-import { calculateAvg } from '../dota/lib/calculateAvg'
-import { getPlayers } from '../dota/lib/getPlayers'
+import { calculateAvg } from '../dota/lib/calculate-avg'
+import { getPlayers } from '../dota/lib/get-players'
 import { getHeroNameOrColor } from '../dota/lib/heroes'
 import type { RosterPlayer, RosterSource } from '../dota/lib/matchData'
 import type { HeroesStatus, NotablePlayer, SocketClient } from '../types'
-import MongoDBSingleton from './MongoDBSingleton'
-import { getSteamPlayerSummaries } from './playerSummaries'
+import MongoDBSingleton from './mongo-db-singleton'
+import { getSteamPlayerSummaries } from './player-summaries'
 
 export interface NotablePlayers {
   account_id: number
@@ -16,7 +16,7 @@ export interface NotablePlayers {
   country_code: string
 }
 
-export async function notablePlayers({
+export const notablePlayers = async function notablePlayers({
   client,
   locale,
   twitchChannelId,

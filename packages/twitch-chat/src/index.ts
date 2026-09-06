@@ -18,11 +18,11 @@ import { use } from 'i18next'
 import FsBackend from 'i18next-fs-backend'
 import type { FsBackendOptions } from 'i18next-fs-backend'
 
-import { ensureEventSubInitialized } from './conduitSetup'
-import { clearDisableCache, DISABLE_CACHE_EXPIRY, disableUserCache } from './disableCache'
-import { isEventsubConnected } from './eventSubSocket'
-import { sendTwitchChatMessage } from './handleChat'
-import { io, setupSocketServer } from './utils/socketManager'
+import { ensureEventSubInitialized } from './conduit-setup'
+import { clearDisableCache, DISABLE_CACHE_EXPIRY, disableUserCache } from './disable-cache'
+import { isEventsubConnected } from './event-sub-socket'
+import { sendTwitchChatMessage } from './handle-chat'
+import { io, setupSocketServer } from './utils/socket-manager'
 
 if (!process.env.TWITCH_BOT_PROVIDERID) {
   throw new Error('TWITCH_BOT_PROVIDERID not set')
@@ -33,7 +33,7 @@ if (!process.env.TWITCH_BOT_USERNAME) {
   process.env.TWITCH_BOT_USERNAME = 'dotabod'
 }
 
-async function startup() {
+const startup = async function startup() {
   try {
     const isBanned = await checkBotStatus()
     if (isBanned) {
@@ -197,7 +197,7 @@ async function startup() {
   }
 }
 
-async function disableUser(
+const disableUser = async function disableUser(
   providerAccountId: string,
   dropReason?: { code: string; message: string }
 ) {

@@ -4,10 +4,10 @@ process.on('SIGINT', () => process.exit(0))
 import { startHeartbeat } from '@dotabod/shared-utils'
 import type { Socket } from 'socket.io'
 
-import { initSpectatorProtobuff } from './initSpectatorProtobuff'
-import { getSocketIoServer } from './socketServer'
+import { initSpectatorProtobuff } from './init-spectator-protobuff'
+import { getSocketIoServer } from './socket-server'
 import Dota, { GetRealTimeStats } from './steam'
-import type { MatchMinimalDetailsResponse } from './types/MatchMinimalDetails'
+import type { MatchMinimalDetailsResponse } from './types/match-minimal-details'
 import { logger } from './utils/logger'
 
 let _hasDotabodSocket = false

@@ -13,7 +13,7 @@ interface HeartbeatOptions {
   name?: string
 }
 
-export function startHeartbeat(opts: HeartbeatOptions = {}): void {
+export const startHeartbeat = function startHeartbeat(opts: HeartbeatOptions = {}): void {
   const {
     url = process.env.KUMA_PUSH_URL,
     getStatus = () => ({ msg: 'OK', up: true }),

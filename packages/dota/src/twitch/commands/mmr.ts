@@ -4,9 +4,9 @@ import { t } from 'i18next'
 
 import { getDotabodRankProfile, getRankDescription, getRankTitle } from '../../dota/lib/ranks'
 import { DBSettings, getValueOrDefault } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
 
 commandHandler.registerCommand('mmr', {
   aliases: ['rank', 'medal'],
@@ -20,7 +20,7 @@ commandHandler.registerCommand('mmr', {
 
     // Check if args include a twitch username
     if (args.length > 0) {
-      const username = args[0].toLowerCase().replace(/^@/, '')
+      const username = args[0].toLowerCase().replace(/^@/u, '')
       logger.debug('[MMR] Looking up username', { channel, username })
 
       const rankProfile = await getDotabodRankProfile(username)
@@ -74,7 +74,7 @@ commandHandler.registerCommand('mmr', {
       client.settings,
       client.subscription
     )
-    const name = channel.replace(/^#/, '').toLowerCase()
+    const name = channel.replace(/^#/u, '').toLowerCase()
 
     logger.debug('[MMR] Getting streamer rank', {
       channel,

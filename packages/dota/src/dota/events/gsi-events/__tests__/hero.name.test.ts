@@ -4,7 +4,7 @@
 // surfaced in !unresolved formatting and chat copy until closeBets ran.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../../__tests__/sharedMocks'
+import { buildSharedUtilsMock, initTestI18n, PRO_SUB } from '../../../../__tests__/shared-mocks'
 
 interface UpdateCall {
   values: Record<string, unknown>
@@ -67,21 +67,21 @@ vi.doMock(import('../../../../steam/ws'), () => ({
   twitchEvents: { emit: () => {}, on: () => {} },
 }))
 
-vi.doMock(import('../../../../twitch/lib/openTwitchBet'), () => ({
+vi.doMock(import('../../../../twitch/lib/open-twitch-bet'), () => ({
   openTwitchBet: async ({ heroName }: { heroName?: string }) => {
     openBetCalls.push({ heroName })
     return { id: 'new-prediction-id' }
   },
 }))
 
-vi.doMock(import('../../../../twitch/lib/refundTwitchBets'), () => ({
+vi.doMock(import('../../../../twitch/lib/refund-twitch-bets'), () => ({
   refundTwitchBet: async (channelId: string, predictionId: string) => {
     refundCalls.push({ channelId, predictionId })
     return predictionId
   },
 }))
 
-vi.doMock(import('../../../lib/DelayedQueue'), () => ({
+vi.doMock(import('../../../lib/delayed-queue'), () => ({
   delayedQueue: {
     addTask: (_delayMs: number, cb: (payload: unknown) => void | Promise<void>) => {
       heldTasks.push({ invoke: () => cb(null) })
@@ -91,7 +91,7 @@ vi.doMock(import('../../../lib/DelayedQueue'), () => ({
   },
 }))
 
-vi.doMock(import('../../../../db/RedisClient'), () => ({
+vi.doMock(import('../../../../db/redis-client'), () => ({
   default: {
     getInstance: () => ({
       client: {
@@ -110,12 +110,12 @@ await initTestI18n()
 // Import the handler module to register it on the global event emitter.
 await import('../hero.name')
 
-const { events } = await import('../../../globalEventEmitter')
+const { events } = await import('../../../global-event-emitter')
 const { gsiHandlers } = await import('../../../lib/consts')
 
 const TOKEN = 'token-arteezy'
 
-function registerFakeHandler() {
+const registerFakeHandler = function registerFakeHandler() {
   gsiHandlers.set(TOKEN, {
     client: {
       gsi: {
@@ -137,7 +137,7 @@ function registerFakeHandler() {
   } as any)
 }
 
-function unregisterFakeHandler() {
+const unregisterFakeHandler = function unregisterFakeHandler() {
   gsiHandlers.delete(TOKEN)
 }
 
@@ -188,7 +188,7 @@ describe('hero:name swap → matches.hero_name update', () => {
     openBetCalls.length = 0
     // Make the reopen "fail" by returning no id — simulate openTwitchBet
     // returning undefined on error (the real fn does this on caught errors).
-    vi.doMock(import('../../../../twitch/lib/openTwitchBet'), () => ({
+    vi.doMock(import('../../../../twitch/lib/open-twitch-bet'), () => ({
       openTwitchBet: async () => {},
     }))
 

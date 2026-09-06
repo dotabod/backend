@@ -1,4 +1,4 @@
-import type { GSIHandlerType } from '../GSIHandlerTypes'
+import type { GSIHandlerType } from '../gsi-handler-types'
 
 // full list at https://github.com/SteamDatabase/GameTracking-Dota2/blob/master/Protobufs/dota_shared_enums.proto
 export const allStates = [
@@ -58,7 +58,8 @@ export const blockTypes = [
 
 export const isDev = process.env.DOTABOD_ENV === 'development'
 
-export const GLOBAL_DELAY = isDev ? 0 : 7000 // 7s for prod only
+// 7s for prod only
+export const GLOBAL_DELAY = isDev ? 0 : 7000
 
 export const ranks = [
   { image: '11.png', range: [0, 153], title: 'Herald☆1' },
@@ -109,7 +110,7 @@ export const leaderRanks = [
 export const plebMode = new Set()
 export const modMode = new Set()
 
-export { invalidTokens } from './invalidTokens'
+export { invalidTokens } from './invalid-tokens'
 
 export const gsiHandlers = new Map<string, GSIHandlerType>()
 export const twitchIdToToken = new Map<string, string>()

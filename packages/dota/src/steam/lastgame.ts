@@ -5,9 +5,9 @@ import { getHeroNameOrColor } from '../dota/lib/heroes'
 import { lookupRosterByMatchId } from '../dota/lib/matchData'
 import type { RosterPlayer } from '../dota/lib/matchData'
 import type { DelayedGames, SocketClient } from '../types'
-import CustomError from '../utils/customError'
+import CustomError from '../utils/custom-error'
 import { dotabodMatchHistoryUrl } from '../utils/index'
-import MongoDBSingleton from './MongoDBSingleton'
+import MongoDBSingleton from './mongo-db-singleton'
 
 const generateMessage = (
   locale: string,
@@ -44,7 +44,9 @@ interface LastgameParams {
 // their GSI). delayedGames is fed by Valve's realtime spectator API, which returns
 // nothing for 8500+/Immortal players, so its newest cached entry can be a stale
 // older match. Prefer Supabase for the "last game" link.
-async function getLatestFinishedMatchId(steam32Id: number): Promise<string | null> {
+const getLatestFinishedMatchId = async function getLatestFinishedMatchId(
+  steam32Id: number
+): Promise<string | null> {
   const { data } = await supabase
     .from('matches')
     .select('matchId')

@@ -1,12 +1,12 @@
 import { t } from 'i18next'
 
-import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/getCurrentMatchId'
+import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/get-current-match-id'
 import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import { gameMedals } from '../../steam/medals'
-import { chatClient } from '../chatClient'
-import { clippingDisabledNote } from '../lib/clippingNote'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import { clippingDisabledNote } from '../lib/clipping-note'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('gm', {
   aliases: ['medals', 'ranks'],

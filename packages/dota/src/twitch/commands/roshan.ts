@@ -1,14 +1,14 @@
 import { t } from 'i18next'
 
-import RedisClient from '../../db/RedisClient'
-import type { AegisRes } from '../../dota/events/gsi-events/AegisRes'
-import { generateAegisMessage } from '../../dota/events/gsi-events/generateAegisMessage'
-import type { RoshRes } from '../../dota/events/gsi-events/RoshRes'
-import { generateRoshanMessage } from '../../dota/events/gsi-events/RoshRes'
-import { isPlayingMatch } from '../../dota/lib/isPlayingMatch'
+import RedisClient from '../../db/redis-client'
+import type { AegisRes } from '../../dota/events/gsi-events/aegis-res'
+import { generateAegisMessage } from '../../dota/events/gsi-events/generate-aegis-message'
+import type { RoshRes } from '../../dota/events/gsi-events/rosh-res'
+import { generateRoshanMessage } from '../../dota/events/gsi-events/rosh-res'
+import { isPlayingMatch } from '../../dota/lib/is-playing-match'
 import { DBSettings } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('roshan', {
   aliases: ['rosh', 'aegis'],

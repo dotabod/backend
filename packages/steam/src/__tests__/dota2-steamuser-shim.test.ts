@@ -7,8 +7,8 @@ import { EventEmitter } from 'node:events'
 
 import { describe, expect, it } from 'vitest'
 
-import { SteamGameCoordinatorShim, SteamUserShim } from '../utils/dota2SteamUser'
-import type { SteamUserClient } from '../utils/dota2SteamUser'
+import { SteamGameCoordinatorShim, SteamUserShim } from '../utils/dota2-steam-user'
+import type { SteamUserClient } from '../utils/dota2-steam-user'
 
 const DOTA_APP_ID = 570
 
@@ -50,7 +50,8 @@ describe(SteamGameCoordinatorShim, () => {
     const gc = new SteamGameCoordinatorShim(asClient(user), DOTA_APP_ID)
 
     const body = Buffer.from([1, 2, 3])
-    gc.send({ msg: 4006 /* k_EMsgGCClientHello */, proto: {} }, body)
+    // 4006 is k_EMsgGCClientHello.
+    gc.send({ msg: 4006, proto: {} }, body)
 
     expect(user.sentToGC).toHaveLength(1)
     const call = user.sentToGC[0]
@@ -102,7 +103,8 @@ describe(SteamGameCoordinatorShim, () => {
     )
 
     const payload = Buffer.from([7, 7, 7])
-    user.emit('receivedFromGC', DOTA_APP_ID, 4004 /* k_EMsgGCClientWelcome */, payload)
+    // 4004 is k_EMsgGCClientWelcome.
+    user.emit('receivedFromGC', DOTA_APP_ID, 4004, payload)
 
     expect(events).toHaveLength(1)
     expect(events[0].header).toStrictEqual({ msg: 4004, proto: {} })
@@ -117,7 +119,8 @@ describe(SteamGameCoordinatorShim, () => {
     const events: unknown[] = []
     gc.on('message', (...args: unknown[]) => events.push(args))
 
-    user.emit('receivedFromGC', 730 /* CS:GO */, 4004, Buffer.from([0]))
+    // 730 is CS:GO.
+    user.emit('receivedFromGC', 730, 4004, Buffer.from([0]))
 
     expect(events).toHaveLength(0)
   })

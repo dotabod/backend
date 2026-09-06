@@ -1,11 +1,11 @@
 import { logger } from '@dotabod/shared-utils'
 
-import RedisClient from '../../../db/RedisClient'
+import RedisClient from '../../../db/redis-client'
 import type { Player } from '../../../types'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { isPlayingMatch } from '../../lib/is-playing-match'
 import { server } from '../../server'
-import eventHandler from '../EventHandler'
-import type { AegisRes } from './AegisRes'
+import eventHandler from '../event-handler'
+import type { AegisRes } from './aegis-res'
 
 eventHandler.registerEvent('player:kill_list', {
   handler: async (dotaClient, kill_list: Player['kill_list']) => {

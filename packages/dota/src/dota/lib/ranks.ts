@@ -1,14 +1,14 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
-import { MULTIPLIER_SOLO } from '../../db/getWL'
-import RedisClient from '../../db/RedisClient'
+import { MULTIPLIER_SOLO } from '../../db/get-wl'
+import RedisClient from '../../db/redis-client'
 import { steamSocket } from '../../steam/ws'
 import type { Cards } from '../../types'
-import CustomError from '../../utils/customError'
+import CustomError from '../../utils/custom-error'
 import { leaderRanks, ranks } from './consts'
 
-export function rankTierToMmr(rankTier: string | number) {
+export const rankTierToMmr = function rankTierToMmr(rankTier: string | number) {
   if (!Number(rankTier)) {
     return 0
   }
@@ -29,15 +29,11 @@ export function rankTierToMmr(rankTier: string | number) {
   return ((rank?.range[0] ?? 0) + (rank?.range[1] ?? 0)) / 2
 }
 
-/**
- * Converts MMR to rank tier
- * @param mmr - The MMR value to convert
- * @returns The rank tier value (e.g. 71 for Legend 1, 80 for Immortal)
- */
-export function mmrToRankTier(mmr: number): number {
+export const mmrToRankTier = function mmrToRankTier(mmr: number): number {
   if (mmr <= 0) {
     return 0
-  } // Uncalibrated
+    // Uncalibrated
+  }
 
   // Immortal rank (rank tier 80)
   // Get the highest MMR from the ranks array
@@ -47,7 +43,7 @@ export function mmrToRankTier(mmr: number): number {
   }
 
   // Find the rank based on MMR
-  for (let i = 0; i < ranks.length; i++) {
+  for (let i = 0; i < ranks.length; i += 1) {
     const rank = ranks[i]
     const [min, max] = rank.range
 
@@ -67,7 +63,7 @@ export function mmrToRankTier(mmr: number): number {
   return 0
 }
 
-export function getRankTitle(rankTier: string | number): string {
+export const getRankTitle = function getRankTitle(rankTier: string | number): string {
   if (!Number(rankTier) || Number(rankTier) <= 0) {
     return 'Uncalibrated'
   }
@@ -100,7 +96,10 @@ interface LeaderRankData {
   standing: number | null
 }
 
-async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise<LeaderRankData> {
+const lookupLeaderRank = async function lookupLeaderRank(
+  mmr: number,
+  steam32Id?: number | null
+): Promise<LeaderRankData> {
   const lowestLeaderRank = leaderRanks.at(-1)
   if (!lowestLeaderRank) {
     throw new Error('Leader ranks must not be empty')
@@ -129,7 +128,8 @@ async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise
       const getCardPromise = new Promise<Cards>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
           reject(new CustomError(t('matchData8500', { emote: 'PoroSad', lng: 'en' })))
-        }, 10_000) // 5 second timeout
+          // 5 second timeout
+        }, 10_000)
 
         steamSocket.emit('getCard', steam32Id, (err: unknown, card: Cards) => {
           clearTimeout(timeoutId)
@@ -166,7 +166,10 @@ async function lookupLeaderRank(mmr: number, steam32Id?: number | null): Promise
   return result
 }
 
-export async function getRankDetail(mmr: string | number, steam32Id?: number | null) {
+export const getRankDetail = async function getRankDetail(
+  mmr: string | number,
+  steam32Id?: number | null
+) {
   const mmrNum = Number(mmr)
 
   if (!mmrNum || mmrNum < 0) {
@@ -207,7 +210,7 @@ interface RankDescription {
 }
 
 // Used for chatting !mmr
-export async function getRankDescription({
+export const getRankDescription = async function getRankDescription({
   locale,
   mmr,
   steam32Id,
@@ -269,7 +272,7 @@ type Region =
   | 'PERU'
   | 'BRAZIL'
 
-export function estimateMMR(leaderboard_rank: number, region: Region): number {
+export const estimateMMR = function estimateMMR(leaderboard_rank: number, region: Region): number {
   // Max leaderboard rank is 5000
   if (leaderboard_rank <= 0 || leaderboard_rank > 5000) {
     return 8500
@@ -308,10 +311,14 @@ const rankProfileCache = new Map<
   { data: { rank_tier: number; leaderboard_rank: number } | null; timestamp: number }
 >()
 
-const RANK_CACHE_TTL = 30 * 60 * 1000 // 30 minutes in milliseconds for users with rank
-const NO_RANK_CACHE_TTL = 30 * 1000 // 30 seconds in milliseconds for users without rank
+// 30 minutes in milliseconds for users with rank
+const RANK_CACHE_TTL = 30 * 60 * 1000
+// 30 seconds in milliseconds for users without rank
+const NO_RANK_CACHE_TTL = 30 * 1000
 
-export async function getDotabodRankProfile(twitchUsername: string): Promise<{
+export const getDotabodRankProfile = async function getDotabodRankProfile(
+  twitchUsername: string
+): Promise<{
   rank_tier: number
   leaderboard_rank: number
 } | null> {

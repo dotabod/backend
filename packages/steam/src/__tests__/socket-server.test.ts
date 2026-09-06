@@ -3,7 +3,7 @@ import type { AddressInfo, Server as HttpServer } from 'node:net'
 import { io as ioClient } from 'socket.io-client'
 import { afterAll, describe, expect, it } from 'vitest'
 
-import { createSocketServer } from '../socketServer'
+import { createSocketServer } from '../socket-server'
 
 const server = createSocketServer(0)
 const httpServer = server.httpServer as HttpServer & {

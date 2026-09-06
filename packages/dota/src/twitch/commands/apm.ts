@@ -2,9 +2,9 @@ import { t } from 'i18next'
 
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import { profileLink } from './profileLink'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import { profileLink } from './profile-link'
 
 commandHandler.registerCommand('apm', {
   dbkey: DBSettings.commandAPM,

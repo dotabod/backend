@@ -1,13 +1,13 @@
 import { supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
-import { LOBBY_TYPE_RANKED } from '../../db/getWL'
-import getHero from '../../dota/lib/getHero'
-import type { HeroNames } from '../../dota/lib/getHero'
+import { LOBBY_TYPE_RANKED } from '../../db/get-wl'
+import getHero from '../../dota/lib/get-hero'
+import type { HeroNames } from '../../dota/lib/get-hero'
 import { DBSettings } from '../../settings'
 import { dotabodMatchHistoryUrl } from '../../utils/index'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('lgs', {
   aliases: ['lastgamescore', 'lgscore', 'lgwl'],

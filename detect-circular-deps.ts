@@ -22,12 +22,12 @@ const externalModules = new Set([
 ])
 
 // Regular expressions for extracting imports
-const importRegex = /import\s+(?:(?:[\w*\s{},]*)\s+from\s+)?['"]([@\w\-./\\]+)['"]/g
-const dynamicImportRegex = /import\s*\(\s*['"]([@\w\-./\\]+)['"]\s*\)/g
-const requireRegex = /require\s*\(\s*['"]([@\w\-./\\]+)['"]\s*\)/g
+const importRegex = /import\s+(?:(?:[\w*\s{},]*)\s+from\s+)?['"]([@\w\-./\\]+)['"]/gu
+const dynamicImportRegex = /import\s*\(\s*['"]([@\w\-./\\]+)['"]\s*\)/gu
+const requireRegex = /require\s*\(\s*['"]([@\w\-./\\]+)['"]\s*\)/gu
 
 // Function to determine if a path is a directory
-function isDirectory(path: string): boolean {
+const isDirectory = function isDirectory(path: string): boolean {
   try {
     return statSync(path).isDirectory()
   } catch {
@@ -36,7 +36,7 @@ function isDirectory(path: string): boolean {
 }
 
 // Function to check if a module is internal or external
-function isInternalModule(modulePath: string): boolean {
+const isInternalModule = function isInternalModule(modulePath: string): boolean {
   return (
     modulePath.startsWith('./') ||
     modulePath.startsWith('../') ||
@@ -46,7 +46,10 @@ function isInternalModule(modulePath: string): boolean {
 }
 
 // Function to resolve a relative import to an absolute path
-function resolveImport(importPath: string, currentFile: string): string | null {
+const resolveImport = function resolveImport(
+  importPath: string,
+  currentFile: string
+): string | null {
   if (!isInternalModule(importPath)) {
     // If it's not an internal module, skip it
     if (importPath.startsWith('@dotabod/')) {
@@ -99,7 +102,7 @@ function resolveImport(importPath: string, currentFile: string): string | null {
 }
 
 // Function to extract imports from a file
-function extractImports(filePath: string): string[] {
+const extractImports = function extractImports(filePath: string): string[] {
   try {
     const content = readFileSync(filePath, 'utf-8')
     const imports: string[] = []
@@ -136,7 +139,7 @@ function extractImports(filePath: string): string[] {
 }
 
 // Function to process a file and extract its dependencies
-function processFile(filePath: string): void {
+const processFile = function processFile(filePath: string): void {
   if (processedFiles.has(filePath)) {
     return
   }
@@ -175,7 +178,7 @@ function processFile(filePath: string): void {
 }
 
 // Function to scan a directory recursively
-function scanDirectory(dir: string, ignorePatterns: RegExp[] = []): void {
+const scanDirectory = function scanDirectory(dir: string, ignorePatterns: RegExp[] = []): void {
   try {
     const entries = readdirSync(dir, { withFileTypes: true })
 
@@ -203,12 +206,12 @@ function scanDirectory(dir: string, ignorePatterns: RegExp[] = []): void {
 }
 
 // Function to find cycles in the dependency graph using DFS
-function findCycles(): Map<string, string[]> {
+const findCycles = function findCycles(): Map<string, string[]> {
   const cycles = new Map<string, string[]>()
   const visited = new Set<string>()
   const stack = new Set<string>()
 
-  function dfs(node: string, path: string[] = []): void {
+  const dfs = function dfs(node: string, path: string[] = []): void {
     if (stack.has(node)) {
       // Found a cycle
       const cycleStart = path.indexOf(node)
@@ -249,17 +252,17 @@ function findCycles(): Map<string, string[]> {
 }
 
 // Function to format a path for display
-function formatPath(path: string): string {
+const formatPath = function formatPath(path: string): string {
   return relative(process.cwd(), path)
 }
 
 // Function to generate a visualization of the circular dependency
-function visualizeCycle(cycle: string[]): string {
+const visualizeCycle = function visualizeCycle(cycle: string[]): string {
   return `${cycle.map(formatPath).join(' → ')} → ${formatPath(cycle[0])}`
 }
 
 // Main function
-async function main() {
+const main = async function main() {
   const startTime = Date.now()
   console.log('Scanning for circular dependencies...')
 
@@ -293,7 +296,7 @@ async function main() {
     // Group cycles by package
     const cyclesByPackage = new Map<string, number>()
     for (const [file] of sortedCycles) {
-      const packageMatch = /^packages\/([^/]+)/.exec(formatPath(file))
+      const packageMatch = /^packages\/([^/]+)/u.exec(formatPath(file))
       if (packageMatch) {
         const packageName = packageMatch[1]
         cyclesByPackage.set(packageName, (cyclesByPackage.get(packageName) || 0) + 1)

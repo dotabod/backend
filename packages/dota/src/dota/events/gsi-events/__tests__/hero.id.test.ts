@@ -7,7 +7,7 @@
 // in EventHandler, so they also exercise the anti-snipe state gate end-to-end.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n } from '../../../../__tests__/sharedMocks'
+import { buildSharedUtilsMock, initTestI18n } from '../../../../__tests__/shared-mocks'
 
 const loggerMock = {
   debug: () => {},
@@ -25,7 +25,7 @@ vi.doMock(import('@dotabod/shared-utils'), () =>
 
 // In-memory Redis so the per-match announce dedupe is exercised for real.
 const redisStore: Record<string, string> = {}
-vi.doMock(import('../../../../db/RedisClient'), () => ({
+vi.doMock(import('../../../../db/redis-client'), () => ({
   default: {
     getInstance: () => ({
       client: {
@@ -42,7 +42,7 @@ vi.doMock(import('../../../../db/RedisClient'), () => ({
 // Control the resolved loadout returned by the (real, elsewhere-tested) capture.
 let capturedItems: unknown[] = []
 const captureMock = vi.fn(async () => capturedItems)
-vi.doMock(import('../../../lib/captureCosmetics'), () => ({ captureCosmetics: captureMock }))
+vi.doMock(import('../../../lib/capture-cosmetics'), () => ({ captureCosmetics: captureMock }))
 
 // Capture say() calls instead of hitting the real chat/delay pipeline.
 const sayMock = vi.fn()
@@ -50,7 +50,7 @@ vi.doMock(import('../../../say'), () => ({ say: sayMock }))
 
 // Capture the registered handler instead of wiring the global event emitter.
 let registeredHandler: ((dotaClient: any, heroId: number) => Promise<void> | void) | undefined
-vi.doMock(import('../../EventHandler'), () => ({
+vi.doMock(import('../../event-handler'), () => ({
   default: {
     registerEvent: (_name: string, opts: { handler: typeof registeredHandler }) => {
       registeredHandler = opts.handler
@@ -68,7 +68,7 @@ interface Setting {
   value: unknown
 }
 
-function makeDotaClient(
+const makeDotaClient = function makeDotaClient(
   overrides: {
     stream_online?: boolean
     matchid?: string
@@ -134,7 +134,8 @@ describe('hero:id — cosmetic set announce', () => {
     sayMock.mockClear()
     await registeredHandler!(makeDotaClient(), INVOKER_ID)
 
-    expect(captureMock).toHaveBeenCalledTimes(2) // capture always runs
+    // capture always runs
+    expect(captureMock).toHaveBeenCalledTimes(2)
     expect(sayMock).not.toHaveBeenCalled()
   })
 

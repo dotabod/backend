@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { computeReconnectDelay } from '../utils/reconnectBackoff'
+import { computeReconnectDelay } from '../utils/reconnect-backoff'
 
 describe(computeReconnectDelay, () => {
   // random: () => 1 yields the upper bound of the jitter window (exp), making
@@ -35,7 +35,7 @@ describe(computeReconnectDelay, () => {
   })
 
   it('stays within [exp/2, exp] for real randomness', () => {
-    for (let attempt = 1; attempt <= 10; attempt++) {
+    for (let attempt = 1; attempt <= 10; attempt += 1) {
       const lo = computeReconnectDelay(attempt, lower)
       const hi = computeReconnectDelay(attempt, upper)
       const actual = computeReconnectDelay(attempt)

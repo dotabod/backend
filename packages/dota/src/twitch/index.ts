@@ -1,4 +1,4 @@
-import './commandLoader'
+import './command-loader'
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import {
   EventSubChannelPollBeginEvent,
@@ -13,20 +13,21 @@ import { t } from 'i18next'
 import { io as socketIo } from 'socket.io-client'
 import type { Socket } from 'socket.io-client'
 
-import getDBUser from '../db/getDBUser'
-import findUser, { getTokenFromTwitchId } from '../dota/lib/connectedStreamers'
+import getDBUser from '../db/get-db-user'
+import findUser, { getTokenFromTwitchId } from '../dota/lib/connected-streamers'
 import { plebMode } from '../dota/lib/consts'
 import { getDotabodRankProfile, getRankTitle } from '../dota/lib/ranks'
 import { server } from '../dota/server'
 import { DBSettings, getValueOrDefault } from '../settings'
 import { twitchChat } from '../steam/ws'
-import { chatClient } from './chatClient'
-import { checkAltAccount } from './checkAltAccount'
-import commandHandler from './lib/CommandHandler'
+import { chatClient } from './chat-client'
+import { checkAltAccount } from './check-alt-account'
+import commandHandler from './lib/command-handler'
 
 // Map to track the last time a rank warning message was sent to a channel
 const lastRankWarningTimestamps: Record<string, number> = {}
-const RANK_WARNING_COOLDOWN_MS = 30_000 // 30 seconds
+// 30 seconds
+const RANK_WARNING_COOLDOWN_MS = 30_000
 
 let disableAltAccountCheck = true
 
@@ -41,7 +42,7 @@ twitchChat.on('disconnect', (reason, details) => {
 })
 
 // Function to check if a user meets the rank requirement
-async function getUserRankTier(twitchUsername: string): Promise<number> {
+const getUserRankTier = async function getUserRankTier(twitchUsername: string): Promise<number> {
   try {
     const profile = await getDotabodRankProfile(twitchUsername)
     return profile?.rank_tier || 0
@@ -110,7 +111,8 @@ twitchChat.on(
     }
 
     // Looks up the chatter's followage date, and their Twitch account creation date, and if its within 10 days of each other, sends a message replying to them
-    const shouldCheckAltAccount = !disableAltAccountCheck && channelId === '40754777' // Only check this for now
+    // Only check this for now
+    const shouldCheckAltAccount = !disableAltAccountCheck && channelId === '40754777'
     if (shouldCheckAltAccount) {
       await checkAltAccount(channel, user, channelId, userInfo, messageId, client)
     }

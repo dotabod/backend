@@ -1,14 +1,14 @@
 import { t } from 'i18next'
 
-import { redisClient } from '../../../db/redisInstance'
+import { redisClient } from '../../../db/redis-instance'
 import type { Item } from '../../../types'
-import type { GSIHandlerType } from '../../GSIHandlerTypes'
-import { findItem } from '../../lib/findItem'
-import handleGetHero from '../../lib/getHero'
-import type { HeroNames } from '../../lib/getHero'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import type { GSIHandlerType } from '../../gsi-handler-types'
+import { findItem } from '../../lib/find-item'
+import handleGetHero from '../../lib/get-hero'
+import type { HeroNames } from '../../lib/get-hero'
+import { isPlayingMatch } from '../../lib/is-playing-match'
 import { say } from '../../say'
-import eventHandler from '../EventHandler'
+import eventHandler from '../event-handler'
 
 const passiveItemNames = [
   { charges: true, name: 'item_magic_stick', title: 'magic stick' },
@@ -45,7 +45,7 @@ eventHandler.registerEvent('player:deaths', {
   },
 })
 
-async function firstBloodChat(dotaClient: GSIHandlerType, heroName: string) {
+const firstBloodChat = async function firstBloodChat(dotaClient: GSIHandlerType, heroName: string) {
   const playingTeam =
     (await redisClient.client.get(`${dotaClient.client.token}:playingTeam`)) ??
     dotaClient.client.gsi?.player?.team_name
@@ -67,7 +67,7 @@ async function firstBloodChat(dotaClient: GSIHandlerType, heroName: string) {
   )
 }
 
-function cantCastItem(item: Item, dotaClient: GSIHandlerType) {
+const cantCastItem = function cantCastItem(item: Item, dotaClient: GSIHandlerType) {
   return (
     Number(item.cooldown) > 0 ||
     !item.can_cast ||
@@ -77,7 +77,7 @@ function cantCastItem(item: Item, dotaClient: GSIHandlerType) {
   )
 }
 
-function passiveDeathChat(dotaClient: GSIHandlerType, heroName: string) {
+const passiveDeathChat = function passiveDeathChat(dotaClient: GSIHandlerType, heroName: string) {
   const couldHaveLivedWith = findItem({
     data: dotaClient.client.gsi,
     itemName: passiveItemNames.map((i) => i.name),

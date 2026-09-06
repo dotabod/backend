@@ -2,12 +2,7 @@ import supabase from '../db/supabase'
 import { logger } from '../logger'
 import type { DisableReason, DisableReasonMetadata } from './types'
 
-/**
- * Insert an audit row into `disable_notifications` without touching the
- * `settings` row. Use this when you want to record that something went wrong
- * (e.g. account-sharing detected) without changing the user's feature state.
- */
-export async function recordDisableNotification(
+export const recordDisableNotification = async function recordDisableNotification(
   userId: string,
   settingKey: string,
   reason: DisableReason,
@@ -31,12 +26,7 @@ export async function recordDisableNotification(
   }
 }
 
-/**
- * Mark open `disable_notifications` rows as resolved without touching the
- * `settings` row. Optionally narrow to a single `reason` so other open
- * notifications for the same setting aren't falsely resolved.
- */
-export async function resolveDisableNotifications(
+export const resolveDisableNotifications = async function resolveDisableNotifications(
   userId: string,
   settingKey: string,
   opts: { reason?: DisableReason; autoResolved?: boolean } = {}
@@ -68,14 +58,7 @@ export async function resolveDisableNotifications(
   }
 }
 
-/**
- * Track when a setting is disabled and why. Mutates both `settings` (sets
- * `value` to `opts.disabledValue` — default `false`) and `disable_notifications`.
- *
- * For settings with inverted semantics (e.g. `commandDisable`, where `value: true`
- * means disabled), pass `opts: { disabledValue: true }`.
- */
-export async function trackDisableReason(
+export const trackDisableReason = async function trackDisableReason(
   userId: string,
   settingKey: string,
   reason: DisableReason,
@@ -120,19 +103,7 @@ export async function trackDisableReason(
   }
 }
 
-/**
- * Clear the disable-tracking fields on a `settings` row and mark its open
- * `disable_notifications` rows resolved.
- *
- * - `opts.reason`: only resolve notifications matching that reason (e.g.
- *   `!clearsharing` should only resolve `ACCOUNT_SHARING` rows, not unrelated
- *   `CHAT_PERMISSION_DENIED` ones).
- * - `opts.enabledValue`: if provided, also write this as the settings `value`
- *   in the same UPDATE. Use this when the resolve also flips the feature back
- *   on, so the realtime watcher only sees ONE settings change (otherwise a
- *   second `settings.upsert` by the caller fires it again).
- */
-export async function trackResolveReason(
+export const trackResolveReason = async function trackResolveReason(
   userId: string,
   settingKey: string,
   autoResolved = false,

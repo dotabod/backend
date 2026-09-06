@@ -16,7 +16,7 @@ afterEach(() => {
 // Winston delivers to transports via a stream, so flush a tick before asserting.
 const flush = async () => await new Promise((resolve) => setTimeout(resolve, 0))
 
-async function captureLogs(emit: (logger: any) => void) {
+const captureLogs = async function captureLogs(emit: (logger: any) => void) {
   const logger = createAppLogger()
   const transport = logger.transports[0]
   const captured: any[] = []

@@ -1,14 +1,14 @@
 import { t } from 'i18next'
 
-import { calculateAvg } from '../dota/lib/calculateAvg'
+import { calculateAvg } from '../dota/lib/calculate-avg'
 import { ranks } from '../dota/lib/consts'
-import { getPlayers } from '../dota/lib/getPlayers'
+import { getPlayers } from '../dota/lib/get-players'
 import { getHeroNameOrColor } from '../dota/lib/heroes'
 import type { RosterPlayer } from '../dota/lib/matchData'
 import type { Medals } from '../types'
-import MongoDBSingleton from './MongoDBSingleton'
+import MongoDBSingleton from './mongo-db-singleton'
 
-export async function gameMedals(
+export const gameMedals = async function gameMedals(
   locale: string,
   currentMatchId?: string,
   players?: RosterPlayer[]

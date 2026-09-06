@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { SteamPlayerSummaryService } from '../playerSummaries.ts'
+import { SteamPlayerSummaryService } from '../player-summaries.ts'
 
 describe(SteamPlayerSummaryService, () => {
   it('uses Steam packet names and the Web API only to add country codes', async () => {

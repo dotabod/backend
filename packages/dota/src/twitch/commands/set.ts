@@ -1,10 +1,10 @@
 import { t } from 'i18next'
 
-import { captureCosmetics } from '../../dota/lib/captureCosmetics'
+import { captureCosmetics } from '../../dota/lib/capture-cosmetics'
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('set', {
   aliases: ['cosmetics', 'loadout'],

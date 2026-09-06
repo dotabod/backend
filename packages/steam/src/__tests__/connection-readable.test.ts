@@ -18,7 +18,7 @@ const Connection = require('steam/lib/connection') as new () => net.Socket & {
   end(): unknown
 }
 
-function frame(body: Buffer): Buffer {
+const frame = function frame(body: Buffer): Buffer {
   const buf = Buffer.alloc(4 + 4 + body.length)
   buf.writeUInt32LE(body.length, 0)
   buf.write('VT01', 4)

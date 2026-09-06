@@ -1,7 +1,7 @@
 import { commandDisable } from '@dotabod/shared-utils'
 
 import { DBSettings, getValueOrDefault } from '../../settings'
-import commandHandler from '../lib/CommandHandler'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('toggle', {
   aliases: ['disable', 'enable'],

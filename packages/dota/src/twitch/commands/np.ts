@@ -2,15 +2,15 @@ import { moderateText } from '@dotabod/profanity-filter'
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
-import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/getCurrentMatchId'
+import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/get-current-match-id'
 import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings, getValueOrDefault } from '../../settings'
-import MongoDBSingleton from '../../steam/MongoDBSingleton'
+import MongoDBSingleton from '../../steam/mongo-db-singleton'
 import type { NotablePlayers } from '../../steam/notableplayers'
 import { notablePlayers } from '../../steam/notableplayers'
-import { chatClient } from '../chatClient'
-import { clippingDisabledNote } from '../lib/clippingNote'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import { clippingDisabledNote } from '../lib/clipping-note'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('np', {
   dbkey: DBSettings.commandNP,
@@ -35,7 +35,7 @@ commandHandler.registerCommand('np', {
       return
     }
 
-    async function addRemoveHandler() {
+    const addRemoveHandler = async function addRemoveHandler() {
       if (addOrRemove === 'add') {
         const forName = name.join(' ')
         if (!Number(forSteam32Id) || !forName) {

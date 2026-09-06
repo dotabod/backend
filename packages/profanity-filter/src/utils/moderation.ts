@@ -40,8 +40,10 @@ interface ModerationResponse {
 const badWords = new Filter()
 
 // Initialize leo-profanity with only English and Russian dictionaries
-leoProfanity.loadDictionary('en') // English
-leoProfanity.loadDictionary('ru') // Russian
+// English
+leoProfanity.loadDictionary('en')
+// Russian
+leoProfanity.loadDictionary('ru')
 
 // Add Russian bad words from the russian-bad-words library to leo-profanity
 leoProfanity.add(russianBadWordsList)
@@ -83,11 +85,7 @@ const SAFE_WORDS_WHITELIST = [
   // Add other safe words as needed
 ]
 
-/**
- * Helper function to check if a text contains only whitelisted words
- * or is part of common legitimate language
- */
-function isSafeText(text: string): boolean {
+const isSafeText = function isSafeText(text: string): boolean {
   // Convert to lowercase for case-insensitive matching
   const lower = text.toLowerCase()
 
@@ -102,36 +100,27 @@ function isSafeText(text: string): boolean {
   }
 
   // Check if text only contains whitelisted words
-  const words = lower.split(/\s+/)
+  const words = lower.split(/\s+/u)
   const allWordsAreSafe = words.every((word) => {
     // Remove any punctuation before checking
-    const cleanWord = word.replaceAll(/[.,?!;:'"()[\]{}]/g, '')
+    const cleanWord = word.replaceAll(/[.,?!;:'"()[\]{}]/gu, '')
     return cleanWord.length === 0 || SAFE_WORDS_WHITELIST.includes(cleanWord)
   })
 
   return allWordsAreSafe
 }
 
-/**
- * Helper function to check text against Russian bad words list
- */
-function checkRussianBadWords(text: string): boolean {
+const checkRussianBadWords = function checkRussianBadWords(text: string): boolean {
   const lowerText = text.toLowerCase()
   return russianBadWordsList.some((word) => lowerText.includes(word.toLowerCase()))
 }
 
-/**
- * Helper function to extract Russian bad words from text
- */
-function extractRussianBadWords(text: string): string[] {
+const extractRussianBadWords = function extractRussianBadWords(text: string): string[] {
   const lowerText = text.toLowerCase()
   return russianBadWordsList.filter((word) => lowerText.includes(word.toLowerCase()))
 }
 
-/**
- * Helper function to check text against washyourmouthoutwithsoap for all locales
- */
-function checkWashProfanity(text: string): {
+const checkWashProfanity = function checkWashProfanity(text: string): {
   detected: boolean
   locale?: string
   matchingWords?: string[]
@@ -145,13 +134,13 @@ function checkWashProfanity(text: string): {
       const tokens = new Set(
         text
           .toLowerCase()
-          .replaceAll(/[\s+]+/g, ' ')
+          .replaceAll(/[\s+]+/gu, ' ')
           .replace('/ {2,}/', ' ')
           .split(' ')
           .concat(
             text
               .toLowerCase()
-              .replaceAll(/[^\w\s]/g, '')
+              .replaceAll(/[^\w\s]/gu, '')
               .replace('/ {2,}/', ' ')
               .split(' ')
           )
@@ -200,12 +189,9 @@ export async function moderateText(
   return await moderateTextSingle(input)
 }
 
-/**
- * Helper function to moderate a single text string
- * @param text Text to moderate
- * @returns Filtered text
- */
-async function moderateTextSingle(text?: string): Promise<string | undefined> {
+const moderateTextSingle = async function moderateTextSingle(
+  text?: string
+): Promise<string | undefined> {
   // If text is empty, return as is
   if (!text?.trim()) {
     return text
@@ -292,7 +278,7 @@ async function moderateTextSingle(text?: string): Promise<string | undefined> {
       const matchedWords = wordList.filter((word) => {
         if (word.length < 4) {
           // For short words, require word boundaries or exact match
-          const regex = new RegExp(`\\b${word}\\b`, 'i')
+          const regex = new RegExp(`\\b${word}\\b`, 'ui')
           return regex.test(text)
         }
         // For longer words, keep the existing includes check
@@ -374,12 +360,7 @@ async function moderateTextSingle(text?: string): Promise<string | undefined> {
   }
 }
 
-/**
- * Get detailed information about profanity detection
- * @param input Text or array of texts to check
- * @returns Object with profanity details
- */
-export function getProfanityDetails(input: string | string[]):
+export const getProfanityDetails = function getProfanityDetails(input: string | string[]):
   | {
       isFlagged: boolean
       source: string
@@ -405,10 +386,7 @@ export function getProfanityDetails(input: string | string[]):
   return getProfanityDetailsSingle(input)
 }
 
-/**
- * Helper function to get profanity details for a single text string
- */
-function getProfanityDetailsSingle(text: string): {
+const getProfanityDetailsSingle = function getProfanityDetailsSingle(text: string): {
   isFlagged: boolean
   source: string
   matches?: string[]
@@ -531,7 +509,7 @@ function getProfanityDetailsSingle(text: string): {
       const matchedWords = wordList.filter((word) => {
         if (word.length < 4) {
           // For short words, require word boundaries or exact match
-          const regex = new RegExp(`\\b${word}\\b`, 'i')
+          const regex = new RegExp(`\\b${word}\\b`, 'ui')
           return regex.test(text)
         }
         // For longer words, keep the existing includes check
@@ -621,9 +599,9 @@ function getProfanityDetailsSingle(text: string): {
   // Check for age restrictions (underage users)
   if (detectAgeRestrictions(text)) {
     // Extract the actual text for matching purposes rather than using a generic "underage" label
-    const agePrefix = /\b(?:i'?m|i\s+am|iam|age)(?=\s|:|=|\d|$)/i.exec(text)
+    const agePrefix = /\b(?:i'?m|i\s+am|iam|age)(?=\s|:|=|\d|$)/iu.exec(text)
     const ageSuffix = agePrefix && text.slice(agePrefix.index + agePrefix[0].length)
-    const ageMatch = ageSuffix && /^\D*\d+/.exec(ageSuffix)
+    const ageMatch = ageSuffix && /^\D*\d+/u.exec(ageSuffix)
     const matchText = ageMatch
       ? text.slice(agePrefix.index, agePrefix.index + agePrefix[0].length + ageMatch[0].length)
       : text

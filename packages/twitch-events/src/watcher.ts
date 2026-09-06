@@ -1,8 +1,8 @@
 import { botStatus, logger, supabase } from '@dotabod/shared-utils'
 import type { Tables } from '@dotabod/shared-utils'
 
-import { handleNewUser } from './handleNewUser'
-import { stopUserSubscriptions } from './twitch/lib/revokeEvent'
+import { handleNewUser } from './handle-new-user'
+import { stopUserSubscriptions } from './twitch/lib/revoke-event'
 
 // Mirrors the Supabase Realtime watcher pattern proven in
 // packages/dota/src/db/watcher.ts. Replaces the legacy HTTP webhook receiver
@@ -31,7 +31,7 @@ const IS_DEV = process.env.DOTABOD_ENV !== 'production'
 // subscriptionHealthCheck.ts is the long-tail safety net.
 const RECONNECT_DELAY_MS = 5000
 
-export function setupAccountWatcher(): void {
+export const setupAccountWatcher = function setupAccountWatcher(): void {
   const channelName = `${IS_DEV ? 'dev-' : ''}twitch-events`
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null
   let activeChannel: unknown = null

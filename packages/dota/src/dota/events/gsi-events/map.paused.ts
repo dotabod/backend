@@ -1,10 +1,10 @@
 import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../../settings'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { isPlayingMatch } from '../../lib/is-playing-match'
 import { say } from '../../say'
 import { server } from '../../server'
-import eventHandler from '../EventHandler'
+import eventHandler from '../event-handler'
 
 eventHandler.registerEvent('map:paused', {
   handler: (dotaClient, isPaused: boolean) => {

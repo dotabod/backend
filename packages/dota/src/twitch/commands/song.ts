@@ -2,17 +2,17 @@ import { moderateText } from '@dotabod/profanity-filter'
 import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
 
 // Last.fm's JSON API returns track/artist/album names with HTML-encoded entities
 // (e.g. "&#39;" for "'", "&amp;" for "&"). Twitch chat doesn't render HTML, so
 // we decode the common entities before emitting.
 const decodeHtmlEntities = (s: string): string =>
   s
-    .replaceAll(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
-    .replaceAll(/&#x([0-9a-fA-F]+);/g, (_, hex: string) =>
+    .replaceAll(/&#(\d+);/gu, (_, code: string) => String.fromCodePoint(Number(code)))
+    .replaceAll(/&#x([0-9a-fA-F]+);/gu, (_, hex: string) =>
       String.fromCodePoint(Number.parseInt(hex, 16))
     )
     .replaceAll('&quot;', '"')
@@ -134,7 +134,8 @@ commandHandler.registerCommand('song', {
           interpolation: { escapeValue: false },
           lng: client.locale,
           title: title || 'Unknown',
-          url: '', // dont show the url,
+          // dont show the url,
+          url: '',
         }),
         message.user.messageId
       )

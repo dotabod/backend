@@ -4,21 +4,21 @@ import * as deepl from 'deepl-node'
 import { franc } from 'franc'
 
 import { DBSettings, getValueOrDefault } from '../../../settings'
-import { chatClient } from '../../../twitch/chatClient'
+import { chatClient } from '../../../twitch/chat-client'
 import { DotaEventTypes } from '../../../types'
 import type { ChatMessageEvent } from '../../../types'
 import { is8500Plus } from '../../../utils/index'
-import type { GSIHandlerType } from '../../GSIHandlerTypes'
+import type { GSIHandlerType } from '../../gsi-handler-types'
 import { getHeroNameOrColor } from '../../lib/heroes'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { isPlayingMatch } from '../../lib/is-playing-match'
 import { MatchDataService } from '../../lib/matchData'
 import { server } from '../../server'
-import eventHandler from '../EventHandler'
+import eventHandler from '../event-handler'
 import {
   formatTranslatedInGameChatMessages,
   formatTranslatedSpeakerLabel,
   resolveTranslatedHeroName,
-} from './translationMessageFormat'
+} from './translation-message-format'
 
 const disableTranslation = false
 const authKey = process.env.DEEPL_KEY || ''
@@ -53,31 +53,41 @@ const DEEPL_LANGUAGE_MAP: Record<string, string | null> = {
   'sv-SE': 'SV',
   'ro-RO': 'RO',
   // Unsupported languages map to null - skip translation for these
-  'af-ZA': null, // Afrikaans not supported
-  'ar-SA': null, // Arabic not supported
-  'ca-ES': null, // Catalan not supported
-  'fa-IR': null, // Farsi not supported
-  'he-IL': null, // Hebrew not supported
-  'sr-SP': null, // Serbian not supported
-  'th-TH': null, // Thai not supported
-  'tl-PH': null, // Tagalog not supported
-  'vi-VN': null, // Vietnamese not supported
+  // Afrikaans not supported
+  'af-ZA': null,
+  // Arabic not supported
+  'ar-SA': null,
+  // Catalan not supported
+  'ca-ES': null,
+  // Farsi not supported
+  'fa-IR': null,
+  // Hebrew not supported
+  'he-IL': null,
+  // Serbian not supported
+  'sr-SP': null,
+  // Thai not supported
+  'th-TH': null,
+  // Tagalog not supported
+  'tl-PH': null,
+  // Vietnamese not supported
+  'vi-VN': null,
 }
 
-/**
- * Get the DeepL-compatible language code for a given app language code.
- * Returns null if the language is not supported by DeepL.
- */
-function getDeepLLanguage(appLanguage: string): string | null {
+const getDeepLLanguage = function getDeepLLanguage(appLanguage: string): string | null {
   return DEEPL_LANGUAGE_MAP[appLanguage] ?? null
 }
 
 // Chatting detection constants
-const CHATTING_WORD_THRESHOLD = 10 // Minimum words to consider as "chatting"
-const CHATTING_MESSAGE_THRESHOLD = 3 // Minimum messages within time window
-const CHATTING_TIME_WINDOW = 5000 // 5 seconds in milliseconds
-const CHATTING_COOLDOWN = 30_000 // 30 seconds cooldown between "Chatting" messages
-const disableChatterMessage = true // Disable chatting detection for now
+// Minimum words to consider as "chatting"
+const CHATTING_WORD_THRESHOLD = 10
+// Minimum messages within time window
+const CHATTING_MESSAGE_THRESHOLD = 3
+// 5 seconds in milliseconds
+const CHATTING_TIME_WINDOW = 5000
+// 30 seconds cooldown between "Chatting" messages
+const CHATTING_COOLDOWN = 30_000
+// Disable chatting detection for now
+const disableChatterMessage = true
 
 // Track messages per player for chatting detection
 interface PlayerMessage {
@@ -89,7 +99,8 @@ const playerMessages = new Map<string, PlayerMessage[]>()
 const lastChattingMessage = new Map<string, number>()
 
 // Debounce constants for translation
-const TRANSLATION_DEBOUNCE_TIME = 5000 // 5 seconds
+// 5 seconds
+const TRANSLATION_DEBOUNCE_TIME = 5000
 
 // Buffer for translation messages
 interface TranslationMessage {
@@ -104,36 +115,40 @@ const translationBuffers = new Map<
   { messages: TranslationMessage[]; timeout: NodeJS.Timeout | null }
 >()
 
-function detectNonLatinCharacters(message: string): boolean {
-  const hasCyrillic = /[\u0400-\u04FF]/.test(message)
-  const hasArabic = /[\u0600-\u06FF]/.test(message)
-  const hasChinese = /[\u4E00-\u9FFF]/.test(message)
-  const hasJapanese = /[\u3040-\u309F\u30A0-\u30FF]/.test(message)
-  const hasKorean = /[\uAC00-\uD7AF\u1100-\u11FF]/.test(message)
+const detectNonLatinCharacters = function detectNonLatinCharacters(message: string): boolean {
+  const hasCyrillic = /[\u0400-\u04FF]/u.test(message)
+  const hasArabic = /[\u0600-\u06FF]/u.test(message)
+  const hasChinese = /[\u4E00-\u9FFF]/u.test(message)
+  const hasJapanese = /[\u3040-\u309F\u30A0-\u30FF]/u.test(message)
+  const hasKorean = /[\uAC00-\uD7AF\u1100-\u11FF]/u.test(message)
   return hasCyrillic || hasArabic || hasChinese || hasJapanese || hasKorean
 }
 
-function isLikelyEnglish(message: string): boolean {
+const isLikelyEnglish = function isLikelyEnglish(message: string): boolean {
   const englishWords =
-    /\b(the|and|or|but|in|on|at|to|for|of|with|by|an|a|is|are|was|were|be|been|being|have|has|had|do|does|did|will|would|could|should|may|might|must|can|shall|this|that|these|those|here|there|where|when|why|how|what|who|which|all|some|any|every|most|many|much|few|little|no|not|yes|ok|okay|hi|hello|hey|bye|good|bad|big|small|long|short|hot|cold|new|old|high|low|right|wrong|true|false|first|last|next|now|then|soon|later|before|after|up|down|in|out|on|off|over|under|above|below|left|right|front|back|inside|outside|open|close|full|empty|fast|slow|easy|hard|quick|quickly|slowly|carefully|well|badly|better|best|worse|worst|more|most|less|least|many|much|few|little|some|any|every|all|no|none|nothing|something|anything|everything|everyone|someone|anyone|noone)\b/gi
+    /\b(the|and|or|but|in|on|at|to|for|of|with|by|an|a|is|are|was|were|be|been|being|have|has|had|do|does|did|will|would|could|should|may|might|must|can|shall|this|that|these|those|here|there|where|when|why|how|what|who|which|all|some|any|every|most|many|much|few|little|no|not|yes|ok|okay|hi|hello|hey|bye|good|bad|big|small|long|short|hot|cold|new|old|high|low|right|wrong|true|false|first|last|next|now|then|soon|later|before|after|up|down|in|out|on|off|over|under|above|below|left|right|front|back|inside|outside|open|close|full|empty|fast|slow|easy|hard|quick|quickly|slowly|carefully|well|badly|better|best|worse|worst|more|most|less|least|many|much|few|little|some|any|every|all|no|none|nothing|something|anything|everything|everyone|someone|anyone|noone)\b/giu
 
-  const wordCount = message.split(/\s+/).length
+  const wordCount = message.split(/\s+/u).length
   const englishWordMatches = (message.match(englishWords) || []).length
   const englishRatio = wordCount > 0 ? englishWordMatches / wordCount : 0
   const hasNonLatinChars = detectNonLatinCharacters(message)
 
-  return !hasNonLatinChars && englishRatio > 0.3 && /^[a-zA-Z\s\d.,!?\-'"()]+$/.test(message)
+  return !hasNonLatinChars && englishRatio > 0.3 && /^[a-zA-Z\s\d.,!?\-'"()]+$/u.test(message)
 }
 
-function normalizeText(text: string): string {
-  return text
-    .replaceAll(/[^\w\s]/g, '') // Remove punctuation
-    .replaceAll(/\s+/g, ' ') // Normalize spaces
-    .toLowerCase()
-    .trim()
+const normalizeText = function normalizeText(text: string): string {
+  return (
+    text
+      // Remove punctuation
+      .replaceAll(/[^\w\s]/gu, '')
+      // Normalize spaces
+      .replaceAll(/\s+/gu, ' ')
+      .toLowerCase()
+      .trim()
+  )
 }
 
-function shouldTriggerChattingAlert(
+const shouldTriggerChattingAlert = function shouldTriggerChattingAlert(
   clientName: string,
   playerId: number,
   wordCount: number
@@ -168,18 +183,22 @@ function shouldTriggerChattingAlert(
   return Math.min(8, Math.max(0, totalSeverity))
 }
 
-function sendChattingAlert(dotaClient: GSIHandlerType, playerId: number, count: number): void {
+const sendChattingAlert = function sendChattingAlert(
+  dotaClient: GSIHandlerType,
+  playerId: number,
+  count: number
+): void {
   const compositeKey = `${dotaClient.client.name}-${playerId}`
   const now = Date.now()
   lastChattingMessage.set(compositeKey, now)
 
   // Send "Chatting" multiple times based on severity
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < count; i += 1) {
     chatClient.say(dotaClient.client.name, 'Chatting')
   }
 }
 
-async function processTranslationBuffer(
+const processTranslationBuffer = async function processTranslationBuffer(
   buffer: TranslationMessage[],
   dotaClient: GSIHandlerType,
   translateInChat: boolean,
@@ -293,7 +312,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
       )
 
       if (chattingEmoteEnabled) {
-        const wordCount = message.split(/\s+/).length
+        const wordCount = message.split(/\s+/u).length
         const chattingSeverity = shouldTriggerChattingAlert(
           dotaClient.client.name,
           event.player_id,

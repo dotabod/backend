@@ -1,0 +1,28 @@
+import type { DelayedGames } from './types/index'
+
+const isDev = process.env.DOTABOD_ENV === 'development'
+
+// NOTE: this only recognizes the GetRealTimeStats `teams[]` shape. It returns false for docs written
+// by the SourceTV feed (flat top-level `players[]`), even though those carry account IDs + heroes.
+export const hasSteamData = function hasSteamData(game?: DelayedGames | null) {
+  const hasTeams = Array.isArray(game?.teams) && game?.teams.length === 2
+  const hasPlayers =
+    hasTeams &&
+    Array.isArray(game.teams[0].players) &&
+    Array.isArray(game.teams[1].players) &&
+    game.teams[0].players.length === 5 &&
+    game.teams[1].players.length === 5
+
+  // Dev should be able to test in a lobby with bot matches
+  // A local development lobby only needs the players array.
+  const hasAccountIds = isDev
+    ? hasPlayers
+    : hasPlayers &&
+      game.teams[0].players.every((player) => player.accountid) &&
+      game.teams[1].players.every((player) => player.accountid)
+  const hasHeroes =
+    hasPlayers &&
+    game.teams[0].players.every((player) => player.heroid) &&
+    game.teams[1].players.every((player) => player.heroid)
+  return { hasAccountIds, hasHeroes, hasPlayers }
+}

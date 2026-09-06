@@ -1,0 +1,23 @@
+import './gsi-events/event.aegis_denied'
+import './gsi-events/event.aegis_picked_up'
+import './gsi-events/event.bounty_rune_pickup'
+import './gsi-events/event.roshan_killed'
+import './gsi-events/event.tip'
+import './gsi-events/event.generic_event'
+import './gsi-events/hero.alive'
+import './gsi-events/hero.id'
+import './gsi-events/hero.name'
+import './gsi-events/hero.smoked'
+import './gsi-events/event.chat_message'
+import './gsi-events/map.game_state'
+import './gsi-events/map.paused'
+import './gsi-events/map.win_team'
+import './gsi-events/newdata'
+import './gsi-events/player.deaths'
+import './gsi-events/player.kill_list'
+import './gsi-events/player.killstreak'
+import './gsi-events/save-heroes-for-match-id'
+import { registerFeatureAnnouncers } from '../lib/announce-features'
+
+// Registry-driven "this feature is new" chat announcements (hooks its own GSI listeners).
+registerFeatureAnnouncers()

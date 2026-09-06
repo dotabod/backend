@@ -2,13 +2,13 @@ import { t } from 'i18next'
 import type { Socket as ClientSocket } from 'socket.io-client'
 
 import { steamSocket, twitchChat, twitchEvents } from '../../steam/ws'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
 
 const VERSION_ACK_TIMEOUT_MS = 2000
 
-async function fetchVersion(socket: ClientSocket): Promise<string | null> {
+const fetchVersion = async function fetchVersion(socket: ClientSocket): Promise<string | null> {
   return await new Promise((resolve) => {
     if (!socket.connected) {
       resolve(null)

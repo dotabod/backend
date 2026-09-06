@@ -4,10 +4,10 @@ import { DotaEventTypes } from '../../../types'
 import type { TipEvent } from '../../../types'
 import { getRedisNumberValue, is8500Plus } from '../../../utils/index'
 import { getHeroNameOrColor } from '../../lib/heroes'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { isPlayingMatch } from '../../lib/is-playing-match'
 import { MatchDataService } from '../../lib/matchData'
 import { say } from '../../say'
-import eventHandler from '../EventHandler'
+import eventHandler from '../event-handler'
 
 eventHandler.registerEvent(`event:${DotaEventTypes.Tip}`, {
   handler: async (dotaClient, event: TipEvent) => {

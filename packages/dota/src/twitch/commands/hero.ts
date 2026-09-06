@@ -1,14 +1,14 @@
 import { t } from 'i18next'
 
-import { getHeroWinLoss } from '../../db/getHeroWinLoss'
+import { getHeroWinLoss } from '../../db/get-hero-win-loss'
 import { gsiHandlers } from '../../dota/lib/consts'
-import { hasCurrentGameContext } from '../../dota/lib/getCurrentMatchId'
+import { hasCurrentGameContext } from '../../dota/lib/get-current-match-id'
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
-import { findAccountFromCmd } from '../lib/findGSIByAccountId'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
+import { findAccountFromCmd } from '../lib/find-gsi-by-account-id'
 
 commandHandler.registerCommand('hero', {
   dbkey: DBSettings.commandHero,
@@ -67,7 +67,7 @@ commandHandler.registerCommand('hero', {
   onlyOnline: true,
 })
 
-function handleNotPlaying(message: MessageType) {
+const handleNotPlaying = function handleNotPlaying(message: MessageType) {
   chatClient.say(
     message.channel.name,
     t('notPlaying', { emote: 'PauseChamp', lng: message.channel.client.locale }),
@@ -75,7 +75,7 @@ function handleNotPlaying(message: MessageType) {
   )
 }
 
-function speakHeroStats({
+const speakHeroStats = function speakHeroStats({
   heroNameOrColor,
   hasHero,
   win,

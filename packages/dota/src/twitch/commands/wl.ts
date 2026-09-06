@@ -1,14 +1,14 @@
 import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
-import { getWL, LOBBY_TYPE_RANKED } from '../../db/getWL'
-import { isArcade } from '../../dota/lib/isArcade'
-import { isSpectator } from '../../dota/lib/isSpectator'
+import { getWL, LOBBY_TYPE_RANKED } from '../../db/get-wl'
+import { isArcade } from '../../dota/lib/is-arcade'
+import { isSpectator } from '../../dota/lib/is-spectator'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { getRedisNumberValue } from '../../utils/index'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
 
 commandHandler.registerCommand('wl', {
   aliases: ['score', 'winrate', 'wr'],

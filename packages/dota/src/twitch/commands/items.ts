@@ -3,22 +3,22 @@ import DOTA_ITEMS from 'dotaconstants/build/items.json' with { type: 'json' }
 import { t } from 'i18next'
 
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
-import { isSpectator } from '../../dota/lib/isSpectator'
+import { isSpectator } from '../../dota/lib/is-spectator'
 import { DBSettings } from '../../settings'
-import { findRealtimePlayer, getRealtimeStats } from '../../steam/realtimeStats'
+import { findRealtimePlayer, getRealtimeStats } from '../../steam/realtime-stats'
 import type { Item, SocketClient } from '../../types'
-import CustomError from '../../utils/customError'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import { profileLink } from './profileLink'
+import CustomError from '../../utils/custom-error'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import { profileLink } from './profile-link'
 
-function formatItemList(itemList: string[]) {
+const formatItemList = function formatItemList(itemList: string[]) {
   const itemCounts = {} as Record<string, number>
   const result = [] as string[]
 
   for (const item of itemList) {
     if (itemCounts[item]) {
-      itemCounts[item]++
+      itemCounts[item] += 1
     } else {
       itemCounts[item] = 1
     }
@@ -35,7 +35,7 @@ function formatItemList(itemList: string[]) {
   return result
 }
 
-async function getItems({
+const getItems = async function getItems({
   client,
   token,
   args,

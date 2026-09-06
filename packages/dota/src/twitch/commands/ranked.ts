@@ -1,13 +1,13 @@
 import { t } from 'i18next'
 
-import { LOBBY_TYPE_RANKED } from '../../db/getWL'
-import { isArcade } from '../../dota/lib/isArcade'
-import { isSpectator } from '../../dota/lib/isSpectator'
+import { LOBBY_TYPE_RANKED } from '../../db/get-wl'
+import { isArcade } from '../../dota/lib/is-arcade'
+import { isSpectator } from '../../dota/lib/is-spectator'
 import { DBSettings } from '../../settings'
-import MongoDBSingleton from '../../steam/MongoDBSingleton'
+import MongoDBSingleton from '../../steam/mongo-db-singleton'
 import type { DelayedGames } from '../../types'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('ranked', {
   aliases: ['isranked'],

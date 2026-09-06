@@ -1,15 +1,15 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import type { MessageType } from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import type { MessageType } from '../lib/command-handler'
 
 commandHandler.registerCommand('beta', {
   aliases: ['joinbeta', 'leavebeta', 'betaoff', 'betaon'],
   cooldown: 0,
   handler: (message: MessageType, _args: string[]) => {
-    async function handler() {
+    const handler = async function handler() {
       await supabase
         .from('users')
         .update({

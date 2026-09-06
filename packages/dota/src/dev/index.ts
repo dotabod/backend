@@ -4,7 +4,7 @@ import type { ApiClient } from '@twurple/api'
 import axios from 'axios'
 
 import { gameEnd } from '../__tests__/play-by-plays'
-import { fetchOnlineUsers } from '../dota/events/gsi-events/__tests__/fetchOnlineUsers'
+import { fetchOnlineUsers } from '../dota/events/gsi-events/__tests__/fetch-online-users'
 import { DotaEventTypes } from '../types'
 
 if (process.env.DOTABOD_ENV !== 'production') {
@@ -18,7 +18,7 @@ export const apiClient = axios.create({
   baseURL: 'http://localhost:5120',
 })
 
-async function postWinEventsForUsers(
+const postWinEventsForUsers = async function postWinEventsForUsers(
   users: {
     id: string
   }[],
@@ -36,7 +36,7 @@ async function postWinEventsForUsers(
   return await Promise.allSettled(promises)
 }
 
-async function postEventsForUsers(
+const postEventsForUsers = async function postEventsForUsers(
   users: {
     id: string
   }[],
@@ -61,13 +61,13 @@ async function postEventsForUsers(
   await Promise.allSettled(promises)
 }
 
-async function _testAegis() {
+const _testAegis = async function _testAegis() {
   const users = await fetchOnlineUsers(USER_COUNT)
   await postWinEventsForUsers(users, 'radiant')
   await postEventsForUsers(users, DotaEventTypes.AegisPickedUp)
 }
 
-async function _fixNewUsers() {
+const _fixNewUsers = async function _fixNewUsers() {
   console.log('running fixNewUsers')
   const { data: users } = await supabase
     .from('users')
@@ -93,7 +93,7 @@ async function _fixNewUsers() {
 
 // await fixNewUsers()
 
-async function handleNewUser(providerAccountId: string, botApi: ApiClient) {
+const handleNewUser = async function handleNewUser(providerAccountId: string, botApi: ApiClient) {
   if (!botApi) {
     return
   }

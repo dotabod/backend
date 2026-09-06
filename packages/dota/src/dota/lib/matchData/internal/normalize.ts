@@ -12,7 +12,7 @@ import { coverage, emptyRoster } from './coverage'
 // All the messy normalization rules (`accountid:0` sentinel collapse, NaN slot/hero rejection,
 // ghost-row filter, spectator team derivation, completeness math, stage inference) live HERE in
 // one place — every resolver gets identical downstream treatment.
-export function normalize({
+export const normalize = function normalize({
   source,
   matchPlayers,
   heroesStatus,
@@ -87,7 +87,7 @@ export function normalize({
   }
 }
 
-function inferStage(
+const inferStage = function inferStage(
   source: RosterSource,
   completeness: RosterCompleteness,
   heroesStatus: HeroesStatus | undefined

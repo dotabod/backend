@@ -3,14 +3,14 @@ process.on('SIGINT', () => process.exit(0))
 
 import { checkBotStatus, checkSupabaseHealth, logger, startHeartbeat } from '@dotabod/shared-utils'
 
-import { fetchExistingSubscriptions, subsToCleanup } from './fetchExistingSubscriptions'
-import { subscribeToEvents } from './subscribeToEvents'
-import { deleteSubscription } from './twitch/lib/revokeEvent'
-import { setupHealthServer } from './utils/healthServer'
-import { rateLimiter } from './utils/rateLimiterCore'
+import { fetchExistingSubscriptions, subsToCleanup } from './fetch-existing-subscriptions'
+import { subscribeToEvents } from './subscribe-to-events'
+import { deleteSubscription } from './twitch/lib/revoke-event'
+import { setupHealthServer } from './utils/health-server'
+import { rateLimiter } from './utils/rate-limiter-core'
 import { scheduleNonOverlapping } from './utils/scheduler'
-import { setupSocketIO } from './utils/socketUtils'
-import { runSubscriptionHealthCheck } from './utils/subscriptionHealthCheck'
+import { setupSocketIO } from './utils/socket-utils'
+import { runSubscriptionHealthCheck } from './utils/subscription-health-check'
 import { setupAccountWatcher } from './watcher'
 
 const HEALTH_CHECK_INTERVAL_MS = 5 * 60 * 1000
@@ -74,7 +74,7 @@ void (async () => {
           chunk.map(async (subId) => {
             await rateLimiter.schedule(async () => {
               await deleteSubscription(subId)
-              completed++
+              completed += 1
 
               const now = Date.now()
               const shouldLog =

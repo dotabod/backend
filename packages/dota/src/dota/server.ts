@@ -1,4 +1,4 @@
-import type { GSIServerInterface } from './GSIServerTypes'
+import type { GSIServerInterface } from './gsi-server-types'
 
 // Create a global variable to hold the server instance
 // This avoids the top-level await export that's causing issues

@@ -2,16 +2,16 @@ import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
-import { isSpectator } from '../../dota/lib/isSpectator'
+import { isSpectator } from '../../dota/lib/is-spectator'
 import { DBSettings } from '../../settings'
-import { findRealtimePlayer, getRealtimeStats } from '../../steam/realtimeStats'
+import { findRealtimePlayer, getRealtimeStats } from '../../steam/realtime-stats'
 import type { SocketClient } from '../../types'
-import CustomError from '../../utils/customError'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
-import { profileLink } from './profileLink'
+import CustomError from '../../utils/custom-error'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
+import { profileLink } from './profile-link'
 
-async function getStats({
+const getStats = async function getStats({
   client,
   token,
   args,

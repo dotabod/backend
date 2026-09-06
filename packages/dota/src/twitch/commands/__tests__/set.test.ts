@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { buildSharedUtilsMock, initTestI18n } from '../../../__tests__/sharedMocks.ts'
-import type { MessageType } from '../../lib/CommandHandler.ts'
+import { buildSharedUtilsMock, initTestI18n } from '../../../__tests__/shared-mocks.ts'
+import type { MessageType } from '../../lib/command-handler.ts'
 
 const noopLogger = {
   debug: () => {},
@@ -25,12 +25,12 @@ vi.doMock(import('@dotabod/shared-utils'), () =>
 )
 
 const sayMock = vi.fn()
-vi.doMock(import('../../chatClient'), () => ({ chatClient: { say: sayMock } }))
+vi.doMock(import('../../chat-client'), () => ({ chatClient: { say: sayMock } }))
 
 let registeredHandler:
   | ((m: MessageType, args: string[], used: string) => Promise<void> | void)
   | undefined
-vi.doMock(import('../../lib/CommandHandler'), () => ({
+vi.doMock(import('../../lib/command-handler'), () => ({
   default: {
     registerCommand: (_name: string, opts: { handler: typeof registeredHandler }) => {
       registeredHandler = opts.handler
@@ -53,7 +53,7 @@ const WEARABLES: Record<string, number> = {
   wearable6: 6079,
 }
 
-function makeMessage(gsi: Record<string, unknown> | undefined): MessageType {
+const makeMessage = function makeMessage(gsi: Record<string, unknown> | undefined): MessageType {
   return {
     channel: {
       client: {

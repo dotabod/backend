@@ -1,0 +1,149 @@
+import { getTwitchHeaders, logger } from '@dotabod/shared-utils'
+
+import { eventSubMap } from './chat-sub-ids'
+import type { TwitchEventSubSubscriptionsResponse } from './interfaces'
+import { rateLimiter } from './utils/rate-limiter-core'
+
+// Constants
+const headers = await getTwitchHeaders()
+export const subsToCleanup: string[] = []
+let fetchedCount = 0
+let totalSubscriptions = 0
+let startTime = 0
+const uniqueBroadcasters = new Set<string>()
+const statusCounts: Record<string, number> = {}
+
+export const fetchExistingSubscriptions = async function fetchExistingSubscriptions() {
+  startTime = Date.now()
+  logger.info('[TWITCHEVENTS] Fetching existing subscriptions')
+  let cursor: string | undefined
+  let pageCount = 0
+  let lastLogTime = Date.now()
+
+  do {
+    pageCount += 1
+    await rateLimiter.schedule(async () => {
+      const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
+      if (cursor) {
+        url.searchParams.append('after', cursor)
+      }
+
+      const subsReq = await fetch(url.toString(), {
+        headers,
+        method: 'GET',
+      })
+
+      // Update rate limit info
+      rateLimiter.updateLimits(subsReq.headers)
+
+      if (subsReq.status === 429) {
+        logger.warn('Rate limit hit, will retry automatically')
+        throw new Error('Rate limit hit')
+      }
+
+      const { data, pagination, total } =
+        (await subsReq.json()) as TwitchEventSubSubscriptionsResponse
+
+      // Update total count if available
+      if (total !== undefined && totalSubscriptions === 0) {
+        totalSubscriptions = total
+      }
+
+      // Store subscriptions in eventSubMap, organizing by broadcaster ID
+      data.forEach((sub) => {
+        const broadcasterId = (sub.condition.broadcaster_user_id || sub.condition.user_id) as
+          | string
+          | undefined
+
+        // App-level auth subs (condition: { client_id }) have no broadcaster but
+        // must be kept — deleting them silently breaks the grant/revoke pipeline
+        if (sub.type === 'user.authorization.grant' || sub.type === 'user.authorization.revoke') {
+          return
+        }
+
+        if (!broadcasterId || sub.transport.method === 'webhook') {
+          subsToCleanup.push(sub.id)
+          return
+        }
+
+        // Track unique broadcasters
+        uniqueBroadcasters.add(broadcasterId)
+
+        // Track subscription status
+        statusCounts[sub.status] = (statusCounts[sub.status] || 0) + 1
+
+        // Initialize broadcaster entry if it doesn't exist
+        eventSubMap[broadcasterId] ??= {} as (typeof eventSubMap)[number]
+
+        // Store subscription details
+        eventSubMap[broadcasterId][sub.type] = {
+          id: sub.id,
+          status: sub.status,
+        }
+
+        fetchedCount += 1
+      })
+
+      // Log progress periodically (every 1000 items or 5 seconds, whichever comes first)
+      const now = Date.now()
+      const timeSinceLastLog = now - lastLogTime
+      if (fetchedCount % 1000 === 0 || timeSinceLastLog > 5000) {
+        lastLogTime = now
+
+        // Calculate progress metrics
+        const elapsedSec = (now - startTime) / 1000
+        const percentComplete =
+          totalSubscriptions > 0 ? Math.round((fetchedCount / totalSubscriptions) * 100) : '?'
+
+        // Estimate remaining time if we have total count
+        let timeEstimate = ''
+        if (totalSubscriptions > 0 && fetchedCount > 0) {
+          const estimatedTotalSec = elapsedSec / (fetchedCount / totalSubscriptions)
+          const remainingSec = Math.max(0, estimatedTotalSec - elapsedSec)
+          timeEstimate = `~${Math.round(remainingSec / 60)} minutes remaining`
+        }
+
+        logger.info('[TWITCHEVENTS] Subscription fetch progress', {
+          processed: fetchedCount,
+          total: totalSubscriptions > 0 ? totalSubscriptions : 'unknown',
+          percent: typeof percentComplete === 'number' ? `${percentComplete}%` : percentComplete,
+          pages: pageCount,
+          broadcasters: uniqueBroadcasters.size,
+          cleanup: subsToCleanup.length,
+          timeElapsed: `${Math.round(elapsedSec / 60)}m ${Math.round(elapsedSec % 60)}s`,
+          ...(timeEstimate ? { timeEstimate } : {}),
+          rateLimit: {
+            queueLength: rateLimiter.queueLength,
+            remaining: rateLimiter.rateLimitStatus.remaining,
+          },
+        })
+      }
+
+      cursor = pagination?.cursor
+    })
+  } while (cursor)
+
+  // Calculate final metrics
+  const totalTime = (Date.now() - startTime) / 1000
+  const minutes = Math.floor(totalTime / 60)
+  const seconds = Math.round(totalTime % 60)
+
+  // Log comprehensive summary when complete
+  logger.info('[TWITCHEVENTS] Finished loading subscriptions', {
+    rateLimit: {
+      queueLength: rateLimiter.queueLength,
+      remaining: rateLimiter.rateLimitStatus.remaining,
+    },
+    statusBreakdown: statusCounts,
+    timing: {
+      averageRate: `${Math.round(fetchedCount / totalTime)} subs/sec`,
+      pagesProcessed: pageCount,
+      totalTime: `${minutes}m ${seconds}s`,
+    },
+    total: {
+      broadcasters: uniqueBroadcasters.size,
+      cleanupNeeded: subsToCleanup.length,
+      subscriptions: fetchedCount,
+    },
+  })
+}

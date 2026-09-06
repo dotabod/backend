@@ -2,7 +2,7 @@
 import Dota2 from 'dota2'
 import { describe, expect, it, vi } from 'vitest'
 
-import { initSpectatorProtobuff } from '../initSpectatorProtobuff'
+import { initSpectatorProtobuff } from '../init-spectator-protobuff'
 
 describe(initSpectatorProtobuff, () => {
   it('patches Dota2Client.prototype with spectateFriendGame and the response handler', () => {

@@ -1,17 +1,17 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
-import RedisClient from '../../../db/RedisClient'
+import RedisClient from '../../../db/redis-client'
 import { DBSettings, getValueOrDefault } from '../../../settings'
-import { openTwitchBet } from '../../../twitch/lib/openTwitchBet'
-import { refundTwitchBet } from '../../../twitch/lib/refundTwitchBets'
-import { getStreamDelay } from '../../getStreamDelay'
-import { delayedQueue } from '../../lib/DelayedQueue'
-import getHero from '../../lib/getHero'
-import type { HeroNames } from '../../lib/getHero'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { openTwitchBet } from '../../../twitch/lib/open-twitch-bet'
+import { refundTwitchBet } from '../../../twitch/lib/refund-twitch-bets'
+import { getStreamDelay } from '../../get-stream-delay'
+import { delayedQueue } from '../../lib/delayed-queue'
+import getHero from '../../lib/get-hero'
+import type { HeroNames } from '../../lib/get-hero'
+import { isPlayingMatch } from '../../lib/is-playing-match'
 import { say } from '../../say'
-import eventHandler from '../EventHandler'
+import eventHandler from '../event-handler'
 
 const redisClient = RedisClient.getInstance()
 

@@ -18,12 +18,12 @@ describe(scheduleNonOverlapping, () => {
     const resolvers: (() => void)[] = []
 
     const stop = scheduleNonOverlapping(async () => {
-      runs++
-      active++
+      runs += 1
+      active += 1
       maxConcurrent = Math.max(maxConcurrent, active)
       await new Promise<void>((r) => {
         resolvers.push(() => {
-          active--
+          active -= 1
           r()
         })
       })
@@ -55,7 +55,7 @@ describe(scheduleNonOverlapping, () => {
   it('continues firing after a rejected promise (does not get stuck)', async () => {
     let runs = 0
     const stop = scheduleNonOverlapping(async () => {
-      runs++
+      runs += 1
       throw new Error('boom')
     }, 500)
 
@@ -74,7 +74,7 @@ describe(scheduleNonOverlapping, () => {
   it('stop() prevents future invocations', async () => {
     let runs = 0
     const stop = scheduleNonOverlapping(async () => {
-      runs++
+      runs += 1
     }, 100)
 
     await vi.advanceTimersByTimeAsync(100)

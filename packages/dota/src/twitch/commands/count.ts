@@ -2,8 +2,8 @@ import { t } from 'i18next'
 
 import { gsiHandlers } from '../../dota/lib/consts'
 import { server } from '../../dota/server'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('count', {
   handler: async (message, _args) => {

@@ -21,7 +21,7 @@ const testCases = [
   { description: 'German profanity', text: 'scheiße' },
 ]
 
-async function testAPI() {
+const testAPI = async function testAPI() {
   // console.log('Testing Profanity Filter API...\n')
 
   // Check API info

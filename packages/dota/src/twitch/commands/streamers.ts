@@ -1,10 +1,10 @@
 import { t } from 'i18next'
 
-import { isPlayingMatch } from '../../dota/lib/isPlayingMatch'
+import { isPlayingMatch } from '../../dota/lib/is-playing-match'
 import { getStreamersInMatch } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('streamers', {
   dbkey: DBSettings.commandStreamers,

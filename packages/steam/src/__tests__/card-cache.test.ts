@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { shouldRefreshCard } from '../cardCache.ts'
+import { shouldRefreshCard } from '../card-cache.ts'
 
 describe(shouldRefreshCard, () => {
   it('refreshes missing, invalid, forced, and expired profile cards', () => {

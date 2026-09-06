@@ -1,6 +1,6 @@
 import type { Entity, MapData, Packet, Player } from '../../../types'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
-import type { DataBroadcasterInterface } from './DataBroadcasterTypes'
+import { isPlayingMatch } from '../../lib/is-playing-match'
+import type { DataBroadcasterInterface } from './data-broadcaster-types'
 
 class MinimapParser {
   lastBroadcastTime = 0

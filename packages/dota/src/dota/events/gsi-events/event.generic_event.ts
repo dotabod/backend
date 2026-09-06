@@ -3,11 +3,11 @@ import { t } from 'i18next'
 import { ChatMessageType, DotaEventTypes } from '../../../types'
 import type { ChatEventData, DotaEvent } from '../../../types'
 import { getRedisNumberValue } from '../../../utils/index'
-import { isFeatureEnabled } from '../../lib/announceFeatures'
-import { delayedQueue } from '../../lib/DelayedQueue'
-import { isPlayingMatch } from '../../lib/isPlayingMatch'
+import { isFeatureEnabled } from '../../lib/announce-features'
+import { delayedQueue } from '../../lib/delayed-queue'
+import { isPlayingMatch } from '../../lib/is-playing-match'
 import { say } from '../../say'
-import eventHandler from '../EventHandler'
+import eventHandler from '../event-handler'
 
 // How long after a team smoke to check whether the streamer's own hero got the buff.
 const SMOKE_FOMO_DELAY_MS = 3000

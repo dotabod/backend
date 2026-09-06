@@ -1,0 +1,60 @@
+import { getPlayers } from './get-players'
+import type { RosterPlayer } from './matchData'
+import { getRankDetail, rankTierToMmr } from './ranks'
+
+interface Avg {
+  locale: string
+  currentMatchId?: string
+  players?: RosterPlayer[]
+}
+
+const calculateAverage = function calculateAverage(numbers: number[]): number {
+  const validNumbers = numbers.filter(Boolean)
+  if (validNumbers.length === 0) {
+    return 0
+  }
+  const sum = validNumbers.reduce((a, b) => a + b, 0)
+  return Math.round(sum / validNumbers.length)
+}
+
+const getRankTitle = async function getRankTitle(
+  avg: number,
+  avgLeader: number,
+  averageMmrPostfix: string
+): Promise<string> {
+  const rank = await getRankDetail(avg)
+  if (!rank && !avgLeader) {
+    return `Immortal${averageMmrPostfix}`
+  }
+  if (!rank) {
+    return `${avg || `#${avgLeader}${averageMmrPostfix}`}`
+  }
+  if (avgLeader) {
+    return `#${avgLeader}${averageMmrPostfix}`
+  }
+  if ('standing' in rank) {
+    return `Immortal${averageMmrPostfix}`
+  }
+  return `${avg} · ${rank.myRank.title}${averageMmrPostfix}`
+}
+
+export const calculateAvg = async function calculateAvg({
+  locale,
+  currentMatchId,
+  players,
+}: Avg): Promise<string> {
+  const { cards, average_mmr } = await getPlayers({ currentMatchId, locale, players })
+
+  const mmrs: number[] = []
+  const leaderranks: number[] = []
+  cards.forEach((card) => {
+    mmrs.push(rankTierToMmr(card.rank_tier))
+    leaderranks.push(card.leaderboard_rank)
+  })
+
+  const avg = calculateAverage(mmrs)
+  const avgLeader = calculateAverage(leaderranks)
+  const averageMmrPostfix = average_mmr ? ` · ${average_mmr} MMR` : ''
+
+  return await getRankTitle(avg, avgLeader, averageMmrPostfix)
+}

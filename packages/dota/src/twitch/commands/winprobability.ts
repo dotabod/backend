@@ -1,8 +1,8 @@
 import { t } from 'i18next'
 
 import { DBSettings } from '../../settings'
-import { chatClient } from '../chatClient'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('winprobability', {
   aliases: ['win%', 'wp'],

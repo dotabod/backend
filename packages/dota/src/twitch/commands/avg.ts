@@ -1,12 +1,12 @@
 import { t } from 'i18next'
 
-import { calculateAvg } from '../../dota/lib/calculateAvg'
-import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/getCurrentMatchId'
+import { calculateAvg } from '../../dota/lib/calculate-avg'
+import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/get-current-match-id'
 import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
-import { chatClient } from '../chatClient'
-import { clippingDisabledNote } from '../lib/clippingNote'
-import commandHandler from '../lib/CommandHandler'
+import { chatClient } from '../chat-client'
+import { clippingDisabledNote } from '../lib/clipping-note'
+import commandHandler from '../lib/command-handler'
 
 commandHandler.registerCommand('avg', {
   dbkey: DBSettings.commandAvg,
