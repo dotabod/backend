@@ -150,6 +150,42 @@ describe('!hero', () => {
     )
   })
 
+  it('reports the streamer winrate for a requested hero outside the current match', async () => {
+    state.delayedGame = {
+      match: { match_id: '7777777777' },
+      players: [
+        { accountid: 99_999, heroid: 1 },
+        { accountid: 111, heroid: 2 },
+      ],
+    }
+    state.recentList = [
+      { hero_name: 'npc_dota_hero_lion', matchId: '1', won: true },
+      { hero_name: 'npc_dota_hero_lion', matchId: '2', won: true },
+      { hero_name: 'npc_dota_hero_lion', matchId: '3', won: false },
+    ]
+
+    await commandHandler.handleMessage(
+      makeMessage({ clientOverrides: { gsi: liveGsi() }, content: '!hero lion' })
+    )
+
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toBe('Winrate is 67% on Lion in 30d from 3 matches.')
+  })
+
+  it('accepts a multiword requested hero with a trailing chat formatting mark', async () => {
+    state.recentList = [
+      { hero_name: 'npc_dota_hero_storm_spirit', matchId: '1', won: true },
+      { hero_name: 'npc_dota_hero_storm_spirit', matchId: '2', won: false },
+    ]
+
+    await commandHandler.handleMessage(makeMessage({ content: '!hero storm spirit ͏' }))
+
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toBe(
+      'Winrate is 50% on Storm Spirit in 30d from 2 matches.'
+    )
+  })
+
   it.each([
     [
       'spectating',
