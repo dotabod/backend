@@ -3,7 +3,7 @@ import { t } from 'i18next'
 import { getHeroWinLoss } from '../../db/get-hero-win-loss'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { hasCurrentGameContext } from '../../dota/lib/get-current-match-id'
-import { getHeroNameOrColor } from '../../dota/lib/heroes'
+import { getHeroByName, getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
 import commandHandler from '../lib/command-handler'
@@ -66,6 +66,40 @@ const speakHeroStats = function speakHeroStats({
   )
 }
 
+const handleRequestedHero = async function handleRequestedHero(
+  message: MessageType,
+  args: string[]
+): Promise<void> {
+  const {
+    channel: { name: channel, client },
+  } = message
+  const requestedHero = getHeroByName(args.join(''))
+  if (!requestedHero) {
+    chatClient.say(channel, t('gameNotFound', { lng: client.locale }), message.user.messageId)
+    return
+  }
+
+  const records = await getHeroWinLoss({
+    heroId: requestedHero.id,
+    isStreamer: true,
+    steam32Id: client.steam32Id ?? 0,
+    token: client.token,
+  })
+  if (!records) {
+    chatClient.say(channel, t('gameNotFound', { lng: client.locale }), message.user.messageId)
+    return
+  }
+
+  speakHeroStats({
+    ...records,
+    channel,
+    hasHero: true,
+    heroNameOrColor: requestedHero.localized_name,
+    lng: client.locale,
+    message,
+  })
+}
+
 commandHandler.registerCommand('hero', {
   dbkey: DBSettings.commandHero,
   handler: async (message, args, command) => {
@@ -74,13 +108,18 @@ commandHandler.registerCommand('hero', {
       channel: { name: channel, client },
     } = message
 
-    const gsi = gsiHandlers.get(client.token)
-    if (!gsi || !hasCurrentGameContext(client)) {
-      handleNotPlaying(message)
-      return
-    }
-
     try {
+      if (args.length > 0) {
+        await handleRequestedHero(message, args)
+        return
+      }
+
+      const gsi = gsiHandlers.get(client.token)
+      if (!gsi || !hasCurrentGameContext(client)) {
+        handleNotPlaying(message)
+        return
+      }
+
       const { ourHero, player, hero, playerIdx } = await findAccountFromCmd(
         client,
         args,
