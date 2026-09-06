@@ -2,6 +2,12 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignore": ["packages/shared-utils/src/db/supabase-types.ts"],
   "ignoreBinaries": ["doppler", "i18next"],
+  "ignoreDependencies": ["steam"],
+  "ignoreIssues": {
+    "packages/dota/src/dota/global-event-emitter.ts": ["exports"],
+    "packages/dota/src/twitch/lib/command-handler.ts": ["types"],
+    "packages/twitch-events/src/interfaces.ts": ["types"]
+  },
   "workspaces": {
     ".": {
       "entry": [
@@ -24,7 +30,7 @@
       "entry": ["src/**/__tests__/**/*.ts"]
     },
     "packages/twitch-events": {
-      "entry": ["src/**/__tests__/**/*.ts"]
+      "entry": ["src/**/__tests__/**/*.ts", "src/scripts/run-subscription-health-check.ts"]
     }
   }
 }

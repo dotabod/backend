@@ -102,9 +102,6 @@ importers:
       express:
         specifier: ^4.21.2
         version: 4.22.2
-      express-body-parser-error-handler:
-        specifier: ^1.0.7
-        version: 1.0.9
       franc:
         specifier: ^6.2.0
         version: 6.2.0
@@ -236,9 +233,6 @@ importers:
       steam:
         specifier: ^1.4.1
         version: 1.4.1
-      steam-crypto:
-        specifier: ^0.0.1
-        version: 0.0.1(patch_hash=f660d1a533f85081dab059801eb0cf52da18049fd953454670e28364c0d69d68)
       steam-errors:
         specifier: ^1.0.0
         version: 1.0.0
@@ -255,9 +249,6 @@ importers:
       '@types/retry':
         specifier: ^0.12.5
         version: 0.12.5
-      '@types/steam':
-        specifier: ^0.0.32
-        version: 0.0.32
 
   packages/twitch-chat:
     dependencies:
@@ -1477,14 +1468,8 @@ packages:
   '@types/estree@1.0.9':
     resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
 
-  '@types/express-serve-static-core@4.19.8':
-    resolution: {integrity: sha512-02S5fmqeoKzVZCHPZid4b8JH2eM5HzQLZWN2FohQEy/0eXTq8VXZfSN6Pcr3F6N9R/vNrj7cpgbhjie6m/1tCA==}
-
   '@types/express-serve-static-core@5.1.1':
     resolution: {integrity: sha512-v4zIMr/cX7/d2BpAEX3KNKL/JrT1s43s96lLvvdTmza1oEvDudCqK9aF/djc/SWgy8Yh0h30TZx5VpzqFCxk5A==}
-
-  '@types/express@4.17.25':
-    resolution: {integrity: sha512-dVd04UKsfpINUnK0yBoYHDF3xu7xVH4BuDotC/xGuycx4CgbP48X/KF/586bcObxT0HENHXEU8Nqtu6NR+eKhw==}
 
   '@types/express@5.0.6':
     resolution: {integrity: sha512-sKYVuV7Sv9fbPIt/442koC7+IIwK5olP1KWeD88e/idgoJqDm3JV/YUiPwkoKK92ylff2MGxSz1CSjsXelx0YA==}
@@ -1504,9 +1489,6 @@ packages:
   '@types/long@4.0.2':
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
 
-  '@types/mime@1.3.5':
-    resolution: {integrity: sha512-/pyBZWSLD2n0dcHE3hq8s8ZvcETHtEuF+3E7XVt0Ig2nvsVQXdghHVcEkIWjy9A0wKfTn97a/PSDYohKIlnP/w==}
-
   '@types/naughty-words@1.2.3':
     resolution: {integrity: sha512-Cf70ztEQzMJrAGtkCWeG65puU4dyL9sskYytOXMRXUNsAHxb5d2eetKUy9gBdg3nVDHNe4sbWfNCDwHJ/TeCEg==}
 
@@ -1525,20 +1507,11 @@ packages:
   '@types/retry@0.12.5':
     resolution: {integrity: sha512-3xSjTp3v03X/lSQLkczaN9UIEwJMoMCA1+Nb5HfbJEQWogdeQIyVtTvxPXDQjZ5zws8rFQfVfRdz03ARihPJgw==}
 
-  '@types/send@0.17.6':
-    resolution: {integrity: sha512-Uqt8rPBE8SY0RK8JB1EzVOIZ32uqy8HwdxCnoCOsYrvnswqmFZ/k+9Ikidlk/ImhsdvBsloHbAlewb2IEBV/Og==}
-
   '@types/send@1.2.1':
     resolution: {integrity: sha512-arsCikDvlU99zl1g69TcAB3mzZPpxgw0UQnaHeC1Nwb015xp8bknZv5rIfri9xTOcMuaVgvabfIRA7PSZVuZIQ==}
 
-  '@types/serve-static@1.15.10':
-    resolution: {integrity: sha512-tRs1dB+g8Itk72rlSI2ZrW6vZg0YrLI81iQSTkMmOqnqCaNr/8Ek4VwWcN5vZgCYWbg/JJSGBlUaYGAOP73qBw==}
-
   '@types/serve-static@2.2.0':
     resolution: {integrity: sha512-8mam4H1NHLtu7nmtalF7eyBH14QyOASmcxHhSfEoRyr0nP/YdoesEtU+uSRvMe96TW/HPTtkoKqQLl53N7UXMQ==}
-
-  '@types/steam@0.0.32':
-    resolution: {integrity: sha512-gn08zT7AaGe8Vm9iHQuhQIolnmVCG8tsNQV+Gkzt/M3OYfXnl4Dsmlt/hcuon6iAUtMi/Kp8v/qMMfPkBez3MA==}
 
   '@types/triple-beam@1.3.5':
     resolution: {integrity: sha512-6WaYesThRMCl19iryMYP7/x2OVgCtbIVflDGFpWnb9irXI3UjYE4AzmYuiUKY1AJstGijoY+MgUszMgRxIYTYw==}
@@ -2335,9 +2308,6 @@ packages:
   expect-type@1.4.0:
     resolution: {integrity: sha512-KfYbmpRm0VbLjEvVa9yGwCi9GI34xvi7A/HXYWQO65CSD2u3MczUJSuwXKFIxlGsgBQizV9q5J9NHj4VG0n+pA==}
     engines: {node: '>=12.0.0'}
-
-  express-body-parser-error-handler@1.0.9:
-    resolution: {integrity: sha512-3+g4eRSx4ShaYfubqpm8efWoBY6A5fgk/oNV4qZ8peH9EWMuPCS1fCOnlnDgCjCwd1wtll/WHYMy6PnLMtEcZA==}
 
   express@4.22.2:
     resolution: {integrity: sha512-IuL+Elrou2ZvCFHs18/CIzy2Nzvo25nZ1/D2eIZlz7c+QUayAcYoiM2BthCjs+EBHVpjYjcuLDAiCWgeIX3X1Q==}
@@ -4817,26 +4787,12 @@ snapshots:
 
   '@types/estree@1.0.9': {}
 
-  '@types/express-serve-static-core@4.19.8':
-    dependencies:
-      '@types/node': 24.13.3
-      '@types/qs': 6.15.1
-      '@types/range-parser': 1.2.7
-      '@types/send': 1.2.1
-
   '@types/express-serve-static-core@5.1.1':
     dependencies:
       '@types/node': 24.13.3
       '@types/qs': 6.15.1
       '@types/range-parser': 1.2.7
       '@types/send': 1.2.1
-
-  '@types/express@4.17.25':
-    dependencies:
-      '@types/body-parser': 1.19.6
-      '@types/express-serve-static-core': 4.19.8
-      '@types/qs': 6.15.1
-      '@types/serve-static': 1.15.10
 
   '@types/express@5.0.6':
     dependencies:
@@ -4856,8 +4812,6 @@ snapshots:
 
   '@types/long@4.0.2': {}
 
-  '@types/mime@1.3.5': {}
-
   '@types/naughty-words@1.2.3': {}
 
   '@types/node@22.20.1':
@@ -4874,29 +4828,14 @@ snapshots:
 
   '@types/retry@0.12.5': {}
 
-  '@types/send@0.17.6':
-    dependencies:
-      '@types/mime': 1.3.5
-      '@types/node': 24.13.3
-
   '@types/send@1.2.1':
     dependencies:
       '@types/node': 24.13.3
-
-  '@types/serve-static@1.15.10':
-    dependencies:
-      '@types/http-errors': 2.0.5
-      '@types/node': 24.13.3
-      '@types/send': 0.17.6
 
   '@types/serve-static@2.2.0':
     dependencies:
       '@types/http-errors': 2.0.5
       '@types/node': 24.13.3
-
-  '@types/steam@0.0.32':
-    dependencies:
-      '@types/node': 22.20.1
 
   '@types/triple-beam@1.3.5': {}
 
@@ -5611,10 +5550,6 @@ snapshots:
       yoctocolors: 2.2.0
 
   expect-type@1.4.0: {}
-
-  express-body-parser-error-handler@1.0.9:
-    dependencies:
-      '@types/express': 4.17.25
 
   express@4.22.2:
     dependencies:

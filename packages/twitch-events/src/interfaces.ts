@@ -1,6 +1,6 @@
 import type { TwitchEventTypes } from './twitch-event-types'
 
-interface TwitchEventSubCondition {
+export interface TwitchEventSubCondition {
   broadcaster_user_id?: string
   client_id?: string
   user_id?: string
@@ -45,20 +45,6 @@ export interface TwitchEventSubResponse {
   max_total_cost: number
 }
 
-/** Transport details for EventSub notifications */
-interface TwitchEventSubSubscriptionTransport {
-  /** The transport method - either webhook or websocket */
-  method: 'webhook' | 'websocket'
-  /** The callback URL where notifications are sent (webhook only) */
-  callback?: string
-  /** WebSocket session ID for receiving notifications (websocket only) */
-  session_id?: string
-  /** UTC timestamp when WebSocket connected (websocket only) */
-  connected_at?: string
-  /** UTC timestamp when WebSocket disconnected (websocket only) */
-  disconnected_at?: string
-}
-
 /** Status values for EventSub subscriptions */
 export const EVENT_SUB_STATUSES = [
   'enabled',
@@ -82,40 +68,3 @@ export const EVENT_SUB_STATUSES = [
 ] as const
 
 export type EventSubStatus = (typeof EVENT_SUB_STATUSES)[number]
-
-/** Individual EventSub subscription */
-interface TwitchEventSubSubscription {
-  /** Unique identifier for this subscription */
-  id: string
-  /** Current status of the subscription */
-  status: EventSubStatus
-  /** Type of subscription (e.g. channel.follow) */
-  type: keyof TwitchEventTypes
-  /** Version of the subscription type */
-  version: string
-  /** Subscription-specific parameters */
-  condition: TwitchEventSubCondition
-  /** RFC3339 timestamp when subscription was created */
-  created_at: string
-  /** Transport configuration for notifications */
-  transport: TwitchEventSubSubscriptionTransport
-  /** Cost against subscription limit */
-  cost: number
-}
-
-/** Response from getting EventSub subscriptions */
-export interface TwitchEventSubSubscriptionsResponse {
-  /** List of subscriptions, ordered by oldest first */
-  data: TwitchEventSubSubscription[]
-  /** Total number of subscriptions created */
-  total: number
-  /** Total cost of all subscriptions */
-  total_cost: number
-  /** Maximum allowed total cost */
-  max_total_cost: number
-  /** Pagination details */
-  pagination?: {
-    /** Cursor for getting next page of results */
-    cursor?: string
-  }
-}

@@ -70,7 +70,7 @@ const sendConduitData = async function sendConduitData(
   }
 }
 
-export const { onSocketEnable, onSocketResubscribe } = createSocketUserActions({
+const { onSocketEnable, onSocketResubscribe } = createSocketUserActions({
   handleNewUser,
   logger,
 })

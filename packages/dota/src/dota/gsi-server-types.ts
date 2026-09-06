@@ -1,4 +1,4 @@
-export interface SocketBroadcastTarget {
+interface SocketBroadcastTarget {
   emit: (event: string, ...args: unknown[]) => unknown
 }
 

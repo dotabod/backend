@@ -9,7 +9,7 @@ import { getBotInstance } from './twitch/lib/bot-api-singleton'
 const botApi = getBotInstance()
 type UserUpdate = Database['public']['Tables']['users']['Update']
 
-export const REPLICA_LAG_RETRY_MS = 1000
+const REPLICA_LAG_RETRY_MS = 1000
 
 export interface HandleNewUserDependencies {
   waitForRetry: (delayMs: number) => Promise<void>

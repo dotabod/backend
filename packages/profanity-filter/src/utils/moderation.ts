@@ -36,14 +36,14 @@ interface ModerationResponse {
   }[]
 }
 
-interface ProfanityDetails {
+export interface ProfanityDetails {
   isFlagged: boolean
   source: string
   matches?: string[]
   language?: string
 }
 
-interface TextProfanityDetails extends ProfanityDetails {
+export interface TextProfanityDetails extends ProfanityDetails {
   text: string
 }
 

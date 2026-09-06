@@ -17,7 +17,7 @@ interface GsiEventDetail {
 
 const eventDetails = new WeakMap<Event, GsiEventDetail>()
 
-class GsiEventBus {
+export class GsiEventBus {
   private readonly target = new EventTarget()
   private readonly listeners = new Map<string, Map<GsiEventListener, TargetListener>>()
 
