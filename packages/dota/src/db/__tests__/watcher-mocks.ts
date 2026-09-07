@@ -18,6 +18,7 @@ type ChannelHandler = (payload: {
   old?: Record<string, unknown>
   eventType?: string
 }) => unknown
+type WatcherSocketPayload = string | Record<string, unknown>
 
 export const watcherState: {
   channelHandlers: Map<string, ChannelHandler>
@@ -35,7 +36,7 @@ export const watcherState: {
   // gsiHandlers is enough; this state is just for assertion convenience.
   loggerInfoCalls: { message: string; meta: Record<string, unknown> }[]
   loggerErrorCalls: { message: string; meta: Record<string, unknown> }[]
-  socketEmits: { event: string; payload: unknown; room: string }[]
+  socketEmits: { event: string; payload: WatcherSocketPayload; room: string }[]
 } = {
   channelCreationCount: 0,
   channelHandlers: new Map(),
@@ -218,7 +219,7 @@ vi.doMock('../../dota/server', () => ({
   server: {
     io: {
       to: (room: string) => ({
-        emit: (event: string, payload: unknown) => {
+        emit: (event: string, payload: WatcherSocketPayload) => {
           watcherState.socketEmits.push({ event, payload, room })
         },
       }),
