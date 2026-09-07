@@ -151,7 +151,7 @@ describe('overlay socket connection state', () => {
       handshake: { auth: { client: 'setup-diagnostic', token: 'diagnostic-token' } },
       join: vi.fn(),
       on: vi.fn(),
-      to: vi.fn<DiagnosticRoomTarget>().mockImplementation(() => ({ emit: broadcastEmit })),
+      to: vi.fn<DiagnosticRoomTarget>().mockReturnValue({ emit: broadcastEmit }),
     }
 
     await socketState.handlers.get('connection')?.(socket)
