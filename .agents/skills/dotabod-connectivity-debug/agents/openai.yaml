@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dotabod Connectivity Debug"
+  short_description: "Diagnose blank overlays and missing GSI traffic"
+  default_prompt: "Use $dotabod-connectivity-debug to diagnose why this streamer’s Dotabod overlay or installer is not connecting."
