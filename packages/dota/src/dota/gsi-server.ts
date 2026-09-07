@@ -447,6 +447,7 @@ const handleSocketConnection = async function handleSocketConnection(socket: Gsi
   const { clientType, dotabodClient } = socket.data ?? {}
   const client = dotabodClient ?? gsiHandlers.get(token)?.client
   if (clientType === 'setup-diagnostic') {
+    socket.to(token).emit('diagnostic-overlay-probe')
     socket.emit('diagnostic-ready', { status: 'ok' })
     return
   }

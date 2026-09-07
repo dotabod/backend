@@ -7,6 +7,7 @@ import findUser from '../dota/lib/connected-streamers'
 import { gsiHandlers, invalidTokens, twitchIdToToken, twitchNameToToken } from '../dota/lib/consts'
 import { getRankDetail } from '../dota/lib/ranks'
 import { server } from '../dota/server'
+import { SETUP_SIGNAL_KEYS } from '../dota/setup-signal-keys'
 import { DBSettings } from '../settings'
 import { twitchChat } from '../steam/ws'
 import { chatClient } from '../twitch/chat-client'
@@ -15,6 +16,8 @@ import { isSubscriptionActive } from '../types/subscription'
 import getDBUser from './get-db-user'
 import { handleUserOnlineMessages } from './handle-scheduled-messages'
 import { handleStreamStatusTransition } from './handle-stream-status-transition'
+
+const setupSignalKeys = new Set<string>(Object.values(SETUP_SIGNAL_KEYS))
 
 const isNonEmptyString = function isNonEmptyString(
   value: string | null | undefined
@@ -514,6 +517,9 @@ class SetupSupabase {
         (payload: { new: Partial<Tables<'settings'>> }) => {
           const newObj = payload.new
           if (!isNonEmptyString(newObj.userId) || !isNonEmptyString(newObj.key)) {
+            return
+          }
+          if (setupSignalKeys.has(newObj.key)) {
             return
           }
           const client = findUser(newObj.userId)

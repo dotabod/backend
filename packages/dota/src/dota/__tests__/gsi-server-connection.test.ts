@@ -11,6 +11,8 @@ import type { GSIHandlerType } from '../gsi-handler-types'
 
 type ServerConnectionHandler = Parameters<Server['on']>[1]
 type SocketEventHandler = Parameters<Socket['on']>[1]
+type DiagnosticBroadcast = (event: 'diagnostic-overlay-probe') => void
+type DiagnosticRoomTarget = (room: string) => { emit: DiagnosticBroadcast }
 interface MiddlewareSocket {
   data: {
     clientType?: string
@@ -142,18 +144,22 @@ describe('overlay socket connection state', () => {
 
   it('does not count a dashboard diagnostic socket as an OBS overlay', async () => {
     new GSIServer()
+    const broadcastEmit = vi.fn<DiagnosticBroadcast>()
     const socket = {
       data: { clientType: 'setup-diagnostic', dotabodClient: { token: 'diagnostic-token' } },
       emit: vi.fn(),
       handshake: { auth: { client: 'setup-diagnostic', token: 'diagnostic-token' } },
       join: vi.fn(),
       on: vi.fn(),
+      to: vi.fn<DiagnosticRoomTarget>().mockReturnValue({ emit: broadcastEmit }),
     }
 
     await socketState.handlers.get('connection')?.(socket)
 
     expect(recordOverlaySocketActivity).not.toHaveBeenCalled()
     expect(socket.join).not.toHaveBeenCalled()
+    expect(socket.to).toHaveBeenCalledWith('diagnostic-token')
+    expect(broadcastEmit).toHaveBeenCalledWith('diagnostic-overlay-probe')
     expect(socket.emit).toHaveBeenCalledWith('diagnostic-ready', { status: 'ok' })
   })
 

@@ -11,6 +11,7 @@
 // silently re-deleted) shipped to prod. See watcher.ts and clearCacheForUser.ts.
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { SETUP_SIGNAL_KEYS } from '../../dota/setup-signal-keys'
 import {
   fire,
   gsiHandlers,
@@ -236,6 +237,19 @@ describe('dota watcher: DELETE:users', () => {
 })
 
 describe('dota watcher: settings', () => {
+  it.each(Object.values(SETUP_SIGNAL_KEYS))(
+    'does not refresh overlays for setup signal updates: %s',
+    async (key) => {
+      seedClient({ userId: 'u-setup-signal' })
+
+      await fire('*', 'settings', {
+        new: { key, userId: 'u-setup-signal', value: true },
+      })
+
+      expect(watcherState.socketEmits).toHaveLength(0)
+    }
+  )
+
   it('keeps high-frequency activity updates out of info logs', async () => {
     seedClient({ userId: 'u-heartbeat' })
 
@@ -257,6 +271,11 @@ describe('dota watcher: settings', () => {
 
     expect(client.settings).toContainEqual({ key: 'wlStatsDays', value: 30 })
     expect(handler.emitWLUpdate).toHaveBeenCalledOnce()
+    expect(watcherState.socketEmits).toContainEqual({
+      event: 'refresh-settings',
+      payload: 'wlStatsDays',
+      room: 'u-wl',
+    })
   })
 
   it('recomputes the overlay when the WL challenge start date changes', async () => {

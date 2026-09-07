@@ -35,6 +35,7 @@ export const watcherState: {
   // gsiHandlers is enough; this state is just for assertion convenience.
   loggerInfoCalls: { message: string; meta: Record<string, unknown> }[]
   loggerErrorCalls: { message: string; meta: Record<string, unknown> }[]
+  socketEmits: { event: string; payload: string; room: string }[]
 } = {
   channelCreationCount: 0,
   channelHandlers: new Map(),
@@ -42,6 +43,7 @@ export const watcherState: {
   clearCacheCalls: [],
   loggerErrorCalls: [],
   loggerInfoCalls: [],
+  socketEmits: [],
   toggleDotabodCalls: [],
 }
 
@@ -53,6 +55,7 @@ export const resetWatcherState = function resetWatcherState() {
   watcherState.toggleDotabodCalls = []
   watcherState.loggerInfoCalls = []
   watcherState.loggerErrorCalls = []
+  watcherState.socketEmits = []
 }
 
 // Chainable supabase mock. Only the subscriptions table (queried via
@@ -212,7 +215,15 @@ vi.doMock('../../dota/lib/ranks', () => ({
 }))
 
 vi.doMock('../../dota/server', () => ({
-  server: { io: { to: () => ({ emit: () => {} }) } },
+  server: {
+    io: {
+      to: (room: string) => ({
+        emit: (event: string, payload: string) => {
+          watcherState.socketEmits.push({ event, payload, room })
+        },
+      }),
+    },
+  },
 }))
 
 await initTestI18n()
