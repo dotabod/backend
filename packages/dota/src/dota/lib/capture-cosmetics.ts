@@ -30,7 +30,7 @@ export const captureCosmetics = async function captureCosmetics(
       heroId,
       heroName: getHeroNameOrColor(heroId),
       items: items as unknown as Json,
-      matchId: String(matchId),
+      matchId,
       updated_at: new Date().toISOString(),
       userId: client.token,
     },

@@ -40,7 +40,7 @@ const processQueue = async () => {
 
 const sendWhisper = (channel: string, text: string) => {
   const MAX_WHISPER_LENGTH = 10_000
-  const chunks = text.match(new RegExp(`.{1,${MAX_WHISPER_LENGTH}}`, 'ug')) || []
+  const chunks = text.match(new RegExp(`.{1,${MAX_WHISPER_LENGTH}}`, 'ug')) ?? []
 
   chunks.forEach((chunk) => {
     twitchChat.emit('whisper', channel, chunk)

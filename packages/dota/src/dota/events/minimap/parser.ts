@@ -127,7 +127,7 @@ class MinimapParser {
     // Simplify Coordinates
     if (entity.xpos !== undefined) {
       if (entity.xpos >= 0) {
-        entity.xpos = Number(entity.xpos) + Number(this.xLength)
+        entity.xpos += this.xLength
       } else {
         entity.xpos = this.xLength - Math.abs(entity.xpos)
       }

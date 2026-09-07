@@ -46,7 +46,7 @@ const checkMidasIterator = async function checkMidasIterator(client: SocketClien
   // Get passive midas data from Redis
   const passiveMidasData = (await redisClient.getJson<PassiveMidasData>(
     `${token}:passiveMidas`
-  )) || {
+  )) ?? {
     firstNoticedPassive: 0,
     told: 0,
   }

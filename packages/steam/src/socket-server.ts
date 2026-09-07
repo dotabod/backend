@@ -7,8 +7,6 @@ export const createSocketServer = function createSocketServer(port = 5035): Serv
 let _socketIoServer: Server | undefined
 
 export const getSocketIoServer = function getSocketIoServer(): Server {
-  if (!_socketIoServer) {
-    _socketIoServer = createSocketServer()
-  }
+  _socketIoServer ??= createSocketServer()
   return _socketIoServer
 }

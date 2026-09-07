@@ -143,7 +143,7 @@ interface ClientOverrides {
 }
 
 const makeClient = function makeClient(o: ClientOverrides = {}): SocketClient {
-  const matchid = o.matchid === undefined ? '8800000001' : o.matchid
+  const matchid = o.matchid ?? '8800000001'
   const ownAccountId = o.ownAccountId ?? '111'
   const baseGsi = createPacketStub(
     matchid

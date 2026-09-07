@@ -8,5 +8,5 @@ export const getStreamDelay = function getStreamDelay(
   settings: SocketClient['settings'],
   subscription?: SubscriptionRow
 ) {
-  return Number(getValueOrDefault(DBSettings.streamDelay, settings, subscription)) + GLOBAL_DELAY
+  return getValueOrDefault(DBSettings.streamDelay, settings, subscription) + GLOBAL_DELAY
 }

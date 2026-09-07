@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events'
 
 import { logger } from '@dotabod/shared-utils'
-import WebSocket from 'ws'
+import { WebSocket } from 'ws'
 
 // Cap the reconnect backoff factor. The generic branch used to grow this
 // unbounded; combined with leaked sockets that pushed it into the hundreds

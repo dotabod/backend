@@ -1,10 +1,10 @@
-process.on('SIGTERM', () => process.exit(0))
-process.on('SIGINT', () => process.exit(0))
-
 import { checkSupabaseHealth, startHeartbeat } from '@dotabod/shared-utils'
 
 import { redisClient } from './db/redis-instance'
 import { steamSocket } from './steam/ws'
+
+process.on('SIGTERM', () => process.exit(0))
+process.on('SIGINT', () => process.exit(0))
 
 const initServer = function initServer() {
   Promise.all([import('./dota/index'), import('./twitch/index')])

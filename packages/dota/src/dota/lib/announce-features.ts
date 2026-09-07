@@ -130,7 +130,7 @@ export const dispatchFeatureAnnouncements = async function dispatchFeatureAnnoun
   }
 
   const guardKey = `${client.token}:featureAnnouncedMatch`
-  if ((await redisClient.client.get(guardKey)) === String(matchId)) {
+  if ((await redisClient.client.get(guardKey)) === matchId) {
     return
   }
 
@@ -142,7 +142,7 @@ export const dispatchFeatureAnnouncements = async function dispatchFeatureAnnoun
       continue
     }
     if (await announceFeatureOnce(client, feature)) {
-      await redisClient.client.set(guardKey, String(matchId))
+      await redisClient.client.set(guardKey, matchId)
       return
     }
   }

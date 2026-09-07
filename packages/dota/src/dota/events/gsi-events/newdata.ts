@@ -352,7 +352,7 @@ const saveMatchData = async function saveMatchData(client: SocketClient) {
             {
               match_id: matchId,
               refetchCards: true,
-              steam_server_id: currentSteamServerId.toString(),
+              steam_server_id: currentSteamServerId,
               token: client.token,
             },
             (err: unknown, data: DelayedGames) => {
@@ -383,7 +383,7 @@ const saveMatchData = async function saveMatchData(client: SocketClient) {
           // Update cache with complete data
           matchDataCache.set(cacheKey, {
             lobbyType: String(delayedData.match.lobby_type),
-            steamServerId: currentSteamServerId.toString(),
+            steamServerId: currentSteamServerId,
             timestamp: Date.now(),
           })
         }

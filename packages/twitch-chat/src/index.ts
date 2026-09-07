@@ -1,6 +1,3 @@
-process.on('SIGTERM', () => process.exit(0))
-process.on('SIGINT', () => process.exit(0))
-
 import { lstatSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -23,6 +20,9 @@ import { clearDisableCache, DISABLE_CACHE_EXPIRY, disableUserCache } from './dis
 import { isEventsubConnected } from './event-sub-socket'
 import { sendTwitchChatMessage } from './handle-chat'
 import { io, setupSocketServer } from './utils/socket-manager'
+
+process.on('SIGTERM', () => process.exit(0))
+process.on('SIGINT', () => process.exit(0))
 
 const isNonEmptyText = function isNonEmptyText(value: string | null | undefined): value is string {
   return value !== null && value !== undefined && value.length > 0
