@@ -47,9 +47,7 @@ class RedisClient {
   }
 
   public static getInstance(): RedisClient {
-    if (RedisClient.instance === undefined) {
-      RedisClient.instance = new RedisClient()
-    }
+    RedisClient.instance ??= new RedisClient()
     return RedisClient.instance
   }
 }

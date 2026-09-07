@@ -96,17 +96,15 @@ export const getHeroByName = function getHeroByName(
   })
 
   // then hero name
-  if (!hero) {
-    hero = lookInHeroes.find((h) => {
-      const inName = h.localized_name
-        // replace all spaces with nothing, and only keep a-z
-        .replaceAll(/[^a-z]/giu, '')
-        .toLowerCase()
-        .trim()
+  hero ??= lookInHeroes.find((h) => {
+    const inName = h.localized_name
+      // replace all spaces with nothing, and only keep a-z
+      .replaceAll(/[^a-z]/giu, '')
+      .toLowerCase()
+      .trim()
 
-      return inName.includes(localName)
-    })
-  }
+    return inName.includes(localName)
+  })
 
   return hero
 }

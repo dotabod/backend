@@ -11,7 +11,7 @@ export const recordDisableNotification = async function recordDisableNotificatio
   try {
     await supabase.from('disable_notifications').insert({
       created_at: new Date().toISOString(),
-      metadata: metadata || {},
+      metadata: metadata ?? {},
       reason,
       setting_key: settingKey,
       user_id: userId,
@@ -73,7 +73,7 @@ export const trackDisableReason = async function trackDisableReason(
       {
         auto_disabled_at: now.toISOString(),
         auto_disabled_by: 'system',
-        disable_metadata: metadata || {},
+        disable_metadata: metadata ?? {},
         disable_reason: reason,
         key: settingKey,
         updated_at: now.toISOString(),

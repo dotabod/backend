@@ -50,7 +50,7 @@ export const gameMedals = async function gameMedals(
     })
 
     // sort according to medal order
-    const sortedMedals = Object.keys(medalsToPlayers).sort((a, b) => {
+    const sortedMedals = Object.keys(medalsToPlayers).toSorted((a, b) => {
       if (a === 'Uncalibrated') {
         return -1
       }
@@ -80,7 +80,7 @@ export const gameMedals = async function gameMedals(
       }
 
       if (a.startsWith('#') || b.startsWith('#')) {
-        return Number.parseInt(b.slice(1), 10) - Number.parseInt(a.slice(1), 10)
+        return Math.trunc(Number(b.slice(1))) - Math.trunc(Number(a.slice(1)))
       }
 
       return 0

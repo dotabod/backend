@@ -82,7 +82,7 @@ export const getPlayers = async function getPlayers({
       accountIds,
       average_mmr: response?.average_mmr,
       cards,
-      gameMode: response !== null ? Number(response.match.game_mode) : undefined,
+      gameMode: response !== null ? response.match.game_mode : undefined,
       matchPlayers,
     }
   } finally {

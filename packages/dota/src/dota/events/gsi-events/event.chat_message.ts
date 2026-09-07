@@ -129,7 +129,7 @@ const isLikelyEnglish = function isLikelyEnglish(message: string): boolean {
     /\b(the|and|or|but|in|on|at|to|for|of|with|by|an|a|is|are|was|were|be|been|being|have|has|had|do|does|did|will|would|could|should|may|might|must|can|shall|this|that|these|those|here|there|where|when|why|how|what|who|which|all|some|any|every|most|many|much|few|little|no|not|yes|ok|okay|hi|hello|hey|bye|good|bad|big|small|long|short|hot|cold|new|old|high|low|right|wrong|true|false|first|last|next|now|then|soon|later|before|after|up|down|in|out|on|off|over|under|above|below|left|right|front|back|inside|outside|open|close|full|empty|fast|slow|easy|hard|quick|quickly|slowly|carefully|well|badly|better|best|worse|worst|more|most|less|least|many|much|few|little|some|any|every|all|no|none|nothing|something|anything|everything|everyone|someone|anyone|noone)\b/giu
 
   const wordCount = message.split(/\s+/u).length
-  const englishWordMatches = (message.match(englishWords) || []).length
+  const englishWordMatches = (message.match(englishWords) ?? []).length
   const englishRatio = wordCount > 0 ? englishWordMatches / wordCount : 0
   const hasNonLatinChars = detectNonLatinCharacters(message)
 
@@ -404,20 +404,18 @@ eventHandler.registerEvent(`event:${DotaEventTypes.ChatMessage}`, {
     })
 
     // Set timeout if not already set
-    if (!buffer.timeout) {
-      buffer.timeout = setTimeout(async () => {
-        const currentBuffer = translationBuffers.get(clientKey)
-        if (currentBuffer) {
-          await processTranslationBuffer(
-            currentBuffer.messages,
-            dotaClient,
-            translateInChat,
-            translateOnOverlay,
-            typedLanguage
-          )
-          translationBuffers.delete(clientKey)
-        }
-      }, TRANSLATION_DEBOUNCE_TIME)
-    }
+    buffer.timeout ??= setTimeout(async () => {
+      const currentBuffer = translationBuffers.get(clientKey)
+      if (currentBuffer) {
+        await processTranslationBuffer(
+          currentBuffer.messages,
+          dotaClient,
+          translateInChat,
+          translateOnOverlay,
+          typedLanguage
+        )
+        translationBuffers.delete(clientKey)
+      }
+    }, TRANSLATION_DEBOUNCE_TIME)
   },
 })

@@ -29,7 +29,7 @@ const setupTranslations = async () => {
     preload: readdirSync(join('./locales')).filter((fileName: string) => {
       const joinedPath = join(join('./locales'), fileName)
       const isDirectory = lstatSync(joinedPath).isDirectory()
-      return !!isDirectory
+      return isDirectory
     }),
     returnEmptyString: false,
     returnNull: false,

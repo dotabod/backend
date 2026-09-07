@@ -38,9 +38,7 @@ export const startHeartbeat = function startHeartbeat(opts: HeartbeatOptions = {
       downSince = null
     } else {
       const now = Date.now()
-      if (downSince === null) {
-        downSince = now
-      }
+      downSince ??= now
       report = now - downSince < debounceMs
     }
 

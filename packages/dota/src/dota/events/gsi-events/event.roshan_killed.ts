@@ -49,7 +49,7 @@ eventHandler.registerEvent(`event:${DotaEventTypes.RoshanKilled}`, {
 
     // TODO: move this to a redis handler
     const redisJson = await redisClient.getJson<RoshRes>(`${dotaClient.getToken()}:roshan`)
-    const count = redisJson ? Number(redisJson.count) : 0
+    const count = redisJson ? redisJson.count : 0
     const res = {
       count: count + 1,
       maxDate,

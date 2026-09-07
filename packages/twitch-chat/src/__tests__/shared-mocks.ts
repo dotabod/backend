@@ -238,7 +238,7 @@ interface FakeWebSocketEvent {
   wasClean?: boolean
 }
 
-vi.doMock('ws', () => ({ default: FakeWebSocket }))
+vi.doMock('ws', () => ({ WebSocket: FakeWebSocket, default: FakeWebSocket }))
 
 // Route fetch through state so each test controls the HTTP response.
 globalThis.fetch = vi.fn<typeof fetch>(async (input, options) => {

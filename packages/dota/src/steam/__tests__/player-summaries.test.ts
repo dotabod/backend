@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { getSteamPlayerSummaries } from '../player-summaries.ts'
+
 const { emit } = vi.hoisted(() => ({
   emit: vi.fn(
     (
@@ -30,8 +32,6 @@ const { emit } = vi.hoisted(() => ({
 }))
 
 vi.mock('../ws.ts', () => ({ steamSocket: { emit } }))
-
-import { getSteamPlayerSummaries } from '../player-summaries.ts'
 
 describe(getSteamPlayerSummaries, () => {
   it('maps Steam-service RPC results by account ID', async () => {

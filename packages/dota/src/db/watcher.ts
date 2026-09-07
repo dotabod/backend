@@ -457,7 +457,7 @@ class SetupSupabase {
                   giftQuantity: giftQuantityNum,
                 })
               }
-            } else if (giftQuantityRaw != null) {
+            } else if (giftQuantityRaw !== null && giftQuantityRaw !== undefined) {
               // Log only if it was provided but invalid
               logger.warn('Gift quantity is invalid or not positive', {
                 giftId: newObj.id,

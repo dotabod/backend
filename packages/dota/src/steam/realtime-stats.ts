@@ -92,7 +92,7 @@ export const findRealtimePlayer = function findRealtimePlayer(
   if (accountId !== undefined && accountId !== 0 && Number.isFinite(accountId)) {
     const accountPlayer = game.teams
       .flatMap((team) => team.players)
-      .find((player) => Number(player.accountid) === accountId)
+      .find((player) => player.accountid === accountId)
     if (accountPlayer !== undefined) {
       return accountPlayer
     }

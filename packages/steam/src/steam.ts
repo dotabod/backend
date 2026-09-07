@@ -289,10 +289,8 @@ class Dota {
     }
     void this.getGames()
 
-    if (!this.interval) {
-      // Get latest games every 30 seconds
-      this.interval = setInterval(this.checkAccounts, 30_000)
-    }
+    // Get latest games every 30 seconds
+    this.interval ??= setInterval(this.checkAccounts, 30_000)
   }
 
   // Writer #2 of the `delayedGames` collection: polls the GC's public
@@ -883,9 +881,7 @@ class Dota {
     })
 
   public static getInstance(): Dota {
-    if (Dota.instance === undefined) {
-      Dota.instance = new Dota()
-    }
+    Dota.instance ??= new Dota()
     return Dota.instance
   }
 

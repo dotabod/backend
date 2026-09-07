@@ -26,11 +26,9 @@ type SupabaseClient = ReturnType<typeof createClient<Database>>
 let supabaseInstance: SupabaseClient | null = null
 
 export const getSupabaseClient = (): SupabaseClient => {
-  if (supabaseInstance === null) {
-    supabaseInstance = createClient<Database>(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false },
-    })
-  }
+  supabaseInstance ??= createClient<Database>(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false },
+  })
   return supabaseInstance
 }
 

@@ -1,6 +1,3 @@
-process.on('SIGTERM', () => process.exit(0))
-process.on('SIGINT', () => process.exit(0))
-
 import { startHeartbeat } from '@dotabod/shared-utils'
 import type { Socket } from 'socket.io'
 
@@ -9,6 +6,9 @@ import { getSocketIoServer } from './socket-server'
 import Dota, { GetRealTimeStats } from './steam'
 import type { MatchMinimalDetailsResponse } from './types/match-minimal-details'
 import { logger } from './utils/logger'
+
+process.on('SIGTERM', () => process.exit(0))
+process.on('SIGINT', () => process.exit(0))
 
 let _hasDotabodSocket = false
 let isConnectedToSteam = false
