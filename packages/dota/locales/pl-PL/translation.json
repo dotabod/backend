@@ -374,7 +374,6 @@
     "winProbabilityDataNotAvailable": "Prawdopodobieństwo wygrania nie jest jeszcze dostępne · Spróbuj ponownie za {{remainingCooldown}}s"
   },
   "wl": {
-    "statsChallenge": "{{elapsed}} of {{count}} days",
     "statsChallenge_one": "",
     "statsChallenge_few": "",
     "statsChallenge_many": "",
