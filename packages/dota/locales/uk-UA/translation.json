@@ -374,7 +374,6 @@
     "winProbabilityDataNotAvailable": "Ймовірність перемоги ще не доступна · Спробуйте ще раз через {{remainingCooldown}} с"
   },
   "wl": {
-    "statsChallenge": "{{elapsed}} of {{count}} days",
     "statsChallenge_one": "",
     "statsChallenge_few": "",
     "statsChallenge_many": "",

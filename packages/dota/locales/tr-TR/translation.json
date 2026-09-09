@@ -326,7 +326,6 @@
     "winProbabilityDataNotAvailable": "Kazanma olasılığı henüz mevcut değil · {{remainingCooldown}} saniye sonra tekrar deneyiniz"
   },
   "wl": {
-    "statsChallenge": "{{elapsed}} of {{count}} days",
     "statsChallenge_one": "",
     "statsChallenge_other": "",
     "statsWindow_one": "Last {{count}} day",

@@ -326,7 +326,6 @@
     "winProbabilityDataNotAvailable": "Vinstsannolikheten är inte tillgänglig än · Försök igen om {{remainingCooldown}}s"
   },
   "wl": {
-    "statsChallenge": "{{elapsed}} of {{count}} days",
     "statsChallenge_one": "",
     "statsChallenge_other": "",
     "statsWindow_one": "Last {{count}} day",

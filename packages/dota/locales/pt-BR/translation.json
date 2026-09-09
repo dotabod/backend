@@ -347,7 +347,6 @@
     "winProbabilityDataNotAvailable": "Chance de vitória não está disponível ainda · Tente novamente em {{remainingCooldown}}s"
   },
   "wl": {
-    "statsChallenge": "{{elapsed}} of {{count}} days",
     "statsChallenge_one": "",
     "statsChallenge_many": "",
     "statsChallenge_other": "",

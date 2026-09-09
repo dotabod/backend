@@ -374,7 +374,6 @@
     "winProbabilityDataNotAvailable": "Pravděpodobnost výher ještě není k dispozici · Zkuste to znovu za {{remainingCooldown}} sekund"
   },
   "wl": {
-    "statsChallenge": "{{elapsed}} of {{count}} days",
     "statsChallenge_one": "",
     "statsChallenge_few": "",
     "statsChallenge_many": "",

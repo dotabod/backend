@@ -421,7 +421,6 @@
     "winProbabilityDataNotAvailable": "Win probability is not available yet · Try again in {{remainingCooldown}}s"
   },
   "wl": {
-    "statsChallenge": "{{elapsed}} of {{count}} days",
     "statsChallenge_zero": "",
     "statsChallenge_one": "",
     "statsChallenge_two": "",
