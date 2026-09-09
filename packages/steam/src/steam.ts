@@ -361,17 +361,17 @@ class Dota {
       const games: SteamMatchDetails[] = []
       const startGame = 90
       let listenerRemoved = false
-      let callbackNotSpecificGames: (data: SourceTvGamesResponse | null) => void
+      let callbackNotSpecificGames: ((data: SourceTvGamesResponse | null) => void) | null = null
 
       const removeListener = () => {
         if (!listenerRemoved) {
           listenerRemoved = true
           this.dota2.removeListener('sourceTVGamesData', callbackNotSpecificGames)
         }
+        callbackNotSpecificGames = null
       }
 
-      // node-dota2 emits null when the GC returns a malformed SourceTV response.
-      // Ignore it before it enters the game accumulator.
+      // node-dota2 emits null for malformed GC responses; ignore it before accumulation.
       callbackNotSpecificGames = (data) => {
         if (!isBadSourceTvGamesResponse(data)) {
           games.push(...data.game_list.filter((game) => game.players.length > 0))
