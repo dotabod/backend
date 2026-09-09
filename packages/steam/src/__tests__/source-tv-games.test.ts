@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { getPlayableSourceTvGames } from '../source-tv-games'
+import { isBadSourceTvGamesResponse } from '../source-tv-games'
 
-describe(getPlayableSourceTvGames, () => {
-  it('ignores a bad SourceTV response', () => {
-    expect(getPlayableSourceTvGames(null)).toStrictEqual([])
+describe(isBadSourceTvGamesResponse, () => {
+  it('identifies a bad SourceTV response', () => {
+    expect(isBadSourceTvGamesResponse(null)).toBeTruthy()
   })
 })

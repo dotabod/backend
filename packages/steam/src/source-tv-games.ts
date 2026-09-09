@@ -7,11 +7,11 @@ export interface SourceTvGamesResponse {
   start_game: number
 }
 
-export const getPlayableSourceTvGames = function getPlayableSourceTvGames(
+export const isBadSourceTvGamesResponse = function isBadSourceTvGamesResponse(
   response: SourceTvGamesResponse | null
-): SteamMatchDetails[] {
+): response is null {
   if (response === null) {
     throw new TypeError('Bad SourceTV response')
   }
-  return response.game_list.filter((game) => game.players.length > 0)
+  return false
 }

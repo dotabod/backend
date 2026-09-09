@@ -15,7 +15,7 @@ import MongoDBSingleton from './mongo-db-singleton'
 import { SteamPlayerSummaryService } from './player-summaries'
 import type { SteamPlayerSummary } from './player-summaries'
 import { getSocketIoServer } from './socket-server'
-import { getPlayableSourceTvGames } from './source-tv-games'
+import { isBadSourceTvGamesResponse } from './source-tv-games'
 import type { SourceTvGamesResponse } from './source-tv-games'
 import type { Cards, DelayedGames } from './types/index'
 import type { MatchMinimalDetailsResponse } from './types/match-minimal-details'
@@ -358,11 +358,10 @@ class Dota {
         return
       }
 
-      let games: SteamMatchDetails[] = []
+      const games: SteamMatchDetails[] = []
       const startGame = 90
       let listenerRemoved = false
-
-      // get a count of the match ids that are unique
+      const filterUniqueGames = this.filterUniqueGames.bind(this)
 
       const removeListener = () => {
         if (!listenerRemoved) {
@@ -371,12 +370,16 @@ class Dota {
         }
       }
 
-      const callbackNotSpecificGames = (data: SourceTvGamesResponse | null) => {
-        games = games.concat(getPlayableSourceTvGames(data))
+      function callbackNotSpecificGames(data: SourceTvGamesResponse | null) {
+        // node-dota2 emits null when the GC returns a malformed SourceTV response.
+        if (isBadSourceTvGamesResponse(data)) {
+          return
+        }
+        games.push(...data.game_list.filter((game) => game.players.length > 0))
         // add match ids to unique set
-        if (data?.league_id === 0 && startGame === data?.start_game) {
+        if (data.league_id === 0 && startGame === data.start_game) {
           removeListener()
-          resolve(this.filterUniqueGames(games))
+          resolve(filterUniqueGames(games))
         }
       }
 
