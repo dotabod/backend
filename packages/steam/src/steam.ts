@@ -361,24 +361,24 @@ class Dota {
       const games: SteamMatchDetails[] = []
       const startGame = 90
       let listenerRemoved = false
-      const dota2 = this.dota2
-      const filterUniqueGames = this.filterUniqueGames.bind(this)
-      const removeListener = (listener: (data: SourceTvGamesResponse | null) => void) => {
+      let callbackNotSpecificGames: (data: SourceTvGamesResponse | null) => void
+
+      const removeListener = () => {
         if (!listenerRemoved) {
           listenerRemoved = true
-          dota2.removeListener('sourceTVGamesData', listener)
+          this.dota2.removeListener('sourceTVGamesData', callbackNotSpecificGames)
         }
       }
 
-      const callbackNotSpecificGames = function sourceTvGamesListener(
-        data: SourceTvGamesResponse | null
-      ) {
+      // node-dota2 emits null when the GC returns a malformed SourceTV response.
+      // Ignore it before it enters the game accumulator.
+      callbackNotSpecificGames = (data) => {
         if (!isBadSourceTvGamesResponse(data)) {
           games.push(...data.game_list.filter((game) => game.players.length > 0))
           // add match ids to unique set
           if (data.league_id === 0 && startGame === data.start_game) {
-            removeListener(sourceTvGamesListener)
-            resolve(filterUniqueGames(games))
+            removeListener()
+            resolve(this.filterUniqueGames(games))
           }
         }
       }
@@ -387,7 +387,7 @@ class Dota {
 
       // Timeout to clean up the listener if the promise never resolves
       setTimeout(() => {
-        removeListener(callbackNotSpecificGames)
+        removeListener()
       }, 30_000)
 
       for (let start = 0; start < 100; start += 10) {
