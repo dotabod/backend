@@ -12868,31 +12868,6 @@
         "severity": "error"
       }
     },
-    "58a7889d488bb35b1ef9758e0e12382baf49b253339ab7b684349488c0885f9d": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-use-before-define)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "listenerRemoved = true",
-              "this.dota2.removeListener('sourceTVGamesData', callbackNotSpecificGames)",
-              "}"
-            ],
-            "message": "",
-            "span": "callbackNotSpecificGames"
-          },
-          {
-            "context": ["", "const callbackNotSpecificGames = (data: {", "specific_games: boolean"],
-            "message": "",
-            "span": "callbackNotSpecificGames"
-          }
-        ],
-        "message": "'callbackNotSpecificGames' was used before it was defined.",
-        "severity": "error"
-      }
-    },
     "58d50a1602ec9d8ae01116bfa621722bfc67c0bdc8b05f02bf092fa9dbaf534f": {
       "count": 1,
       "diagnostic": {
@@ -27977,26 +27952,6 @@
           }
         ],
         "message": "Parameter `response` leaves input unparsed. Accept a named domain type; run the expected schema or parser at the I/O boundary before calling this function.",
-        "severity": "error"
-      }
-    },
-    "c96b59a8c876d98a49d0ee7d53c4fd0417fc87431f50e30c5a229f4a819a2ed3": {
-      "count": 1,
-      "diagnostic": {
-        "code": "unicorn(prefer-spread)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "}) => {",
-              "games = games.concat(data?.game_list?.filter((game) => game.players?.length > 0))",
-              "// add match ids to unique set"
-            ],
-            "message": "",
-            "span": "games.concat(data?.game_list?.filter((game) => game.players?.length > 0))"
-          }
-        ],
-        "message": "Prefer the spread operator (`...`) over array.concat()",
         "severity": "error"
       }
     },

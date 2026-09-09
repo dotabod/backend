@@ -15,6 +15,8 @@ import MongoDBSingleton from './mongo-db-singleton'
 import { SteamPlayerSummaryService } from './player-summaries'
 import type { SteamPlayerSummary } from './player-summaries'
 import { getSocketIoServer } from './socket-server'
+import { isBadSourceTvGamesResponse } from './source-tv-games'
+import type { SourceTvGamesResponse } from './source-tv-games'
 import type { Cards, DelayedGames } from './types/index'
 import type { MatchMinimalDetailsResponse } from './types/match-minimal-details'
 import type { SteamMatchDetails } from './types/steam-match-details'
@@ -356,30 +358,28 @@ class Dota {
         return
       }
 
-      let games: SteamMatchDetails[] = []
+      const games: SteamMatchDetails[] = []
       const startGame = 90
       let listenerRemoved = false
-
-      // get a count of the match ids that are unique
+      let callbackNotSpecificGames: ((data: SourceTvGamesResponse | null) => void) | null = null
 
       const removeListener = () => {
         if (!listenerRemoved) {
           listenerRemoved = true
           this.dota2.removeListener('sourceTVGamesData', callbackNotSpecificGames)
         }
+        callbackNotSpecificGames = null
       }
 
-      const callbackNotSpecificGames = (data: {
-        specific_games: boolean
-        game_list: SteamMatchDetails[]
-        league_id: number
-        start_game: number
-      }) => {
-        games = games.concat(data?.game_list?.filter((game) => game.players?.length > 0))
-        // add match ids to unique set
-        if (data?.league_id === 0 && startGame === data?.start_game) {
-          removeListener()
-          resolve(this.filterUniqueGames(games))
+      // node-dota2 emits null for malformed GC responses; ignore it before accumulation.
+      callbackNotSpecificGames = (data) => {
+        if (!isBadSourceTvGamesResponse(data)) {
+          games.push(...data.game_list.filter((game) => game.players.length > 0))
+          // add match ids to unique set
+          if (data.league_id === 0 && startGame === data.start_game) {
+            removeListener()
+            resolve(this.filterUniqueGames(games))
+          }
         }
       }
 
