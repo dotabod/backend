@@ -15,6 +15,8 @@ import MongoDBSingleton from './mongo-db-singleton'
 import { SteamPlayerSummaryService } from './player-summaries'
 import type { SteamPlayerSummary } from './player-summaries'
 import { getSocketIoServer } from './socket-server'
+import { getPlayableSourceTvGames } from './source-tv-games'
+import type { SourceTvGamesResponse } from './source-tv-games'
 import type { Cards, DelayedGames } from './types/index'
 import type { MatchMinimalDetailsResponse } from './types/match-minimal-details'
 import type { SteamMatchDetails } from './types/steam-match-details'
@@ -369,13 +371,8 @@ class Dota {
         }
       }
 
-      const callbackNotSpecificGames = (data: {
-        specific_games: boolean
-        game_list: SteamMatchDetails[]
-        league_id: number
-        start_game: number
-      }) => {
-        games = games.concat(data?.game_list?.filter((game) => game.players?.length > 0))
+      const callbackNotSpecificGames = (data: SourceTvGamesResponse | null) => {
+        games = games.concat(getPlayableSourceTvGames(data))
         // add match ids to unique set
         if (data?.league_id === 0 && startGame === data?.start_game) {
           removeListener()
