@@ -10,8 +10,5 @@ export interface SourceTvGamesResponse {
 export const isBadSourceTvGamesResponse = function isBadSourceTvGamesResponse(
   response: SourceTvGamesResponse | null
 ): response is null {
-  if (response === null) {
-    throw new TypeError('Bad SourceTV response')
-  }
-  return false
+  return response === null
 }
