@@ -2,7 +2,7 @@ import DOTA_ITEM_IDS from 'dotaconstants/build/item_ids.json' with { type: 'json
 import DOTA_ITEMS from 'dotaconstants/build/items.json' with { type: 'json' }
 import { t } from 'i18next'
 
-import { getHeroNameOrColor } from '../../dota/lib/heroes'
+import { getHeroById, getHeroNameOrColor } from '../../dota/lib/heroes'
 import { isSpectator } from '../../dota/lib/is-spectator'
 import { DBSettings } from '../../settings'
 import { findRealtimePlayer, getRealtimeStats } from '../../steam/realtime-stats'
@@ -60,6 +60,10 @@ const getItems = async function getItems({
     command,
     locale,
   })
+
+  if (args.length > 0 && getHeroById(hero?.id) === null) {
+    throw new CustomError(t('invalidHero', { command, heroList: '', lng: locale }))
+  }
 
   let itemList: string[]
   if (isSpectator(packet)) {

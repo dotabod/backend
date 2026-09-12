@@ -83,7 +83,3 @@ export const getWinLossStartDate = function getWinLossStartDate(
 
   return resetTime > windowStart.getTime() ? resetDate : windowStart
 }
-
-export const getTodayStartDate = function getTodayStartDate(now = new Date()): Date {
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
-}

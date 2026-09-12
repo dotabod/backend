@@ -31,20 +31,20 @@ afterEach(() => {
 })
 
 describe('!today', () => {
-  it('keeps a one-day query when the WL counter uses a 30-day window', async () => {
+  it('queries from the current stream start date', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-09-04T18:45:00.000Z'))
 
     await commandHandler.handleMessage(
       makeMessage({
-        clientOverrides: { settings: [{ key: 'wlStatsDays', value: 30 }] },
+        clientOverrides: { stream_start_date: new Date('2026-09-04T15:00:00.000Z') },
         content: '!today',
       })
     )
 
     expect(state.gteCalls).toContainEqual({
       column: 'created_at',
-      value: '2026-09-04T00:00:00.000Z',
+      value: '2026-09-04T15:00:00.000Z',
     })
   })
 

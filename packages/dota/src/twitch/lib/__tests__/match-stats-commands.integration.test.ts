@@ -34,6 +34,15 @@ describe('!items', () => {
     expect(state.chatSayCalls[0].message).toBe(notPlaying)
   })
 
+  it('rejects an unknown hero argument instead of returning the streamer items', async () => {
+    await commandHandler.handleMessage(
+      makeMessage({ clientOverrides: { gsi: liveGsi() }, content: '!item distiller' })
+    )
+
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toContain('Invalid hero specified')
+  })
+
   it('reports gameNotFound for a non-numeric match id', async () => {
     await commandHandler.handleMessage(
       makeMessage({
