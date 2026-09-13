@@ -48,11 +48,11 @@ describe('!items', () => {
     )
 
     expect(state.chatSayCalls).toHaveLength(1)
-    const message = state.chatSayCalls[0].message
+    const { message } = state.chatSayCalls[0]
     expect(message).toContain('Invalid hero specified')
     expect(message).toContain('Axe')
     expect(message).toContain('Anti-Mage')
-    expect(message.trimEnd().endsWith('from')).toBe(false)
+    expect(message.trimEnd().endsWith('from')).toBeFalsy()
   })
 
   it('rejects a globally valid hero that is not in the current match', async () => {
@@ -69,11 +69,11 @@ describe('!items', () => {
     )
 
     expect(state.chatSayCalls).toHaveLength(1)
-    const message = state.chatSayCalls[0].message
+    const { message } = state.chatSayCalls[0]
     expect(message).toContain('Invalid hero specified')
     expect(message).toContain('Axe')
     expect(message).toContain('Anti-Mage')
-    expect(message.trimEnd().endsWith('from')).toBe(false)
+    expect(message.trimEnd().endsWith('from')).toBeFalsy()
   })
 
   it('reports gameNotFound for a non-numeric match id', async () => {
