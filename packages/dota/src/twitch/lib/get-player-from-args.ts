@@ -105,7 +105,12 @@ export const getPlayerFromArgs = async function getPlayerFromArgs({
   const playerIdx = resolvePlayerIndex({ firstArg, hero, packet, players })
 
   if (playerIdx < 0) {
-    throw new CustomError(t('invalidHero', { command, heroList, lng: locale }))
+    if (heroList.length > 0) {
+      throw new CustomError(t('invalidHero', { command, heroList, lng: locale }))
+    }
+    throw new CustomError(
+      t('invalidColorNew', { colorList: heroColors.join(' · '), command, lng: locale })
+    )
   }
 
   // Translate the matched RosterPlayer back to the GSI-style snake_case shape the 15+ callers

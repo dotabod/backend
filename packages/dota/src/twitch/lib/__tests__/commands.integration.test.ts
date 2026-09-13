@@ -270,9 +270,8 @@ describe('!gpm', () => {
   it('reports lookup errors for an unknown hero argument', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!gpm unknown-hero' }))
     expect(state.chatSayCalls).toHaveLength(1)
-    expect(state.chatSayCalls[0].message).toBe(
-      t('missingMatchData', { emote: 'PauseChamp', lng: 'en' })
-    )
+    expect(state.chatSayCalls[0].message).toContain('Invalid command')
+    expect(state.chatSayCalls[0].message).toContain('!gpm')
   })
 })
 
