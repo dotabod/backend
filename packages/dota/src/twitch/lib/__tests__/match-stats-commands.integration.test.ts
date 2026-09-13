@@ -34,13 +34,44 @@ describe('!items', () => {
     expect(state.chatSayCalls[0].message).toBe(notPlaying)
   })
 
-  it('rejects an unknown hero argument instead of returning the streamer items', async () => {
+  it('rejects an unknown hero argument with the active match hero list', async () => {
+    state.delayedGame = {
+      match: { match_id: '7777777777', server_steam_id: '90292108836096020' },
+      players: [
+        { accountid: 111, heroid: 2 },
+        { accountid: 99_999, heroid: 1 },
+      ],
+    }
+
     await commandHandler.handleMessage(
       makeMessage({ clientOverrides: { gsi: liveGsi() }, content: '!item distiller' })
     )
 
     expect(state.chatSayCalls).toHaveLength(1)
     expect(state.chatSayCalls[0].message).toContain('Invalid hero specified')
+    expect(state.chatSayCalls[0].message).toContain('Axe')
+    expect(state.chatSayCalls[0].message).toContain('Anti-Mage')
+    expect(state.chatSayCalls[0].message.trimEnd().endsWith('from')).toBeFalsy()
+  })
+
+  it('rejects a globally valid hero that is not in the current match', async () => {
+    state.delayedGame = {
+      match: { match_id: '7777777777', server_steam_id: '90292108836096020' },
+      players: [
+        { accountid: 111, heroid: 2 },
+        { accountid: 99_999, heroid: 1 },
+      ],
+    }
+
+    await commandHandler.handleMessage(
+      makeMessage({ clientOverrides: { gsi: liveGsi() }, content: '!items pudge' })
+    )
+
+    expect(state.chatSayCalls).toHaveLength(1)
+    expect(state.chatSayCalls[0].message).toContain('Invalid hero specified')
+    expect(state.chatSayCalls[0].message).toContain('Axe')
+    expect(state.chatSayCalls[0].message).toContain('Anti-Mage')
+    expect(state.chatSayCalls[0].message.trimEnd().endsWith('from')).toBeFalsy()
   })
 
   it('reports gameNotFound for a non-numeric match id', async () => {

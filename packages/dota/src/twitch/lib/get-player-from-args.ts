@@ -104,11 +104,20 @@ export const getPlayerFromArgs = async function getPlayerFromArgs({
   const hero = getHeroByName(args.join('').toLowerCase().trim(), heroIdsInMatch)
   const playerIdx = resolvePlayerIndex({ firstArg, hero, packet, players })
 
+  if (playerIdx < 0) {
+    if (heroList.length > 0) {
+      throw new CustomError(t('invalidHero', { command, heroList, lng: locale }))
+    }
+    throw new CustomError(
+      t('invalidColorNew', { colorList: heroColors.join(' · '), command, lng: locale })
+    )
+  }
+
   // Translate the matched RosterPlayer back to the GSI-style snake_case shape the 15+ callers
   // (hero, dotabuff, opendota, profile, stats, items, aghs, d2pt, gpm, innate, shard, xpm, apm)
   // expect via `player.accountid` / `player.heroid`. This is the one boundary point where the
   // internal RosterPlayer shape meets external GSI-shaped data.
-  const matched = players[playerIdx ?? -1]
+  const matched = players[playerIdx]
   const matchedLegacy = toLegacyPlayer(matched)
   const defaultPlayer = {
     accountid: Number(packet?.player?.accountid),

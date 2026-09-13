@@ -36,7 +36,7 @@ describe('!opendota', () => {
     await commandHandler.handleMessage(
       makeMessage({
         clientOverrides: { gsi: liveGsi() },
-        content: '!opendota me',
+        content: '!opendota antimage',
       })
     )
     expect(state.chatSayCalls).toHaveLength(1)
