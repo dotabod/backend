@@ -6,6 +6,13 @@ services:
       - run
       - --token-file
       - /run/secrets/cloudflare_tunnel_token
+    # Compose starts this outside Coolify, so it carries none of the coolify.* labels the
+    # existing New Relic dashboards facet on. Pin a stable container name so ContainerSample
+    # can be faceted on containerName instead, and label it for whoever finds it on the host.
+    container_name: dotabod-cloudflared
+    labels:
+      com.dotabod.component: cloudflared-bridge-connector
+      com.dotabod.managed-by: compose
     restart: unless-stopped
     read_only: true
     cap_drop:

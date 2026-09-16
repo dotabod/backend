@@ -40,6 +40,7 @@ jobs:
             | jq -e '
                 .services.cloudflared.ports == null
                 and .services.cloudflared.environment == null
+                and .services.cloudflared.container_name == "dotabod-cloudflared"
                 and .services.cloudflared.command[-2:] == ["--token-file", "/run/secrets/cloudflare_tunnel_token"]
                 and .services.cloudflared.secrets[0].source == "cloudflare_tunnel_token"
                 and .services.cloudflared.secrets[0].target == "cloudflare_tunnel_token"

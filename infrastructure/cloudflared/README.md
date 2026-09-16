@@ -44,6 +44,18 @@ The tunnel is remotely managed. Its origin setting is shared by every connector,
 
 Expected savings are limited to the measured forwarding cost: about 0.08 of one CPU core at the observed traffic rate. The connector's separate CPU use remains and must be measured independently.
 
+## Observing it
+
+Compose starts this connector outside Coolify, so it carries none of the `coolify.*` labels that the existing New Relic dashboards facet on. It still reports through the host `newrelic-infra` agent's `nri-docker`, so facet on the container name instead:
+
+```sql
+SELECT average(cpuPercent) FROM ContainerSample WHERE containerName = 'dotabod-cloudflared' TIMESERIES
+```
+
+Compare that against the host connector's own CPU over the same window. Both numbers are needed for step 4's comparison; neither appears on the Coolify-faceted dashboards.
+
+The Compose file defines no healthcheck, so `docker compose ps` reports the container as running rather than as connected. The migration's "confirm both connectors are healthy" steps mean checking the Cloudflare dashboard's connector list and the container logs, not container state. Adding cloudflared's `--metrics` endpoint and a `/ready` healthcheck would mechanise this; it is deliberately not part of this change because it alters the runtime command and has not been exercised against this pinned image.
+
 ## Rollback
 
 The bridge connector cannot use a localhost origin. Roll back in this order:
