@@ -86,8 +86,7 @@ let known: Set<string> | null = null
 const isJsonObject = function isJsonObject(
   value: AuthenticatedGsiPacket | Json | undefined
 ): value is JsonObject {
-  // oxlint-disable-next-line anti-slop/no-runtime-typeof -- Express has already parsed this named JSON domain value; this check only distinguishes records from scalars.
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
+  return value instanceof Object && !Array.isArray(value)
 }
 
 const asJsonObject = function asJsonObject(
