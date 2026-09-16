@@ -1,4 +1,5 @@
 import type { GSIHandlerType } from '../gsi-handler-types'
+import { MatchIdMemory } from './match-id-memory'
 
 // full list at https://github.com/SteamDatabase/GameTracking-Dota2/blob/master/Protobufs/dota_shared_enums.proto
 export const allStates = [
@@ -118,5 +119,5 @@ export const twitchNameToToken = new Map<string, string>()
 export const pendingCheckAuth = new Map<string, boolean>()
 export const lookingupToken = new Map<string, boolean>()
 
-export const draftStartByMatchId = new Map<string, boolean>()
-export const gameInProgressClipByMatchId = new Map<string, boolean>()
+export const draftStartByMatchId = new MatchIdMemory()
+export const gameInProgressClipByMatchId = new MatchIdMemory()
