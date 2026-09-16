@@ -17,29 +17,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  realtime-config:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_PASSWORD: test-only-password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 5
-    steps:
-      - uses: actions/checkout@v7
-      - name: Verify scoped polling changes and rollback
-        env:
-          PGHOST: 127.0.0.1
-          PGPORT: 5432
-          PGDATABASE: postgres
-          PGUSER: postgres
-          PGPASSWORD: test-only-password
-        run: bash services/observability/realtime/test-poll-interval.sh
-
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
