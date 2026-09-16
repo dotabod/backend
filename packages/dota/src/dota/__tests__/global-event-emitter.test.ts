@@ -53,10 +53,6 @@ let savedListeners: [string, SavedListener[]][] = []
 type JsonObject = Extract<Json, Record<string, Json | undefined>>
 type TestPacketInput = JsonObject | Parameters<typeof createPacketStub>[0]
 
-const isJsonObject = function isJsonObject(value: GsiEventData): value is JsonObject {
-  return value !== null && Object(value) === value && !Array.isArray(value)
-}
-
 const next = function next(): void {}
 
 const response: GsiEventResponse = {
@@ -347,8 +343,8 @@ describe('global event emitter', () => {
 
     it('isolates listener mutation from req.body while sharing it with child dispatch', () => {
       events.on('hero', (data) => {
-        if (isJsonObject(data)) {
-          Reflect.set(data, 'alive', false)
+        if (data !== null && !Array.isArray(data)) {
+          Object.assign(data, { alive: false })
         }
       })
       const body = {

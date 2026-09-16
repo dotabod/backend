@@ -86,7 +86,8 @@ let known: Set<string> | null = null
 const isJsonObject = function isJsonObject(
   value: AuthenticatedGsiPacket | Json | undefined
 ): value is JsonObject {
-  return value !== null && value !== undefined && Object(value) === value && !Array.isArray(value)
+  // oxlint-disable-next-line anti-slop/no-runtime-typeof -- Express has already parsed this named JSON domain value; this check only distinguishes records from scalars.
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
 }
 
 const asJsonObject = function asJsonObject(
@@ -95,31 +96,33 @@ const asJsonObject = function asJsonObject(
   return isJsonObject(value) ? value : null
 }
 
-const cloneJsonValue = function cloneJsonValue(value: Json): Json {
-  if (Array.isArray(value)) {
-    return value.map((entry) => cloneJsonValue(entry))
-  }
-
-  const objectValue = asJsonObject(value)
-  if (objectValue === null) {
-    return value
-  }
-
-  const cloned: JsonObject = {}
-  for (const key of Object.keys(objectValue)) {
-    if (key === '__proto__') {
-      continue
-    }
-    const child = objectValue[key]
-    if (child !== undefined) {
-      cloned[key] = cloneJsonValue(child)
-    }
-  }
-  return cloned
+interface JsonCloner {
+  cloneJsonObject: (value: JsonObject) => JsonObject
+  cloneJsonValue: (value: Json) => Json
 }
 
-const cloneJsonObject = function cloneJsonObject(value: JsonObject): JsonObject {
-  return asJsonObject(cloneJsonValue(value)) ?? {}
+const jsonCloner: JsonCloner = {
+  cloneJsonObject(value) {
+    const cloned: JsonObject = {}
+    for (const key of Object.keys(value)) {
+      if (key === '__proto__') {
+        continue
+      }
+      const child = value[key]
+      if (child !== undefined) {
+        cloned[key] = jsonCloner.cloneJsonValue(child)
+      }
+    }
+    return cloned
+  },
+  cloneJsonValue(value) {
+    if (Array.isArray(value)) {
+      return value.map((entry) => jsonCloner.cloneJsonValue(entry))
+    }
+
+    const objectValue = asJsonObject(value)
+    return objectValue === null ? value : jsonCloner.cloneJsonObject(objectValue)
+  },
 }
 
 const ensureIndex = function ensureIndex(): Set<string> {
@@ -194,7 +197,7 @@ const emitChangedEntry = function emitChangedEntry(
   const bodyObject = asJsonObject(bodyValue)
   if (changedObject !== null && bodyObject !== null) {
     const hasExactListener = events.listenerCount(name) > 0
-    const dispatchBody = hasExactListener ? cloneJsonObject(bodyObject) : bodyObject
+    const dispatchBody = hasExactListener ? jsonCloner.cloneJsonObject(bodyObject) : bodyObject
     if (hasExactListener) {
       events.emit(name, projectChangedValues(changedObject, dispatchBody), context.token)
     }
@@ -204,10 +207,10 @@ const emitChangedEntry = function emitChangedEntry(
     return null
   }
   if (bodyObject === null) {
-    events.emit(name, cloneJsonValue(bodyValue), context.token)
+    events.emit(name, jsonCloner.cloneJsonValue(bodyValue), context.token)
     return null
   }
-  const dispatchBody = cloneJsonObject(bodyObject)
+  const dispatchBody = jsonCloner.cloneJsonObject(bodyObject)
   if (events.listenerCount(name) > 0) {
     events.emit(name, dispatchBody, context.token)
   }
