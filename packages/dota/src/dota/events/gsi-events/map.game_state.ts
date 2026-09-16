@@ -80,7 +80,10 @@ eventHandler.registerEvent('map:game_state', {
 
     // Create a clip when the draft starts to get a list of players
     if (gameState === 'DOTA_GAMERULES_STATE_PLAYER_DRAFT') {
-      draftStartByMatchId.set(dotaClient.client.gsi?.map?.matchid ?? '', true)
+      const draftMatchId = dotaClient.client.gsi?.map?.matchid ?? ''
+      if (draftMatchId.length > 0) {
+        draftStartByMatchId.add(draftMatchId)
+      }
       // 46 seconds
       const DRAFT_CLIP_DELAY_MS = 46_000
       const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)
@@ -135,10 +138,10 @@ eventHandler.registerEvent('map:game_state', {
     // an extra clip once the player has loaded in.
     if (gameState === 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS') {
       const matchId = dotaClient.client.gsi?.map?.matchid ?? ''
-      if (gameInProgressClipByMatchId.get(matchId) === true) {
+      if (gameInProgressClipByMatchId.has(matchId)) {
         return
       }
-      gameInProgressClipByMatchId.set(matchId, true)
+      gameInProgressClipByMatchId.add(matchId)
 
       // settle ~1 min in; top bar is up all game
       const IN_GAME_CLIP_DELAY_MS = 60_000

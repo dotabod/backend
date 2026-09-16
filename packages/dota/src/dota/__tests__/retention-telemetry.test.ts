@@ -8,6 +8,13 @@ import {
   startDotaRetentionTelemetry,
 } from '../retention-telemetry'
 
+const registries = {
+  lookingUpToken: 7,
+  pendingCheckAuth: 8,
+  twitchIdToToken: 9,
+  twitchNameToToken: 10,
+}
+
 const memoryUsage = {
   arrayBuffers: 6,
   external: 5,
@@ -50,6 +57,7 @@ describe('Dota retention telemetry', () => {
       gameInProgressClipMatches: 5,
       memoryUsage,
       now,
+      registries,
       uptimeSeconds: 123.5,
     })
 
@@ -75,6 +83,7 @@ describe('Dota retention telemetry', () => {
         heapUsedBytes: 4,
         rssBytes: 2,
       },
+      registries,
       uptimeSeconds: 123.5,
     })
   })
@@ -95,6 +104,7 @@ describe('Dota retention telemetry', () => {
       gameInProgressClipMatches: 1,
       memoryUsage,
       now,
+      registries,
       uptimeSeconds: 123.5,
     })
     const log = vi.fn<(message: string, value: DotaRetentionTelemetry) => void>()
@@ -120,6 +130,7 @@ describe('Dota retention telemetry', () => {
         heapUsedBytes: 4,
         rssBytes: 2,
       },
+      registries,
       uptimeSeconds: 123.5,
     }
     const stop = startDotaRetentionTelemetry({ collect: () => telemetry, log })

@@ -1,7 +1,15 @@
 import { logger } from '@dotabod/shared-utils'
 
 import type { SocketClient } from '../types'
-import { draftStartByMatchId, gameInProgressClipByMatchId, gsiHandlers } from './lib/consts'
+import {
+  draftStartByMatchId,
+  gameInProgressClipByMatchId,
+  gsiHandlers,
+  lookingupToken,
+  pendingCheckAuth,
+  twitchIdToToken,
+  twitchNameToToken,
+} from './lib/consts'
 import { isGsiFresh } from './lib/get-current-match-id'
 
 export const RETENTION_TELEMETRY_INTERVAL_MS = 5 * 60 * 1000
@@ -11,12 +19,22 @@ type RetentionClient = Pick<
   'gsi' | 'gsiUpdatedAt' | 'pendingGsi' | 'pendingGsiUpdatedAt' | 'stream_online'
 >
 
+interface RetentionRegistrySizes {
+  // Both are cleared in `finally` blocks, so a steady-state value above roughly the
+  // in-flight request count means lookups are wedged rather than merely busy.
+  lookingUpToken: number
+  pendingCheckAuth: number
+  twitchIdToToken: number
+  twitchNameToToken: number
+}
+
 interface RetentionTelemetrySources {
   clients: Iterable<RetentionClient>
   draftStartMatches: number
   gameInProgressClipMatches: number
   memoryUsage: NodeJS.MemoryUsage
   now: number
+  registries: RetentionRegistrySizes
   uptimeSeconds: number
 }
 
@@ -42,6 +60,7 @@ export interface DotaRetentionTelemetry {
     heapUsedBytes: number
     rssBytes: number
   }
+  registries: RetentionRegistrySizes
   uptimeSeconds: number
 }
 
@@ -56,6 +75,7 @@ export const buildDotaRetentionTelemetry = function buildDotaRetentionTelemetry(
   gameInProgressClipMatches,
   memoryUsage,
   now,
+  registries,
   uptimeSeconds,
 }: RetentionTelemetrySources): DotaRetentionTelemetry {
   let total = 0
@@ -122,6 +142,7 @@ export const buildDotaRetentionTelemetry = function buildDotaRetentionTelemetry(
       heapUsedBytes: memoryUsage.heapUsed,
       rssBytes: memoryUsage.rss,
     },
+    registries,
     uptimeSeconds,
   }
 }
@@ -135,6 +156,12 @@ const collectDotaRetentionTelemetry = function collectDotaRetentionTelemetry(
     gameInProgressClipMatches: gameInProgressClipByMatchId.size,
     memoryUsage: process.memoryUsage(),
     now,
+    registries: {
+      lookingUpToken: lookingupToken.size,
+      pendingCheckAuth: pendingCheckAuth.size,
+      twitchIdToToken: twitchIdToToken.size,
+      twitchNameToToken: twitchNameToToken.size,
+    },
     uptimeSeconds: process.uptime(),
   })
 }
