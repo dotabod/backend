@@ -1,0 +1,11 @@
+transforms:
+  kong_settings_access:
+    type: filter
+    inputs:
+      - kong_logs
+    condition: |-
+      method = string(.metadata.request.method) ?? ""
+      path = string(.metadata.request.path) ?? ""
+      path = split(path, "?", limit: 2)[0]
+      status = int(.metadata.response.status_code) ?? 0
+      !(method == "POST" && path == "/rest/v1/settings" && status >= 200 && status < 300)

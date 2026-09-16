@@ -1,0 +1,24 @@
+name: Vector configuration
+
+on:
+  pull_request:
+    paths:
+      - services/observability/vector/**
+      - .github/workflows/vector-config.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  vector-config:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Verify the local analytics filter with the production Vector version
+        run: |
+          docker run --rm \
+            -v "$PWD/services/observability/vector:/config:ro" \
+            timberio/vector:0.53.0-alpine@sha256:ca92d617e905953c3f852e7e88061f7039460e733522e3f0c21bc6ae946b2558 \
+            test /config/settings-access-filter.yaml /config/settings-access-filter.test.yaml
