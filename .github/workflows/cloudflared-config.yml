@@ -1,0 +1,81 @@
+name: Cloudflared config
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/cloudflared-config.yml'
+      - 'infrastructure/cloudflared/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Require an explicit secret path
+        run: |
+          if env -u CLOUDFLARE_TUNNEL_TOKEN_FILE \
+            docker compose -f infrastructure/cloudflared/compose.yml config --quiet
+          then
+            echo 'Compose unexpectedly accepted a missing token file path' >&2
+            exit 1
+          fi
+
+      - name: Validate and render Compose
+        id: compose
+        run: |
+          token_file="${RUNNER_TEMP}/cloudflare-tunnel-token"
+          printf '%s\n' 'invalid-ci-token' > "$token_file"
+          sudo chown root:65532 "$token_file"
+          sudo chmod 0440 "$token_file"
+          export CLOUDFLARE_TUNNEL_TOKEN_FILE="$token_file"
+
+          docker compose -f infrastructure/cloudflared/compose.yml config --quiet
+          docker compose -f infrastructure/cloudflared/compose.yml config --format json \
+            | jq -e '
+                .services.cloudflared.ports == null
+                and .services.cloudflared.environment == null
+                and .services.cloudflared.command[-2:] == ["--token-file", "/run/secrets/cloudflare_tunnel_token"]
+                and .services.cloudflared.secrets[0].source == "cloudflare_tunnel_token"
+                and .services.cloudflared.secrets[0].target == "cloudflare_tunnel_token"
+                and .networks.coolify.external == true
+                and .secrets.cloudflare_tunnel_token.file == env.CLOUDFLARE_TUNNEL_TOKEN_FILE
+              '
+
+          image=$(docker compose -f infrastructure/cloudflared/compose.yml config --images)
+          test "$(printf '%s\n' "$image" | wc -l)" -eq 1
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "token_file=$token_file" >> "$GITHUB_OUTPUT"
+
+      - name: Verify image platforms and CLI
+        env:
+          IMAGE: ${{ steps.compose.outputs.image }}
+          TOKEN_FILE: ${{ steps.compose.outputs.token_file }}
+        run: |
+          docker buildx imagetools inspect --raw "$IMAGE" \
+            | jq -e '
+                .manifests[]
+                | select(.platform.os == "linux" and .platform.architecture == "arm64")
+              '
+
+          docker run --rm "$IMAGE" version | grep -F '2026.9.1'
+          docker run --rm "$IMAGE" tunnel run --help | grep -F -- '--token-file'
+
+          set +e
+          output=$(timeout 30s docker run --rm \
+            --network none \
+            --read-only \
+            --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --mount "type=bind,source=${TOKEN_FILE},target=/run/secrets/cloudflare_tunnel_token,readonly" \
+            "$IMAGE" tunnel run --token-file /run/secrets/cloudflare_tunnel_token 2>&1)
+          status=$?
+          set -e
+
+          test "$status" -ne 0
+          grep -F 'Provided Tunnel token is not valid.' <<< "$output"

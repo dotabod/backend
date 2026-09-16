@@ -1,0 +1,28 @@
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:2026.9.1@sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4
+    command:
+      - tunnel
+      - run
+      - --token-file
+      - /run/secrets/cloudflare_tunnel_token
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - coolify
+    secrets:
+      - source: cloudflare_tunnel_token
+        target: cloudflare_tunnel_token
+
+networks:
+  coolify:
+    external: true
+    name: coolify
+
+secrets:
+  cloudflare_tunnel_token:
+    file: ${CLOUDFLARE_TUNNEL_TOKEN_FILE:?set CLOUDFLARE_TUNNEL_TOKEN_FILE}
