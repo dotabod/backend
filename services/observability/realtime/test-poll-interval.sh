@@ -78,3 +78,26 @@ if "${psql_command[@]}" -f "$trial_dir/apply-250ms.sql"; then
   echo 'Missing tenant was accepted' >&2
   exit 1
 fi
+
+# A JSON string is not the JSON number the guard compares against, so a tenant storing
+# "100" instead of 100 must be refused rather than silently rewritten.
+"${psql_command[@]}" <<'SQL'
+INSERT INTO _realtime.extensions (tenant_external_id, type, settings)
+VALUES ('realtime-dev', 'postgres_cdc_rls', '{"poll_interval_ms":"100"}');
+SQL
+
+for trial_script in apply-250ms.sql rollback-100ms.sql; do
+  if "${psql_command[@]}" -f "$trial_dir/$trial_script"; then
+    echo "String-typed interval was accepted by $trial_script" >&2
+    exit 1
+  fi
+done
+
+"${psql_command[@]}" <<'SQL'
+DO $$ BEGIN
+  IF (SELECT settings FROM _realtime.extensions WHERE tenant_external_id = 'realtime-dev' AND type = 'postgres_cdc_rls')
+      IS DISTINCT FROM '{"poll_interval_ms":"100"}'::jsonb THEN
+    RAISE EXCEPTION 'A refused string-typed interval was modified';
+  END IF;
+END $$;
+SQL

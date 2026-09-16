@@ -7,6 +7,7 @@ Before applying the trial:
 - Verify watcher reconnection and reconciliation of account/settings/stream changes missed during a reload in an isolated environment. A successful socket reconnect is not proof of recovered state. This PR does not implement or certify that application recovery.
 - Record matched quiet and busy baselines: Postgres CPU, change-reading calls/rows/execution time, commit-to-receipt latency, and replication-slot lag. Identify statements by database, user, top-level flag, and query ID.
 - Save the current tenant settings privately and obtain authorization for the configuration change and tenant reload. The scripts deliberately reject missing, duplicate, or unexpected tenant configuration.
+- Confirm `poll_interval_ms` is stored as a JSON number. The guard compares against `'100'::jsonb`, so a value stored as the string `"100"` is unequal and the script refuses to run. That is the intended fail-closed behaviour, not a bug to work around: check the stored type before the maintenance window rather than discovering it inside one.
 
 On an authorized administration host, use a connection explicitly targeting the Supabase `postgres` database and `psql -X --set ON_ERROR_STOP=1 --file apply-250ms.sql`. Avoid exposing connection passwords in shell history or process arguments. The guarded transaction changes only the numeric polling interval, preserves all other settings, and treats a repeated application as a no-op. Lock and statement timeouts bound waiting.
 
