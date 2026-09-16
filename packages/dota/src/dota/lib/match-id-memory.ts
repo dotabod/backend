@@ -39,6 +39,13 @@ export class MatchIdMemory {
   }
 
   add(matchId: string): void {
+    // A packet with no match id cannot identify a match, so remembering it under the empty
+    // key would let one such packet answer `has` for every later one. Refusing to store it
+    // means those degenerate packets are never deduped, which risks repeating work once
+    // rather than suppressing it permanently.
+    if (matchId.length === 0) {
+      return
+    }
     const expiresAt = this.now() + this.ttlMs
     // Reinsert so Map order keeps matching expiry order for oldest-first cleanup.
     this.entries.delete(matchId)

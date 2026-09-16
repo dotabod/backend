@@ -80,10 +80,7 @@ eventHandler.registerEvent('map:game_state', {
 
     // Create a clip when the draft starts to get a list of players
     if (gameState === 'DOTA_GAMERULES_STATE_PLAYER_DRAFT') {
-      const draftMatchId = dotaClient.client.gsi?.map?.matchid ?? ''
-      if (draftMatchId.length > 0) {
-        draftStartByMatchId.add(draftMatchId)
-      }
+      draftStartByMatchId.add(dotaClient.client.gsi?.map?.matchid ?? '')
       // 46 seconds
       const DRAFT_CLIP_DELAY_MS = 46_000
       const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)

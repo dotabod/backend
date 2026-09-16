@@ -59,6 +59,17 @@ describe(MatchIdMemory, () => {
     }).toStrictEqual({ first: false, second: true, size: 2, third: true })
   })
 
+  it('refuses to remember a packet that carries no match id', () => {
+    const memory = new MatchIdMemory({ now: () => 0 })
+
+    memory.add('')
+
+    expect({ remembered: memory.has(''), size: memory.size }).toStrictEqual({
+      remembered: false,
+      size: 0,
+    })
+  })
+
   it('refreshes the horizon and expiry order when a match id is re-added', () => {
     let now = 0
     const memory = new MatchIdMemory({ now: () => now, ttlMs: HOUR_MS })
