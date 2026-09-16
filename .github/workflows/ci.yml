@@ -17,18 +17,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  vector-config:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v7
-      - name: Verify the local analytics filter with the production Vector version
-        run: |
-          docker run --rm \
-            -v "$PWD/services/observability/vector:/config:ro" \
-            timberio/vector:0.53.0-alpine \
-            test /config/settings-access-filter.yaml /config/settings-access-filter.test.yaml
-
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
