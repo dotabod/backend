@@ -83,11 +83,16 @@ export interface GsiEventResponse {
 // listeners are never added or removed after startup, so the cache is permanent.
 let known: Set<string> | null = null
 
-const asJsonObject = function asJsonObject(value: unknown): JsonObject | null {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-    return null
-  }
-  return value as JsonObject
+const isJsonObject = function isJsonObject(
+  value: AuthenticatedGsiPacket | Json | undefined
+): value is JsonObject {
+  return value !== null && value !== undefined && Object(value) === value && !Array.isArray(value)
+}
+
+const asJsonObject = function asJsonObject(
+  value: AuthenticatedGsiPacket | Json | undefined
+): JsonObject | null {
+  return isJsonObject(value) ? value : null
 }
 
 const cloneJsonValue = function cloneJsonValue(value: Json): Json {
@@ -111,6 +116,10 @@ const cloneJsonValue = function cloneJsonValue(value: Json): Json {
     }
   }
   return cloned
+}
+
+const cloneJsonObject = function cloneJsonObject(value: JsonObject): JsonObject {
+  return asJsonObject(cloneJsonValue(value)) ?? {}
 }
 
 const ensureIndex = function ensureIndex(): Set<string> {
@@ -185,7 +194,7 @@ const emitChangedEntry = function emitChangedEntry(
   const bodyObject = asJsonObject(bodyValue)
   if (changedObject !== null && bodyObject !== null) {
     const hasExactListener = events.listenerCount(name) > 0
-    const dispatchBody = hasExactListener ? (cloneJsonValue(bodyObject) as JsonObject) : bodyObject
+    const dispatchBody = hasExactListener ? cloneJsonObject(bodyObject) : bodyObject
     if (hasExactListener) {
       events.emit(name, projectChangedValues(changedObject, dispatchBody), context.token)
     }
@@ -198,7 +207,7 @@ const emitChangedEntry = function emitChangedEntry(
     events.emit(name, cloneJsonValue(bodyValue), context.token)
     return null
   }
-  const dispatchBody = cloneJsonValue(bodyObject) as JsonObject
+  const dispatchBody = cloneJsonObject(bodyObject)
   if (events.listenerCount(name) > 0) {
     events.emit(name, dispatchBody, context.token)
   }

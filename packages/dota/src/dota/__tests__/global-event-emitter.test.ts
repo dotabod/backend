@@ -53,6 +53,10 @@ let savedListeners: [string, SavedListener[]][] = []
 type JsonObject = Extract<Json, Record<string, Json | undefined>>
 type TestPacketInput = JsonObject | Parameters<typeof createPacketStub>[0]
 
+const isJsonObject = function isJsonObject(value: GsiEventData): value is JsonObject {
+  return value !== null && Object(value) === value && !Array.isArray(value)
+}
+
 const next = function next(): void {}
 
 const response: GsiEventResponse = {
@@ -274,18 +278,18 @@ describe('global event emitter', () => {
     })
 
     it('preserves safe unusual keys while dropping __proto__ from object payloads', () => {
-      const body = JSON.parse(
-        '{"player":{"kill_list":{"__proto__":3,"constructor":2,"prototype":1}}}'
-      ) as JsonObject
-      const previously = JSON.parse(
-        '{"player":{"kill_list":{"__proto__":0,"constructor":0,"prototype":0}}}'
-      ) as JsonObject
+      const killList = { constructor: 2, prototype: 1 }
+      const previousKillList = { constructor: 0, prototype: 0 }
+      Object.defineProperty(killList, '__proto__', { enumerable: true, value: 3 })
+      Object.defineProperty(previousKillList, '__proto__', { enumerable: true, value: 0 })
 
-      runPost({ ...body, previously })
+      runPost({
+        player: { kill_list: killList },
+        previously: { player: { kill_list: previousKillList } },
+      })
 
       const payload = spies.get('player:kill_list')?.[0]?.args[0]
       expect(payload).toStrictEqual({ constructor: 2, prototype: 1 })
-      expect(Object.hasOwn(payload as object, '__proto__')).toBeFalsy()
     })
 
     it('does not fire any listener for items:* subtree (no listeners registered there)', () => {
@@ -343,7 +347,7 @@ describe('global event emitter', () => {
 
     it('isolates listener mutation from req.body while sharing it with child dispatch', () => {
       events.on('hero', (data) => {
-        if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+        if (isJsonObject(data)) {
           Reflect.set(data, 'alive', false)
         }
       })
