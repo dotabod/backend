@@ -14,12 +14,12 @@ inputs:
 
 Keep the existing `kong_logs` parser, `kong_err` route, sink credentials, and other sinks unchanged. Do not load this fragment alongside another definition of the same transform. Validate the complete assembled configuration in an isolated environment before an authorized Vector-only restart. This PR does not change production.
 
-GitHub CI runs the native Vector unit tests using `timberio/vector:0.53.0-alpine`, matching production. The equivalent command on an isolated runner is:
+GitHub CI runs the native Vector unit tests using `timberio/vector:0.53.0-alpine@sha256:ca92d617e905953c3f852e7e88061f7039460e733522e3f0c21bc6ae946b2558`, matching production. The digest is pinned alongside the tag because Docker Hub tags are mutable, so a republished `0.53.0-alpine` would otherwise change what CI validates without any commit here. The equivalent command on an isolated runner is:
 
 ```sh
 docker run --rm \
   -v "$PWD/services/observability/vector:/config:ro" \
-  timberio/vector:0.53.0-alpine \
+  timberio/vector:0.53.0-alpine@sha256:ca92d617e905953c3f852e7e88061f7039460e733522e3f0c21bc6ae946b2558 \
   test /config/settings-access-filter.yaml /config/settings-access-filter.test.yaml
 ```
 
