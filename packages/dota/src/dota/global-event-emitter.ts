@@ -86,7 +86,10 @@ let known: Set<string> | null = null
 const isJsonObject = function isJsonObject(
   value: AuthenticatedGsiPacket | Json | undefined
 ): value is JsonObject {
-  return value instanceof Object && !Array.isArray(value)
+  // Runs several times per key per admitted packet, so prefer a typeof check over
+  // `instanceof Object`: no prototype-chain walk, and it stays correct if the body ever
+  // arrives from a parser that builds null-prototype objects to blunt prototype pollution.
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 const asJsonObject = function asJsonObject(
@@ -259,6 +262,9 @@ const getKillListDeltaKeys = function getKillListDeltaKeys(body: AuthenticatedGs
     const changed = changedPlayer?.kill_list
     if (changed === true && current !== undefined) {
       for (const key of Object.keys(current)) {
+        if (key === '__proto__') {
+          continue
+        }
         keys.add(key)
       }
     } else {
