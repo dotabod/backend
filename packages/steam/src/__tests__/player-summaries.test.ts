@@ -19,6 +19,7 @@ type CacheInfo = (
     hits: number
     maxEntries: number
     misses: number
+    windowMs: number
   }
 ) => void
 
@@ -194,6 +195,7 @@ describe(SteamPlayerSummaryService, () => {
       hits: 0,
       maxEntries: 5000,
       misses: 4,
+      windowMs: 10 * 60 * 1000 + 250,
     })
   })
 
@@ -220,6 +222,7 @@ describe(SteamPlayerSummaryService, () => {
       hits: 0,
       maxEntries: 5000,
       misses: 3,
+      windowMs: 10 * 60 * 1000 + 1,
     })
   })
 

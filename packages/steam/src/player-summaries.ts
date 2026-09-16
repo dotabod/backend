@@ -49,6 +49,9 @@ interface CacheStats {
 interface CacheStatsMetadata extends CacheStats {
   cacheSize: number
   maxEntries: number
+  // Counters are cumulative over this window, and the window only advances when `get` is
+  // called, so it stretches during idle periods. Without it the numbers are not rates.
+  windowMs: number
 }
 
 interface CacheLogger {
@@ -200,6 +203,7 @@ export class SteamPlayerSummaryService {
       ...this.cacheStats,
       cacheSize: this.cache.size,
       maxEntries: CACHE_MAX_ENTRIES,
+      windowMs: now - this.lastStatsLoggedAt,
     })
     this.cacheStats.capacityEvictions = 0
     this.cacheStats.expiredEvictions = 0
