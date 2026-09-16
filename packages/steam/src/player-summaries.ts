@@ -1,7 +1,11 @@
 import { z } from 'zod'
 
+import { logger as defaultLogger } from './utils/logger'
+
 const STEAM_ID64_BASE = 76_561_197_960_265_728n
 const CACHE_TTL_MS = 10 * 60 * 1000
+const CACHE_MAX_ENTRIES = 5000
+const CACHE_STATS_INTERVAL_MS = 10 * 60 * 1000
 
 export interface SteamPlayerSummary {
   account_id: number
@@ -21,6 +25,8 @@ interface SteamPlayerSummaryServiceOptions {
   getPersonas: PersonaClient['getPersonas']
   apiKey?: string
   fetchImpl?: typeof fetch
+  logger?: CacheLogger
+  now?: () => number
 }
 
 interface CacheEntry {
@@ -31,6 +37,22 @@ interface CacheEntry {
 interface WebSummary {
   countryCode: string | null
   personaName: string | null
+}
+
+interface CacheStats {
+  capacityEvictions: number
+  expiredEvictions: number
+  hits: number
+  misses: number
+}
+
+interface CacheStatsMetadata extends CacheStats {
+  cacheSize: number
+  maxEntries: number
+}
+
+interface CacheLogger {
+  info: (message: string, metadata: CacheStatsMetadata) => void
 }
 
 const webJsonValueSchema = z.json()
@@ -75,28 +97,48 @@ const validAccountId = function validAccountId(steamId64?: string): number | nul
 
 export class SteamPlayerSummaryService {
   private readonly cache = new Map<number, CacheEntry>()
+  private readonly cacheLogger: CacheLogger
+  private readonly cacheStats: CacheStats = {
+    capacityEvictions: 0,
+    expiredEvictions: 0,
+    hits: 0,
+    misses: 0,
+  }
   private readonly getPersonas: PersonaClient['getPersonas']
   private readonly apiKey?: string
   private readonly fetchImpl: typeof fetch
+  private readonly now: () => number
+  private lastStatsLoggedAt: number
 
-  constructor({ getPersonas, apiKey, fetchImpl = fetch }: SteamPlayerSummaryServiceOptions) {
+  constructor({
+    getPersonas,
+    apiKey,
+    fetchImpl = fetch,
+    logger = defaultLogger,
+    now = Date.now,
+  }: SteamPlayerSummaryServiceOptions) {
     this.getPersonas = getPersonas
     this.apiKey = apiKey
     this.fetchImpl = fetchImpl
+    this.cacheLogger = logger
+    this.now = now
+    this.lastStatsLoggedAt = now()
   }
 
   async get(accountIds: number[]): Promise<SteamPlayerSummary[]> {
     const uniqueIds = [
       ...new Set(accountIds.filter((id) => Number.isInteger(id) && id > 0 && id <= 0xff_ff_ff_ff)),
     ]
-    const now = Date.now()
+    const now = this.now()
+    this.removeExpired(now)
     const results = new Map<number, SteamPlayerSummary>()
     const uncached = uniqueIds.filter((accountId) => {
       const cached = this.cache.get(accountId)
-      if (!cached || cached.expiresAt <= now) {
-        this.cache.delete(accountId)
+      if (!cached) {
+        this.cacheStats.misses += 1
         return true
       }
+      this.cacheStats.hits += 1
       results.set(accountId, cached.summary)
       return false
     })
@@ -110,6 +152,7 @@ export class SteamPlayerSummaryService {
       const personas = personaResult.status === 'fulfilled' ? personaResult.value.personas : {}
       const webSummaries =
         webResult.status === 'fulfilled' ? webResult.value : new Map<number, WebSummary>()
+      const expiresAt = this.now() + CACHE_TTL_MS
 
       for (const accountId of uncached) {
         const steamId = toSteamId64(accountId)
@@ -122,14 +165,57 @@ export class SteamPlayerSummaryService {
           persona_name: personaName,
         }
         results.set(accountId, summary)
-        this.cache.set(accountId, { expiresAt: now + CACHE_TTL_MS, summary })
+        // A concurrent request may have filled this key while the Steam calls were pending.
+        // Reinsert it so Map order continues to match expiry order for oldest-first cleanup.
+        this.cache.delete(accountId)
+        this.cache.set(accountId, { expiresAt, summary })
       }
+      this.enforceCapacity()
     }
 
-    return uniqueIds.flatMap((accountId) => {
+    const summaries = uniqueIds.flatMap((accountId) => {
       const summary = results.get(accountId)
       return summary ? [summary] : []
     })
+    this.logCacheStatsIfDue(this.now())
+    return summaries
+  }
+
+  private enforceCapacity(): void {
+    while (this.cache.size > CACHE_MAX_ENTRIES) {
+      const oldestAccountId = this.cache.keys().next().value
+      if (oldestAccountId === undefined) {
+        return
+      }
+      this.cache.delete(oldestAccountId)
+      this.cacheStats.capacityEvictions += 1
+    }
+  }
+
+  private logCacheStatsIfDue(now: number): void {
+    if (now - this.lastStatsLoggedAt < CACHE_STATS_INTERVAL_MS) {
+      return
+    }
+    this.cacheLogger.info('[STEAM] Player summary cache stats', {
+      ...this.cacheStats,
+      cacheSize: this.cache.size,
+      maxEntries: CACHE_MAX_ENTRIES,
+    })
+    this.cacheStats.capacityEvictions = 0
+    this.cacheStats.expiredEvictions = 0
+    this.cacheStats.hits = 0
+    this.cacheStats.misses = 0
+    this.lastStatsLoggedAt = now
+  }
+
+  private removeExpired(now: number): void {
+    for (const [accountId, entry] of this.cache) {
+      if (entry.expiresAt > now) {
+        return
+      }
+      this.cache.delete(accountId)
+      this.cacheStats.expiredEvictions += 1
+    }
   }
 
   private async fetchWebSummaries(steamIds: string[]): Promise<Map<number, WebSummary>> {

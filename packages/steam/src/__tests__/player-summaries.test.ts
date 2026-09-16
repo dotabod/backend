@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { once } from 'node:events'
+
+import { describe, expect, it, vi } from 'vitest'
 
 import { SteamPlayerSummaryService } from '../player-summaries.ts'
 
@@ -7,6 +9,18 @@ interface WebPlayerFixture {
   personaname?: string
   steamid: string
 }
+
+type CacheInfo = (
+  message: string,
+  metadata: {
+    cacheSize: number
+    capacityEvictions: number
+    expiredEvictions: number
+    hits: number
+    maxEntries: number
+    misses: number
+  }
+) => void
 
 const completed = Promise.resolve()
 
@@ -118,5 +132,113 @@ describe(SteamPlayerSummaryService, () => {
     await service.get([789])
 
     expect({ personaRequests, webRequests }).toStrictEqual({ personaRequests: 1, webRequests: 1 })
+  })
+
+  it('starts the cache TTL after an asynchronous Steam lookup completes', async () => {
+    let now = 0
+    let personaRequests = 0
+    const service = new SteamPlayerSummaryService({
+      getPersonas: async () => {
+        personaRequests += 1
+        now = 10 * 60 * 1000 + 1
+        await completed
+        return {
+          personas: { '76561197960265851': { player_name: 'Slow Response' } },
+        }
+      },
+      now: () => now,
+    })
+
+    await service.get([123])
+    await service.get([123])
+
+    expect(personaRequests).toBe(1)
+  })
+
+  it('preserves expiry order when overlapping lookups finish out of order', async () => {
+    let now = 0
+    let requestNumber = 0
+    const gates = new EventTarget()
+    const info = vi.fn<CacheInfo>()
+    const service = new SteamPlayerSummaryService({
+      getPersonas: async () => {
+        requestNumber += 1
+        const currentRequest = requestNumber
+        await (currentRequest <= 2 ? once(gates, `request-${currentRequest}`) : completed)
+        return { personas: {} }
+      },
+      logger: { info },
+      now: () => now,
+    })
+
+    const olderLookup = service.get([123])
+    const newerLookup = service.get([123])
+    now = 100
+    gates.dispatchEvent(new Event('request-2'))
+    await newerLookup
+
+    now = 200
+    await service.get([456])
+
+    now = 300
+    gates.dispatchEvent(new Event('request-1'))
+    await olderLookup
+
+    now = 10 * 60 * 1000 + 250
+    await service.get([789])
+
+    expect(info).toHaveBeenCalledExactlyOnceWith('[STEAM] Player summary cache stats', {
+      cacheSize: 2,
+      capacityEvictions: 0,
+      expiredEvictions: 1,
+      hits: 0,
+      maxEntries: 5000,
+      misses: 4,
+    })
+  })
+
+  it('removes expired entries even when those accounts are not requested again', async () => {
+    let now = 0
+    const info = vi.fn<CacheInfo>()
+    const service = new SteamPlayerSummaryService({
+      getPersonas: async () => {
+        await completed
+        return { personas: {} }
+      },
+      logger: { info },
+      now: () => now,
+    })
+
+    await service.get([123, 456])
+    now = 10 * 60 * 1000 + 1
+    await service.get([789])
+
+    expect(info).toHaveBeenCalledExactlyOnceWith('[STEAM] Player summary cache stats', {
+      cacheSize: 1,
+      capacityEvictions: 0,
+      expiredEvictions: 2,
+      hits: 0,
+      maxEntries: 5000,
+      misses: 3,
+    })
+  })
+
+  it('evicts the oldest summary after reaching the cache limit', async () => {
+    const requestedBatchSizes: number[] = []
+    const service = new SteamPlayerSummaryService({
+      getPersonas: async (steamIds) => {
+        await completed
+        requestedBatchSizes.push(steamIds.length)
+        return { personas: {} }
+      },
+    })
+    const initialAccounts = Array.from({ length: 5000 }, (_, index) => index + 1)
+
+    await service.get(initialAccounts)
+    await service.get([5001])
+    const summaries = await service.get([1, 2])
+
+    expect(requestedBatchSizes).toStrictEqual([5000, 1, 1])
+    expect(summaries.map((summary) => summary.account_id)).toStrictEqual([1, 2])
   })
 })
