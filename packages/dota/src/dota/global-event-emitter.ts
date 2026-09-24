@@ -1,6 +1,5 @@
 import type { Json } from '@dotabod/shared-utils'
 import type { NextFunction } from 'express'
-import { z } from 'zod'
 
 import type { DotaEvent } from '../types'
 import { gsiHandlers } from './lib/consts'
@@ -67,8 +66,7 @@ export class GsiEventBus {
 export const events = new GsiEventBus()
 const multiAccountRecoveryPackets = new WeakSet<AuthenticatedGsiPacket>()
 const killListSnapshots = new WeakMap<object, { matchId: string; values: Record<string, number> }>()
-const jsonObjectSchema = z.record(z.string(), z.json())
-type JsonObject = z.infer<typeof jsonObjectSchema>
+type JsonObject = Extract<Json, Record<string, Json | undefined>>
 type GsiChangeSection = 'added' | 'previously'
 
 export interface GsiEventRequest {
@@ -85,11 +83,48 @@ export interface GsiEventResponse {
 // listeners are never added or removed after startup, so the cache is permanent.
 let known: Set<string> | null = null
 
-const parseJsonObject = function parseJsonObject(
+const isJsonObject = function isJsonObject(
+  value: AuthenticatedGsiPacket | Json | undefined
+): value is JsonObject {
+  // Runs several times per key per admitted packet, so prefer a typeof check over
+  // `instanceof Object`: no prototype-chain walk, and it stays correct if the body ever
+  // arrives from a parser that builds null-prototype objects to blunt prototype pollution.
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+const asJsonObject = function asJsonObject(
   value: AuthenticatedGsiPacket | Json | undefined
 ): JsonObject | null {
-  const parsed = jsonObjectSchema.safeParse(value)
-  return parsed.success ? parsed.data : null
+  return isJsonObject(value) ? value : null
+}
+
+interface JsonCloner {
+  cloneJsonObject: (value: JsonObject) => JsonObject
+  cloneJsonValue: (value: Json) => Json
+}
+
+const jsonCloner: JsonCloner = {
+  cloneJsonObject(value) {
+    const cloned: JsonObject = {}
+    for (const key of Object.keys(value)) {
+      if (key === '__proto__') {
+        continue
+      }
+      const child = value[key]
+      if (child !== undefined) {
+        cloned[key] = jsonCloner.cloneJsonValue(child)
+      }
+    }
+    return cloned
+  },
+  cloneJsonValue(value) {
+    if (Array.isArray(value)) {
+      return value.map((entry) => jsonCloner.cloneJsonValue(entry))
+    }
+
+    const objectValue = asJsonObject(value)
+    return objectValue === null ? value : jsonCloner.cloneJsonObject(objectValue)
+  },
 }
 
 const ensureIndex = function ensureIndex(): Set<string> {
@@ -115,9 +150,13 @@ const emitAll = function emitAll(
   knownEvents: ReadonlySet<string>
 ) {
   for (const key of Object.keys(obj)) {
+    if (key === '__proto__') {
+      continue
+    }
     const name = prefix + key
-    if (knownEvents.has(name)) {
-      events.emit(name, obj[key], token)
+    const value = obj[key]
+    if (knownEvents.has(name) && value !== undefined) {
+      events.emit(name, value, token)
     }
   }
 }
@@ -128,6 +167,9 @@ const projectChangedValues = function projectChangedValues(
 ): JsonObject {
   const projected: JsonObject = {}
   for (const key of Object.keys(changed)) {
+    if (key === '__proto__') {
+      continue
+    }
     const value = body[key]
     if (value !== null && value !== undefined) {
       projected[key] = value
@@ -153,25 +195,28 @@ const emitChangedEntry = function emitChangedEntry(
   bodyValue: Json | undefined,
   context: RecursiveEmitContext
 ): NestedChange | null {
-  const changedObject = parseJsonObject(changedValue)
-  const bodyObject = parseJsonObject(bodyValue)
+  const changedObject = asJsonObject(changedValue)
+  const bodyObject = asJsonObject(bodyValue)
   if (changedObject !== null && bodyObject !== null) {
-    if (events.listenerCount(name) > 0) {
-      events.emit(name, projectChangedValues(changedObject, bodyObject), context.token)
+    const hasExactListener = events.listenerCount(name) > 0
+    const dispatchBody = hasExactListener ? jsonCloner.cloneJsonObject(bodyObject) : bodyObject
+    if (hasExactListener) {
+      events.emit(name, projectChangedValues(changedObject, dispatchBody), context.token)
     }
-    return { body: bodyObject, changed: changedObject, prefix: `${name}:` }
+    return { body: dispatchBody, changed: changedObject, prefix: `${name}:` }
   }
   if (bodyValue === null || bodyValue === undefined) {
     return null
   }
   if (bodyObject === null) {
-    events.emit(name, bodyValue, context.token)
+    events.emit(name, jsonCloner.cloneJsonValue(bodyValue), context.token)
     return null
   }
+  const dispatchBody = jsonCloner.cloneJsonObject(bodyObject)
   if (events.listenerCount(name) > 0) {
-    events.emit(name, bodyObject, context.token)
+    events.emit(name, dispatchBody, context.token)
   }
-  emitAll(`${name}:`, bodyObject, context.token, context.knownEvents)
+  emitAll(`${name}:`, dispatchBody, context.token, context.knownEvents)
   return null
 }
 
@@ -182,6 +227,9 @@ const recursiveEmit = function recursiveEmit(
   context: RecursiveEmitContext
 ) {
   for (const key of Object.keys(changed)) {
+    if (key === '__proto__') {
+      continue
+    }
     const name = prefix + key
     if (context.knownEvents.has(name)) {
       const nestedChange = emitChangedEntry(name, changed[key], body[key], context)
@@ -194,8 +242,8 @@ const recursiveEmit = function recursiveEmit(
 
 export const processChanges = function processChanges(section: GsiChangeSection) {
   return function handle(req: GsiEventRequest, _res: GsiEventResponse, next: NextFunction) {
-    const changed = parseJsonObject(req.body[section])
-    const body = parseJsonObject(req.body)
+    const changed = asJsonObject(req.body[section])
+    const body = asJsonObject(req.body)
     const token = req.body.auth?.token
     if (changed !== null && body !== null && token !== undefined && token.length > 0) {
       recursiveEmit('', changed, body, { knownEvents: ensureIndex(), token })
@@ -209,16 +257,22 @@ const getKillListDeltaKeys = function getKillListDeltaKeys(body: AuthenticatedGs
   const current = body.player?.kill_list
 
   for (const section of ['previously', 'added'] as const) {
-    const sectionValue = parseJsonObject(body[section])
-    const changedPlayer = parseJsonObject(sectionValue?.player)
+    const sectionValue = asJsonObject(body[section])
+    const changedPlayer = asJsonObject(sectionValue?.player)
     const changed = changedPlayer?.kill_list
     if (changed === true && current !== undefined) {
       for (const key of Object.keys(current)) {
+        if (key === '__proto__') {
+          continue
+        }
         keys.add(key)
       }
     } else {
-      const changedObject = parseJsonObject(changed)
+      const changedObject = asJsonObject(changed)
       for (const key of Object.keys(changedObject ?? {})) {
+        if (key === '__proto__') {
+          continue
+        }
         keys.add(key)
       }
     }

@@ -265,6 +265,29 @@ describe('global event emitter', () => {
       expect(spies.get('player:deaths')).toStrictEqual([{ args: [3, 'tkn'] }])
     })
 
+    it('preserves URL-encoded string leaf values', () => {
+      runPost({
+        hero: { alive: 'false' },
+        previously: { hero: { alive: 'true' } },
+      })
+      expect(spies.get('hero:alive')).toStrictEqual([{ args: ['false', 'tkn'] }])
+    })
+
+    it('preserves safe unusual keys while dropping __proto__ from object payloads', () => {
+      const killList = { constructor: 2, prototype: 1 }
+      const previousKillList = { constructor: 0, prototype: 0 }
+      Object.defineProperty(killList, '__proto__', { enumerable: true, value: 3 })
+      Object.defineProperty(previousKillList, '__proto__', { enumerable: true, value: 0 })
+
+      runPost({
+        player: { kill_list: killList },
+        previously: { player: { kill_list: previousKillList } },
+      })
+
+      const payload = spies.get('player:kill_list')?.[0]?.args[0]
+      expect(payload).toStrictEqual({ constructor: 2, prototype: 1 })
+    })
+
     it('does not fire any listener for items:* subtree (no listeners registered there)', () => {
       runPost({
         items: { slot0: { name: 'bar', purchaser: 2 } },
@@ -316,6 +339,40 @@ describe('global event emitter', () => {
       })
       expect(callCount('hero:alive')).toBe(1)
       expect(callCountsByName()).toStrictEqual({ 'hero:alive': 1, newdata: 1 })
+    })
+
+    it('isolates listener mutation from req.body while sharing it with child dispatch', () => {
+      events.on('hero', (data) => {
+        if (data !== null && !Array.isArray(data)) {
+          Object.assign(data, { alive: false })
+        }
+      })
+      const body = {
+        added: { hero: true },
+        hero: { alive: true },
+      }
+
+      runPost(body)
+
+      expect(spies.get('hero:alive')).toStrictEqual([{ args: [false, 'tkn'] }])
+      expect(body.hero.alive).toBeTruthy()
+    })
+
+    it('treats arrays as leaf payloads and isolates listener mutation', () => {
+      events.on('player:kill_list', (data) => {
+        if (Array.isArray(data)) {
+          data.push(3)
+        }
+      })
+      const body = {
+        added: { player: { kill_list: true } },
+        player: { kill_list: [1, 2] },
+      }
+
+      runPost(body)
+
+      expect(spies.get('player:kill_list')).toStrictEqual([{ args: [[1, 2, 3], 'tkn'] }])
+      expect(body.player.kill_list).toStrictEqual([1, 2])
     })
   })
 
