@@ -13,6 +13,7 @@ import SetupSupabase from '../db/watcher'
 import GSIServer from './gsi-server'
 import { rearmPersistedClips } from './lib/clip-schedule'
 import { hydrateInvalidTokens } from './lib/invalid-tokens'
+import { startDotaRetentionTelemetry } from './retention-telemetry'
 import { server } from './server'
 
 logger.info("Starting 'dota' package")
@@ -112,7 +113,9 @@ const main = async () => {
     logger.error('Error in setup', { error })
   }
 
-  return initServer()
+  const gsiServer = initServer()
+  startDotaRetentionTelemetry()
+  return gsiServer
 }
 
 const logAndExit = (err: unknown) => {
