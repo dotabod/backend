@@ -1,0 +1,141 @@
+sources:
+  kong_logs:
+    type: stdin
+
+sinks:
+  test_output:
+    type: blackhole
+    inputs:
+      - kong_settings_access
+
+tests:
+  - name: successful settings writes do not reach local analytics
+    inputs:
+      - insert_at: kong_settings_access
+        type: vrl
+        source: '. = {"metadata": {"request": {"method": "POST", "path": "/rest/v1/settings"}, "response": {"status_code": 200}}}'
+      - insert_at: kong_settings_access
+        type: vrl
+        source: '. = {"metadata": {"request": {"method": "POST", "path": "/rest/v1/settings?on_conflict=userId%2Ckey"}, "response": {"status_code": 201}}}'
+      - insert_at: kong_settings_access
+        type: vrl
+        source: '. = {"metadata": {"request": {"method": "POST", "path": "/rest/v1/settings"}, "response": {"status_code": 204}}}'
+      - insert_at: kong_settings_access
+        type: vrl
+        source: '. = {"metadata": {"request": {"method": "POST", "path": "/rest/v1/settings"}, "response": {"status_code": 299}}}'
+    no_outputs_from:
+      - kong_settings_access
+
+  - name: settings errors retain their original fields
+    inputs:
+      - insert_at: kong_settings_access
+        type: vrl
+        source: '. = {"event_message": "settings write failed", "metadata": {"request": {"method": "POST", "path": "/rest/v1/settings?on_conflict=userId%2Ckey"}, "response": {"status_code": 500}}}'
+    outputs:
+      - extract_from: kong_settings_access
+        conditions:
+          - type: vrl
+            source: |-
+              assert_eq!(.event_message, "settings write failed")
+              assert_eq!(.metadata.request.method, "POST")
+              assert_eq!(.metadata.request.path, "/rest/v1/settings?on_conflict=userId%2Ckey")
+              assert_eq!(.metadata.response.status_code, 500)
+
+  - name: informational status is retained
+    inputs:
+      - insert_at: kong_settings_access
+        type: vrl
+        source: '. = {"metadata": {"request": {"method": "POST", "path": "/rest/v1/settings"}, "response": {"status_code": 199}}}'
+    outputs:
+      - extract_from: kong_settings_access
+        conditions:
+          - type: vrl
+            source: 'assert_eq!(.metadata.response.status_code, 199)'
+
+  - name: redirect boundary is retained
+    inputs:
+      - insert_at: kong_settings_access
+        type: vrl
+        source: '. = {"metadata": {"request": {"method": "POST", "path": "/rest/v1/settings"}, "response": {"status_code": 300}}}'
+    outputs:
+      - extract_from: kong_settings_access
+        conditions:
+          - type: vrl
+            source: 'assert_eq!(.metadata.response.status_code, 300)'
+
+  - name: rate limits remain visible
+    inputs:
+      - insert_at: kong_settings_access
+        type: vrl
+        source: '. = {"metadata": {"request": {"method": "POST", "path": "/rest/v1/settings"}, "response": {"status_code": 429}}}'
+    outputs:
+      - extract_from: kong_settings_access
+        conditions:
+          - type: vrl
+            source: 'assert_eq!(.metadata.response.status_code, 429)'
+
+  - name: reads remain visible
+    inputs:
+      - insert_at: kong_settings_access
+        type: vrl
+        source: '. = {"metadata": {"request": {"method": "GET", "path": "/rest/v1/settings"}, "response": {"status_code": 200}}}'
+    outputs:
+      - extract_from: kong_settings_access
+        conditions:
+          - type: vrl
+            source: 'assert_eq!(.metadata.request.method, "GET")'
+
+  - name: a similar table name is not filtered
+    inputs:
+      - insert_at: kong_settings_access
+        type: vrl
+        source: '. = {"metadata": {"request": {"method": "POST", "path": "/rest/v1/settings_archive"}, "response": {"status_code": 200}}}'
+    outputs:
+      - extract_from: kong_settings_access
+        conditions:
+          - type: vrl
+            source: 'assert_eq!(.metadata.request.path, "/rest/v1/settings_archive")'
+
+  - name: nested paths are not filtered
+    inputs:
+      - insert_at: kong_settings_access
+        type: vrl
+        source: '. = {"metadata": {"request": {"method": "POST", "path": "/rest/v1/settings/child"}, "response": {"status_code": 200}}}'
+    outputs:
+      - extract_from: kong_settings_access
+        conditions:
+          - type: vrl
+            source: 'assert_eq!(.metadata.request.path, "/rest/v1/settings/child")'
+
+  - name: missing metadata fails open
+    inputs:
+      - insert_at: kong_settings_access
+        type: vrl
+        source: '. = {"event_message": "unparsed gateway error"}'
+    outputs:
+      - extract_from: kong_settings_access
+        conditions:
+          - type: vrl
+            source: 'assert_eq!(.event_message, "unparsed gateway error")'
+
+  - name: malformed status fails open
+    inputs:
+      - insert_at: kong_settings_access
+        type: vrl
+        source: '. = {"event_message": "malformed status", "metadata": {"request": {"method": "POST", "path": "/rest/v1/settings"}, "response": {"status_code": "200"}}}'
+    outputs:
+      - extract_from: kong_settings_access
+        conditions:
+          - type: vrl
+            source: 'assert_eq!(.event_message, "malformed status")'
+
+  - name: malformed request path fails open
+    inputs:
+      - insert_at: kong_settings_access
+        type: vrl
+        source: '. = {"event_message": "malformed request", "metadata": {"request": {"method": "POST", "path": []}, "response": {"status_code": 200}}}'
+    outputs:
+      - extract_from: kong_settings_access
+        conditions:
+          - type: vrl
+            source: 'assert!(is_string(.event_message))'
