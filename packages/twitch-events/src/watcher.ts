@@ -1,4 +1,4 @@
-import { botStatus, logger, supabase } from '@dotabod/shared-utils'
+import { botStatus, commandDisable, logger, supabase } from '@dotabod/shared-utils'
 import type { Tables } from '@dotabod/shared-utils'
 
 import { handleNewUser } from './handle-new-user'
@@ -46,6 +46,28 @@ const handleAccountInsert = async function handleAccountInsert(payload: {
   }
 }
 
+// revoke-event disables the bot with TOKEN_REVOKED and the dashboard tells the
+// streamer to reconnect. Once the new grant has re-created their subscriptions,
+// lift that disable. A disable for any other reason (e.g. !disable) stays.
+const liftTokenRevokedDisable = async function liftTokenRevokedDisable(
+  userId: string
+): Promise<void> {
+  const { data: settings } = await supabase
+    .from('settings')
+    .select('value, disable_reason')
+    .eq('userId', userId)
+    .eq('key', 'commandDisable')
+  const revoked = settings?.some(
+    (setting) => setting.value === true && setting.disable_reason === 'TOKEN_REVOKED'
+  )
+  if (revoked !== true) {
+    return
+  }
+
+  logger.info('[WATCHER] Reauthorized, lifting TOKEN_REVOKED disable', { userId })
+  await commandDisable.enable(userId, { autoResolved: true, reason: 'TOKEN_REVOKED' })
+}
+
 const handleAccountUpdate = async function handleAccountUpdate(payload: {
   new: AccountRow
   old: Partial<AccountRow>
@@ -68,6 +90,7 @@ const handleAccountUpdate = async function handleAccountUpdate(payload: {
   })
   try {
     await handleNewUser(account.providerAccountId)
+    await liftTokenRevokedDisable(account.userId)
   } catch (error) {
     logger.error('[WATCHER] UPDATE handleNewUser failed', {
       error,
