@@ -583,35 +583,6 @@
         "severity": "error"
       }
     },
-    "046b5c2a735d75a3867e8a513a887209a71afe62b01af59deb8ee1db43546fe3": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-use-before-define)",
-        "file": "packages/twitch-chat/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "// Bot's phone number is banned from the channel - this should disable the bot",
-              "await disableUser(providerAccountId, dropReason)",
-              "} else if (dropReason?.code === 'rate_limited') {"
-            ],
-            "message": "",
-            "span": "disableUser"
-          },
-          {
-            "context": [
-              "",
-              "const disableUser = async function disableUser(",
-              "providerAccountId: string,"
-            ],
-            "message": "",
-            "span": "disableUser"
-          }
-        ],
-        "message": "'disableUser' was used before it was defined.",
-        "severity": "error"
-      }
-    },
     "0499aee1e64e5956a72f03419e5ef3bee1463ae8683815cab549e520dd687531": {
       "count": 1,
       "diagnostic": {
@@ -2733,35 +2704,6 @@
           }
         ],
         "message": "Type 'number' is not assignable to type 'string'.",
-        "severity": "error"
-      }
-    },
-    "10e373c4283dfe05dad8574a6871fd896b87a8240d20daab9dad2b05ae69af1a": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-use-before-define)",
-        "file": "packages/twitch-chat/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "} else if (dropReason?.code === 'user_warned') {",
-              "await disableUser(providerAccountId, dropReason)",
-              "} else if (dropReason?.code === 'banned_phone_alias') {"
-            ],
-            "message": "",
-            "span": "disableUser"
-          },
-          {
-            "context": [
-              "",
-              "const disableUser = async function disableUser(",
-              "providerAccountId: string,"
-            ],
-            "message": "",
-            "span": "disableUser"
-          }
-        ],
-        "message": "'disableUser' was used before it was defined.",
         "severity": "error"
       }
     },
@@ -10012,26 +9954,6 @@
         "severity": "error"
       }
     },
-    "44c1f367fe882b9559d99a712f8fe9c496ae9183d4a9c3b68b526eca091c0175": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(variable-name)",
-        "file": "packages/twitch-chat/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "'say',",
-              "async (providerAccountId: string, text: string, reply_parent_message_id?: string) => {",
-              "try {"
-            ],
-            "message": "",
-            "span": "reply_parent_message_id?: string"
-          }
-        ],
-        "message": "Rename this parameter \"reply_parent_message_id\" to match the regular expression ^[_$A-Za-z][$A-Za-z0-9]*$|^[_$A-Z][_$A-Z0-9]+$.",
-        "severity": "error"
-      }
-    },
     "44d1c7fbe566ae90750723b54e6c0789ba35a80aa7ccef6c4c27a1ceeed60d67": {
       "count": 1,
       "diagnostic": {
@@ -10337,26 +10259,6 @@
           }
         ],
         "message": "Unsafe type assertion: type 'MinimapEntityType' is more narrow than the original type.",
-        "severity": "error"
-      }
-    },
-    "46c7ba991ea6c428f87b35811695c93137082a79d40de56eec95cf6d9ab6f2f6": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(complexity)",
-        "file": "packages/twitch-chat/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "'say',",
-              "async (providerAccountId: string, text: string, reply_parent_message_id?: string) => {",
-              "try {"
-            ],
-            "message": "",
-            "span": "async (providerAccountId: string, text: string, reply_parent_message_id?: string) => {\n          try {\n            // Check if bot is banned before attempting to send message\n            const isBanned = await checkBotStatus()\n            if (isBanned) {\n              return\n            }\n\n            const response = await sendTwitchChatMessage({\n              broadcaster_id: providerAccountId,\n              message: text || \"I'm sorry, I can't do that\",\n              reply_parent_message_id,\n              sender_id: process.env.TWITCH_BOT_PROVIDERID!,\n            })\n\n            // Only disable if message failed to send\n            if (!response.data?.[0]?.is_sent) {\n              const dropReason = response.data?.[0]?.drop_reason\n\n              // Handle different drop reason codes that require disabling\n              if (dropReason?.code === 'followers_only_mode') {\n                await disableUser(providerAccountId, dropReason)\n              } else if (dropReason?.code === 'user_warned') {\n                await disableUser(providerAccountId, dropReason)\n              } else if (dropReason?.code === 'banned_phone_alias') {\n                // Bot's phone number is banned from the channel - this should disable the bot\n                await disableUser(providerAccountId, dropReason)\n              } else if (dropReason?.code === 'rate_limited') {\n                // Don't disable for rate limiting - just log it\n                logger.warn('Chat message rate limited, not disabling account:', {\n                  broadcaster_id: providerAccountId,\n                  drop_reason: dropReason,\n                  message: text,\n                })\n              } else if (dropReason?.code === 'send_error') {\n                // Don't disable for generic send errors - just log them\n                logger.error('Chat message send error, not disabling account:', {\n                  broadcaster_id: providerAccountId,\n                  drop_reason: dropReason,\n                  message: text,\n                })\n              } else if (dropReason?.code === 'msg_rejected') {\n                // Don't disable for message moderation - bot can still send other messages\n                logger.warn('Chat message rejected by moderators, not disabling account:', {\n                  broadcaster_id: providerAccountId,\n                  drop_reason: dropReason,\n                  message: text,\n                })\n              } else if (dropReason?.code === 'duplicate_message') {\n                // Don't disable for duplicate messages - can retry later\n                logger.warn('Chat message dropped as duplicate, not disabling account:', {\n                  broadcaster_id: providerAccountId,\n                  drop_reason: dropReason,\n                  message: text,\n                })\n              } else if (dropReason?.code === 'msg_duplicate') {\n                // Don't disable for Twitch's 30-second duplicate restriction\n                logger.warn(\n                  'Chat message blocked by Twitch duplicate restriction, not disabling account:',\n                  {\n                    broadcaster_id: providerAccountId,\n                    drop_reason: dropReason,\n                    message: text,\n                  }\n                )\n              } else if (isNonEmptyText(dropReason?.code)) {\n                // Only disable for actual permission issues\n                await disableUser(providerAccountId, dropReason)\n              } else {\n                // Log the entire message and response for unknown issues\n                logger.error('Failed to send chat message in drop reason:', {\n                  broadcaster_id: providerAccountId,\n                  drop_reason: dropReason,\n                  message: text,\n                  response,\n                })\n              }\n            }\n          } catch (error) {\n            logger.error('Failed to send chat message in say', error)\n          }\n        }"
-          }
-        ],
-        "message": "async function has a complexity of 27. Maximum allowed is 20.",
         "severity": "error"
       }
     },
@@ -12839,35 +12741,6 @@
         "severity": "error"
       }
     },
-    "5891572b8de84d4924c472f053d85d9d46d3a8f3627d0d89b67bdff2e0338987": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-use-before-define)",
-        "file": "packages/twitch-chat/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "// Only disable for actual permission issues",
-              "await disableUser(providerAccountId, dropReason)",
-              "} else {"
-            ],
-            "message": "",
-            "span": "disableUser"
-          },
-          {
-            "context": [
-              "",
-              "const disableUser = async function disableUser(",
-              "providerAccountId: string,"
-            ],
-            "message": "",
-            "span": "disableUser"
-          }
-        ],
-        "message": "'disableUser' was used before it was defined.",
-        "severity": "error"
-      }
-    },
     "58d50a1602ec9d8ae01116bfa621722bfc67c0bdc8b05f02bf092fa9dbaf534f": {
       "count": 1,
       "diagnostic": {
@@ -14725,31 +14598,6 @@
           }
         ],
         "message": "Either remove this useless object instantiation of \"GSIServer\" or use it.",
-        "severity": "error"
-      }
-    },
-    "65a8bbcce4fe01a185605bf565abfa9406f62c4b8a7c046a057f4c9c310026c6": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-shadow)",
-        "file": "packages/twitch-chat/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "// Check if bot is banned before attempting to send message",
-              "const isBanned = await checkBotStatus()",
-              "if (isBanned) {"
-            ],
-            "message": "",
-            "span": "isBanned"
-          },
-          {
-            "context": ["try {", "const isBanned = await checkBotStatus()", "if (isBanned) {"],
-            "message": "",
-            "span": "isBanned"
-          }
-        ],
-        "message": "'isBanned' is already declared in the upper scope.",
         "severity": "error"
       }
     },
@@ -18073,35 +17921,6 @@
         "severity": "error"
       }
     },
-    "82ab59b812eda2cd27283c4547faf184d9c816daa411d73096666caa969f45dc": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-use-before-define)",
-        "file": "packages/twitch-chat/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "if (dropReason?.code === 'followers_only_mode') {",
-              "await disableUser(providerAccountId, dropReason)",
-              "} else if (dropReason?.code === 'user_warned') {"
-            ],
-            "message": "",
-            "span": "disableUser"
-          },
-          {
-            "context": [
-              "",
-              "const disableUser = async function disableUser(",
-              "providerAccountId: string,"
-            ],
-            "message": "",
-            "span": "disableUser"
-          }
-        ],
-        "message": "'disableUser' was used before it was defined.",
-        "severity": "error"
-      }
-    },
     "82b1c1140d598056ecb039631414a71b36a037524ca17dac97d86002d0d73ad5": {
       "count": 1,
       "diagnostic": {
@@ -19505,26 +19324,6 @@
           }
         ],
         "message": "A `typeof` check narrows a representation without establishing its contract. Parse input at its I/O boundary, then branch on the domain value.",
-        "severity": "error"
-      }
-    },
-    "8d4945f3c58cca5197a1aac7e2bb73118d62cd73d0491cb9ae1d7119ec74133c": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-non-null-assertion)",
-        "file": "packages/twitch-chat/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "reply_parent_message_id,",
-              "sender_id: process.env.TWITCH_BOT_PROVIDERID!,",
-              "})"
-            ],
-            "message": "",
-            "span": "process.env.TWITCH_BOT_PROVIDERID!"
-          }
-        ],
-        "message": "Forbidden non-null assertion.",
         "severity": "error"
       }
     },
@@ -32247,26 +32046,6 @@
           }
         ],
         "message": "Prefer `async`/`await` to the callback pattern",
-        "severity": "error"
-      }
-    },
-    "e50ce2fd2eaeb8bc230cbbbb5dcf31251ef487f6fdf7e8ae54e0c6dec7dadc65": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(strict-void-return)",
-        "file": "packages/twitch-chat/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "'say',",
-              "async (providerAccountId: string, text: string, reply_parent_message_id?: string) => {",
-              "try {"
-            ],
-            "message": "",
-            "span": "async (providerAccountId: string, text: string, reply_parent_message_id?: string) => {\n          try {\n            // Check if bot is banned before attempting to send message\n            const isBanned = await checkBotStatus()\n            if (isBanned) {\n              return\n            }\n\n            const response = await sendTwitchChatMessage({\n              broadcaster_id: providerAccountId,\n              message: text || \"I'm sorry, I can't do that\",\n              reply_parent_message_id,\n              sender_id: process.env.TWITCH_BOT_PROVIDERID!,\n            })\n\n            // Only disable if message failed to send\n            if (!response.data?.[0]?.is_sent) {\n              const dropReason = response.data?.[0]?.drop_reason\n\n              // Handle different drop reason codes that require disabling\n              if (dropReason?.code === 'followers_only_mode') {\n                await disableUser(providerAccountId, dropReason)\n              } else if (dropReason?.code === 'user_warned') {\n                await disableUser(providerAccountId, dropReason)\n              } else if (dropReason?.code === 'banned_phone_alias') {\n                // Bot's phone number is banned from the channel - this should disable the bot\n                await disableUser(providerAccountId, dropReason)\n              } else if (dropReason?.code === 'rate_limited') {\n                // Don't disable for rate limiting - just log it\n                logger.warn('Chat message rate limited, not disabling account:', {\n                  broadcaster_id: providerAccountId,\n                  drop_reason: dropReason,\n                  message: text,\n                })\n              } else if (dropReason?.code === 'send_error') {\n                // Don't disable for generic send errors - just log them\n                logger.error('Chat message send error, not disabling account:', {\n                  broadcaster_id: providerAccountId,\n                  drop_reason: dropReason,\n                  message: text,\n                })\n              } else if (dropReason?.code === 'msg_rejected') {\n                // Don't disable for message moderation - bot can still send other messages\n                logger.warn('Chat message rejected by moderators, not disabling account:', {\n                  broadcaster_id: providerAccountId,\n                  drop_reason: dropReason,\n                  message: text,\n                })\n              } else if (dropReason?.code === 'duplicate_message') {\n                // Don't disable for duplicate messages - can retry later\n                logger.warn('Chat message dropped as duplicate, not disabling account:', {\n                  broadcaster_id: providerAccountId,\n                  drop_reason: dropReason,\n                  message: text,\n                })\n              } else if (dropReason?.code === 'msg_duplicate') {\n                // Don't disable for Twitch's 30-second duplicate restriction\n                logger.warn(\n                  'Chat message blocked by Twitch duplicate restriction, not disabling account:',\n                  {\n                    broadcaster_id: providerAccountId,\n                    drop_reason: dropReason,\n                    message: text,\n                  }\n                )\n              } else if (isNonEmptyText(dropReason?.code)) {\n                // Only disable for actual permission issues\n                await disableUser(providerAccountId, dropReason)\n              } else {\n                // Log the entire message and response for unknown issues\n                logger.error('Failed to send chat message in drop reason:', {\n                  broadcaster_id: providerAccountId,\n                  drop_reason: dropReason,\n                  message: text,\n                  response,\n                })\n              }\n            }\n          } catch (error) {\n            logger.error('Failed to send chat message in say', error)\n          }\n        }"
-          }
-        ],
-        "message": "Async function used in a context where a void function is expected.",
         "severity": "error"
       }
     },

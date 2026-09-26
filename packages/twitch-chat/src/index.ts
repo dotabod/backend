@@ -17,6 +17,7 @@ import type { FsBackendOptions } from 'i18next-fs-backend'
 
 import { ensureEventSubInitialized } from './conduit-setup'
 import { clearDisableCache, DISABLE_CACHE_EXPIRY, disableUserCache } from './disable-cache'
+import { isBlockingDropReason } from './drop-reasons'
 import { isEventsubConnected } from './event-sub-socket'
 import { sendTwitchChatMessage } from './handle-chat'
 import { io, setupSocketServer } from './utils/socket-manager'
@@ -44,180 +45,10 @@ if (!isNonEmptyText(process.env.TWITCH_BOT_USERNAME)) {
   process.env.TWITCH_BOT_USERNAME = 'dotabod'
 }
 
-const startup = async function startup() {
-  try {
-    const isBanned = await checkBotStatus()
-    if (isBanned) {
-      logger.error('Bot is banned!')
-    }
-
-    await use(FsBackend).init<FsBackendOptions>({
-      backend: {
-        loadPath: join('./locales/{{lng}}/{{ns}}.json'),
-      },
-      defaultNS: 'translation',
-      fallbackLng: 'en',
-      initAsync: false,
-      lng: 'en',
-      preload: readdirSync(join('./locales')).filter((fileName: string) => {
-        const joinedPath = join(join('./locales'), fileName)
-        return lstatSync(joinedPath).isDirectory()
-      }),
-    })
-
-    logger.info('Loaded i18n for chat')
-
-    // Initialize socket server
-    setupSocketServer()
-
-    // Report liveness to the Uptime Kuma push monitor
-    startHeartbeat()
-
-    // Report whether the bot's Twitch EventSub connection is live (separate monitor)
-    startHeartbeat({
-      debounceMs: 90_000,
-      getStatus: () => ({
-        msg: isEventsubConnected() ? 'connected' : 'eventsub disconnected',
-        up: isEventsubConnected(),
-      }),
-      name: 'eventsub heartbeat',
-      url: process.env.KUMA_PUSH_URL_EVENTSUB,
-    })
-
-    // Dependency-aware Supabase probe: the liveness ping above stays green even
-    // when the container can't reach Supabase, so every account/token lookup
-    // can fail silently (as it did in the 2026-05-29 network incident).
-    startHeartbeat({
-      debounceMs: 90_000,
-      getStatus: checkSupabaseHealth,
-      name: 'twitch-chat supabase heartbeat',
-      url: process.env.KUMA_PUSH_URL_SUPABASE,
-    })
-
-    // Initialize Twitch EventSub connection. If twitch-events isn't reachable
-    // yet, this attempt fails — but the eventsSocket 'connect' handler in
-    // conduitSetup re-runs it whenever the link to twitch-events comes (back) up,
-    // so EventSub self-heals instead of staying dead until a manual restart.
-    await ensureEventSubInitialized('startup')
-
-    // Listen for disable cache clear events from other packages
-    io.on('clear-disable-cache', ({ userId }: { userId: string }) => {
-      clearDisableCache(userId)
-    })
-
-    // Add event handlers for 'say' and 'whisper'
-    io.on('connection', (socket) => {
-      socket.on(
-        'say',
-        async (providerAccountId: string, text: string, reply_parent_message_id?: string) => {
-          try {
-            // Check if bot is banned before attempting to send message
-            const isBanned = await checkBotStatus()
-            if (isBanned) {
-              return
-            }
-
-            const response = await sendTwitchChatMessage({
-              broadcaster_id: providerAccountId,
-              message: text || "I'm sorry, I can't do that",
-              reply_parent_message_id,
-              sender_id: process.env.TWITCH_BOT_PROVIDERID!,
-            })
-
-            // Only disable if message failed to send
-            if (!response.data?.[0]?.is_sent) {
-              const dropReason = response.data?.[0]?.drop_reason
-
-              // Handle different drop reason codes that require disabling
-              if (dropReason?.code === 'followers_only_mode') {
-                await disableUser(providerAccountId, dropReason)
-              } else if (dropReason?.code === 'user_warned') {
-                await disableUser(providerAccountId, dropReason)
-              } else if (dropReason?.code === 'banned_phone_alias') {
-                // Bot's phone number is banned from the channel - this should disable the bot
-                await disableUser(providerAccountId, dropReason)
-              } else if (dropReason?.code === 'rate_limited') {
-                // Don't disable for rate limiting - just log it
-                logger.warn('Chat message rate limited, not disabling account:', {
-                  broadcaster_id: providerAccountId,
-                  drop_reason: dropReason,
-                  message: text,
-                })
-              } else if (dropReason?.code === 'send_error') {
-                // Don't disable for generic send errors - just log them
-                logger.error('Chat message send error, not disabling account:', {
-                  broadcaster_id: providerAccountId,
-                  drop_reason: dropReason,
-                  message: text,
-                })
-              } else if (dropReason?.code === 'msg_rejected') {
-                // Don't disable for message moderation - bot can still send other messages
-                logger.warn('Chat message rejected by moderators, not disabling account:', {
-                  broadcaster_id: providerAccountId,
-                  drop_reason: dropReason,
-                  message: text,
-                })
-              } else if (dropReason?.code === 'duplicate_message') {
-                // Don't disable for duplicate messages - can retry later
-                logger.warn('Chat message dropped as duplicate, not disabling account:', {
-                  broadcaster_id: providerAccountId,
-                  drop_reason: dropReason,
-                  message: text,
-                })
-              } else if (dropReason?.code === 'msg_duplicate') {
-                // Don't disable for Twitch's 30-second duplicate restriction
-                logger.warn(
-                  'Chat message blocked by Twitch duplicate restriction, not disabling account:',
-                  {
-                    broadcaster_id: providerAccountId,
-                    drop_reason: dropReason,
-                    message: text,
-                  }
-                )
-              } else if (isNonEmptyText(dropReason?.code)) {
-                // Only disable for actual permission issues
-                await disableUser(providerAccountId, dropReason)
-              } else {
-                // Log the entire message and response for unknown issues
-                logger.error('Failed to send chat message in drop reason:', {
-                  broadcaster_id: providerAccountId,
-                  drop_reason: dropReason,
-                  message: text,
-                  response,
-                })
-              }
-            }
-          } catch (error) {
-            logger.error('Failed to send chat message in say', error)
-          }
-        }
-      )
-
-      socket.on('whisper', async (channel: string, text: string) => {
-        try {
-          const api = await getTwitchAPI()
-          await api.whispers.sendWhisper(process.env.TWITCH_BOT_PROVIDERID!, channel, text)
-        } catch (error) {
-          logger.error('could not whisper', error)
-        }
-      })
-    })
-  } catch (error) {
-    logger.error('Error during startup', error)
-    process.exit(1)
-  }
-}
-
 const disableUser = async function disableUser(
   providerAccountId: string,
   dropReason?: { code: string; message: string }
 ) {
-  // Our own race guard dropped this message (usually "Dotabod is now disabled").
-  // Disabling again would overwrite the real drop reason the streamer needs to see.
-  if (dropReason?.code === 'user_being_disabled') {
-    return
-  }
-
   const { data: user } = await supabase
     .from('accounts')
     .select('userId')
@@ -301,6 +132,135 @@ const disableUser = async function disableUser(
     dropReasonMessage: dropReason?.message,
     providerAccountId,
   })
+}
+
+const say = async function say(
+  providerAccountId: string,
+  text: string,
+  replyParentMessageId?: string
+): Promise<void> {
+  try {
+    // Check if bot is banned before attempting to send message
+    if (await checkBotStatus()) {
+      return
+    }
+
+    const response = await sendTwitchChatMessage({
+      broadcaster_id: providerAccountId,
+      message: text || "I'm sorry, I can't do that",
+      reply_parent_message_id: replyParentMessageId,
+      sender_id: process.env.TWITCH_BOT_PROVIDERID ?? '',
+    })
+    const result = response.data?.[0]
+    if (result?.is_sent) {
+      return
+    }
+
+    const dropReason = result?.drop_reason
+    if (dropReason?.code === undefined) {
+      logger.error('Failed to send chat message in drop reason:', {
+        broadcaster_id: providerAccountId,
+        message: text,
+        response,
+      })
+      return
+    }
+
+    if (isBlockingDropReason(dropReason.code)) {
+      await disableUser(providerAccountId, dropReason)
+      return
+    }
+
+    logger.warn('Chat message dropped, not disabling account:', {
+      broadcaster_id: providerAccountId,
+      drop_reason: dropReason,
+      message: text,
+    })
+  } catch (error) {
+    logger.error('Failed to send chat message in say', error)
+  }
+}
+
+const startup = async function startup() {
+  try {
+    const isBanned = await checkBotStatus()
+    if (isBanned) {
+      logger.error('Bot is banned!')
+    }
+
+    await use(FsBackend).init<FsBackendOptions>({
+      backend: {
+        loadPath: join('./locales/{{lng}}/{{ns}}.json'),
+      },
+      defaultNS: 'translation',
+      fallbackLng: 'en',
+      initAsync: false,
+      lng: 'en',
+      preload: readdirSync(join('./locales')).filter((fileName: string) => {
+        const joinedPath = join(join('./locales'), fileName)
+        return lstatSync(joinedPath).isDirectory()
+      }),
+    })
+
+    logger.info('Loaded i18n for chat')
+
+    // Initialize socket server
+    setupSocketServer()
+
+    // Report liveness to the Uptime Kuma push monitor
+    startHeartbeat()
+
+    // Report whether the bot's Twitch EventSub connection is live (separate monitor)
+    startHeartbeat({
+      debounceMs: 90_000,
+      getStatus: () => ({
+        msg: isEventsubConnected() ? 'connected' : 'eventsub disconnected',
+        up: isEventsubConnected(),
+      }),
+      name: 'eventsub heartbeat',
+      url: process.env.KUMA_PUSH_URL_EVENTSUB,
+    })
+
+    // Dependency-aware Supabase probe: the liveness ping above stays green even
+    // when the container can't reach Supabase, so every account/token lookup
+    // can fail silently (as it did in the 2026-05-29 network incident).
+    startHeartbeat({
+      debounceMs: 90_000,
+      getStatus: checkSupabaseHealth,
+      name: 'twitch-chat supabase heartbeat',
+      url: process.env.KUMA_PUSH_URL_SUPABASE,
+    })
+
+    // Initialize Twitch EventSub connection. If twitch-events isn't reachable
+    // yet, this attempt fails — but the eventsSocket 'connect' handler in
+    // conduitSetup re-runs it whenever the link to twitch-events comes (back) up,
+    // so EventSub self-heals instead of staying dead until a manual restart.
+    await ensureEventSubInitialized('startup')
+
+    // Listen for disable cache clear events from other packages
+    io.on('clear-disable-cache', ({ userId }: { userId: string }) => {
+      clearDisableCache(userId)
+    })
+
+    // Add event handlers for 'say' and 'whisper'
+    io.on('connection', (socket) => {
+      socket.on('say', (providerAccountId: string, text: string, replyParentMessageId?: string) => {
+        void say(providerAccountId, text, replyParentMessageId)
+      })
+
+      socket.on('whisper', async (channel: string, text: string) => {
+        try {
+          const api = await getTwitchAPI()
+          await api.whispers.sendWhisper(process.env.TWITCH_BOT_PROVIDERID!, channel, text)
+        } catch (error) {
+          logger.error('could not whisper', error)
+        }
+      })
+    })
+  } catch (error) {
+    logger.error('Error during startup', error)
+    process.exit(1)
+  }
 }
 
 // Start the service and handle any uncaught errors
