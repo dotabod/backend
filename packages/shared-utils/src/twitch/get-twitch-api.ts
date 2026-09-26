@@ -39,14 +39,14 @@ export const getTwitchAPI = async (twitchId?: string): Promise<ApiClient> => {
         throw new Error('Missing Twitch tokens')
       }
 
+      // Rows written by the dashboard sign-in have a null obtainment_timestamp
+      const obtainedAt = tokens?.obtainment_timestamp ?? ''
+
       // Create token data object
       const tokenData = {
         accessToken,
         expiresIn: tokens?.expires_in ?? 0,
-        obtainmentTimestamp:
-          tokens?.obtainment_timestamp !== undefined && tokens.obtainment_timestamp.length > 0
-            ? new Date(tokens.obtainment_timestamp).getTime()
-            : Date.now(),
+        obtainmentTimestamp: obtainedAt.length > 0 ? new Date(obtainedAt).getTime() : Date.now(),
         refreshToken,
         scope: tokens?.scope?.split(' ') ?? [],
       }
