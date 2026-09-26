@@ -212,6 +212,12 @@ const disableUser = async function disableUser(
   providerAccountId: string,
   dropReason?: { code: string; message: string }
 ) {
+  // Our own race guard dropped this message (usually "Dotabod is now disabled").
+  // Disabling again would overwrite the real drop reason the streamer needs to see.
+  if (dropReason?.code === 'user_being_disabled') {
+    return
+  }
+
   const { data: user } = await supabase
     .from('accounts')
     .select('userId')
