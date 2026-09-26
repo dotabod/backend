@@ -36076,26 +36076,6 @@
         "severity": "error"
       }
     },
-    "fea55977a322208d492b85f17a54ba2ac6f036576ac3c7748d16b8fabe288f60": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(no-duplicate-string)",
-        "file": "packages/dota/src/dota/validate-token.ts",
-        "labels": [
-          {
-            "context": [
-              "res.status(200).json({",
-              "error: 'Invalid token, skipping auth check',",
-              "})"
-            ],
-            "message": "",
-            "span": "'Invalid token, skipping auth check'"
-          }
-        ],
-        "message": "Define a constant instead of duplicating this literal 3 times.",
-        "severity": "error"
-      }
-    },
     "fef968a40342b3b24a6d7d8989ce2d5b50292259b3129a6c6205f4de6f62430b": {
       "count": 1,
       "diagnostic": {
