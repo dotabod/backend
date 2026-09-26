@@ -5,7 +5,7 @@
   },
   "aegis": {
     "denied": "{{- heroName}} знищив Аєгіс {{emote}}",
-    "deniedUnknown": "Aegis denied {{emote}}",
+    "deniedUnknown": "Вам не дісталась",
     "expired": "Аєгіс у {{- heroName}} зник {{emote}}. Ніхто його не бачив?",
     "expiredUnknown": "Aegis expired {{emote}}",
     "pickup": "{{- heroName}} підібрав Аєгіс!",
