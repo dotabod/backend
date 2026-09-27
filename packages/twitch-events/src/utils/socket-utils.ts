@@ -26,7 +26,8 @@ type EventSocket = Socket<ClientToServerEvents, ServerToClientEvents>
 
 const conduitOptionsSchema = z.object({ forceRefresh: z.boolean().optional() })
 
-const socketIo = new Server<ClientToServerEvents, ServerToClientEvents>(5015, {
+// The port opens in setupSocketIO, once the connection handler is attached.
+export const socketIo = new Server<ClientToServerEvents, ServerToClientEvents>({
   cors: {
     methods: ['GET', 'POST'],
     // This allows any origin - adjust for production,
@@ -127,8 +128,14 @@ const registerSocket = async function registerSocket(socket: EventSocket): Promi
   }
 }
 
-export const setupSocketIO = function setupSocketIO(): void {
+// Attach the connection handler, then open the port. twitch-chat reconnects the moment
+// twitch-events is reachable; a socket accepted before the handler exists never gets a
+// getConduitData listener, so twitch-chat's EventSub stays down until it reconnects (prod
+// 2026-09-27: a Docker restart left the bot's EventSub down until twitch-chat was restarted).
+export const setupSocketIO = function setupSocketIO(port = 5015): void {
   socketIo.on('connection', (socket) => {
     void registerSocket(socket)
   })
+
+  socketIo.listen(port)
 }

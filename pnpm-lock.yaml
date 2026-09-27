@@ -305,6 +305,9 @@ importers:
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
+      socket.io-client:
+        specifier: ^4.8.1
+        version: 4.8.3
 
 packages:
 
