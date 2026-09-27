@@ -418,6 +418,11 @@ export const { executeRevoke, revokeEvent, stopUserSubscriptions } =
   await import('../twitch/lib/revoke-event')
 export const { handleNewUser } = await import('../handle-new-user')
 export const { ensureBotIsModerator } = await import('../ensure-bot-is-moderator')
+const socketUtils = await import('../utils/socket-utils')
+export const { isEventsIOConnected, setupSocketIO } = socketUtils
+export const closeSocketIO = async function closeSocketIO(): Promise<void> {
+  await socketUtils.socketIo.close()
+}
 export const { checkAndFixUserSubscriptions } = await import('../utils/rate-limiter')
 const { setupAccountWatcher: setupAccountWatcherWithDependencies } = await import('../watcher')
 

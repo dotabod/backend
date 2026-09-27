@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
-    "@types/node": "^24.13.3"
+    "@types/node": "^24.13.3",
+    "socket.io-client": "^4.8.1"
   }
 }
