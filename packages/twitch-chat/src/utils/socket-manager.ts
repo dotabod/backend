@@ -1,8 +1,10 @@
 import { logger } from '@dotabod/shared-utils'
 import { Server } from 'socket.io'
+import type { Socket } from 'socket.io'
 
-// Socket.io server instance with improved connection handling
-export const io = new Server(5005, {
+// Socket.io server instance with improved connection handling. The port opens in
+// setupSocketServer, once every connection handler is attached.
+export const io = new Server({
   // Increase connection timeout
   connectTimeout: 45_000,
   cors: {
@@ -66,13 +68,14 @@ export const emitEvent = function emitEvent(
   io.to('twitch-chat-messages').emit('event', type, broadcasterId, data)
 }
 
-// Initialize socket connections
-export const setupSocketServer = function setupSocketServer(): void {
-  // Set up error handling for the server
-  io.engine.on('connection_error', (err) => {
-    logger.error('Socket.io server connection error:', err)
-  })
-
+// Attach every connection handler, then open the port. dota reconnects within a second
+// of a twitch-chat restart; a socket accepted before its handlers exist never joins the
+// chat room or gets a 'say' listener, and stays that way until dota reconnects (prod
+// 2026-09-26: 22h of unanswered commands after a twitch-chat-only redeploy).
+export const setupSocketServer = function setupSocketServer(
+  onConnection: (socket: Socket) => void,
+  port = 5005
+): void {
   io.on('connection', (socket) => {
     logger.info(`Found a connection! Socket ID: ${socket.id}`)
 
@@ -116,5 +119,14 @@ export const setupSocketServer = function setupSocketServer(): void {
       logger.info(`Socket disconnected. Socket ID: ${socket.id}. Reason: ${reason}`, details)
       removeSocket(socket.id)
     })
+
+    onConnection(socket)
+  })
+
+  io.listen(port)
+
+  // Set up error handling for the server
+  io.engine.on('connection_error', (err) => {
+    logger.error('Socket.io server connection error:', err)
   })
 }

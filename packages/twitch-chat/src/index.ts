@@ -20,7 +20,7 @@ import { clearDisableCache, DISABLE_CACHE_EXPIRY, disableUserCache } from './dis
 import { isBlockingDropReason } from './drop-reasons'
 import { isEventsubConnected } from './event-sub-socket'
 import { sendTwitchChatMessage } from './handle-chat'
-import { io, setupSocketServer } from './utils/socket-manager'
+import { setupSocketServer } from './utils/socket-manager'
 
 process.on('SIGTERM', () => process.exit(0))
 process.on('SIGINT', () => process.exit(0))
@@ -183,6 +183,27 @@ const say = async function say(
 
 const startup = async function startup() {
   try {
+    // Before the first await, so no connection can arrive ahead of its handlers.
+    setupSocketServer((socket) => {
+      // dota asks for this when a streamer re-enables the bot
+      socket.on('clear-disable-cache', ({ userId }: { userId: string }) => {
+        clearDisableCache(userId)
+      })
+
+      socket.on('say', (providerAccountId: string, text: string, replyParentMessageId?: string) => {
+        void say(providerAccountId, text, replyParentMessageId)
+      })
+
+      socket.on('whisper', async (channel: string, text: string) => {
+        try {
+          const api = await getTwitchAPI()
+          await api.whispers.sendWhisper(process.env.TWITCH_BOT_PROVIDERID!, channel, text)
+        } catch (error) {
+          logger.error('could not whisper', error)
+        }
+      })
+    })
+
     const isBanned = await checkBotStatus()
     if (isBanned) {
       logger.error('Bot is banned!')
@@ -203,9 +224,6 @@ const startup = async function startup() {
     })
 
     logger.info('Loaded i18n for chat')
-
-    // Initialize socket server
-    setupSocketServer()
 
     // Report liveness to the Uptime Kuma push monitor
     startHeartbeat()
@@ -236,27 +254,6 @@ const startup = async function startup() {
     // conduitSetup re-runs it whenever the link to twitch-events comes (back) up,
     // so EventSub self-heals instead of staying dead until a manual restart.
     await ensureEventSubInitialized('startup')
-
-    // Listen for disable cache clear events from other packages
-    io.on('clear-disable-cache', ({ userId }: { userId: string }) => {
-      clearDisableCache(userId)
-    })
-
-    // Add event handlers for 'say' and 'whisper'
-    io.on('connection', (socket) => {
-      socket.on('say', (providerAccountId: string, text: string, replyParentMessageId?: string) => {
-        void say(providerAccountId, text, replyParentMessageId)
-      })
-
-      socket.on('whisper', async (channel: string, text: string) => {
-        try {
-          const api = await getTwitchAPI()
-          await api.whispers.sendWhisper(process.env.TWITCH_BOT_PROVIDERID!, channel, text)
-        } catch (error) {
-          logger.error('could not whisper', error)
-        }
-      })
-    })
   } catch (error) {
     logger.error('Error during startup', error)
     process.exit(1)
