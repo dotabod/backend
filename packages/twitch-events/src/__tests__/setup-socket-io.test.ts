@@ -1,13 +1,13 @@
 import { io as connect } from 'socket.io-client'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 
-import { isEventsIOConnected, setupSocketIO, socketIo } from './shared-mocks.ts'
+import { closeSocketIO, isEventsIOConnected, setupSocketIO } from './shared-mocks.ts'
 
 const PORT = 15_015
 
 describe(setupSocketIO, () => {
   afterAll(async () => {
-    await socketIo.close()
+    await closeSocketIO()
   })
 
   // Prod 2026-09-27: twitch-chat connected before the connection handler was attached,
