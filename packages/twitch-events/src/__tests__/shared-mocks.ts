@@ -48,7 +48,7 @@ interface TestState {
   // supabase: accounts.single() -> dbUser; settings.select -> dbSettings;
   // upserts/updates capture writes.
   dbUser: { userId: string } | null
-  dbSettings: { key: string; value: TestValue }[]
+  dbSettings: { key: string; value: TestValue; disable_reason?: string | null }[]
   upserts: { table: string; values: TestRecord }[]
   updates: { table: string; values: TestRecord }[]
   commandDisableCalls: (

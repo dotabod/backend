@@ -27,6 +27,21 @@ export interface ValidateTokenResponse {
 
 export type ValidateTokenNext = () => void
 
+// Dota's GSI client never has two POSTs in flight, and its throttle and heartbeat
+// timers start only once a 2xx arrives. Holding the reply to packets we discard
+// slows offline streamers and dead cfg files from ~1 packet/s to one every few
+// seconds. Stay under the 5s `timeout` every shipped cfg uses, or the client
+// gives up on the request instead of waiting.
+export const DISCARDED_REPLY_DELAY_MS = 3000
+
+const INVALID_TOKEN_ERROR = 'Invalid token, skipping auth check'
+
+const replyDiscarded = function replyDiscarded(res: ValidateTokenResponse, error: string): void {
+  setTimeout(() => {
+    res.status(200).json({ error })
+  }, DISCARDED_REPLY_DELAY_MS)
+}
+
 export const validateTokenRequest = async function validateTokenRequest(
   req: ValidateTokenRequest,
   res: ValidateTokenResponse,
@@ -41,9 +56,7 @@ export const validateTokenRequest = async function validateTokenRequest(
   const token = req.body.auth?.token
 
   if (invalidTokens.has(token)) {
-    res.status(200).json({
-      error: 'Invalid token, skipping auth check',
-    })
+    replyDiscarded(res, INVALID_TOKEN_ERROR)
     return
   }
 
@@ -79,9 +92,7 @@ export const validateTokenRequest = async function validateTokenRequest(
         // recover immediately without exposing the previous match through chat or tooltips.
         client.pendingGsi = req.body
         client.pendingGsiUpdatedAt = Date.now()
-        res.status(200).json({
-          error: 'Stream offline',
-        })
+        replyDiscarded(res, 'Stream offline')
         return
       }
 
@@ -94,13 +105,11 @@ export const validateTokenRequest = async function validateTokenRequest(
     }
 
     invalidTokens.add(token)
-    res.status(200).json({ error: 'Invalid token, skipping auth check' })
+    replyDiscarded(res, INVALID_TOKEN_ERROR)
   } catch (error) {
     logger.info('[GSI] io.use Error checking auth 48', { error, token })
     invalidTokens.add(token)
-    res.status(200).json({
-      error: 'Invalid token, skipping auth check',
-    })
+    replyDiscarded(res, INVALID_TOKEN_ERROR)
   } finally {
     pendingCheckAuth.delete(token)
   }

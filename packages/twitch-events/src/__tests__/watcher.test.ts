@@ -112,6 +112,70 @@ describe(setupAccountWatcher, () => {
     expect(state.subscribeCalls.some((c) => c.userId === 'tw-back')).toBeTruthy()
   })
 
+  it('UPDATE:accounts requires_refresh true→false → lifts a TOKEN_REVOKED disable', async () => {
+    // Prod 2026-09-25: a streamer enabled 2FA, Twitch revoked every grant, and
+    // revoke-event disabled Dotabod with TOKEN_REVOKED. The dashboard told them
+    // to reconnect; they did, but the disable stayed until it was cleared by hand.
+    state.streamer = { displayName: 'Returning', name: 'returning' }
+    state.dbUser = { userId: 'user-back' }
+    state.dbSettings = [{ disable_reason: 'TOKEN_REVOKED', key: 'commandDisable', value: true }]
+
+    await fire('UPDATE', 'accounts', {
+      new: {
+        provider: 'twitch',
+        providerAccountId: 'tw-back',
+        requires_refresh: false,
+        userId: 'user-back',
+      },
+      old: { provider: 'twitch', providerAccountId: 'tw-back', requires_refresh: true },
+    })
+
+    expect(state.commandDisableCalls).toStrictEqual([
+      {
+        kind: 'enable',
+        opts: { autoResolved: true, reason: 'TOKEN_REVOKED' },
+        userId: 'user-back',
+      },
+    ])
+  })
+
+  it('UPDATE:accounts requires_refresh true→false → keeps a disable the streamer chose', async () => {
+    state.streamer = { displayName: 'Returning', name: 'returning' }
+    state.dbUser = { userId: 'user-off' }
+    state.dbSettings = [{ disable_reason: 'MANUAL_DISABLE', key: 'commandDisable', value: true }]
+
+    await fire('UPDATE', 'accounts', {
+      new: {
+        provider: 'twitch',
+        providerAccountId: 'tw-off',
+        requires_refresh: false,
+        userId: 'user-off',
+      },
+      old: { provider: 'twitch', providerAccountId: 'tw-off', requires_refresh: true },
+    })
+
+    expect(state.commandDisableCalls).toHaveLength(0)
+  })
+
+  it('UPDATE:accounts requires_refresh true→false → keeps TOKEN_REVOKED when resubscribing fails', async () => {
+    state.streamer = { displayName: 'Returning', name: 'returning' }
+    state.dbUser = { userId: 'user-bad' }
+    state.dbSettings = [{ disable_reason: 'TOKEN_REVOKED', key: 'commandDisable', value: true }]
+    state.subscribeResult = (_userId, type) => type !== 'stream.online'
+
+    await fire('UPDATE', 'accounts', {
+      new: {
+        provider: 'twitch',
+        providerAccountId: 'tw-bad',
+        requires_refresh: false,
+        userId: 'user-bad',
+      },
+      old: { provider: 'twitch', providerAccountId: 'tw-bad', requires_refresh: true },
+    })
+
+    expect(state.commandDisableCalls).toHaveLength(0)
+  })
+
   it('UPDATE:accounts that does NOT flip requires_refresh → no-op', async () => {
     await fire('UPDATE', 'accounts', {
       new: { provider: 'twitch', providerAccountId: 'tw-x', requires_refresh: false },

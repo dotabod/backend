@@ -6,7 +6,7 @@ export interface TwitchTokens {
   refresh_token: string
   expires_in?: number
   scope?: string
-  obtainment_timestamp?: string
+  obtainment_timestamp?: string | null
   requires_refresh?: boolean
 }
 

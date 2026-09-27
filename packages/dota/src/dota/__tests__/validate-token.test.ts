@@ -24,7 +24,8 @@ vi.doMock(import('../setup-signals'), () => ({
 }))
 
 const { invalidTokens, lookingupToken, pendingCheckAuth } = await import('../lib/consts')
-const { validateTokenRequest: validateToken } = await import('../validate-token')
+const { DISCARDED_REPLY_DELAY_MS, validateTokenRequest: validateToken } =
+  await import('../validate-token')
 
 const makeRequest = function makeRequest(token = 'token-1'): ValidateTokenRequest {
   return {
@@ -116,11 +117,13 @@ describe('validateToken cleanup', () => {
     getDBUserMock.mockResolvedValue({ result: client })
 
     await validateToken(request, response, next)
+    const receivedAt = Date.now()
+    vi.advanceTimersByTime(DISCARDED_REPLY_DELAY_MS)
 
     expect(statusCalls).toStrictEqual([200])
     expect(jsonCalls).toStrictEqual([{ error: 'Stream offline' }])
     expect(client.pendingGsi).toBe(request.body)
-    expect(client.pendingGsiUpdatedAt).toBe(Date.now())
+    expect(client.pendingGsiUpdatedAt).toBe(receivedAt)
     expect(client.gsi).toBeUndefined()
     expect(client.gsiUpdatedAt).toBeUndefined()
     expect(next).not.toHaveBeenCalled()
@@ -129,29 +132,51 @@ describe('validateToken cleanup', () => {
   })
 
   it('caches an invalid lookup and releases pending auth', async () => {
+    vi.useFakeTimers()
     const request = makeRequest()
     const { response, statusCalls, jsonCalls } = makeResponse()
     getDBUserMock.mockResolvedValue({ result: null })
 
     await validateToken(request, response, vi.fn<ValidateTokenNext>())
+    vi.advanceTimersByTime(DISCARDED_REPLY_DELAY_MS)
 
     expect(statusCalls).toStrictEqual([200])
     expect(jsonCalls).toStrictEqual([{ error: 'Invalid token, skipping auth check' }])
     expect(invalidTokens.has('token-1')).toBeTruthy()
     expect(pendingCheckAuth.has('token-1')).toBeFalsy()
+    vi.useRealTimers()
   })
 
   it('caches a rejected lookup and releases pending auth', async () => {
+    vi.useFakeTimers()
     const request = makeRequest()
     const { response, statusCalls, jsonCalls } = makeResponse()
     getDBUserMock.mockRejectedValue(new Error('lookup failed'))
 
     await validateToken(request, response, vi.fn<ValidateTokenNext>())
+    vi.advanceTimersByTime(DISCARDED_REPLY_DELAY_MS)
 
     expect(statusCalls).toStrictEqual([200])
     expect(jsonCalls).toStrictEqual([{ error: 'Invalid token, skipping auth check' }])
     expect(invalidTokens.has('token-1')).toBeTruthy()
     expect(pendingCheckAuth.has('token-1')).toBeFalsy()
+    vi.useRealTimers()
+  })
+
+  it('holds the reply to a discarded packet so the GSI client waits before sending again', async () => {
+    vi.useFakeTimers()
+    invalidTokens.add('token-1')
+    const { response, jsonCalls } = makeResponse()
+
+    await validateToken(makeRequest(), response, vi.fn<ValidateTokenNext>())
+    vi.advanceTimersByTime(DISCARDED_REPLY_DELAY_MS - 1)
+    const repliesBeforeDelay = [...jsonCalls]
+    vi.advanceTimersByTime(1)
+
+    expect(repliesBeforeDelay).toStrictEqual([])
+    expect(jsonCalls).toStrictEqual([{ error: 'Invalid token, skipping auth check' }])
+    expect(getDBUserMock).not.toHaveBeenCalled()
+    vi.useRealTimers()
   })
 
   it('rejects a concurrent request while retaining the lock until the first lookup finishes', async () => {

@@ -27,7 +27,7 @@
     "axios": "^1.18.0",
     "bad-words": "^4.0.0",
     "curse-filter": "^6.0.0",
-    "elysia": "^1.2.25",
+    "elysia": "^1.4.29",
     "leo-profanity": "^1.7.0",
     "naughty-words": "^1.2.0",
     "obscenity": "^0.4.3",
