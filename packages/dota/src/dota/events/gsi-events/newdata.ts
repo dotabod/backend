@@ -723,9 +723,9 @@ eventHandler.registerEvent('newdata', {
       isPlayingMatch(dotaClient.client.gsi, false) &&
       data.map?.game_state === 'DOTA_GAMERULES_STATE_PLAYER_DRAFT' &&
       currentMatchId.length > 0 &&
-      draftStartByMatchId.get(currentMatchId) !== true
+      !draftStartByMatchId.has(currentMatchId)
     ) {
-      draftStartByMatchId.set(currentMatchId, true)
+      draftStartByMatchId.add(currentMatchId)
       events.emit('map:game_state', 'DOTA_GAMERULES_STATE_PLAYER_DRAFT', dotaClient.client.token)
     }
 
