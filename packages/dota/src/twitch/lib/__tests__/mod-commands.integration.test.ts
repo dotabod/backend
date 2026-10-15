@@ -21,6 +21,17 @@ describe('!setmmr', () => {
     expect(state.updateMmrCalls).toHaveLength(0)
   })
 
+  it.each(['!setmmr', '!mmr=', '!mmrset'])(
+    'replies with the invalid-mmr message when %s has no argument',
+    async (content) => {
+      await commandHandler.handleMessage(makeMessage({ content }))
+      expect(state.chatSayCalls).toHaveLength(1)
+      expect(state.chatSayCalls[0].message.toLowerCase()).toContain('mmr')
+      expect(state.updateMmrCalls).toHaveLength(0)
+      expect(state.loggerErrorCalls).toHaveLength(0)
+    }
+  )
+
   it('updates mmr for a single-account streamer', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!setmmr 4200' }))
     expect(state.updateMmrCalls).toHaveLength(1)

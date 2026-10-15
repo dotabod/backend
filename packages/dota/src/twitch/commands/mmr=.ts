@@ -5,9 +5,13 @@ import type { UpdateMmrParams } from '../../dota/lib/update-mmr'
 import { chatClient } from '../chat-client'
 import commandHandler from '../lib/command-handler'
 
-const isNumberValid = (num: string): boolean => {
+// `num` is undefined when the command is sent with no argument (`!setmmr`).
+const isNumberValid = (num: string | undefined): boolean => {
+  if (num === undefined || num.length === 0) {
+    return false
+  }
   const value = Number(num)
-  return num.length > 0 && !Number.isNaN(value) && value >= 0 && value <= 20_000
+  return !Number.isNaN(value) && value >= 0 && value <= 20_000
 }
 
 const sendMessage = (
