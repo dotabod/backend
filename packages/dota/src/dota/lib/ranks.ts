@@ -96,9 +96,15 @@ interface LeaderRankData {
   standing: number | null
 }
 
+// A streamer's standing is refreshed at match end (skipCache), so the TTL only
+// bounds drift between games, e.g. players passing them while they're offline.
+// 30 minutes keeps it to ~2 Steam getCard lookups an hour per Immortal account.
+const MEDAL_CACHE_TTL_SECONDS = 1800
+
 const lookupLeaderRank = async function lookupLeaderRank(
   mmr: number,
-  steam32Id?: number | null
+  steam32Id: number | null | undefined,
+  { skipCache }: { skipCache: boolean }
 ): Promise<LeaderRankData> {
   const lowestLeaderRank = leaderRanks.at(-1)
   if (!lowestLeaderRank) {
@@ -120,7 +126,7 @@ const lookupLeaderRank = async function lookupLeaderRank(
 
   const redisClient = RedisClient.getInstance()
   // Try to get the cached result first
-  const medalCache = await redisClient.getJson<LeaderRankData>(cacheKey)
+  const medalCache = skipCache ? null : await redisClient.getJson<LeaderRankData>(cacheKey)
   if (medalCache) {
     result = medalCache
   } else {
@@ -141,6 +147,7 @@ const lookupLeaderRank = async function lookupLeaderRank(
 
       // Cache the result
       await redisClient.setJson(cacheKey, result)
+      await redisClient.client.expire(cacheKey, MEDAL_CACHE_TTL_SECONDS)
     } catch {
       return defaultNotFound
     }
@@ -151,7 +158,8 @@ const lookupLeaderRank = async function lookupLeaderRank(
 
 export const getRankDetail = async function getRankDetail(
   mmr: string | number,
-  steam32Id?: number | null
+  steam32Id?: number | null,
+  { skipCache = false }: { skipCache?: boolean } = {}
 ) {
   const mmrNum = Number(mmr)
 
@@ -165,7 +173,7 @@ export const getRankDetail = async function getRankDetail(
     return null
   }
   if (mmrNum >= highestRank.range[1]) {
-    return await lookupLeaderRank(mmrNum, steam32Id)
+    return await lookupLeaderRank(mmrNum, steam32Id, { skipCache })
   }
 
   const [myRank, nextRank] = ranks.filter((rank) => mmrNum <= rank.range[1])
