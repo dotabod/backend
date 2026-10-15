@@ -22,11 +22,16 @@ const { rankTierToMmr, mmrToRankTier, estimateMMR, getRankDetail } = await impor
 const { default: RedisClient } = await import('../../../db/redis-client.ts')
 const { steamSocket } = await import('../../../steam/ws.ts')
 
+interface CachedMedal {
+  mmr: number
+  standing: number | null
+}
+
 interface MedalCacheState {
-  cached: { mmr: number; standing: number | null } | null
+  cached: CachedMedal | null
   cardStanding: number
   expireCalls: { key: string; seconds: number }[]
-  setCalls: { key: string; value: unknown }[]
+  setCalls: { key: string; value: CachedMedal }[]
 }
 
 const medalCache: MedalCacheState = {
@@ -46,7 +51,7 @@ Object.assign(RedisClient.getInstance(), {
     },
     json: {
       get: async () => await Promise.resolve(medalCache.cached),
-      set: async (key: string, _path: string, value: unknown) => {
+      set: async (key: string, _path: string, value: CachedMedal) => {
         medalCache.setCalls.push({ key, value })
         return await Promise.resolve('OK')
       },
