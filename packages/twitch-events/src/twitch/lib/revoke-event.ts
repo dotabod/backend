@@ -54,10 +54,9 @@ const disableChannel = async function disableChannel(broadcasterId: string) {
     logger.info('twitch-events Failed to find user', { twitchId: broadcasterId })
     return
   }
-  // Remove all steam accounts associated with this user
-  // This allows them to link these steam accounts to a different Twitch account
-  // if they need to create a new one after being banned
-  await supabase.from('steam_accounts').delete().eq('userId', user.userId)
+  // Keep the user's steam_accounts rows. Twitch also revokes on routine events
+  // (password change, enabling 2FA), and deleting the rows lost their MMR and
+  // leaderboard rank on re-auth. requires_refresh already blocks the account.
 
   const { data: settings } = await supabase
     .from('settings')
