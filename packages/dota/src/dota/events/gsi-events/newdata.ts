@@ -501,6 +501,13 @@ export const checkAccountSharing = async function checkAccountSharing(
         // This is the first/primary Steam account - allow processing
         return false
       }
+
+      // Switching between the streamer's own linked accounts is not sharing
+      const ownSteamIds = new Set(client.SteamAccount.map((act) => act.steam32Id.toString()))
+      if (activeSteamIds.every((id) => ownSteamIds.has(id))) {
+        return false
+      }
+
       const playerName = client.gsi?.player?.name
       const accountName =
         playerName === undefined || playerName.length === 0 ? 'Unknown' : playerName
@@ -516,7 +523,7 @@ export const checkAccountSharing = async function checkAccountSharing(
         }
       )
 
-      // Rate limit logging to database to prevent spam
+      // Rate limit the database log and chat warning to prevent spam
       const logCacheKey = `${currentToken}:${steam32Id}`
       const lastLogged = accountSharingLogCache.get(logCacheKey)
 
@@ -525,6 +532,8 @@ export const checkAccountSharing = async function checkAccountSharing(
         lastLogged === 0 ||
         currentTime - lastLogged > ACCOUNT_SHARING_LOG_INTERVAL
       ) {
+        accountSharingLogCache.set(logCacheKey, currentTime)
+
         await commandDisable.recordNotification(currentToken, 'ACCOUNT_SHARING', {
           account_name: accountName,
           all_active_steam_ids: activeSteamIds,
@@ -535,17 +544,15 @@ export const checkAccountSharing = async function checkAccountSharing(
           primary_steam32_id: activeSteamIds[0],
         })
 
-        accountSharingLogCache.set(logCacheKey, currentTime)
+        // Send warning message to blocked account
+        say(
+          client,
+          t('accountSharing.blocked', {
+            accountName,
+            lng: client.locale,
+          })
+        )
       }
-
-      // Send warning message to blocked account
-      say(
-        client,
-        t('accountSharing.blocked', {
-          accountName,
-          lng: client.locale,
-        })
-      )
 
       // Block processing for this Steam account
       return true
