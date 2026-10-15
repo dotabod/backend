@@ -16,6 +16,23 @@ describe('CommandHandler dispatch (integration)', () => {
     commandHandler.cooldowns.clear()
   })
 
+  describe('handler errors', () => {
+    it('logs a throwing handler instead of rejecting to the process handler', async () => {
+      commandHandler.registerCommand('throwsfortest', {
+        handler: () => {
+          throw new Error('boom')
+        },
+      })
+
+      await expect(
+        commandHandler.handleMessage(makeMessage({ content: '!throwsfortest' }))
+      ).resolves.toBeUndefined()
+      expect(state.loggerErrorCalls).toHaveLength(1)
+      expect(state.loggerErrorCalls[0].message).toBe('[COMMAND] Handler threw')
+      expect(state.loggerErrorCalls[0].meta).toMatchObject({ command: 'throwsfortest' })
+    })
+  })
+
   describe('parsing', () => {
     it('exposes command parsing to isolated diagnostic runners', () => {
       expect(commandHandler.parseMessage).toBeTypeOf('function')

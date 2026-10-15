@@ -1,4 +1,4 @@
-import { supabase } from '@dotabod/shared-utils'
+import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
 import { getRawSettingValue, getValueOrDefault } from '../../settings'
@@ -273,7 +273,17 @@ class CommandHandler {
     const runHandler = async () => {
       await options.handler(message, args, command)
     }
-    await suggestionContext.run({ suffix }, runHandler)
+    // A throw here would reach the process-level unhandledRejection handler,
+    // which exits dota and drops every streamer's in-memory GSI state.
+    try {
+      await suggestionContext.run({ suffix }, runHandler)
+    } catch (error) {
+      logger.error('[COMMAND] Handler threw', {
+        channel: message.channel.name,
+        command: commandName,
+        error,
+      })
+    }
   }
 
   // Function for checking if a command is on cooldown
