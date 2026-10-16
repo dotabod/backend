@@ -1200,7 +1200,7 @@ class GSIHandler implements GSIHandlerType {
         scores,
       })
 
-      const response = await getRankDetail(this.getMmr(), this.getSteam32())
+      const response = await getRankDetail(this.getMmr(), this.getSteam32(), { skipCache: true })
       if (
         this.client.steam32Id !== null &&
         this.client.steam32Id !== 0 &&

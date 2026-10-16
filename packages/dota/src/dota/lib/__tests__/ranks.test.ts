@@ -3,7 +3,7 @@
 // mock.module's ranks to stub getRankTitle/getRankDescription/getDotabodRankProfile).
 // rankTierToMmr/mmrToRankTier/estimateMMR/getRankDetail are preserved real via
 // that harness's spread, so they're stable no matter the suite run order.
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { buildSharedUtilsMock } from '../../../__tests__/shared-mocks.ts'
 
@@ -19,6 +19,50 @@ const noopLogger = {
 vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ logger: noopLogger, supabase: {} }))
 
 const { rankTierToMmr, mmrToRankTier, estimateMMR, getRankDetail } = await import('../ranks.ts')
+const { default: RedisClient } = await import('../../../db/redis-client.ts')
+const { steamSocket } = await import('../../../steam/ws.ts')
+
+interface CachedMedal {
+  mmr: number
+  standing: number | null
+}
+
+interface MedalCacheState {
+  cached: CachedMedal | null
+  cardStanding: number
+  expireCalls: { key: string; seconds: number }[]
+  setCalls: { key: string; value: CachedMedal }[]
+}
+
+const medalCache: MedalCacheState = {
+  cached: null,
+  cardStanding: 0,
+  expireCalls: [],
+  setCalls: [],
+}
+
+// The leaderboard branch reads `${steam32Id}:medal` from Redis and falls back to
+// the steam service's getCard; swap both for in-memory fakes.
+Object.assign(RedisClient.getInstance(), {
+  client: {
+    expire: async (key: string, seconds: number) => {
+      medalCache.expireCalls.push({ key, seconds })
+      return await Promise.resolve(true)
+    },
+    json: {
+      get: async () => await Promise.resolve(medalCache.cached),
+      set: async (key: string, _path: string, value: CachedMedal) => {
+        medalCache.setCalls.push({ key, value })
+        return await Promise.resolve('OK')
+      },
+    },
+  },
+})
+Object.assign(steamSocket, {
+  timeout: () => ({
+    emitWithAck: async () => await Promise.resolve({ leaderboard_rank: medalCache.cardStanding }),
+  }),
+})
 
 describe('mmrToRankTier', () => {
   it('returns 0 (uncalibrated) for non-positive mmr', () => {
@@ -100,5 +144,35 @@ describe('getRankDetail', () => {
     expect(detail).not.toBeNull()
     // The leaderboard-branch shape carries `standing`; the in-range shape doesn't.
     expect(detail && 'standing' in detail).toBeTruthy()
+  })
+})
+
+describe('getRankDetail leaderboard cache', () => {
+  beforeEach(() => {
+    medalCache.cached = null
+    medalCache.cardStanding = 0
+    medalCache.expireCalls = []
+    medalCache.setCalls = []
+  })
+
+  it('caches a fetched standing with a TTL so it cannot go stale forever', async () => {
+    medalCache.cardStanding = 42
+
+    const detail = await getRankDetail(8000, 123)
+
+    expect(detail).toMatchObject({ standing: 42 })
+    expect(medalCache.expireCalls).toStrictEqual([{ key: '123:medal', seconds: 1800 }])
+  })
+
+  it('skipCache fetches a fresh standing instead of returning the cached one', async () => {
+    medalCache.cached = { mmr: 8000, standing: 500 }
+    medalCache.cardStanding = 42
+
+    const cached = await getRankDetail(8000, 123)
+    const fresh = await getRankDetail(8000, 123, { skipCache: true })
+
+    expect(cached).toMatchObject({ standing: 500 })
+    expect(fresh).toMatchObject({ standing: 42 })
+    expect(medalCache.setCalls).toMatchObject([{ key: '123:medal', value: { standing: 42 } }])
   })
 })
