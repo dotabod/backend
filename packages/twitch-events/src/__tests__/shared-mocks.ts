@@ -46,11 +46,12 @@ interface TestState {
   logWarn: LogCall[]
   logError: LogCall[]
   // supabase: accounts.single() -> dbUser; settings.select -> dbSettings;
-  // upserts/updates capture writes.
+  // upserts/updates/deletes capture writes.
   dbUser: { userId: string } | null
   dbSettings: { key: string; value: TestValue; disable_reason?: string | null }[]
   upserts: { table: string; values: TestRecord }[]
   updates: { table: string; values: TestRecord }[]
+  deletes: { table: string }[]
   commandDisableCalls: (
     | { kind: 'disable'; userId: string; reason: string; metadata?: TestRecord }
     | { kind: 'enable'; userId: string; opts?: { reason?: string; autoResolved?: boolean } }
@@ -122,6 +123,7 @@ export const state: TestState = {
   conduitId: 'conduit-1',
   dbSettings: [],
   dbUser: { userId: 'user-1' },
+  deletes: [],
   isBanned: false,
   logError: [],
   logInfo: [],
@@ -152,6 +154,7 @@ export const resetState = function resetState() {
   state.dbSettings = []
   state.upserts = []
   state.updates = []
+  state.deletes = []
   state.commandDisableCalls = []
   state.stream = null
   state.streamer = { displayName: 'Streamer', name: 'streamer' }
@@ -172,7 +175,7 @@ export const resetState = function resetState() {
 }
 
 // Chainable supabase mock. accounts...single() -> dbUser; settings select ->
-// dbSettings; update/upsert/delete are captured / resolve.
+// dbSettings; update/upsert/delete are captured.
 interface SbBuilder {
   select: () => SbBuilder
   update: (v: TestRecord) => SbBuilder
@@ -217,6 +220,9 @@ const sbBuilder = function sbBuilder(table: string) {
     then: (onFulfilled) => {
       if (mode === 'update') {
         state.updates.push({ table, values })
+      }
+      if (mode === 'delete') {
+        state.deletes.push({ table })
       }
       const data = mode === 'select' && table === 'settings' ? state.dbSettings : null
       return onFulfilled({ data, error: null })

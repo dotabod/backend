@@ -77,6 +77,15 @@ describe(executeRevoke, () => {
     })
   })
 
+  it('keeps the user steam accounts so MMR survives re-auth', async () => {
+    state.dbUser = { userId: 'user-1' }
+    state.dbSettings = []
+
+    await executeRevoke('444')
+
+    expect(state.deletes).toStrictEqual([])
+  })
+
   it('does not re-disable a channel that is already disabled', async () => {
     state.dbUser = { userId: 'user-1' }
     state.dbSettings = [{ key: 'commandDisable', value: true }]
