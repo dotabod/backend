@@ -400,7 +400,22 @@ describe('account sharing safeguards', () => {
 
       // Two blocks, but only one notification + one chat warning.
       expect(state.commandDisableCalls).toHaveLength(1)
-      expect(state.sayCalls.length).toBeGreaterThanOrEqual(1)
+      expect(state.sayCalls).toHaveLength(1)
+    })
+
+    it('does not flag the streamer switching between their own linked Steam accounts', async () => {
+      state.redisGetReturn = JSON.stringify(['22222'])
+      const client = baseClient()
+      client.SteamAccount = [
+        { leaderboard_rank: null, mmr: 3000, name: 'Main', steam32Id: 22_222 },
+        { leaderboard_rank: null, mmr: 2000, name: 'Smurf', steam32Id: 11_111 },
+      ]
+
+      const blocked = await checkAccountSharing(client, 'match-1')
+
+      expect(blocked).toBeFalsy()
+      expect(state.commandDisableCalls).toHaveLength(0)
+      expect(state.sayCalls).toHaveLength(0)
     })
 
     it('returns false when redis throws — fail-open so a redis outage cannot block GSI', async () => {
