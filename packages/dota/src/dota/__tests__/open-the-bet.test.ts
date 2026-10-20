@@ -139,9 +139,9 @@ interface SupabaseBuilder {
   eq: () => SupabaseBuilder
   gte: () => SupabaseBuilder
   insert: (values: CapturedInsertValues) => Promise<SteamAccountInsertResult>
-  is: () => Promise<BetRowsResult>
+  is: () => SupabaseBuilder
   limit: () => Promise<BetRowsResult>
-  match: () => Promise<{ data: null; error: null }>
+  match: () => SupabaseBuilder
   maybeSingle: () => Promise<typeof steamAccountLookup>
   neq: () => SupabaseBuilder
   not: () => SupabaseBuilder
@@ -176,7 +176,9 @@ const supabaseMock = {
       },
       upsert: async () => await Promise.resolve({ data: null, error: null }),
       eq: () => builder,
-      is: async () => await Promise.resolve({ data: [...existingBetRows], error: null }),
+      // Chainable like the real client (`.is().eq()`, `.match().is()`); awaiting it
+      // resolves through `then` with existingBetRows.
+      is: () => builder,
       neq: () => builder,
       not: () => builder,
       gte: () => builder,
@@ -194,7 +196,7 @@ const supabaseMock = {
         }
         return await Promise.resolve({ ...steamAccountLookup })
       },
-      match: async () => await Promise.resolve({ data: null, error: null }),
+      match: () => builder,
       then: async (onFulfilled) =>
         await Promise.resolve({ data: [...existingBetRows], error: null }).then(onFulfilled),
     }
@@ -392,6 +394,7 @@ server.setServer({
 // Side-effect import: registers the GSIHandler constructor with the factory.
 await import('../gsi-handler')
 const { createGSIHandler } = await import('../gsi-handler-factory')
+const { steamSocket } = await import('../../steam/ws')
 
 type Client = SocketClient
 
@@ -959,6 +962,127 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
       token: 'token-arteezy',
     })
     expect(closeBets).toHaveBeenCalledOnce()
+  })
+
+  it('resolves from the post-game winner when the win_team transition packet was missed', async () => {
+    const client = makeClient({
+      gsi: liveGsi({
+        map: {
+          dire_score: 41,
+          game_state: 'DOTA_GAMERULES_STATE_POST_GAME',
+          matchid: '9053165578',
+          radiant_score: 30,
+          win_team: 'dire',
+        },
+        player: { activity: 'playing', team_name: 'dire' },
+      }),
+      mmr: 4209,
+    })
+    const handler = makeHandler(client)
+    redisStore['token-arteezy:matchId'] = '9053165578'
+    redisStore['token-arteezy:playingTeam'] = 'dire'
+
+    await handler.closeBets(null)
+
+    expect(
+      loggerInfoCalls.find((call) => call.message === '[BETS] end bets won data')?.meta
+    ).toMatchObject({ localWinner: 'dire', won: true })
+    expect(loggerInfoCalls.map((call) => call.message)).not.toContain(
+      '[BETS] Streamer exited the match before it ended with a winner'
+    )
+  })
+
+  it('asks the GC for the result when post-game GSI has no winner instead of treating it as a rejoin', async () => {
+    const client = makeClient({
+      gsi: liveGsi({
+        map: {
+          game_state: 'DOTA_GAMERULES_STATE_POST_GAME',
+          matchid: '9053165578',
+          win_team: 'none',
+        },
+      }),
+      mmr: 4209,
+    })
+    const handler = makeHandler(client)
+    redisStore['token-arteezy:matchId'] = '9053165578'
+    matchPredictionLookup.data = { predictionId: null }
+    const gcRequests: unknown[][] = []
+    const emit = vi.spyOn(steamSocket, 'emit').mockImplementation((...args: unknown[]) => {
+      gcRequests.push(args.slice(0, 2))
+      return steamSocket
+    })
+
+    await handler.closeBets(null)
+
+    await vi.waitFor(() => {
+      expect(gcRequests).toContainEqual(['getMatchMinimalDetails', { match_id: 9_053_165_578 }])
+    })
+    expect(loggerInfoCalls.map((call) => call.message)).not.toContain(
+      '[BETS] Streamer rejoined the match, skipping early DC winner check'
+    )
+    emit.mockRestore()
+  })
+
+  it('checks the next exit again after the streamer really rejoined the match', async () => {
+    const client = makeClient({
+      gsi: liveGsi({
+        map: {
+          game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+          matchid: '9053165578',
+          win_team: 'none',
+        },
+      }),
+      mmr: 4209,
+    })
+    const handler = makeHandler(client)
+    redisStore['token-arteezy:matchId'] = '9053165578'
+    matchPredictionLookup.data = { predictionId: null }
+    const messages = () => loggerInfoCalls.map((call) => call.message)
+
+    await handler.closeBets(null)
+    await vi.waitFor(() => {
+      expect(messages()).toContain(
+        '[BETS] Streamer rejoined the match, skipping early DC winner check'
+      )
+    })
+
+    loggerInfoCalls.length = 0
+    await handler.closeBets(null)
+    await vi.waitFor(() => {
+      expect(messages()).toContain(
+        '[BETS] Streamer rejoined the match, skipping early DC winner check'
+      )
+    })
+    expect(messages()).not.toContain(
+      '[BETS] Already checking early DC winner, skipping duplicate call'
+    )
+  })
+
+  it('does not call a match unscored because live GSI has moved on to the next 0-0 match', async () => {
+    const client = makeClient({
+      gsi: liveGsi({
+        map: {
+          dire_score: 0,
+          game_state: 'DOTA_GAMERULES_STATE_HERO_SELECTION',
+          matchid: '9054119387',
+          radiant_score: 0,
+          win_team: 'none',
+        },
+      }),
+      mmr: 4209,
+    })
+    const handler = makeHandler(client)
+    redisStore['token-arteezy:matchId'] = '9054032265'
+    redisStore['token-arteezy:playingTeam'] = 'dire'
+
+    await handler.closeBets('radiant')
+
+    expect(
+      loggerInfoCalls.find((call) => call.message === '[BETS] end bets won data')?.meta
+    ).toMatchObject({ localWinner: 'radiant', won: false })
+    expect(loggerInfoCalls.map((call) => call.message)).not.toContain(
+      'This is likely a no stats recorded match'
+    )
   })
 
   it('invalidates the blocker cache during a forced stale-match reset', async () => {
