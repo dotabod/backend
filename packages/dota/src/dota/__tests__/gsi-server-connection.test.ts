@@ -92,6 +92,7 @@ vi.mock('../../twitch/index', () => ({ twitchEvent: { emit: vi.fn() } }))
 vi.mock('../dota-patch-checker', () => ({ initDotaPatchChecker: vi.fn() }))
 vi.mock('../gsi-handler', () => ({ emitMinimapBlockerStatus: vi.fn() }))
 vi.mock('../global-event-emitter', () => ({
+  fillMissingChanges: vi.fn<() => void>(),
   newData: vi.fn(),
   processChanges: () => vi.fn(),
   processUnmarkedKillListChanges: vi.fn(),

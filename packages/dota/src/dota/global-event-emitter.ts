@@ -252,6 +252,130 @@ export const processChanges = function processChanges(section: GsiChangeSection)
   }
 }
 
+interface RebuiltChanges {
+  added: JsonObject
+  previously: JsonObject
+}
+
+// Dota's own throttle and heartbeat keep packets seconds apart. A baseline older than this
+// is from another session (stream offline, game closed), not from a dropped POST.
+const MAX_BASELINE_AGE_MS = 60_000
+const PACKET_META_KEYS: ReadonlySet<string> = new Set(['added', 'auth', 'previously', 'provider'])
+const NO_KEYS: ReadonlySet<string> = new Set()
+const lastProcessedPackets = new WeakMap<object, { at: number; body: AuthenticatedGsiPacket }>()
+
+const hasKeys = (value: JsonObject) => Object.keys(value).length > 0
+
+const markAdded = function markAdded(value: Json): Json {
+  const object = asJsonObject(value)
+  if (object === null) {
+    return true
+  }
+  const marked: JsonObject = {}
+  for (const key of Object.keys(object)) {
+    const child = object[key]
+    if (key !== '__proto__' && child !== undefined) {
+      marked[key] = markAdded(child)
+    }
+  }
+  return marked
+}
+
+const sameLeaf = (was: Json, now: Json) =>
+  was === now ||
+  (Array.isArray(was) && Array.isArray(now) && JSON.stringify(was) === JSON.stringify(now))
+
+interface ChangeRebuilder {
+  rebuild: (before: JsonObject, after: JsonObject, skip: ReadonlySet<string>) => RebuiltChanges
+  record: (changes: RebuiltChanges, key: string, was: Json | undefined, now: Json) => void
+}
+
+const changeRebuilder: ChangeRebuilder = {
+  rebuild(before, after, skip) {
+    const changes: RebuiltChanges = { added: {}, previously: {} }
+    const tracked = (key: string) => key !== '__proto__' && !skip.has(key)
+    for (const key of Object.keys(after).filter(tracked)) {
+      const now = after[key]
+      if (now !== undefined) {
+        changeRebuilder.record(changes, key, before[key], now)
+      }
+    }
+    for (const key of Object.keys(before).filter(tracked)) {
+      const was = before[key]
+      if (was !== undefined && after[key] === undefined) {
+        changes.previously[key] = asJsonObject(was) === null ? was : true
+      }
+    }
+    return changes
+  },
+  record(changes, key, was, now) {
+    if (was === undefined) {
+      changes.added[key] = markAdded(now)
+      return
+    }
+    const nowObject = asJsonObject(now)
+    const wasObject = asJsonObject(was)
+    if (nowObject === null || wasObject === null) {
+      if (!sameLeaf(was, now)) {
+        changes.previously[key] = was
+      }
+      return
+    }
+    const nested = changeRebuilder.rebuild(wasObject, nowObject, NO_KEYS)
+    if (hasKeys(nested.previously)) {
+      changes.previously[key] = nested.previously
+    }
+    if (hasKeys(nested.added)) {
+      changes.added[key] = nested.added
+    }
+  },
+}
+
+// Builds the `previously`/`added` sections Dota would have sent for the step from `before`
+// to `after`: old values of changed leaves, `true` for a removed object, and `true` at every
+// leaf of anything new.
+export const rebuildChanges = function rebuildChanges(
+  before: JsonObject,
+  after: JsonObject,
+  skip: ReadonlySet<string> = NO_KEYS
+): RebuiltChanges {
+  return changeRebuilder.rebuild(before, after, skip)
+}
+
+// After a POST times out, Dota sends the next packet as full state with no `previously` or
+// `added`, so every transition in it (game end, game state, hero) would never be emitted.
+// Rebuild those sections from the last packet this handler processed.
+export const fillMissingChanges = function fillMissingChanges(
+  req: GsiEventRequest,
+  _res: GsiEventResponse,
+  next: NextFunction
+): void {
+  const token = req.body.auth?.token
+  const handler = token === undefined || token.length === 0 ? undefined : gsiHandlers.get(token)
+  if (handler === undefined) {
+    next()
+    return
+  }
+
+  const now = Date.now()
+  const baseline = lastProcessedPackets.get(handler)
+  lastProcessedPackets.set(handler, { at: now, body: req.body })
+
+  const hasDotaChanges = req.body.previously !== undefined || req.body.added !== undefined
+  const recent = baseline !== undefined && now - baseline.at <= MAX_BASELINE_AGE_MS
+  const before = recent ? asJsonObject(baseline.body) : null
+  const after = asJsonObject(req.body)
+  if (!hasDotaChanges && before !== null && after !== null) {
+    const { added, previously } = rebuildChanges(before, after, PACKET_META_KEYS)
+    Object.assign(
+      req.body,
+      hasKeys(previously) ? { previously } : {},
+      hasKeys(added) ? { added } : {}
+    )
+  }
+  next()
+}
+
 const getKillListDeltaKeys = function getKillListDeltaKeys(body: AuthenticatedGsiPacket) {
   const keys = new Set<string>()
   const current = body.player?.kill_list
