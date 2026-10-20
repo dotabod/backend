@@ -1076,14 +1076,15 @@ class GSIHandler implements GSIHandlerType {
         getHeroById(player?.hero_id)?.key ??
         (await redisClient.client.get(`${this.client.token}:playingHero`))
 
+      const localWinner = this.resolveWinner(winningTeam, matchId)
+
       // An early without waiting for ancient to blow up
       // We have to check every few seconds with an api to see if the match is over
-      if (!winningTeam) {
+      if (!localWinner) {
         void this.checkEarlyDCWinner(matchId)
         return
       }
 
-      const localWinner = winningTeam
       const scores = buildClosingScores({
         gcMatch: match,
         gcPlayer: player,
@@ -1124,9 +1125,8 @@ class GSIHandler implements GSIHandlerType {
         (this.client.gsi?.map?.radiant_score === null ||
           this.client.gsi?.map?.radiant_score === undefined ||
           this.client.gsi.map.radiant_score === 0) &&
-        this.client.gsi?.map?.matchid !== null &&
-        this.client.gsi?.map?.matchid !== undefined &&
-        this.client.gsi.map.matchid.length > 0
+        // After an early DC the live GSI can already be the next match, still at 0-0
+        this.client.gsi?.map?.matchid === matchId
       ) {
         logger.info('This is likely a no stats recorded match', {
           matchId,
@@ -1334,6 +1334,20 @@ class GSIHandler implements GSIHandlerType {
     }
   }
 
+  // map:win_team comes from the `previously` diff, and Dota drops that diff from the packet
+  // after a timed-out POST. When the win_team flip lands there, the event never fires, but
+  // the post-game packet still carries the winner for this match.
+  private resolveWinner(winningTeam: Team | null, matchId: string): Team | null {
+    const map = this.client.gsi?.map
+    return winningTeam ?? (map?.matchid === matchId ? parseTeam(map.win_team ?? null) : null)
+  }
+
+  // Post-game still reports the match id, but the match is over, so the GC has to be asked
+  private isBackInMatch(matchId: string | number): boolean {
+    const map = this.client.gsi?.map
+    return map?.matchid === matchId && map.game_state !== 'DOTA_GAMERULES_STATE_POST_GAME'
+  }
+
   private async checkEarlyDCWinner(matchId: string | number) {
     // Prevent multiple concurrent early DC winner checks
     if (this.checkingEarlyDCWinner) {
@@ -1459,11 +1473,13 @@ class GSIHandler implements GSIHandlerType {
 
     const attemptFetchMatchData = async (): Promise<void> => {
       // Check if they rejoined the match they disconnected from
-      if (this.client.gsi?.map?.matchid === matchId) {
+      if (this.isBackInMatch(matchId)) {
         logger.info('[BETS] Streamer rejoined the match, skipping early DC winner check', {
           matchId,
           name: this.client.name,
         })
+        // Let the next exit from this match start a fresh check
+        this.checkingEarlyDCWinner = false
         return
       }
 
