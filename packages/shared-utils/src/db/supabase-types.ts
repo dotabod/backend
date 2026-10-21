@@ -413,6 +413,8 @@ export interface Database {
           steam32Id: number | null
           updated_at: string
           userId: string
+          verification: string | null
+          verified_at: string | null
           won: boolean | null
         }
         Insert: {
@@ -433,6 +435,8 @@ export interface Database {
           steam32Id?: number | null
           updated_at?: string
           userId: string
+          verification?: string | null
+          verified_at?: string | null
           won?: boolean | null
         }
         Update: {
@@ -453,6 +457,8 @@ export interface Database {
           steam32Id?: number | null
           updated_at?: string
           userId?: string
+          verification?: string | null
+          verified_at?: string | null
           won?: boolean | null
         }
         Relationships: [

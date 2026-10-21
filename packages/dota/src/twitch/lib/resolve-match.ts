@@ -149,7 +149,7 @@ interface ResolveMatchResult {
   errorKey?: string
 }
 
-const closeTwitchBetById = async function closeTwitchBetById(
+export const closeTwitchBetById = async function closeTwitchBetById(
   won: boolean,
   twitchId: string,
   predictionId: string,
