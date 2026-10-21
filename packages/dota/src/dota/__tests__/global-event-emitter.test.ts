@@ -1,5 +1,5 @@
 import type { Json } from '@dotabod/shared-utils'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { gameEnd } from '../../__tests__/fixtures/game-end'
 import {
@@ -9,9 +9,11 @@ import {
 } from '../../__tests__/shared-mocks'
 import {
   events,
+  fillMissingChanges,
   newData,
   processChanges,
   processUnmarkedKillListChanges,
+  rebuildChanges,
 } from '../global-event-emitter'
 import type { GsiEventData, GsiEventRequest, GsiEventResponse } from '../global-event-emitter'
 import { gsiHandlers } from '../lib/consts'
@@ -87,6 +89,45 @@ const runPost = function runPost(body: TestPacketInput) {
   processChanges('added')(req, response, next)
   processUnmarkedKillListChanges(req, response, next)
   newData(req, response)
+}
+
+// The production chain from gsi-server.ts, with the clock set to the packet's arrival time
+const runFilledPost = function runFilledPost(body: TestPacketInput, arrivedAtMs: number) {
+  vi.setSystemTime(arrivedAtMs)
+  const packet = Object.assign(createPacketStub(), body)
+  const req: GsiEventRequest = {
+    body: Object.assign(packet, { auth: { token: 'tkn' } }),
+  }
+  fillMissingChanges(req, response, next)
+  processChanges('previously')(req, response, next)
+  processChanges('added')(req, response, next)
+  processUnmarkedKillListChanges(req, response, next)
+  newData(req, response)
+  return req.body
+}
+
+// Sanitized from a live capture (2026-10-20): the game-end packet arrived after a
+// timed-out POST, so Dota sent it as full state without `previously`.
+const inProgressPacket = {
+  map: {
+    clock_time: 2486,
+    customgamename: '',
+    game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+    matchid: '9054278051',
+    win_team: 'none',
+  },
+  player: { activity: 'playing', team_name: 'radiant' },
+  previously: { map: { clock_time: 2485 } },
+}
+const postGamePacket = {
+  map: {
+    clock_time: 2487,
+    customgamename: '',
+    game_state: 'DOTA_GAMERULES_STATE_POST_GAME',
+    matchid: '9054278051',
+    win_team: 'radiant',
+  },
+  player: { activity: 'playing', team_name: 'radiant' },
 }
 
 const callCount = function callCount(name: ListenerName): number {
@@ -195,6 +236,166 @@ describe('global event emitter', () => {
       })
 
       expect(spies.get('player:kill_list')).toStrictEqual([])
+    })
+  })
+
+  describe(rebuildChanges, () => {
+    it('records the old value of each changed leaf, nested by object', () => {
+      expect(
+        rebuildChanges(
+          { map: { clock_time: 1, game_state: 'A', matchid: 'm' } },
+          { map: { clock_time: 2, game_state: 'B', matchid: 'm' } }
+        )
+      ).toStrictEqual({ added: {}, previously: { map: { clock_time: 1, game_state: 'A' } } })
+    })
+
+    it('marks every leaf of anything new as added', () => {
+      expect(
+        rebuildChanges(
+          { player: { kills: 1 } },
+          {
+            hero: { alive: true, name: 'npc_dota_hero_lion' },
+            player: { kill_list: { victimid_2: 1 }, kills: 1 },
+          }
+        )
+      ).toStrictEqual({
+        added: { hero: { alive: true, name: true }, player: { kill_list: { victimid_2: true } } },
+        previously: {},
+      })
+    })
+
+    it('marks a removed object true and keeps the old value of a removed leaf', () => {
+      expect(
+        rebuildChanges({ hero: { smoked: true }, map: { matchid: 'm' } }, { hero: {} })
+      ).toStrictEqual({ added: {}, previously: { hero: { smoked: true }, map: true } })
+    })
+
+    it('compares arrays by value', () => {
+      const before = { events: [{ event_type: 'tip' }] }
+      expect(rebuildChanges(before, { events: [{ event_type: 'tip' }] })).toStrictEqual({
+        added: {},
+        previously: {},
+      })
+      expect(rebuildChanges(before, { events: [] })).toStrictEqual({
+        added: {},
+        previously: before,
+      })
+    })
+
+    it('ignores skipped keys', () => {
+      expect(
+        rebuildChanges(
+          { provider: { timestamp: 1 } },
+          { auth: { token: 'tkn' }, provider: { timestamp: 2 } },
+          new Set(['auth', 'provider'])
+        )
+      ).toStrictEqual({ added: {}, previously: {} })
+    })
+  })
+
+  describe('rebuilt changes for packets that arrive without previously/added', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] })
+      installHandlerSnapshot()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('emits the game end from a post-game packet sent without previously', () => {
+      runFilledPost(inProgressPacket, 1000)
+      runFilledPost(postGamePacket, 9000)
+
+      expect(spies.get('map:win_team')).toStrictEqual([{ args: ['radiant', 'tkn'] }])
+      expect(spies.get('map:game_state')).toStrictEqual([
+        { args: ['DOTA_GAMERULES_STATE_POST_GAME', 'tkn'] },
+      ])
+    })
+
+    it('control: the same packets emit no game end without the rebuild', () => {
+      runPost(inProgressPacket)
+      runPost(postGamePacket)
+
+      expect(callCount('map:win_team')).toBe(0)
+      expect(callCount('map:game_state')).toBe(0)
+    })
+
+    it('leaves a packet that carries Dota sections untouched', () => {
+      const previously = { map: { clock_time: 2486 } }
+      runFilledPost(inProgressPacket, 1000)
+      const body = runFilledPost({ ...postGamePacket, previously }, 2000)
+
+      expect(body.previously).toBe(previously)
+      expect(body.added).toBeUndefined()
+      expect(callCount('map:win_team')).toBe(0)
+    })
+
+    it('does not rebuild from a baseline older than a minute', () => {
+      runFilledPost(inProgressPacket, 1000)
+      const body = runFilledPost(postGamePacket, 62_000)
+
+      expect(body.previously).toBeUndefined()
+      expect(callCount('map:win_team')).toBe(0)
+    })
+
+    it('does not rebuild the first packet a handler sees', () => {
+      const body = runFilledPost(postGamePacket, 1000)
+
+      expect(body.previously).toBeUndefined()
+      expect(callCount('map:win_team')).toBe(0)
+    })
+
+    it('does not rebuild without a GSI handler', () => {
+      gsiHandlers.delete('tkn')
+      runFilledPost(inProgressPacket, 1000)
+      const body = runFilledPost(postGamePacket, 2000)
+
+      expect(body.previously).toBeUndefined()
+    })
+
+    it('gives previously readers the old value', () => {
+      runFilledPost(
+        { map: inProgressPacket.map, player: { activity: 'playing', kill_streak: 2 } },
+        1000
+      )
+      const body = runFilledPost(
+        { map: inProgressPacket.map, player: { activity: 'playing', kill_streak: 3 } },
+        2000
+      )
+
+      expect(body.previously?.player?.kill_streak).toBe(2)
+      expect(spies.get('player:kill_streak')).toStrictEqual([{ args: [3, 'tkn'] }])
+    })
+
+    it('emits a kill once through the rebuilt section and the unmarked kill-list fallback', () => {
+      const player = { activity: 'playing', team_name: 'radiant' }
+      runFilledPost(
+        { map: inProgressPacket.map, player: { ...player, kill_list: { victimid_2: 1 } } },
+        1000
+      )
+      runFilledPost(
+        { map: inProgressPacket.map, player: { ...player, kill_list: { victimid_2: 2 } } },
+        2000
+      )
+
+      expect(spies.get('player:kill_list')).toStrictEqual([{ args: [{ victimid_2: 2 }, 'tkn'] }])
+    })
+
+    it('does not repeat a transition when Dota resumes diffing from the rebuilt packet', () => {
+      runFilledPost(inProgressPacket, 1000)
+      runFilledPost(postGamePacket, 9000)
+      runFilledPost(
+        {
+          map: { ...postGamePacket.map, clock_time: 2488 },
+          player: postGamePacket.player,
+          previously: { map: { clock_time: 2487 } },
+        },
+        10_000
+      )
+
+      expect(callCount('map:win_team')).toBe(1)
+      expect(callCount('map:game_state')).toBe(1)
     })
   })
 

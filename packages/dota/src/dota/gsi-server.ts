@@ -16,6 +16,7 @@ import type { Abilities, Items, SocketClient } from '../types'
 import { getDiagnosticPayload } from './diagnostic-payload'
 import { initDotaPatchChecker } from './dota-patch-checker'
 import {
+  fillMissingChanges,
   newData,
   processChanges,
   processUnmarkedKillListChanges,
@@ -548,6 +549,7 @@ class GSIServer implements GSIServerInterface {
       },
       validateToken,
       recoverMultiAccount,
+      fillMissingChanges,
       processChanges('previously'),
       processChanges('added'),
       processUnmarkedKillListChanges,
