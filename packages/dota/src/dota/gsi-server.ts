@@ -11,7 +11,9 @@ import { z } from 'zod'
 import getDBUser from '../db/get-db-user'
 import { getWL } from '../db/get-wl'
 import { MAX_WL_STATS_DAYS, normalizeStatsStartDate } from '../db/win-loss-window'
+import { steamSocket } from '../steam/ws'
 import { twitchEvent } from '../twitch/index'
+import { closeTwitchBetById } from '../twitch/lib/resolve-match'
 import type { Abilities, Items, SocketClient } from '../types'
 import { getDiagnosticPayload } from './diagnostic-payload'
 import { initDotaPatchChecker } from './dota-patch-checker'
@@ -26,9 +28,13 @@ import { emitMinimapBlockerStatus } from './gsi-handler'
 import type { GSIServerInterface } from './gsi-server-types'
 import { gsiHandlers } from './lib/consts'
 import { isGsiFresh } from './lib/get-current-match-id'
+import { supabaseMatchStore } from './lib/match-store'
+import { socketMatchRequester } from './lib/match-verification'
 import { MatchDataService } from './lib/matchData'
 import { remindUnresolvedMatches } from './lib/remind-unresolved-matches'
 import { deleteClipsBatch } from './lib/twitch-utils'
+import { updateMmr } from './lib/update-mmr'
+import { createMatchVerifier } from './lib/verify-recent-matches'
 import { recordOverlaySocketActivity } from './setup-signals'
 import { validateToken } from './validate-token'
 import {
@@ -562,6 +568,8 @@ class GSIServer implements GSIServerInterface {
     const RESUBSCRIBE_CLEANUP_TIMEOUT = 24 * 60 * 60 * 1000
     // 5 minutes
     const UNRESOLVED_REMINDER_INTERVAL_MS = 5 * 60 * 1000
+    // 2 minutes
+    const MATCH_VERIFY_INTERVAL_MS = 2 * 60 * 1000
 
     // Function to clean up old resubscribe request timestamps
     const cleanupResubscribeTimestamps = function cleanupResubscribeTimestamps() {
@@ -713,6 +721,25 @@ class GSIServer implements GSIServerInterface {
         }
       })()
     }, UNRESOLVED_REMINDER_INTERVAL_MS)
+
+    // Check finished matches against Valve: confirm, fill in, or correct their results
+    const verifyRecentMatches = createMatchVerifier({
+      closePrediction: closeTwitchBetById,
+      handlers: gsiHandlers,
+      isConnected: () => steamSocket.connected,
+      request: socketMatchRequester(steamSocket),
+      store: supabaseMatchStore,
+      updateMmr,
+    })
+    setInterval(() => {
+      void (async () => {
+        try {
+          await verifyRecentMatches()
+        } catch (error) {
+          logger.error('[VERIFY] verifyRecentMatches failed', { error })
+        }
+      })()
+    }, MATCH_VERIFY_INTERVAL_MS)
 
     // Initialize the Dota patch checker with a 5-minute check interval
     initDotaPatchChecker(5)
