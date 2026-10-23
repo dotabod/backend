@@ -1,4 +1,4 @@
-FROM node:24-slim AS base
+FROM node:24.22.1-slim AS base
 
 RUN corepack enable && corepack prepare pnpm@11.2.2 --activate
 
@@ -44,7 +44,7 @@ RUN pnpm --filter ./$BUILD_CONTEXT --prod deploy /deploy
 
 #------------------------ prod
 
-FROM node:24-slim AS prod
+FROM node:24.22.1-slim AS prod
 
 ARG BUILD_CONTEXT
 ARG DOTABOD_ENV
