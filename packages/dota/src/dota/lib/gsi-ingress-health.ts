@@ -13,6 +13,10 @@ const DEGRADED_SHARE = 0.5
 const BASELINE_WEIGHT = 1 / 60
 // Healthy seconds needed before the usual rate is trusted, for example after a deploy
 const WARMUP_SAMPLES = 60
+// Tunnel outages last tens of seconds. Traffic has to stay low this long before it counts, so
+// one-second dips from bursty traffic, such as clients posting in step right after a deploy, do
+// not. The outage is then dated from when the traffic first dropped.
+const MIN_OUTAGE_MS = 5000
 // The most outage time one freshness check skips. An ingress that stays down longer becomes the
 // new usual rate, so a broken tunnel cannot keep hours-old game state alive.
 export const MAX_EXCUSED_DOWNTIME_MS = 10 * 60 * 1000
@@ -35,12 +39,14 @@ export const createGsiIngressHealth = function createGsiIngressHealth(
 ): GsiIngressHealth {
   const outages: Outage[] = []
   let currentOutage: Outage | null = null
+  let lowSince: number | null = null
   let packets = 0
   let windowStart = startedAt
   let usualPerSecond = 0
   let healthySamples = 0
 
   const recordHealthySecond = (perSecond: number) => {
+    lowSince = null
     if (currentOutage !== null) {
       logger.info('[GSI] Ingress recovered', {
         durationMs: currentOutage.end - currentOutage.start,
@@ -55,8 +61,14 @@ export const createGsiIngressHealth = function createGsiIngressHealth(
   }
 
   const recordDegradedSecond = (perSecond: number, now: number) => {
+    if (lowSince === null) {
+      lowSince = windowStart
+    }
+    if (now - lowSince < MIN_OUTAGE_MS) {
+      return
+    }
     if (currentOutage === null) {
-      currentOutage = { end: now, start: windowStart }
+      currentOutage = { end: now, start: lowSince }
       outages.push(currentOutage)
       logger.info('[GSI] Ingress degraded', {
         perSecond: Math.round(perSecond),
