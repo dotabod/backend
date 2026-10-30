@@ -34,18 +34,18 @@ export const createGsiIngressHealth = function createGsiIngressHealth(
   startedAt: number
 ): GsiIngressHealth {
   const outages: Outage[] = []
-  let currentOutage: Outage | undefined
+  let currentOutage: Outage | null = null
   let packets = 0
   let windowStart = startedAt
   let usualPerSecond = 0
   let healthySamples = 0
 
   const recordHealthySecond = (perSecond: number) => {
-    if (currentOutage !== undefined) {
+    if (currentOutage !== null) {
       logger.info('[GSI] Ingress recovered', {
         durationMs: currentOutage.end - currentOutage.start,
       })
-      currentOutage = undefined
+      currentOutage = null
     }
     usualPerSecond =
       healthySamples === 0
@@ -55,7 +55,7 @@ export const createGsiIngressHealth = function createGsiIngressHealth(
   }
 
   const recordDegradedSecond = (perSecond: number, now: number) => {
-    if (currentOutage === undefined) {
+    if (currentOutage === null) {
       currentOutage = { end: now, start: windowStart }
       outages.push(currentOutage)
       logger.info('[GSI] Ingress degraded', {
