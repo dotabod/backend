@@ -1,10 +1,12 @@
 import type { SocketClient } from '../../types'
+import { gsiIngressHealth } from './gsi-ingress-health'
 import { isArcade } from './is-arcade'
 import { isPlayingMatch } from './is-playing-match'
 import { isSpectator } from './is-spectator'
 
 // GSI configs heartbeat every 30 seconds. Two missed heartbeats plus jitter means the snapshot
-// is no longer trustworthy enough to answer current-game chat commands.
+// is no longer trustworthy enough to answer current-game chat commands. Time our own ingress was
+// down does not count, because no streamer's packets could reach us then.
 export const GSI_STALE_AFTER_MS = 75_000
 
 const activeMatchStates = new Set([
@@ -27,7 +29,11 @@ export const isGsiFresh = function isGsiFresh(
   if (updatedAt === undefined || updatedAt === 0) {
     return false
   }
-  return now - updatedAt <= GSI_STALE_AFTER_MS
+  const age = now - updatedAt
+  if (age <= GSI_STALE_AFTER_MS) {
+    return true
+  }
+  return age - gsiIngressHealth.downtimeBetween(updatedAt, now) <= GSI_STALE_AFTER_MS
 }
 
 const hasFreshActiveGameState = function hasFreshActiveGameState(
