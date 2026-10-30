@@ -28,6 +28,7 @@ import { emitMinimapBlockerStatus } from './gsi-handler'
 import type { GSIServerInterface } from './gsi-server-types'
 import { gsiHandlers } from './lib/consts'
 import { isGsiFresh } from './lib/get-current-match-id'
+import { gsiIngressHealth } from './lib/gsi-ingress-health'
 import { supabaseMatchStore } from './lib/match-store'
 import { socketMatchRequester } from './lib/match-verification'
 import { MatchDataService } from './lib/matchData'
@@ -551,6 +552,8 @@ class GSIServer implements GSIServerInterface {
     app.post(
       '/',
       (_req: Request, _res: Response, next: () => void) => {
+        // Count every post, even ones with a bad token, because this measures the tunnel
+        gsiIngressHealth.record()
         next()
       },
       validateToken,
@@ -691,6 +694,11 @@ class GSIServer implements GSIServerInterface {
 
     // Set up the repeating timer for cleaning up resubscribe timestamps
     setInterval(cleanupResubscribeTimestamps, RESUBSCRIBE_CLEANUP_TIMEOUT)
+
+    // Measure the GSI ingress once a second so tunnel outages are not mistaken for closed games
+    setInterval(() => {
+      gsiIngressHealth.sample(Date.now())
+    }, 1000)
 
     // Dota does not always send an INIT/POST_GAME packet when leaving a spectator or custom
     // game. Once its heartbeat expires, clear the browser source instead of leaving the last
