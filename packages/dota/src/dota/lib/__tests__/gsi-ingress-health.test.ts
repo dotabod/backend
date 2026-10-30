@@ -39,6 +39,20 @@ describe(createGsiIngressHealth, () => {
     expect(health.downtimeBetween(outageEnd, end)).toBe(0)
   })
 
+  it('ignores dips shorter than five seconds', () => {
+    const health = createGsiIngressHealth(0)
+    // Clients that resumed together after a deploy post in step, so every third second runs low
+    let now = runSeconds(health, 0, 120, 200)
+    now = runSeconds(health, now, 1, 30)
+    now = runSeconds(health, now, 2, 200)
+    now = runSeconds(health, now, 1, 30)
+    now = runSeconds(health, now, 2, 200)
+    now = runSeconds(health, now, 4, 0)
+    now = runSeconds(health, now, 10, 200)
+
+    expect(health.downtimeBetween(0, now)).toBe(0)
+  })
+
   it('ignores a drop in traffic too thin to tell from a quiet hour', () => {
     const health = createGsiIngressHealth(0)
     const outageStart = runSeconds(health, 0, 120, 10)
