@@ -61,9 +61,7 @@ export const createGsiIngressHealth = function createGsiIngressHealth(
   }
 
   const recordDegradedSecond = (perSecond: number, now: number) => {
-    if (lowSince === null) {
-      lowSince = windowStart
-    }
+    lowSince ??= windowStart
     if (now - lowSince < MIN_OUTAGE_MS) {
       return
     }
