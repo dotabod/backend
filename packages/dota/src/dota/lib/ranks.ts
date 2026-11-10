@@ -4,10 +4,10 @@ import { z } from 'zod'
 
 import { MULTIPLIER_SOLO } from '../../db/get-wl'
 import RedisClient from '../../db/redis-client'
-import { steamSocket } from '../../steam/ws'
+import { requestSteam } from '../../steam/request'
 import { leaderRanks, ranks } from './consts'
 
-const leaderboardCardSchema = z.object({ leaderboard_rank: z.number() })
+const leaderboardCardSchema = z.object({ leaderboard_rank: z.number().nullable() })
 
 export const rankTierToMmr = function rankTierToMmr(rankTier: string | number) {
   if (!Number(rankTier)) {
@@ -94,6 +94,8 @@ interface LeaderRankData {
   }
   mmr: number
   standing: number | null
+  // Set when Steam couldn't answer, as opposed to Valve listing no standing
+  lookupFailed?: true
 }
 
 // A streamer's standing is refreshed at match end (skipCache), so the TTL only
@@ -131,11 +133,15 @@ const lookupLeaderRank = async function lookupLeaderRank(
     result = medalCache
   } else {
     try {
-      const response: unknown = await steamSocket.timeout(10_000).emitWithAck('getCard', steam32Id)
-      const { leaderboard_rank: standing } = leaderboardCardSchema.parse(response)
+      const { leaderboard_rank: standing } = await requestSteam(
+        'getCard',
+        [steam32Id],
+        leaderboardCardSchema,
+        10_000
+      )
 
       // If the rank is not available, return default values
-      if (standing === 0) {
+      if (standing === null || standing === 0) {
         return defaultNotFound
       }
 
@@ -149,7 +155,7 @@ const lookupLeaderRank = async function lookupLeaderRank(
       await redisClient.setJson(cacheKey, result)
       await redisClient.client.expire(cacheKey, MEDAL_CACHE_TTL_SECONDS)
     } catch {
-      return defaultNotFound
+      return { ...defaultNotFound, lookupFailed: true }
     }
   }
 

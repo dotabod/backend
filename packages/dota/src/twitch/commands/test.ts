@@ -7,7 +7,7 @@ import type { DelayedGames } from '../../../../steam/src/types/index'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { MatchDataService } from '../../dota/lib/matchData'
 import MongoDBSingleton from '../../steam/mongo-db-singleton'
-import { steamSocket } from '../../steam/ws'
+import { requestSteam } from '../../steam/request'
 import { chatClient } from '../chat-client'
 import commandHandler from '../lib/command-handler'
 import type { MessageType } from '../lib/command-handler'
@@ -112,10 +112,8 @@ const handleCardCommand = async (message: MessageType, args: string[]): Promise<
   const [, accountId] = args
 
   try {
-    const response: unknown = await steamSocket
-      .timeout(5000)
-      .emitWithAck('getCard', Number(accountId))
-    chatClient.whisper(message.user.userId, JSON.stringify(z.json().parse(response)))
+    const response = await requestSteam('getCard', [Number(accountId)], z.json(), 5000)
+    chatClient.whisper(message.user.userId, JSON.stringify(response))
     chatClient.say(message.channel.name, 'card!')
   } catch (error) {
     chatClient.whisper(
@@ -145,13 +143,12 @@ const handleServerCommand = async (message: MessageType, args: string[]) => {
       channelClientSteam32Id: channel.client.steam32Id,
       steam32Id,
     })
-    const serverResponse: unknown = await steamSocket
-      .timeout(10_000)
-      .emitWithAck(
-        'getUserSteamServer',
-        steam32Id !== undefined && steam32Id.length > 0 ? steam32Id : channel.client.steam32Id
-      )
-    const steamServerId = z.string().min(1).parse(serverResponse)
+    const steamServerId = await requestSteam(
+      'getUserSteamServer',
+      [steam32Id !== undefined && steam32Id.length > 0 ? steam32Id : channel.client.steam32Id],
+      z.string().min(1),
+      10_000
+    )
     logger.info('[STEAM] Got user steam server', {
       channelClientSteam32Id: channel.client.steam32Id,
       steam32Id,

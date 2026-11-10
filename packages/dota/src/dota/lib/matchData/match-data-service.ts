@@ -2,7 +2,7 @@ import { supabase } from '@dotabod/shared-utils'
 import { z } from 'zod'
 
 import { DBSettings, getValueOrDefault } from '../../../settings'
-import { steamSocket } from '../../../steam/ws'
+import { requestSteam } from '../../../steam/request'
 import type { Cards, DelayedGames, HeroesStatus, SocketClient } from '../../../types'
 import { is8500Plus } from '../../../utils/index'
 import { getHeroNameOrColor, heroColors } from '../heroes'
@@ -431,10 +431,7 @@ export class MatchDataService {
     if (!accountIds.length) {
       return []
     }
-    const response: unknown = await steamSocket
-      .timeout(10_000)
-      .emitWithAck('getCards', accountIds, false)
-    return cardsSchema.parse(response)
+    return await requestSteam('getCards', [accountIds, false], cardsSchema, 10_000)
   }
 }
 
