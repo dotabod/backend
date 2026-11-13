@@ -432,6 +432,22 @@ class GSIHandler implements GSIHandlerType {
     })
   }
 
+  private async storeLeaderboardStanding() {
+    const response = await getRankDetail(this.getMmr(), this.getSteam32(), { skipCache: true })
+    const { steam32Id } = this.client
+    if (steam32Id === null || steam32Id === 0 || response === null) {
+      return
+    }
+    // A failed lookup keeps the stored standing instead of wiping it
+    if (!('standing' in response) || response.lookupFailed === true) {
+      return
+    }
+    await supabase
+      .from('steam_accounts')
+      .update({ leaderboard_rank: response.standing, updated_at: new Date().toISOString() })
+      .eq('steam32Id', steam32Id)
+  }
+
   emitBadgeUpdate() {
     getRankDetail(this.getMmr(), this.getSteam32())
       .then((deets) => {
@@ -1200,18 +1216,7 @@ class GSIHandler implements GSIHandlerType {
         scores,
       })
 
-      const response = await getRankDetail(this.getMmr(), this.getSteam32(), { skipCache: true })
-      if (
-        this.client.steam32Id !== null &&
-        this.client.steam32Id !== 0 &&
-        response !== null &&
-        'standing' in response
-      ) {
-        await supabase
-          .from('steam_accounts')
-          .update({ leaderboard_rank: response.standing, updated_at: new Date().toISOString() })
-          .eq('steam32Id', this.client.steam32Id)
-      }
+      await this.storeLeaderboardStanding()
 
       const TreadToggleData = this.treadsData
       const toggleHandler = async () => {

@@ -3,7 +3,13 @@
 // mock.module's ranks to stub getRankTitle/getRankDescription/getDotabodRankProfile).
 // rankTierToMmr/mmrToRankTier/estimateMMR/getRankDetail are preserved real via
 // that harness's spread, so they're stable no matter the suite run order.
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { once } from 'node:events'
+import { createServer } from 'node:http'
+
+import { Server } from 'socket.io'
+import { io } from 'socket.io-client'
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { z } from 'zod'
 
 import { buildSharedUtilsMock } from '../../../__tests__/shared-mocks.ts'
 
@@ -29,7 +35,8 @@ interface CachedMedal {
 
 interface MedalCacheState {
   cached: CachedMedal | null
-  cardStanding: number
+  cardStanding: number | null
+  steamError: string | null
   expireCalls: { key: string; seconds: number }[]
   setCalls: { key: string; value: CachedMedal }[]
 }
@@ -39,10 +46,12 @@ const medalCache: MedalCacheState = {
   cardStanding: 0,
   expireCalls: [],
   setCalls: [],
+  steamError: null,
 }
 
 // The leaderboard branch reads `${steam32Id}:medal` from Redis and falls back to
-// the steam service's getCard; swap both for in-memory fakes.
+// the steam service's getCard. Redis is an in-memory fake; getCard goes to a real
+// socket.io server that acks the way packages/steam/src/index.ts does: (error, card).
 Object.assign(RedisClient.getInstance(), {
   client: {
     expire: async (key: string, seconds: number) => {
@@ -58,11 +67,23 @@ Object.assign(RedisClient.getInstance(), {
     },
   },
 })
-Object.assign(steamSocket, {
-  timeout: () => ({
-    emitWithAck: async () => await Promise.resolve({ leaderboard_rank: medalCache.cardStanding }),
-  }),
+type SteamAck = (error: string | null, card: { leaderboard_rank: number | null } | null) => void
+
+const httpServer = createServer()
+const steamServer = new Server(httpServer)
+steamServer.on('connection', (socket) => {
+  socket.on('getCard', (_accountId: number, respond: SteamAck) => {
+    if (medalCache.steamError !== null) {
+      respond(medalCache.steamError, null)
+      return
+    }
+    respond(null, { leaderboard_rank: medalCache.cardStanding })
+  })
 })
+await once(httpServer.listen(0, '127.0.0.1'), 'listening')
+const { port } = z.object({ port: z.number() }).parse(httpServer.address())
+const steamClient = io(`http://127.0.0.1:${port}`)
+Object.assign(steamSocket, { timeout: (ms: number) => steamClient.timeout(ms) })
 
 describe('mmrToRankTier', () => {
   it('returns 0 (uncalibrated) for non-positive mmr', () => {
@@ -153,6 +174,12 @@ describe('getRankDetail leaderboard cache', () => {
     medalCache.cardStanding = 0
     medalCache.expireCalls = []
     medalCache.setCalls = []
+    medalCache.steamError = null
+  })
+
+  afterAll(async () => {
+    steamClient.close()
+    await steamServer.close()
   })
 
   it('caches a fetched standing with a TTL so it cannot go stale forever', async () => {
@@ -174,5 +201,24 @@ describe('getRankDetail leaderboard cache', () => {
     expect(cached).toMatchObject({ standing: 500 })
     expect(fresh).toMatchObject({ standing: 42 })
     expect(medalCache.setCalls).toMatchObject([{ key: '123:medal', value: { standing: 42 } }])
+  })
+
+  it("treats Valve's null leaderboard_rank as an Immortal off the leaderboard", async () => {
+    medalCache.cardStanding = null
+
+    const detail = await getRankDetail(8000, 123)
+
+    expect(detail).toMatchObject({ myRank: { image: '80.png' }, standing: null })
+    expect(detail).not.toHaveProperty('lookupFailed')
+    expect(medalCache.setCalls).toStrictEqual([])
+  })
+
+  it('flags a lookup the steam service could not answer', async () => {
+    medalCache.steamError = 'Steam not connected'
+
+    const detail = await getRankDetail(8000, 123, { skipCache: true })
+
+    expect(detail).toMatchObject({ lookupFailed: true, standing: null })
+    expect(medalCache.setCalls).toStrictEqual([])
   })
 })

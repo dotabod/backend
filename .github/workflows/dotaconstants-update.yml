@@ -65,7 +65,7 @@ jobs:
       - name: Create Pull Request
         id: cpr
         if: steps.scan.outputs.should_update == 'true'
-        uses: peter-evans/create-pull-request@v8.1.1
+        uses: peter-evans/create-pull-request@v8.1.2
         with:
           # PAT (not GITHUB_TOKEN) so the created PR triggers the CI + Autofix
           # workflows — pushes/PRs made with GITHUB_TOKEN don't fire workflows.

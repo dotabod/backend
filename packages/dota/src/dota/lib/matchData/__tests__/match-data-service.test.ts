@@ -73,16 +73,24 @@ let socketError: Error | null = null
 let socketCallCount = 0
 let socketLastIds: number[] = []
 
+type CardsAck = (
+  ackError: Error | null,
+  serverError: string | null,
+  cards: typeof cardsResponse
+) => void
+
+// Acks the way the steam service does: (error, data) after socket.io's own timeout error
 vi.doMock('../../../../steam/ws', () => ({
   steamSocket: {
     timeout: () => ({
-      emitWithAck: async (_event: string, ids: number[]) => {
+      emit: (_event: string, ids: number[], _refetchCards: boolean, ack: CardsAck) => {
         socketCallCount += 1
         socketLastIds = ids
         if (socketError) {
-          throw socketError
+          ack(socketError, null, null)
+          return
         }
-        return await Promise.resolve(cardsResponse)
+        ack(null, null, cardsResponse)
       },
     }),
   },
