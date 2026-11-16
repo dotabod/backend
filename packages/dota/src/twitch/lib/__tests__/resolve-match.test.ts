@@ -124,6 +124,7 @@ describe(resolveMatchRetroactively, () => {
   describe('fresh resolution (won was null)', () => {
     it('refunds a one-sided prediction using the streamer settings and subscription', async () => {
       state.sessionMatch = baseMatchRow({ won: null })
+      state.channelId = 'twitch-channel-1'
       state.predictions = [
         {
           id: 'pred-1',
