@@ -112,7 +112,7 @@ jobs:
           buildkitd-flags: --debug
 
       - name: Login to ghcr
-        if: github.actor != 'dependabot[bot]'
+        if: github.actor != 'dependabot[bot]' || github.ref == 'refs/heads/master'
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -127,9 +127,9 @@ jobs:
         id: image
         uses: docker/bake-action@v7
         with:
-          # Dependabot workflows cannot access GHA_PAT. Still build its images
-          # as a validation check, but only publish non-Dependabot builds.
-          push: ${{ github.actor != 'dependabot[bot]' }}
+          # Unmerged Dependabot branches lack GHA_PAT. Approved master changes
+          # can publish after the caller's CI gate regardless of the actor.
+          push: ${{ github.actor != 'dependabot[bot]' || github.ref == 'refs/heads/master' }}
           provenance: false
           targets: ${{ matrix.service }}
           set: |
@@ -144,14 +144,14 @@ jobs:
             *.cache-to=type=gha,mode=min,scope=${{ matrix.service }}
 
       - name: Record the published image
-        if: github.actor != 'dependabot[bot]'
+        if: github.actor != 'dependabot[bot]' || github.ref == 'refs/heads/master'
         env:
           BAKE_METADATA: ${{ steps.image.outputs.metadata }}
           RELEASE_SERVICE: ${{ matrix.service }}
         run: python scripts/deploy/coolify.py manifest
 
       - name: Save release manifest
-        if: github.actor != 'dependabot[bot]'
+        if: github.actor != 'dependabot[bot]' || github.ref == 'refs/heads/master'
         uses: actions/upload-artifact@v4
         with:
           name: coolify-image-${{ matrix.service }}
