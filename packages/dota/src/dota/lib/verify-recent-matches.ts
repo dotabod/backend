@@ -3,6 +3,7 @@ import { setTimeout as delay } from 'node:timers/promises'
 import { logger } from '@dotabod/shared-utils'
 
 import { LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/get-wl'
+import type { SocketClient } from '../../types'
 import type { GSIHandlerType } from '../gsi-handler-types'
 import { applyVerification, decideVerification, fetchValveMatch } from './match-verification'
 import type {
@@ -30,7 +31,9 @@ export interface MatchVerifierDeps {
     won: boolean,
     channelId: string,
     predictionId: string,
-    matchId: string
+    matchId: string,
+    settings?: SocketClient['settings'],
+    subscription?: SocketClient['subscription']
   ) => Promise<boolean>
   handlers: ReadonlyMap<string, GSIHandlerType>
   isConnected: () => boolean
@@ -74,7 +77,14 @@ const onlineEffectsFor = function onlineEffectsFor(
     async closePrediction(match, won) {
       const channelId = handler.getChannelId()
       if (match.predictionId !== null && match.predictionId.length > 0 && channelId.length > 0) {
-        await deps.closePrediction(won, channelId, match.predictionId, match.matchId)
+        await deps.closePrediction(
+          won,
+          channelId,
+          match.predictionId,
+          match.matchId,
+          client.settings,
+          client.subscription
+        )
       }
     },
     refreshWinLoss() {

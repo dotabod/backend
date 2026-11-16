@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { createPacketStub } from '../../../__tests__/shared-mocks.ts'
+import { DBSettings } from '../../../settings.ts'
 import {
   baseMatchRow,
   commandHandler,
   findMostRecentResolvedMatch,
   makeClient,
+  PRO_SUB,
   resetState,
   resolveMatchRetroactively,
   state,
@@ -120,6 +122,41 @@ describe(resolveMatchRetroactively, () => {
   })
 
   describe('fresh resolution (won was null)', () => {
+    it('refunds a one-sided prediction using the streamer settings and subscription', async () => {
+      state.sessionMatch = baseMatchRow({ won: null })
+      state.channelId = 'twitch-channel-1'
+      state.predictions = [
+        {
+          id: 'pred-1',
+          outcomes: [
+            { id: 'win', title: 'Yes', users: 0 },
+            { id: 'loss', title: 'No', users: 5 },
+          ],
+          status: 'LOCKED',
+        },
+      ]
+      const client = makeClient({
+        settings: [{ key: DBSettings.discardZeroBets, value: true }],
+        subscription: PRO_SUB,
+      })
+
+      const result = await resolveMatchRetroactively(
+        client,
+        '7777777777',
+        true,
+        'modUser',
+        '#streamer',
+        'msg-1'
+      )
+
+      expect(result.success).toBeTruthy()
+      expect(state.updateCalls[0].values).toMatchObject({ won: true })
+      expect(state.cancelPredictionCalls).toStrictEqual([
+        { predictionId: 'pred-1', twitchId: 'twitch-channel-1' },
+      ])
+      expect(state.resolvePredictionCalls).toHaveLength(0)
+    })
+
     it('records a win, applies +mmrSize for ranked solo, and writes the success message', async () => {
       state.sessionMatch = baseMatchRow({
         is_party: false,
