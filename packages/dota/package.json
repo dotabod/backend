@@ -31,7 +31,7 @@
     "cors": "^2.8.5",
     "country-code-emoji": "^2.3.0",
     "deepl-node": "^1.19.1",
-    "dotaconstants": "github:dotabod/dotaconstants#a11599baceeaf0a8824290717bcf27cead74203a",
+    "dotaconstants": "github:dotabod/dotaconstants#216d55988c2b3c6f7830639cd9b11db4df69e0ad",
     "express": "^4.21.2",
     "franc": "^6.2.0",
     "i18next": "^26.4.2",
