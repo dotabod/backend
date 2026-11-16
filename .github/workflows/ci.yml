@@ -14,7 +14,8 @@ concurrency:
   # For PRs, group by head ref so a new push cancels the in-flight run. For
   # master pushes, github.ref is the branch ref. Either way one run per ref.
   group: ci-${{ github.event.pull_request.head.ref || github.ref }}
-  cancel-in-progress: true
+  # A new master push must not cancel a deployment while it replaces a singleton.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 jobs:
   test:
@@ -55,5 +56,30 @@ jobs:
         run: pnpm run quality
       - name: Run tests
         run: pnpm exec vitest run
+      - name: Test deployment orchestration
+        run: python -m unittest discover -s scripts/deploy -p 'test_*.py' -v
       - name: Build all packages
         run: pnpm run build:all
+
+  build-images:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    uses: ./.github/workflows/builder.yml
+    permissions:
+      contents: read
+      packages: write
+    secrets: inherit
+
+  deploy:
+    needs: build-images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && needs.build-images.outputs.services != '[]'
+    uses: ./.github/workflows/deploy.yml
+    permissions:
+      contents: read
+      actions: read
+    secrets: inherit
+    with:
+      mode: deploy
+      services: ${{ needs.build-images.outputs.services }}
+      revision: ${{ github.sha }}
+      build_run_id: ${{ github.run_id }}
