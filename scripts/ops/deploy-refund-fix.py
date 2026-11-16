@@ -23,12 +23,26 @@ def api(path, method='GET', data=None):
         base + path,
         method=method,
         data=json.dumps(data).encode() if data is not None else None,
-        headers={'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json'},
+        headers={
+            'Authorization': 'Bearer ' + key,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'dotabod-release-check/1.0',
+        },
     )
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
             return json.load(response)
     except urllib.error.HTTPError as error:
+        body = error.read(4096).decode('utf-8', errors='replace')
+        detail = 'Non-JSON error response'
+        try:
+            payload = json.loads(body)
+            detail = str(payload.get('message') or payload.get('error') or 'No API error message')
+        except json.JSONDecodeError:
+            pass
+        detail = detail.replace(key, '[redacted]').replace(host, '[host]')[:500]
+        print(json.dumps({'status': error.code, 'content_type': error.headers.get('Content-Type'), 'server': error.headers.get('Server'), 'message': detail}), flush=True)
         raise SystemExit('Coolify request failed: ' + method + ' ' + path + ' HTTP ' + str(error.code)) from None
     except urllib.error.URLError:
         raise SystemExit('Coolify host is unreachable from the hosted runner.') from None
