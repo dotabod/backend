@@ -4,7 +4,9 @@ import {
   createGsiHandlerStub,
   createPacketStub,
   createSocketClientStub,
+  PRO_SUB,
 } from '../../../__tests__/shared-mocks.ts'
+import { DBSettings } from '../../../settings.ts'
 import type { GSIHandlerType } from '../../gsi-handler-types.ts'
 import type { UpdateMmrParams } from '../update-mmr.ts'
 import { createMatchVerifier } from '../verify-recent-matches.ts'
@@ -28,10 +30,10 @@ const setup = function setup(options: {
   const { store, table } = createMemoryStore(options.rows)
   const { request, requested } = createRequester(options.answers ?? new Map())
   const mmrCalls: UpdateMmrParams[] = []
-  const predictionCalls: [boolean, string, string, string][] = []
+  const predictionCalls: Parameters<MatchVerifierDeps['closePrediction']>[] = []
   const deps: MatchVerifierDeps = {
-    async closePrediction(won, channelId, predictionId, matchId) {
-      predictionCalls.push([won, channelId, predictionId, matchId])
+    async closePrediction(...args) {
+      predictionCalls.push(args)
       return await Promise.resolve(true)
     },
     handlers: options.handlers ?? new Map(),
@@ -107,7 +109,13 @@ describe(createMatchVerifier, () => {
   })
 
   it('fills in an online streamer’s missing result with MMR and the prediction', async () => {
-    const client = createSocketClientStub({ mmr: 4000, steam32Id: 433_314_623, token: 'user-1' })
+    const client = createSocketClientStub({
+      mmr: 4000,
+      settings: [{ key: DBSettings.discardZeroBets, value: true }],
+      steam32Id: 433_314_623,
+      subscription: PRO_SUB,
+      token: 'user-1',
+    })
     const handler = createGsiHandlerStub(client, { getChannelId: () => 'twitch-1' })
     const { mmrCalls, predictionCalls, table, verify } = setup({
       answers: new Map([['9053165578', valveMatch()]]),
@@ -119,7 +127,9 @@ describe(createMatchVerifier, () => {
 
     expect(table.get('row-1')).toMatchObject({ verification: 'resolved', won: true })
     expect(mmrCalls).toMatchObject([{ currentMmr: 4000, newMmr: 4025, steam32Id: 433_314_623 }])
-    expect(predictionCalls).toStrictEqual([[true, 'twitch-1', 'prediction-1', '9053165578']])
+    expect(predictionCalls).toStrictEqual([
+      [true, 'twitch-1', 'prediction-1', '9053165578', client.settings, PRO_SUB],
+    ])
   })
 
   it('leaves MMR and the prediction alone for a streamer who is not loaded', async () => {

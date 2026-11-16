@@ -208,6 +208,7 @@ interface TwitchHarnessState {
     outcomeId: string
   }[]
   cancelPredictionCalls: { twitchId: string; predictionId: string }[]
+  cancelPredictionError: Error | null
   createPredictionCalls: {
     twitchId: string
     opts: { title: string; outcomes: string[]; autoLockAfter: number }
@@ -292,6 +293,7 @@ interface TwitchHarnessState {
 export const state: TwitchHarnessState = {
   botBanned: false,
   cancelPredictionCalls: [],
+  cancelPredictionError: null,
   channelId: null,
   chatSayCalls: [],
   chatSettingsUpdates: [],
@@ -453,6 +455,9 @@ const getTwitchAPIMock = async () =>
     predictions: {
       cancelPrediction: async (twitchId: string, predictionId: string) => {
         state.cancelPredictionCalls.push({ predictionId, twitchId })
+        if (state.cancelPredictionError !== null) {
+          throw state.cancelPredictionError
+        }
         return await Promise.resolve({})
       },
       createPrediction: async (
@@ -639,6 +644,7 @@ await initTestI18n()
 // Import after all module mocks are registered.
 const resolveMatchModule = await import('../resolve-match')
 export const { resolveMatchRetroactively } = resolveMatchModule
+export const { closeTwitchBetById } = resolveMatchModule
 export const { findMostRecentResolvedMatch } = resolveMatchModule
 export const { closeTwitchBet } = await import('../close-twitch-bet')
 export const { refundTwitchBet } = await import('../refund-twitch-bets')
@@ -807,6 +813,7 @@ export const resetState = function resetState() {
   state.predictions = []
   state.resolvePredictionCalls = []
   state.cancelPredictionCalls = []
+  state.cancelPredictionError = null
   state.createPredictionCalls = []
   state.createPredictionError = null
   state.getPredictionsCalls = []

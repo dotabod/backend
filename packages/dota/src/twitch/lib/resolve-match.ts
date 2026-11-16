@@ -5,9 +5,11 @@ import { LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/g
 import { getSessionStartDate } from '../../db/stream-window'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { updateMmr } from '../../dota/lib/update-mmr'
+import { DBSettings, getValueOrDefault } from '../../settings'
 import { steamSocket } from '../../steam/ws'
 import type { MatchMinimalDetailsResponse, SocketClient } from '../../types'
 import { chatClient } from '../chat-client'
+import { refundTwitchBet } from './refund-twitch-bets'
 import { retryTransient } from './retry-transient'
 
 interface SessionMatch {
@@ -153,7 +155,9 @@ export const closeTwitchBetById = async function closeTwitchBetById(
   won: boolean,
   twitchId: string,
   predictionId: string,
-  matchId: string
+  matchId: string,
+  settings?: SocketClient['settings'],
+  subscription?: SocketClient['subscription']
 ): Promise<boolean> {
   try {
     const api = await getTwitchAPI(twitchId)
@@ -200,6 +204,18 @@ export const closeTwitchBetById = async function closeTwitchBetById(
     }
 
     const [wonOutcome, lossOutcome] = prediction.outcomes
+
+    const discardZeroBets = getValueOrDefault(DBSettings.discardZeroBets, settings, subscription)
+    if (discardZeroBets && (wonOutcome.users === 0 || lossOutcome.users === 0)) {
+      logger.info('[PREDICT] [BETS] Refunding prediction - zero predictions on one side', {
+        lossOutcomeUsers: lossOutcome.users,
+        matchId,
+        predictionId,
+        twitchId,
+        wonOutcomeUsers: wonOutcome.users,
+      })
+      return (await refundTwitchBet(twitchId, predictionId)) === predictionId
+    }
 
     await retryTransient(
       async () =>
@@ -374,7 +390,14 @@ export const resolveMatchRetroactively = async function resolveMatchRetroactivel
     const channelId = handler?.getChannelId() ?? client.Account?.providerAccountId
 
     if (channelId !== undefined && channelId.length > 0) {
-      const closed = await closeTwitchBetById(won, channelId, match.predictionId, matchId)
+      const closed = await closeTwitchBetById(
+        won,
+        channelId,
+        match.predictionId,
+        matchId,
+        client.settings,
+        client.subscription
+      )
       if (closed) {
         logger.info('[BETS] Retroactive resolution - Twitch prediction closed', {
           matchId,
