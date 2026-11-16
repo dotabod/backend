@@ -85,7 +85,7 @@ jobs:
         env:
           PACKAGE_FILTER: ${{ matrix.filter }}
           CONSTANTS_SHA: ${{ steps.scan.outputs.latest_sha }}
-        run: pnpm --filter "$PACKAGE_FILTER" update "dotaconstants@github:dotabod/dotaconstants#$CONSTANTS_SHA" --lockfile-only --ignore-scripts
+        run: pnpm --filter "$PACKAGE_FILTER" add "dotaconstants@github:dotabod/dotaconstants#$CONSTANTS_SHA" --lockfile-only --ignore-scripts
       - name: Create update PR
         id: pr
         if: steps.scan.outputs.should_update == 'true'
