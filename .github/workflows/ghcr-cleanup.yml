@@ -38,8 +38,8 @@ jobs:
           owner: ${{ github.repository_owner }}
           packages: ${{ matrix.package }}
           # Keep the newest 30 tagged builds (sha-* + branch tags). Generous on
-          # purpose: deploys are manual, so a service may run an image several
-          # builds old — keep enough that its tag isn't pruned out from under it.
+          # purpose: unchanged services and rollback targets can be several
+          # builds old. Keep enough history for release rollback.
           keep-n-tagged: 30
           exclude-tags: master
           delete-untagged: true

@@ -1,40 +1,93 @@
 name: Release to Coolify
 
 on:
-  registry_package:
-    types: [published]
+  workflow_call:
+    inputs:
+      mode:
+        type: string
+        default: deploy
+      services:
+        type: string
+        required: true
+      revision:
+        type: string
+        required: true
+      build_run_id:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Inspect configuration or deploy a previously successful release
+        type: choice
+        options: [inspect, deploy]
+        default: inspect
+      service:
+        type: choice
+        options: [all, dota, steam, twitch-chat, twitch-events]
+        default: all
+      ci_run_id:
+        description: Successful master CI run containing the desired image manifests (deploy only)
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+# Never cancel a running cutover, including when a newer release is queued.
+concurrency:
+  group: coolify-production
+  cancel-in-progress: false
 
 jobs:
-  release:
-    if: ${{ github.event.registry_package.package_version.container_metadata.labels.description != '' }}
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.release.outputs.services }}
+      revision: ${{ steps.release.outputs.revision }}
+      run_id: ${{ steps.release.outputs.run_id }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Select verified release images
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOY_MODE: ${{ inputs.mode }}
+          RELEASE_SERVICES: ${{ inputs.services || '[]' }}
+          RELEASE_REVISION: ${{ inputs.revision }}
+          RELEASE_RUN_ID: ${{ inputs.build_run_id }}
+          SELECTED_SERVICE: ${{ inputs.service || 'all' }}
+          MANUAL_RUN_ID: ${{ inputs.ci_run_id }}
+        run: python scripts/deploy/coolify.py prepare
+
+  deploy:
+    needs: prepare
+    if: needs.prepare.outputs.services != '[]'
     runs-on: ubuntu-latest
     environment: prod
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        service: ${{ fromJSON(needs.prepare.outputs.services) }}
     steps:
-      - name: 'Release to Prod and Dev'
-        run: |
-          notify_coolify() {
-            local env_name=$1
-            local -n uuid_map=$2 # Use nameref for associative array
-
-            # Map package name to UUID
-            local package_name="${{ github.event.registry_package.name }}"
-            local UUID=${uuid_map[$package_name]}
-
-            # Check if UUID is empty
-            if [ -z "$UUID" ]; then
-              echo "UUID not found for package $package_name"
-              return 1
-            fi
-
-            # Notify Coolify
-            echo "Notifying Coolify for $env_name environment: $UUID"
-            # curl -s -X GET -H "Authorization: Bearer ${{ secrets.COOLIFY_API_KEY }}" "https://${{ secrets.COOLIFY_HOST }}/api/v1/deploy?uuid=${UUID}&force=false"
-          }
-
-          # UUID mappings for prod and dev
-          declare -A prod_uuids=( ["dota"]="i8gccg8" ["twitch-events"]="zwg4g4c" ["twitch-chat"]="zwgkg48" ["steam"]="wsgwk8s" )
-          declare -A dev_uuids=( ["dota"]="esgckgc" ["twitch-events"]="kkk04os" ["twitch-chat"]="qgosw80" ["steam"]="q88g0c8" )
-
-          # Notify for prod and dev
-          notify_coolify "Prod" prod_uuids
-          # notify_coolify "Dev" dev_uuids
+      - uses: actions/checkout@v7
+      - name: Download the image manifest from its build run
+        if: inputs.mode == 'deploy'
+        uses: actions/download-artifact@v4
+        with:
+          name: coolify-image-${{ matrix.service }}
+          path: release
+          run-id: ${{ needs.prepare.outputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Inspect or deploy the production application
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COOLIFY_API_KEY: ${{ secrets.COOLIFY_API_KEY }}
+          COOLIFY_HOST: ${{ secrets.COOLIFY_HOST }}
+          DEPLOY_MODE: ${{ inputs.mode }}
+          RELEASE_SERVICE: ${{ matrix.service }}
+          RELEASE_REVISION: ${{ needs.prepare.outputs.revision }}
+          AUTOMATIC_RELEASE: ${{ inputs.build_run_id != '' && 'true' || 'false' }}
+        run: python scripts/deploy/coolify.py deploy
