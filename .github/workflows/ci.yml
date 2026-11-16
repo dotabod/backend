@@ -1,59 +1,37 @@
-name: CI
+name: Deploy Dota refund fix
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
   workflow_dispatch:
+    inputs:
+      mode:
+        type: choice
+        options: [inspect, deploy]
+        default: inspect
+        required: true
+      revision:
+        type: string
+        default: 759dec583f91205ab1e09fe5ef46eb62ee368cff
+        required: true
 
 permissions:
   contents: read
 
 concurrency:
-  # For PRs, group by head ref so a new push cancels the in-flight run. For
-  # master pushes, github.ref is the branch ref. Either way one run per ref.
-  group: ci-${{ github.event.pull_request.head.ref || github.ref }}
-  cancel-in-progress: true
+  group: manual-dota-production-deploy
+  cancel-in-progress: false
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    environment: prod
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-        with:
-          version: 11.2.2
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: pnpm
-      # `injectWorkspacePackages: true` (pnpm-workspace.yaml) hard-copies each workspace
-      # dep's `files` into consumers' node_modules at install time — it's a static
-      # snapshot, not a symlink, and pnpm never re-syncs it on a later `pnpm install`
-      # even with --force (nothing in the lockfile changed). So shared-utils/profanity-filter
-      # must be built *before* the full install that populates their consumers, or
-      # consumers get an injected copy with no dist/ and fail to resolve at runtime.
-      - name: Install shared-utils + profanity-filter (for build)
-        uses: nick-fields/retry@v4
-        with:
-          timeout_minutes: 5
-          max_attempts: 3
-          retry_wait_seconds: 10
-          command: pnpm install --frozen-lockfile --filter @dotabod/shared-utils --filter @dotabod/profanity-filter
-      - name: Build workspace deps for tests
-        run: pnpm --filter @dotabod/shared-utils --filter @dotabod/profanity-filter run build
-      - name: Install remaining dependencies
-        uses: nick-fields/retry@v4
-        with:
-          timeout_minutes: 5
-          max_attempts: 3
-          retry_wait_seconds: 10
-          command: pnpm install --frozen-lockfile
-      - name: Format, lint, typecheck + dead-code check
-        run: pnpm run quality
-      - name: Run tests
-        run: pnpm exec vitest run
-      - name: Build all packages
-        run: pnpm run build:all
+      - name: Inspect or deploy the production Dota application
+        env:
+          COOLIFY_API_KEY: ${{ secrets.COOLIFY_API_KEY }}
+          COOLIFY_HOST: ${{ secrets.COOLIFY_HOST }}
+          DEPLOY_MODE: ${{ inputs.mode }}
+          REQUESTED_REVISION: ${{ inputs.revision }}
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/ops/deploy-refund-fix.py
