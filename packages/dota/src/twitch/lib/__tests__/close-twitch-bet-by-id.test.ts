@@ -44,7 +44,6 @@ describe(closeTwitchBetById, () => {
 
   it.each([
     { enabled: false, subscription: PRO_SUB },
-    { enabled: true, subscription: undefined },
     { enabled: true, subscription: { ...PRO_SUB, tier: 'FREE' as const } },
     { enabled: true, subscription: { ...PRO_SUB, status: 'CANCELED' as const } },
   ])('resolves normally without access or opt-in: %o', async ({ enabled, subscription }) => {
@@ -61,6 +60,17 @@ describe(closeTwitchBetById, () => {
     expect(state.cancelPredictionCalls).toHaveLength(0)
     expect(state.resolvePredictionCalls).toStrictEqual([
       { outcomeId: 'loss', predictionId: 'prediction-1', twitchId: 'twitch-1' },
+    ])
+  })
+
+  it('resolves normally when no subscription is available', async () => {
+    await closeTwitchBetById(true, 'twitch-1', 'prediction-1', 'match-1', [
+      { key: DBSettings.discardZeroBets, value: true },
+    ])
+
+    expect(state.cancelPredictionCalls).toHaveLength(0)
+    expect(state.resolvePredictionCalls).toStrictEqual([
+      { outcomeId: 'win', predictionId: 'prediction-1', twitchId: 'twitch-1' },
     ])
   })
 
