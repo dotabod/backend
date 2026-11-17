@@ -23,6 +23,8 @@ class CoolifyFake:
         self.calls = []
         self.confirm_pin = True
         self.resource_uuid = APPS['dota']
+        self.deployment_finished = False
+        self.health_states = []
 
     def __call__(self, path, method='GET', data=None):
         self.calls.append((method, path, data))
@@ -36,7 +38,10 @@ class CoolifyFake:
             status = self.statuses[0]
             if len(self.statuses) > 1:
                 self.statuses.pop(0)
+            self.deployment_finished = status == 'finished'
             return {'status': status}
+        if self.deployment_finished and self.health_states:
+            return {**self.app, 'status': self.health_states.pop(0)}
         return self.app.copy()
 
     def mutations(self):
@@ -115,6 +120,27 @@ class CoolifyReleaseTests(unittest.TestCase):
         api = CoolifyFake(statuses=['finished'], status='running:unhealthy')
         with self.assertRaisesRegex(ReleaseError, 'healthy'):
             deploy(api, 'dota', manifest(), REVISION, wait=lambda _: None)
+
+    def test_waits_through_docker_startup_grace_without_redeploying(self):
+        api = CoolifyFake(statuses=['finished'])
+        api.health_states = ['running:starting'] * 30 + ['running:healthy']
+        waits = []
+
+        result = deploy(api, 'dota', manifest(), REVISION, wait=waits.append)
+
+        self.assertEqual(result['status'], 'running:healthy')
+        self.assertEqual(waits, [5] * 30)
+        self.assertEqual(len([call for call in api.calls if call[0] == 'POST']), 1)
+
+    def test_health_timeout_remains_bounded_without_redeploying(self):
+        api = CoolifyFake(statuses=['finished'], status='running:unhealthy')
+        waits = []
+
+        with self.assertRaisesRegex(ReleaseError, 'healthy'):
+            deploy(api, 'dota', manifest(), REVISION, wait=waits.append)
+
+        self.assertEqual(waits, [5] * 60)
+        self.assertEqual(len([call for call in api.calls if call[0] == 'POST']), 1)
 
     def test_different_returned_resource_is_a_release_failure(self):
         api = CoolifyFake()

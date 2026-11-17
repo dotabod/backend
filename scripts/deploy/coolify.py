@@ -101,10 +101,16 @@ def deploy(api, service, manifest, revision, wait=time.sleep):
         wait(5)
     else:
         raise ReleaseError('Timed out waiting for the Coolify deployment')
-    for _ in range(12):
+    # Docker allows 120s of startup grace; Coolify's status refresh can lag it.
+    # Keep polling the same completed deployment rather than queueing another one.
+    previous_health = None
+    for _ in range(60):
         app = inspect_app(api, service)
         if app.get('docker_registry_image_tag') != tag:
             raise ReleaseError('The configured image changed during deployment')
+        if app.get('status') != previous_health:
+            emit({'service': service, 'deployment_uuid': deployment_id, 'application_status': app.get('status')})
+            previous_health = app.get('status')
         if app.get('status') == 'running:healthy':
             result = {'service': service, 'deployment_uuid': deployment_id, 'revision': revision, 'digest': manifest['digest'], 'previous_tag': previous_tag, 'status': app['status']}
             emit(result)
