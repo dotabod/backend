@@ -37,6 +37,12 @@ to reach `finished`, the app's configured digest to match, and Coolify to report
 previous image setting, and final status. Coolify's status is a platform signal;
 when an app has no configured health check, it does not prove every user journey.
 
+After deployment finishes, allow up to five minutes for Docker/Coolify to report
+healthy. The images have a 120-second Docker startup grace period, and the
+platform's status refresh can lag. A release that finished but timed out during
+health observation may already be healthy: run the read-only inspection before
+queueing another deployment. Do not treat `finished` alone as proof of health.
+
 ## Inspect without redeploying
 
 ```sh

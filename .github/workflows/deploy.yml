@@ -65,7 +65,9 @@ jobs:
     if: needs.prepare.outputs.services != '[]'
     runs-on: ubuntu-latest
     environment: prod
-    timeout-minutes: 15
+    # Up to ten minutes for deployment and five for Docker/Coolify health,
+    # plus checkout, artifact download and API overhead.
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       max-parallel: 1
