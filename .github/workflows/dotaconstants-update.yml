@@ -1,114 +1,136 @@
-name: Update dotaconstants (low-noise)
+name: Update dotaconstants consumers
 
 on:
   workflow_dispatch:
+    inputs:
+      force:
+        description: Refresh pins even if only tracking metadata changed
+        type: boolean
+        default: false
+      constants_sha:
+        description: Optional full fork commit SHA for a preview PR (otherwise fork master)
+        type: string
   schedule:
-    # Daily check; the create-pull-request step is a no-op unless patch-relevant files changed.
-    - cron: '30 6 * * *'
+    - cron: '43 * * * *' # After the fork's hourly source check; GitHub may delay schedules.
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+  pull-requests: read
 
 concurrency:
-  group: dotaconstants-update
-  cancel-in-progress: true
+  group: dotaconstants-consumers
+  cancel-in-progress: false
 
 jobs:
-  update-dotaconstants:
+  update:
     runs-on: ubuntu-latest
-    # `prod` environment scopes the GHA_PAT secret used to create the PR.
     environment: prod
-    env:
-      UPDATE_BRANCH: ci/update-dotaconstants
-      BASE_BRANCH: master
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - repository: dotabod/backend
+            manifest: packages/dota/package.json
+            filter: '@dotabod/dota'
+          - repository: dotabod/frontend
+            manifest: package.json
+            filter: dotabod-frontend
     steps:
-      - name: Checkout
+      - name: Check updater credentials
+        env:
+          UPDATE_TOKEN: ${{ secrets.GHA_PAT }}
+        run: |
+          if [ -z "$UPDATE_TOKEN" ]; then
+            echo '::error::GHA_PAT is required to update both repositories and trigger their CI.'
+            exit 1
+          fi
+      - name: Checkout updater
         uses: actions/checkout@v7
-
-      - name: Setup Python
-        uses: actions/setup-python@v7
+        with:
+          path: tooling
+      - name: Checkout consumer
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ matrix.repository }}
+          ref: master
+          token: ${{ secrets.GHA_PAT }}
+          path: consumer
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.x'
-
-      - name: Detect patch-relevant changes
+      - name: Detect generated data changes
         id: scan
+        working-directory: consumer
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          python .github/scripts/update_dotaconstants.py
-
-      - name: Setup pnpm
+          MANIFEST_PATH: ${{ matrix.manifest }}
+          CONSTANTS_SHA: ${{ inputs.constants_sha }}
+          FORCE_UPDATE: ${{ inputs.force && 'true' || 'false' }}
+        run: python ../tooling/.github/scripts/update_dotaconstants.py
+      - uses: pnpm/action-setup@v6
         if: steps.scan.outputs.should_update == 'true'
-        uses: pnpm/action-setup@v6
         with:
           version: 11.2.2
-
-      - name: Setup Node
+          package_json_file: consumer/package.json
+      - uses: actions/setup-node@v7
         if: steps.scan.outputs.should_update == 'true'
-        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm
-
-      # Pin to the exact detected SHA (not the floating branch ref) so the bump
-      # is deterministic regardless of pnpm's git-ref cache. This updates both
-      # packages/dota/package.json and pnpm-lock.yaml (correct tarball integrity)
-      # in one shot, keeping the manifest and lockfile in sync.
-      - name: Bump dotaconstants to latest SHA
+          cache-dependency-path: consumer/pnpm-lock.yaml
+      - name: Update the exact pin and lockfile
         if: steps.scan.outputs.should_update == 'true'
-        run: |
-          pnpm --filter @dotabod/dota update \
-            "dotaconstants@github:dotabod/dotaconstants#${{ steps.scan.outputs.latest_sha }}" \
-            --lockfile-only
-
-      - name: Create Pull Request
-        id: cpr
+        working-directory: consumer
+        env:
+          PACKAGE_FILTER: ${{ matrix.filter }}
+          CONSTANTS_SHA: ${{ steps.scan.outputs.latest_sha }}
+        run: pnpm --filter "$PACKAGE_FILTER" add "dotaconstants@github:dotabod/dotaconstants#$CONSTANTS_SHA" --lockfile-only --ignore-scripts
+      - name: Create update PR
+        id: pr
         if: steps.scan.outputs.should_update == 'true'
         uses: peter-evans/create-pull-request@v8.1.2
         with:
-          # PAT (not GITHUB_TOKEN) so the created PR triggers the CI + Autofix
-          # workflows — pushes/PRs made with GITHUB_TOKEN don't fire workflows.
+          path: consumer
           token: ${{ secrets.GHA_PAT }}
-          title: 'chore(dota): update dotaconstants for patch-relevant changes'
+          title: 'chore: update dotaconstants generated data'
           body: |
-            Automated dotaconstants refresh.
+            Refresh the Dotabod constants fork pin and lockfile together.
 
-            This PR is created only when patch-relevant datasets changed in `dotabod/dotaconstants`:
-            - `build/heroes.json`
-            - `build/items.json`
-            - `build/item_ids.json`
-            - `build/abilities.json`
-            - `build/hero_abilities.json`
-            - `build/aghs_desc.json`
+            - Previous commit: `${{ steps.scan.outputs.current_sha }}`
+            - Target commit: `${{ steps.scan.outputs.latest_sha }}`
+            - Generated data changes: `${{ steps.scan.outputs.changed_files }}`
 
-            Updated:
-            - `packages/dota/package.json`
-            - `pnpm-lock.yaml`
-
-            Comparison:
-            - Previous SHA: `${{ steps.scan.outputs.current_sha }}`
-            - Latest SHA: `${{ steps.scan.outputs.latest_sha }}`
-            - Changed relevant files: `${{ steps.scan.outputs.changed_files }}`
-          base: ${{ env.BASE_BRANCH }}
-          branch: ${{ env.UPDATE_BRANCH }}
-          commit-message: 'chore(dota): refresh dotaconstants pin'
+            Scheduled checks cover all generated JSON datasets and package entry points.
+            Tracking-only commits do not create update PRs. Preview commits that are not
+            yet in the fork's master history remain open for review.
+          base: master
+          branch: ci/update-dotaconstants
+          commit-message: 'chore: refresh dotaconstants pin and lockfile'
           delete-branch: true
           add-paths: |
-            packages/dota/package.json
+            ${{ matrix.manifest }}
             pnpm-lock.yaml
-
-      - name: Enable Pull Request Automerge
-        if: steps.cpr.outputs.pull-request-number
+      - name: Merge only after the consumer CI and checks pass
+        if: steps.pr.outputs.pull-request-number && steps.scan.outputs.allow_automerge == 'true'
         env:
           GH_TOKEN: ${{ secrets.GHA_PAT }}
-          PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
-          PR_HEAD_SHA: ${{ steps.cpr.outputs.pull-request-head-sha }}
+          GH_REPO: ${{ matrix.repository }}
+          PR_NUMBER: ${{ steps.pr.outputs.pull-request-number }}
+          PR_HEAD_SHA: ${{ steps.pr.outputs.pull-request-head-sha }}
         run: |
-          if [ "$(gh pr view "$PR_NUMBER" --json autoMergeRequest \
-            --jq '.autoMergeRequest != null')" = "true" ]; then
-            echo "Auto-merge is already enabled for PR #$PR_NUMBER"
-            exit 0
+          set -euo pipefail
+          run_id=''
+          for attempt in $(seq 1 60); do
+            run_id=$(gh api "repos/$GH_REPO/actions/workflows/ci.yml/runs?head_sha=$PR_HEAD_SHA&event=pull_request" \
+              --jq '.workflow_runs[0].id // empty')
+            if [ -n "$run_id" ]; then break; fi
+            sleep 5
+          done
+          if [ -z "$run_id" ]; then
+            echo '::error::Consumer CI did not start; leaving the PR open.'
+            exit 1
           fi
-
-          gh pr merge "$PR_NUMBER" --auto --squash --match-head-commit "$PR_HEAD_SHA"
+          gh run watch "$run_id" --exit-status --interval 15
+          gh pr checks "$PR_NUMBER" --watch --interval 15 --fail-fast
+          gh pr merge "$PR_NUMBER" --squash --match-head-commit "$PR_HEAD_SHA"
