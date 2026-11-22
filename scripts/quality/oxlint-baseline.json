@@ -1192,26 +1192,6 @@
         "severity": "error"
       }
     },
-    "078c7b8580d928fb3c9667e68c5ee42bb11ed8a5604cf3a127d6f0aff6f0cb3d": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(no-duplicate-string)",
-        "file": "packages/twitch-chat/src/utils/socket-manager.ts",
-        "labels": [
-          {
-            "context": [
-              "): void {",
-              "io.to('twitch-chat-messages').emit('msg', broadcasterLogin, chatterLogin, text, metadata)",
-              "}"
-            ],
-            "message": "",
-            "span": "'twitch-chat-messages'"
-          }
-        ],
-        "message": "Define a constant instead of duplicating this literal 3 times.",
-        "severity": "error"
-      }
-    },
     "07ab462bbdd1e6c7c4085e39aef1a705d8435b1be64972f3db75ff3cb9500c75": {
       "count": 1,
       "diagnostic": {
@@ -24766,26 +24746,6 @@
         "severity": "error"
       }
     },
-    "b1ac1a2c0ee6239f81f9379bf36e2cfaeb8d3267111f1b5980d92230568a90f7": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-assignment)",
-        "file": "packages/dota/src/twitch/lib/__tests__/close-twitch-bet.test.ts",
-        "labels": [
-          {
-            "context": [
-              "message: '[PREDICT] [BETS] Refunding prediction - zero predictions on one side',",
-              "meta: expect.objectContaining({",
-              "lossOutcomeUsers: 5,"
-            ],
-            "message": "",
-            "span": "meta: expect.objectContaining({\n        lossOutcomeUsers: 5,\n        matchId: mockMatchId,\n        twitchId: mockTwitchId,\n        wonOutcomeUsers: 0,\n      })"
-          }
-        ],
-        "message": "Unsafe assignment of an any value.",
-        "severity": "error"
-      }
-    },
     "b1b9a84a42bded9f1f3f4e135152efdf8afdd3f5d47529ddd9d99a8f516dc07b": {
       "count": 1,
       "diagnostic": {
@@ -34774,26 +34734,6 @@
           }
         ],
         "message": "Forbidden non-null assertion.",
-        "severity": "error"
-      }
-    },
-    "f8aec498e77f8d4c04e996e77ab963db5dcdc27158ac2e9583f3d95430297d36": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-assignment)",
-        "file": "packages/dota/src/twitch/lib/__tests__/close-twitch-bet.test.ts",
-        "labels": [
-          {
-            "context": [
-              "message: '[PREDICT] Close bets - no predictions found',",
-              "meta: expect.any(Object),",
-              "})"
-            ],
-            "message": "",
-            "span": "meta: expect.any(Object)"
-          }
-        ],
-        "message": "Unsafe assignment of an any value.",
         "severity": "error"
       }
     },

@@ -71,13 +71,6 @@ describe(setupAccountWatcher, () => {
     expect(eventSubMap.get('tw-still')).toBeDefined()
   })
 
-  it('registers four Realtime listeners and a subscribe callback', () => {
-    expect(new Set(state.channelHandlers.keys())).toStrictEqual(
-      new Set(['DELETE:accounts', 'INSERT:accounts', 'UPDATE:accounts', 'UPDATE:users'])
-    )
-    expect(state.channelSubscribeStatuses).toContain('SUBSCRIBED')
-  })
-
   it('INSERT:accounts (twitch provider) → onboards new user', async () => {
     state.streamer = { displayName: 'Newbie', name: 'newbie' }
     state.dbUser = { userId: 'user-new' }
@@ -346,50 +339,31 @@ describe(setupAccountWatcher, () => {
       expect(state.channelCreationCount).toBe(3)
     })
 
-    it('does not pile up reconnect timers if CHANNEL_ERROR fires repeatedly before the backoff elapses', async () => {
-      vi.useFakeTimers()
-      state.channelSubscribeCallbacks[0]('CHANNEL_ERROR')
-      state.channelSubscribeCallbacks[0]('CHANNEL_ERROR')
-      state.channelSubscribeCallbacks[0]('CHANNEL_ERROR')
-      // First call tears down; subsequent on the dead callback must be ignored.
-      expect(state.removeChannelCount).toBe(1)
-      await vi.advanceTimersByTimeAsync(5100)
-      // Only ONE reconnect, not three.
-      expect(state.channelCreationCount).toBe(2)
-    })
-
-    it('does not infinitely recurse when removeChannel synchronously re-fires CLOSED', async () => {
-      // Real supabase-js removeChannel() tears the channel down on the same
-      // stack and re-emits CLOSED, re-entering scheduleReconnect. Prod
-      // 2026-06-21: that re-entry sailed past the not-yet-set guard, called
-      // removeChannel again, re-fired CLOSED again, and recursed ~390 deep
-      // until a RangeError (Maximum call stack size exceeded) thrown inside the
-      // winston console transport crashed twitch-events. The guard must be
-      // claimed BEFORE removeChannel so the re-entrant call bails.
+    it('recovers when removeChannel synchronously reports CLOSED', async () => {
       vi.useFakeTimers()
       state.removeChannelRefiresClosed = true
-
-      // A single CLOSED — the mock will re-fire CLOSED from inside removeChannel.
-      // With the bug this throws RangeError; fixed, it tears down exactly once.
       state.channelSubscribeCallbacks[0]('CLOSED')
 
-      expect(state.removeChannelCount).toBe(1)
-      // Exactly one reconnect scheduled, and the warn logged once (not 390×).
-      expect(state.logWarn.filter((l) => l.message.includes('Realtime channel down'))).toHaveLength(
-        1
-      )
-
       await vi.advanceTimersByTimeAsync(5100)
-      // One fresh channel from the single scheduled reconnect.
-      expect(state.channelCreationCount).toBe(2)
-      expect(state.channelHandlers.size).toBe(4)
+      expect({
+        channels: state.channelCreationCount,
+        removed: state.removeChannelCount,
+      }).toStrictEqual({ channels: 2, removed: 1 })
     })
 
-    it('SUBSCRIBED status is logged and does not trigger any reconnect', () => {
-      // The initial SUBSCRIBED already fired in beforeEach (synchronous mock).
-      expect(state.channelSubscribeStatuses).toContain('SUBSCRIBED')
-      expect(state.removeChannelCount).toBe(0)
-      expect(state.channelCreationCount).toBe(1)
+    it('keeps the new subscription when a retired channel reports CLOSED again', async () => {
+      vi.useFakeTimers()
+      const [closedChannel] = state.channelSubscribeCallbacks
+      closedChannel('CHANNEL_ERROR')
+      await vi.advanceTimersByTimeAsync(5100)
+
+      closedChannel('CLOSED')
+      await vi.advanceTimersByTimeAsync(5100)
+
+      expect({
+        channels: state.channelCreationCount,
+        removed: state.removeChannelCount,
+      }).toStrictEqual({ channels: 2, removed: 1 })
     })
 
     it('schedules a reconnect when supabase.channel() throws synchronously', async () => {

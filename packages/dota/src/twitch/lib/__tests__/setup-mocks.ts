@@ -644,9 +644,8 @@ await initTestI18n()
 // Import after all module mocks are registered.
 const resolveMatchModule = await import('../resolve-match')
 export const { resolveMatchRetroactively } = resolveMatchModule
-export const { closeTwitchBetById } = resolveMatchModule
 export const { findMostRecentResolvedMatch } = resolveMatchModule
-export const { closeTwitchBet } = await import('../close-twitch-bet')
+export const { closeTwitchBet, closeTwitchBetById } = await import('../close-twitch-bet')
 export const { refundTwitchBet } = await import('../refund-twitch-bets')
 export const { isPredictionAlreadyActiveError, openTwitchBet } = await import('../open-twitch-bet')
 const { gsiHandlers } = await import('../../../dota/lib/consts')

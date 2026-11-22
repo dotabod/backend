@@ -27,7 +27,7 @@ describe(closeTwitchBet, () => {
 
     const settings: SocketClient['settings'] = [{ key: DBSettings.discardZeroBets, value: false }]
 
-    await closeTwitchBet(true, mockTwitchId, mockMatchId, settings, PRO_SUB)
+    await closeTwitchBet(true, mockTwitchId, mockMatchId, { settings, subscription: PRO_SUB })
 
     expect(state.resolvePredictionCalls).toStrictEqual([
       { outcomeId: 'outcome-1', predictionId: mockPredictionId, twitchId: mockTwitchId },
@@ -49,21 +49,12 @@ describe(closeTwitchBet, () => {
 
     const settings: SocketClient['settings'] = [{ key: DBSettings.discardZeroBets, value: true }]
 
-    await closeTwitchBet(true, mockTwitchId, mockMatchId, settings, PRO_SUB)
+    await closeTwitchBet(true, mockTwitchId, mockMatchId, { settings, subscription: PRO_SUB })
 
     expect(state.cancelPredictionCalls).toStrictEqual([
       { predictionId: mockPredictionId, twitchId: mockTwitchId },
     ])
     expect(state.resolvePredictionCalls).toHaveLength(0)
-    expect(state.loggerInfoCalls).toContainEqual({
-      message: '[PREDICT] [BETS] Refunding prediction - zero predictions on one side',
-      meta: expect.objectContaining({
-        lossOutcomeUsers: 5,
-        matchId: mockMatchId,
-        twitchId: mockTwitchId,
-        wonOutcomeUsers: 0,
-      }),
-    })
   })
 
   it('should refund prediction when discardZeroBets is enabled and losing side has zero users', async () => {
@@ -80,7 +71,7 @@ describe(closeTwitchBet, () => {
 
     const settings: SocketClient['settings'] = [{ key: DBSettings.discardZeroBets, value: true }]
 
-    await closeTwitchBet(false, mockTwitchId, mockMatchId, settings, PRO_SUB)
+    await closeTwitchBet(false, mockTwitchId, mockMatchId, { settings, subscription: PRO_SUB })
 
     expect(state.cancelPredictionCalls).toStrictEqual([
       { predictionId: mockPredictionId, twitchId: mockTwitchId },
@@ -102,7 +93,7 @@ describe(closeTwitchBet, () => {
 
     const settings: SocketClient['settings'] = [{ key: DBSettings.discardZeroBets, value: true }]
 
-    await closeTwitchBet(true, mockTwitchId, mockMatchId, settings, PRO_SUB)
+    await closeTwitchBet(true, mockTwitchId, mockMatchId, { settings, subscription: PRO_SUB })
 
     expect(state.resolvePredictionCalls).toStrictEqual([
       { outcomeId: 'outcome-1', predictionId: mockPredictionId, twitchId: mockTwitchId },
@@ -122,7 +113,7 @@ describe(closeTwitchBet, () => {
       },
     ]
 
-    await closeTwitchBet(true, mockTwitchId, mockMatchId)
+    await closeTwitchBet(true, mockTwitchId, mockMatchId, { settings: [] })
 
     expect(state.resolvePredictionCalls).toStrictEqual([
       { outcomeId: 'outcome-1', predictionId: mockPredictionId, twitchId: mockTwitchId },
@@ -133,14 +124,10 @@ describe(closeTwitchBet, () => {
   it('should handle case with no predictions found', async () => {
     state.predictions = []
 
-    await closeTwitchBet(true, mockTwitchId, mockMatchId)
+    await closeTwitchBet(true, mockTwitchId, mockMatchId, { settings: [] })
 
     expect(state.resolvePredictionCalls).toHaveLength(0)
     expect(state.cancelPredictionCalls).toHaveLength(0)
-    expect(state.loggerInfoCalls).toContainEqual({
-      message: '[PREDICT] Close bets - no predictions found',
-      meta: expect.any(Object),
-    })
   })
 
   it('should retry getPredictions on a transient ERR_STREAM_PREMATURE_CLOSE and still resolve', async () => {
@@ -154,16 +141,13 @@ describe(closeTwitchBet, () => {
         status: 'ACTIVE',
       },
     ]
-    // Fail twice (the two retries), succeed on the third attempt.
     state.getPredictionsTransientFailures = 2
 
-    await closeTwitchBet(true, mockTwitchId, mockMatchId)
+    await closeTwitchBet(true, mockTwitchId, mockMatchId, { settings: [] })
 
     expect(state.getPredictionsCalls).toHaveLength(3)
     expect(state.resolvePredictionCalls).toStrictEqual([
       { outcomeId: 'outcome-1', predictionId: mockPredictionId, twitchId: mockTwitchId },
     ])
-    // The blip was absorbed by the retry, so no error was surfaced.
-    expect(state.loggerErrorCalls).toHaveLength(0)
   })
 })

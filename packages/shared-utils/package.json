@@ -10,11 +10,15 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./start-socket-listener": {
+      "import": "./dist/start-socket-listener.js",
+      "types": "./dist/start-socket-listener.d.ts"
     }
   },
   "scripts": {
     "prebuild": "rm -rf dist",
-    "build": "tsdown --config ../../tsdown.config.ts src/index.ts -f esm -d dist --sourcemap",
+    "build": "tsdown --config ../../tsdown.config.ts src/index.ts src/start-socket-listener.ts -f esm -d dist --sourcemap",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -22,6 +26,7 @@
     "@supabase/supabase-js": "^2.21.0",
     "@twurple/api": "7.2.1",
     "@twurple/auth": "7.2.1",
+    "socket.io": "^4.8.1",
     "winston": "^3.17.0",
     "zod": "^4.5.4"
   }

@@ -56,15 +56,44 @@ jobs:
         run: pnpm run quality
       - name: Run tests
         run: pnpm exec vitest run
+      - name: Model-check the Realtime watcher
+        run: bash verification/realtime-watcher/check.sh
       - name: Test constants update detection
         run: python -m unittest discover -s .github/scripts -p 'test_*.py' -v
+      - name: Model-check Twitch chat conduit initialization
+        run: bash verification/eventsub-conduit/check.sh
       - name: Test deployment orchestration
         run: python -m unittest discover -s scripts/deploy -p 'test_*.py' -v
       - name: Build all packages
         run: pnpm run build:all
 
+  clip-queue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: clip_queue_test
+          POSTGRES_PASSWORD: clip_queue_test
+        options: >-
+          --health-cmd "pg_isready -U postgres -d clip_queue_test" --health-interval 5s --health-timeout 5s --health-retries 6
+        ports:
+          - 5432/tcp
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: python -m pip install psycopg2-binary==2.9.12
+      - name: Run clip queue tests against PostgreSQL
+        working-directory: packages/clip-processor-py
+        env:
+          CLIP_TEST_DATABASE_URL: postgresql://postgres:clip_queue_test@127.0.0.1:${{ job.services.postgres.ports[5432] }}/clip_queue_test
+        run: python -m unittest discover -s tests/integration -v
+
   build-images:
-    needs: test
+    needs: [test, clip-queue]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     uses: ./.github/workflows/builder.yml
     permissions:
