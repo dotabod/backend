@@ -1,5 +1,5 @@
 import { profanity } from '@2toad/profanity'
-import axios from 'axios'
+import axios, { isAxiosError } from 'axios'
 import { Filter } from 'bad-words'
 import { detect } from 'curse-filter'
 import leoProfanity from 'leo-profanity'
@@ -466,7 +466,7 @@ const isFlaggedByOpenAi = async function isFlaggedByOpenAi(
     )
     return response.data.results[0]?.flagged ?? false
   } catch (error) {
-    const requestError = axios.isAxiosError(error) ? error : undefined
+    const requestError = isAxiosError(error) ? error : undefined
     console.error('Error using OpenAI moderation API', {
       code: requestError?.code,
       status: requestError?.response?.status,
