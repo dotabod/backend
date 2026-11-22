@@ -6,6 +6,7 @@ import {
   detectEvasionTactics,
   detectMultilingualProfanity,
   detectRussianProfanity,
+  detectTransphobicContent,
 } from '../src/utils/profanity-wordlists'
 
 describe('Profanity Filter', () => {
@@ -321,13 +322,17 @@ describe('Profanity Filter', () => {
       expect(getProfanityDetails(phrase).isFlagged).toBeTruthy()
     })
 
-    test.each(['trans', 'transgender', 'transsexual', 'transvestite'])(
+    test.each(['trans', 'transgender', 'transvestite'])(
       'allows neutral use of %s',
       async (term) => {
         await expect(moderateText(term)).resolves.toBe(term)
         expect(getProfanityDetails(term).isFlagged).toBeFalsy()
       }
     )
+
+    test('requires hateful context for transsexual in the hate-speech detector', () => {
+      expect(detectTransphobicContent('transsexual')).toBeFalsy()
+    })
   })
 
   test('uses the configured OpenAI key when local rules find no profanity', async () => {

@@ -791,7 +791,7 @@ export const detectTransphobicContent = function detectTransphobicContent(text: 
   const hatefulPhrases = [
     // Mental illness related
     /(?:trans(?:gender|sexual|vestite)?|tr[a@]n[s5]g[e3]nd[e3]r(?:i[s5]m)?)\s*(?:i[s5]|are)\s*(?:a\s*)?(?:m[e3]nt[a@]l\s*(?:illn[e3][s5][s5]|d[i1][s5][o0]rd[e3]r|d[i1][s5][e3][a@][s5][e3])|d[e3]lu[s5][i1][o0]n|d[e3]lu[s5][i1][o0]n[a@]l)/iu,
-    /tr[a@]n[s5]\s*(?:p[e3][o0]pl[e3]\s*)?(?:[a@]r[e3]|i[s5])\s*(?:m[e3]nt[a@]lly\s*[i1]ll|[s5][i1]ck|[s5][i1]ckn[e3][s5][s5]|p[e3]rv[e3]rt[s5]?|gr[o0]{2}m[e3]r[s5]?)/iu,
+    /tr[a@]n[s5](?:g[e3]nd[e3]r)?\s*(?:p[e3][o0]pl[e3]\s*)?(?:[a@]r[e3]|i[s5])\s*(?:m[e3]nt[a@]lly\s*[i1]ll|[s5][i1]ck|[s5][i1]ckn[e3][s5][s5]|p[e3]rv[e3]rt[s5]?|gr[o0]{2}m[e3]r[s5]?)/iu,
 
     // Existence denial with enhanced character variations
     /tr[a@]n[s5](?:g[e3]nd[e3]r|[s5][e3]xu[a@]l)?\s*(?:p[e3][o0]pl[e3]\s*)?(?:[a@]r[e3]n'?t|n[o0]t)\s*r[e3][a@]l/iu,
