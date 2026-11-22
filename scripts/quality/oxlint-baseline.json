@@ -109,26 +109,6 @@
         "severity": "error"
       }
     },
-    "01817f96ead4a90ca95b43cac297852f65b178d948ac74f8335e8836539dbb9f": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(no-nested-conditional)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              ": (parseTeam(await redisClient.client.get(`${this.client.token}:playingTeam`)) ??",
-              "(this.client.gsi?.player?.team_name === 'radiant' ||",
-              "this.client.gsi?.player?.team_name === 'dire'"
-            ],
-            "message": "",
-            "span": "this.client.gsi?.player?.team_name === 'radiant' ||\n            this.client.gsi?.player?.team_name === 'dire'\n              ? this.client.gsi?.player?.team_name\n              : null"
-          }
-        ],
-        "message": "Extract this nested ternary operation into an independent statement.",
-        "severity": "error"
-      }
-    },
     "018cce0dfb1e85f5f841ebe885aa5fff0180081bd6860b00559ab37dabe1365d": {
       "count": 1,
       "diagnostic": {
@@ -699,26 +679,6 @@
         "severity": "error"
       }
     },
-    "05e2aa914032a5df48d4e336b3358062fa84d42f571ffe152f1b776ad02cc8db": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-assignment)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "this.resetClientState().catch((error) => {",
-              "logger.error('Error resetting client state', { error })",
-              "})"
-            ],
-            "message": "",
-            "span": "error"
-          }
-        ],
-        "message": "Unsafe assignment of an any value.",
-        "severity": "error"
-      }
-    },
     "05f561b500c4a5f2f6409c05176a02083627a43155928c5a014445c21c099e99": {
       "count": 1,
       "diagnostic": {
@@ -1125,22 +1085,6 @@
           }
         ],
         "message": "Replace module mocking with dependency injection through a real interface, service layer, or faithful test implementation.",
-        "severity": "error"
-      }
-    },
-    "08a662ed943a3ecca15212fc801cdb033d5d517f303d397362092687da00beb2": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-then)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": ["})", ".finally(() => {", "this.resetClientState().catch((error) => {"],
-            "message": "",
-            "span": "finally"
-          }
-        ],
-        "message": "Prefer await to then()/catch()/finally()",
         "severity": "error"
       }
     },
@@ -2585,35 +2529,6 @@
           }
         ],
         "message": "Unexpected `await` inside a loop.",
-        "severity": "error"
-      }
-    },
-    "12235dda3f90ffb11dd3a8081710d58143258d3297f97a676e4ab3981eba5a16": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-shadow)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "const player = match?.players?.find(",
-              "(player) => player.account_id === Number(this.client.gsi?.player?.accountid)",
-              ")"
-            ],
-            "message": "",
-            "span": "player"
-          },
-          {
-            "context": [
-              "const matchId = (await redisClient.client.get(`${this.client.token}:matchId`)) ?? longMatchId",
-              "const player = match?.players?.find(",
-              "(player) => player.account_id === Number(this.client.gsi?.player?.accountid)"
-            ],
-            "message": "",
-            "span": "player"
-          }
-        ],
-        "message": "'player' is already declared in the upper scope.",
         "severity": "error"
       }
     },
@@ -4396,22 +4311,6 @@
         "severity": "error"
       }
     },
-    "221d7c32165473dbacd0e3ff5705540692798eb81d6ce89a6c6fd23afa40b364": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-then)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [")", ".then(() => {", "logger.info('[BETS] end bets', {"],
-            "message": "",
-            "span": "then"
-          }
-        ],
-        "message": "Prefer await to then()/catch()/finally()",
-        "severity": "error"
-      }
-    },
     "222d41526c6fc392bb37278f53265c4333a9e09bd9dcdad210ad5d6780e3a546": {
       "count": 1,
       "diagnostic": {
@@ -5734,26 +5633,6 @@
         "severity": "error"
       }
     },
-    "2d77852d9de617f01e1e833a911f7af18039ab8a23a365e4db62fa74532e0de2": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-callbacks)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "})",
-              ".catch((error: unknown) => {",
-              "logger.error('[BETS] Error closing twitch bet', {"
-            ],
-            "message": "",
-            "span": "(error: unknown) => {\n            logger.error('[BETS] Error closing twitch bet', {\n              channel,\n              e: error instanceof Error ? error.message : error,\n              matchId,\n            })\n          }"
-          }
-        ],
-        "message": "Prefer `async`/`await` to the callback pattern",
-        "severity": "error"
-      }
-    },
     "2d7f783cc76fa8b71ae878b9e57a97cd9c9413e8cbff14d7f6acfe347d744f57": {
       "count": 1,
       "diagnostic": {
@@ -5871,26 +5750,6 @@
           }
         ],
         "message": "This type assertion has no `SAFETY:` justification. State the checked invariant immediately before the assertion or its containing statement.",
-        "severity": "error"
-      }
-    },
-    "2e889e44e597eb1a6673dc93fad79bbc4007aac26c8d54263e954d353547f272": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(expression-complexity)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "const myTeam: Team | null =",
-              "typeof player?.team_number === 'number'",
-              "? (gcTeam ?? null)"
-            ],
-            "message": "",
-            "span": "typeof player?.team_number === 'number'\n          ? (gcTeam ?? null)\n          : (parseTeam(await redisClient.client.get(`${this.client.token}:playingTeam`)) ??\n            (this.client.gsi?.player?.team_name === 'radiant' ||\n            this.client.gsi?.player?.team_name === 'dire'\n              ? this.client.gsi?.player?.team_name\n              : null))"
-          }
-        ],
-        "message": "Reduce the number of conditional operators (5) used in the expression (maximum allowed 3).",
         "severity": "error"
       }
     },
@@ -7117,22 +6976,6 @@
         "severity": "error"
       }
     },
-    "39976d1ccaea4fb020e65a9f5767b4b07c15cf1eff598175395b7a4cdaf0f7c7": {
-      "count": 2,
-      "diagnostic": {
-        "code": "typescript(strict-void-return)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": ["", "setTimeout(attemptFetchMatchData, RETRY_DELAY)", "}"],
-            "message": "",
-            "span": "attemptFetchMatchData"
-          }
-        ],
-        "message": "Value-returning function used in a context where a void function is expected.",
-        "severity": "error"
-      }
-    },
     "39b5fc533490fc6906a64a2052d24ad071b35160810aeddbdb18e9691e9d743e": {
       "count": 1,
       "diagnostic": {
@@ -8265,26 +8108,6 @@
         "severity": "error"
       }
     },
-    "40e081e986970302a35fed153a07af8152b5a8df4deae3c6340a92745d65329c": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-then)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              ".finally(() => {",
-              "this.resetClientState().catch((error) => {",
-              "logger.error('Error resetting client state', { error })"
-            ],
-            "message": "",
-            "span": "catch"
-          }
-        ],
-        "message": "Prefer await to then()/catch()/finally()",
-        "severity": "error"
-      }
-    },
     "40fb706d5926af9736a779fc59c08ad36dce1c6fb5570a1787d0752f4374f900": {
       "count": 1,
       "diagnostic": {
@@ -8724,35 +8547,6 @@
           }
         ],
         "message": "The explicit anonymous object type on return value of `evt` discards known type evidence. Keep inference, validate with `satisfies`, or use a named owner contract.",
-        "severity": "error"
-      }
-    },
-    "43809b7a90c748ebaa9f14b581a0ccbc99cd5d51010551bb5d90e1f8c3598a33": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unnecessary-type-conversion)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              ".select('predictionId')",
-              ".eq('matchId', matchId.toString())",
-              ".eq('userId', client.token)"
-            ],
-            "message": "",
-            "span": "matchId"
-          },
-          {
-            "context": [
-              ".select('predictionId')",
-              ".eq('matchId', matchId.toString())",
-              ".eq('userId', client.token)"
-            ],
-            "message": "",
-            "span": "toString()"
-          }
-        ],
-        "message": "This type conversion does not change the type or value of the expression.",
         "severity": "error"
       }
     },
@@ -10061,26 +9855,6 @@
           }
         ],
         "message": "Prefer `async`/`await` to the callback pattern",
-        "severity": "error"
-      }
-    },
-    "f5364fb154d38d7c16c00167c8530c90bd42f0445507c7a9e4549dca7432558c": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(expression-complexity)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "if (",
-              "(this.client.gsi?.map?.dire_score === null ||",
-              "this.client.gsi?.map?.dire_score === undefined ||"
-            ],
-            "message": "",
-            "span": "(this.client.gsi?.map?.dire_score === null ||\n          this.client.gsi?.map?.dire_score === undefined ||\n          this.client.gsi.map.dire_score === 0) &&\n        (this.client.gsi?.map?.radiant_score === null ||\n          this.client.gsi?.map?.radiant_score === undefined ||\n          this.client.gsi.map.radiant_score === 0) &&\n        // After an early DC the live GSI can already be the next match, still at 0-0\n        this.client.gsi?.map?.matchid === matchId"
-          }
-        ],
-        "message": "Reduce the number of conditional operators (6) used in the expression (maximum allowed 3).",
         "severity": "error"
       }
     },
@@ -11808,26 +11582,6 @@
         "severity": "error"
       }
     },
-    "5b348e5bc552cfad319383f8d87fa66410695d33f87410c25533c35b1cf0fddd": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-runtime-typeof)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "matchData !== undefined &&",
-              "typeof matchData.match_outcome === 'number' &&",
-              "matchData.match_outcome > EMatchOutcome.k_EMatchOutcome_DireVictory"
-            ],
-            "message": "",
-            "span": "typeof matchData.match_outcome"
-          }
-        ],
-        "message": "A `typeof` check narrows a representation without establishing its contract. Parse input at its I/O boundary, then branch on the domain value.",
-        "severity": "error"
-      }
-    },
     "5b47c514ea1656f61e30dc7bae485b49cd3b7aebb1a0beba270f47acb7245829": {
       "count": 1,
       "diagnostic": {
@@ -12061,22 +11815,6 @@
           }
         ],
         "message": "Unsafe type assertion: type 'RedisJSON' is more narrow than the original type.",
-        "severity": "error"
-      }
-    },
-    "5d6644e58ec75cbb98206819780a7512b5eda604a4fe7832be2d2323727f279f": {
-      "count": 2,
-      "diagnostic": {
-        "code": "typescript(no-misused-promises)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": ["", "setTimeout(attemptFetchMatchData, RETRY_DELAY)", "}"],
-            "message": "",
-            "span": "attemptFetchMatchData"
-          }
-        ],
-        "message": "Promise returned in function argument where a void return was expected.",
         "severity": "error"
       }
     },
@@ -12568,35 +12306,6 @@
         "severity": "error"
       }
     },
-    "6116c63d73c9e0cdf5a66d7240f1a6c535214b136911bb8b3bbb488353741b53": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-shadow)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "await attemptFetchMatchData()",
-              "} catch (error) {",
-              "// If any uncaught error occurs, reset the flag"
-            ],
-            "message": "",
-            "span": "error"
-          },
-          {
-            "context": [
-              "// Check if the bet for this match is already closed in the database",
-              "const { data: matchData, error } = await supabase",
-              ".from('matches')"
-            ],
-            "message": "",
-            "span": "error"
-          }
-        ],
-        "message": "'error' is already declared in the upper scope.",
-        "severity": "error"
-      }
-    },
     "6119383635b49d737a2c859bc30aba26776a7aff4ff2149f07a51010f58a2ddc": {
       "count": 1,
       "diagnostic": {
@@ -12783,31 +12492,6 @@
           }
         ],
         "message": "Unsafe call of a(n) `error` type typed value.",
-        "severity": "error"
-      }
-    },
-    "62b5ff35d91e9c7274bc8e6b3668effa03e575bf6f778f75335946708c376210": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-shadow)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": ["}", "} catch (error) {", "// Error occurred, retry after delay"],
-            "message": "",
-            "span": "error"
-          },
-          {
-            "context": [
-              "// Check if the bet for this match is already closed in the database",
-              "const { data: matchNotEnded, error } = await supabase",
-              ".from('matches')"
-            ],
-            "message": "",
-            "span": "error"
-          }
-        ],
-        "message": "'error' is already declared in the upper scope.",
         "severity": "error"
       }
     },
@@ -14343,35 +14027,6 @@
         "severity": "error"
       }
     },
-    "72e70a2ef4db0efbaa6c7c2a5c306d197d83f71970f90d720540a94f4f0fc8b3": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unnecessary-type-conversion)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              ".select('predictionId')",
-              ".eq('matchId', matchId.toString())",
-              ".eq('userId', this.client.token)"
-            ],
-            "message": "",
-            "span": "matchId"
-          },
-          {
-            "context": [
-              ".select('predictionId')",
-              ".eq('matchId', matchId.toString())",
-              ".eq('userId', this.client.token)"
-            ],
-            "message": "",
-            "span": "toString()"
-          }
-        ],
-        "message": "This type conversion does not change the type or value of the expression.",
-        "severity": "error"
-      }
-    },
     "7311406b850d2f5ec6fe575d590f0caf59b1299c0490f15225f21b5630332489": {
       "count": 1,
       "diagnostic": {
@@ -15151,26 +14806,6 @@
           }
         ],
         "message": "Function `inv` does not capture any variables from its parent scope",
-        "severity": "error"
-      }
-    },
-    "7aebe00c16485360fd255620ce606535d2c701b59fc322d65004a0063b605043": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-warning-comments)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "",
-              "// TODO: CRON Job",
-              "// 1 Find bets that are open and don't equal this match id and close them"
-            ],
-            "message": "",
-            "span": "// TODO: CRON Job"
-          }
-        ],
-        "message": "Unexpected 'todo' comment: TODO: CRON Job",
         "severity": "error"
       }
     },
@@ -16391,26 +16026,6 @@
         "severity": "error"
       }
     },
-    "8589d0fc17465c322784ff9518e6aa7a722af1dcfb602d5181cbc95929c4baa7": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-then)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "})",
-              ".catch((error: unknown) => {",
-              "logger.error('[BETS] Error closing twitch bet', {"
-            ],
-            "message": "",
-            "span": "catch"
-          }
-        ],
-        "message": "Prefer await to then()/catch()/finally()",
-        "severity": "error"
-      }
-    },
     "859110fbde78c9d7215027cc8d7c4d063c3f3070cb5d70f6d1649b9f1179d260": {
       "count": 1,
       "diagnostic": {
@@ -17049,26 +16664,6 @@
           }
         ],
         "message": "Unsafe member access .games on an `error` typed value.",
-        "severity": "error"
-      }
-    },
-    "8b44b1e88bdc0080d242ce4fe60ccce391707a8e3b755f1b6a0e7a8fd043170f": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(cognitive-complexity)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "",
-              "const attemptFetchMatchData = async (): Promise<void> => {",
-              "// Check if they rejoined the match they disconnected from"
-            ],
-            "message": "",
-            "span": "=>"
-          }
-        ],
-        "message": "Refactor this function to reduce its Cognitive Complexity from 27 to the 20 allowed.",
         "severity": "error"
       }
     },
@@ -18698,26 +18293,6 @@
         "severity": "error"
       }
     },
-    "965bc59367560b96915cd6ee467e1378ec1aeb7594ef6823598a55c81716de7e": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-runtime-typeof)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "matchData !== undefined &&",
-              "typeof matchData.match_outcome === 'number' &&",
-              "["
-            ],
-            "message": "",
-            "span": "typeof matchData.match_outcome"
-          }
-        ],
-        "message": "A `typeof` check narrows a representation without establishing its contract. Parse input at its I/O boundary, then branch on the domain value.",
-        "severity": "error"
-      }
-    },
     "969d3ca9b9311251a549896b57270830e70a123c5f1c9557f158f44683ccae1a": {
       "count": 1,
       "diagnostic": {
@@ -18831,26 +18406,6 @@
           }
         ],
         "message": "Value-returning function used in a context where a void function is expected.",
-        "severity": "error"
-      }
-    },
-    "976b0f4a35421952a1343713147c45b20c77f559b698d980aa32a3780421be43": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(complexity)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "// 4 Then, tell twitch to close bets based on win result",
-              "async openBets(client: SocketClient) {",
-              "if (this.openingBets) {"
-            ],
-            "message": "",
-            "span": "(client: SocketClient) {\n    if (this.openingBets) {\n      // console.log('still opening')\n      return\n    }\n\n    // Why open if not playing?\n    if (client.gsi?.player?.activity !== 'playing') {\n      // console.log(`if (client.gsi?.player?.activity !== 'playing') {`)\n      return\n    }\n\n    // Why open if won?\n    if (client.gsi.map?.win_team !== 'none') {\n      // console.log(`if (client.gsi.map?.win_team !== 'none') {`)\n      return\n    }\n\n    // We at least want the hero name so it can go in the twitch bet title\n    const heroName = client.gsi.hero?.name\n    if (heroName === null || heroName === undefined || heroName.length === 0) {\n      // console.log(`if (!client.gsi.hero?.name || !client.gsi.hero.name.length) {`)\n      return\n    }\n\n    // It's not a live game, so we don't want to open bets nor save it to DB\n    if (!client.gsi.map?.matchid || client.gsi.map?.matchid === '0') {\n      // console.log(`if (!client.gsi.map.matchid || client.gsi.map.matchid === '0') {`)\n      return\n    }\n\n    // Snapshot validated matchid + hero name now; openTheBet runs after the\n    // stream delay and `client.gsi` can be cleared by then (e.g. draft abandon\n    // + requeue triggers resetClientState). Without the snapshot, openTheBet\n    // would insert a `matches` row with an empty matchId and open a Twitch\n    // prediction titled \"Will we win with \".\n    const validatedMatchId = client.gsi.map.matchid\n    const validatedHeroName = heroName\n    // team_name is set on player at this point because activity === 'playing'\n    // (checked above). Capture it for the same reason as matchId/heroName so\n    // the matches row records the team the streamer was actually on.\n    const validatedMyTeam = client.gsi.player?.team_name ?? ''\n\n    const matchId = (await redisClient.client.get(`${client.token}:matchId`)) ?? undefined\n\n    if (matchId !== undefined && matchId.length > 0 && matchId !== validatedMatchId) {\n      // Check if there's a pending manual resolution for the old match\n      const pendingResolution = await redisClient.client.get(\n        `${client.token}:pendingManualResolution`\n      )\n      if (pendingResolution !== null && pendingResolution.length > 0) {\n        try {\n          const { matchId: pendingMatchId } = JSON.parse(pendingResolution)\n\n          // If the pending match is the old one, refund it and notify\n          if (pendingMatchId === matchId) {\n            logger.info('[BETS] Expiring pending manual resolution - new match joined', {\n              name: client.name,\n              newMatchId: client.gsi.map.matchid,\n              oldMatchId: matchId,\n            })\n\n            const betsEnabled = getValueOrDefault(\n              DBSettings.bets,\n              client.settings,\n              client.subscription\n            )\n            if (betsEnabled) {\n              const predictionResponse = await supabase\n                .from('matches')\n                .select('predictionId')\n                .eq('matchId', matchId.toString())\n                .eq('userId', client.token)\n                .is('won', null)\n                .single()\n              if (\n                predictionResponse.data?.predictionId !== null &&\n                predictionResponse.data?.predictionId !== undefined &&\n                predictionResponse.data.predictionId.length > 0\n              ) {\n                await refundTwitchBet(this.getChannelId(), predictionResponse.data.predictionId)\n\n                const tellChatBets = getValueOrDefault(\n                  DBSettings.tellChatBets,\n                  client.settings,\n                  client.subscription\n                )\n                if (tellChatBets && client.stream_online) {\n                  say(\n                    client,\n                    t('bets.manualResolutionExpired', {\n                      emote: 'FeelsBadMan',\n                      lng: client.locale,\n                    })\n                  )\n                }\n              }\n            }\n          }\n        } catch (error) {\n          logger.error('[BETS] Error handling pending manual resolution expiration', { error })\n        }\n      }\n\n      // We have the wrong matchid, reset vars and start over\n      logger.info('[BETS] openBets resetClientState because stuck on old match id', {\n        gsiMatchId: client.gsi.map.matchid,\n        name: client.name,\n        playingMatchId: matchId,\n        steam32Id: client.steam32Id,\n        steamFromGSI: client.gsi.player?.steamid,\n        token: client.token,\n      })\n      await this.resetClientState()\n      return\n    }\n\n    // The bet was already made\n    if (Number(matchId) >= 0) {\n      return\n    }\n\n    logger.info('[BETS] Begin opening bets', {\n      hero: heroName,\n      matchId: client.gsi.map.matchid,\n      name: client.name,\n      playingMatchId: matchId,\n    })\n\n    this.openingBets = true\n\n    const { data: bet } = await supabase\n      .from('matches')\n      .select('matchId, myTeam, id')\n      .eq('matchId', client.gsi.map.matchid)\n      .eq('userId', client.token)\n      .is('won', null)\n\n    try {\n      // Saving to redis so we don't have to query the db again\n      await redisClient.client.set(`${client.token}:matchId`, client.gsi.map.matchid)\n\n      const playingTeam = bet?.[0]?.myTeam ?? client.gsi?.player?.team_name ?? ''\n      await redisClient.client.set(`${client.token}:playingTeam`, playingTeam)\n      await redisClient.client.set(`${client.token}:playingHero`, client.gsi.hero?.name ?? '')\n    } catch (error) {\n      logger.error('Error while saving data to Redis:', {\n        client: client.name,\n        error,\n        matchId: client.gsi.map.matchid,\n        token: client.token,\n      })\n    }\n\n    // Check if this bet for this match id already exists, dont continue if it does\n    if (bet?.[0]?.id !== null && bet?.[0]?.id !== undefined && bet[0].id.length > 0) {\n      logger.info('[BETS] Found a bet in the database', { id: bet?.[0]?.id })\n      this.openingBets = false\n      return\n    }\n\n    if (!client.stream_online) {\n      logger.info('[BETS] Not opening bets bc stream is offline for', {\n        name: client.name,\n      })\n      this.openingBets = false\n      return\n    }\n\n    if (!client.token) {\n      this.openingBets = false\n      return\n    }\n\n    this.openTheBetTaskId = delayedQueue.addTask(\n      getStreamDelay(client.settings, client.subscription),\n      async () => {\n        await this.openTheBet(validatedMatchId, validatedHeroName, validatedMyTeam)\n      }\n    )\n\n    // .catch((e: any) => {\n    //   logger.error(`[BETS] Could not add bet to channel`, {\n    //     channel: client.name,\n    //     e: e?.message || e,\n    //   })\n    //   this.openingBets = false\n    // })\n\n    // .catch((e: any) => {\n    //   logger.error('[BETS] Error opening bet', {\n    //     matchId: client?.gsi?.map?.matchid || '',\n    //     channel,\n    //     e: e?.message || e,\n    //   })\n    //   if ((e?.message || e).includes('error')) {\n    //     this.openingBets = false\n    //   }\n    // })\n  }"
-          }
-        ],
-        "message": "async method `openBets` has a complexity of 55. Maximum allowed is 20.",
         "severity": "error"
       }
     },
@@ -19403,35 +18958,6 @@
           }
         ],
         "message": "Mocked modules must be dynamic imported.",
-        "severity": "error"
-      }
-    },
-    "9be3e3751e331f7cffd26a9acb76e86324e42be28d9cf7799cfe61ffd272cfbd": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-shadow)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "// Check if the bet for this match is already closed in the database",
-              "const { data: matchNotEnded, error } = await supabase",
-              ".from('matches')"
-            ],
-            "message": "",
-            "span": "error"
-          },
-          {
-            "context": [
-              "// Check if the bet for this match is already closed in the database",
-              "const { data: matchData, error } = await supabase",
-              ".from('matches')"
-            ],
-            "message": "",
-            "span": "error"
-          }
-        ],
-        "message": "'error' is already declared in the upper scope.",
         "severity": "error"
       }
     },
@@ -20229,26 +19755,6 @@
         "severity": "error"
       }
     },
-    "a2491ed8a110fc701fd107073bba815abfb84e8fc999455da15df73739c44399": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(cognitive-complexity)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "// 4 Then, tell twitch to close bets based on win result",
-              "async openBets(client: SocketClient) {",
-              "if (this.openingBets) {"
-            ],
-            "message": "",
-            "span": "openBets"
-          }
-        ],
-        "message": "Refactor this function to reduce its Cognitive Complexity from 39 to the 20 allowed.",
-        "severity": "error"
-      }
-    },
     "a27a0559eeee4b43be3eb682945589c9d72854a79a73ddd683d8b6bd27fa0d8d": {
       "count": 1,
       "diagnostic": {
@@ -20302,35 +19808,6 @@
           }
         ],
         "message": "Parameter `messageToSend` leaves input unparsed. Accept a named domain type; run the expected schema or parser at the I/O boundary before calling this function.",
-        "severity": "error"
-      }
-    },
-    "a2a22788a2402d8f132e1c3462964dc2deffb55c73a893df552e1ac9666a7ec0": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-shadow)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "const response = await getMatchDetailsPromise",
-              "const matchData = response?.matches?.[0]",
-              ""
-            ],
-            "message": "",
-            "span": "matchData"
-          },
-          {
-            "context": [
-              "// Check if the bet for this match is already closed in the database",
-              "const { data: matchData, error } = await supabase",
-              ".from('matches')"
-            ],
-            "message": "",
-            "span": "matchData"
-          }
-        ],
-        "message": "'matchData' is already declared in the upper scope.",
         "severity": "error"
       }
     },
@@ -21195,26 +20672,6 @@
         "severity": "error"
       }
     },
-    "a82f2ca275138a239afae4a2b3256e755804afa9f5f81a9ecd84392c7718a76f": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(todo-tag)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "",
-              "// TODO: CRON Job",
-              "// 1 Find bets that are open and don't equal this match id and close them"
-            ],
-            "message": "",
-            "span": "TODO"
-          }
-        ],
-        "message": "Complete the task associated to this \"TODO\" comment.",
-        "severity": "error"
-      }
-    },
     "a8621034b5e9029281ffc2f2083ae495e690ca6aceddbf6d7aa742e579c519d6": {
       "count": 1,
       "diagnostic": {
@@ -21580,46 +21037,6 @@
           }
         ],
         "message": "Complete the task associated to this \"TODO\" comment.",
-        "severity": "error"
-      }
-    },
-    "ab9f1efe49de228c390bf84fbcc21add9bb4ef0b05af40176c7c95206d77654b": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(use-unknown-in-catch-callback-variable)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              ".finally(() => {",
-              "this.resetClientState().catch((error) => {",
-              "logger.error('Error resetting client state', { error })"
-            ],
-            "message": "",
-            "span": "error"
-          }
-        ],
-        "message": "Prefer the safe `: unknown` for a `catch` callback variable.",
-        "severity": "error"
-      }
-    },
-    "abb276ac9fcfa9bbf200d1a1d177a7eef805ac9230aefc30f536042c8b9accb3": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-nested-ternary)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "const gcTeam =",
-              "player?.team_number === DotaGcTeam.DOTA_GC_TEAM_GOOD_GUYS",
-              "? 'radiant'"
-            ],
-            "message": "",
-            "span": "player?.team_number === DotaGcTeam.DOTA_GC_TEAM_GOOD_GUYS\n          ? 'radiant'\n          : player?.team_number === DotaGcTeam.DOTA_GC_TEAM_BAD_GUYS\n            ? 'dire'\n            : null"
-          }
-        ],
-        "message": "Do not nest ternary expressions.",
         "severity": "error"
       }
     },
@@ -22824,26 +22241,6 @@
         "severity": "error"
       }
     },
-    "b56bea810dc2ec77ef52b7d2b0f9a5bc7a8c87876673f800cbf0f72569e43945": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-runtime-typeof)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "const myTeam: Team | null =",
-              "typeof player?.team_number === 'number'",
-              "? (gcTeam ?? null)"
-            ],
-            "message": "",
-            "span": "typeof player?.team_number"
-          }
-        ],
-        "message": "A `typeof` check narrows a representation without establishing its contract. Parse input at its I/O boundary, then branch on the domain value.",
-        "severity": "error"
-      }
-    },
     "b585bf0ea1d0e20b2dc6873149470043e042229d0f3d84d7262e5e9f314c5400": {
       "count": 1,
       "diagnostic": {
@@ -22877,22 +22274,6 @@
           }
         ],
         "message": "Use null instead.",
-        "severity": "error"
-      }
-    },
-    "b605f68531d821aee584243c9a2c455bce2e4f43eaa2d87851416bd3e222b82b": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-useless-return)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": ["await this.resetClientState()", "return", "} else {"],
-            "message": "",
-            "span": "return"
-          }
-        ],
-        "message": "Unnecessary return statement.",
         "severity": "error"
       }
     },
@@ -23186,26 +22567,6 @@
           }
         ],
         "message": "Replace module mocking with dependency injection through a real interface, service layer, or faithful test implementation.",
-        "severity": "error"
-      }
-    },
-    "269b62202bf5885d0451497b8e2650580a3ca56e16b08da76223070cc9f1fed9": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(complexity)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "",
-              "async closeBets(winningTeam: Team | null = null, gcData?: MatchClosingDetailsResponse) {",
-              "if (this.endingBets) {"
-            ],
-            "message": "",
-            "span": "(winningTeam: Team | null = null, gcData?: MatchClosingDetailsResponse) {\n    if (this.endingBets) {\n      return\n    }\n    this.endingBets = true\n\n    try {\n      const match = gcData?.matches?.[0]\n      const longMatchId = match?.match_id\n        ? (() => {\n            const id = new Long(match.match_id.low, match.match_id.high).toString()\n            const numId = Number(id)\n            return !Number.isNaN(numId) && numId > 1 ? id : undefined\n          })()\n        : undefined\n      const matchId = (await redisClient.client.get(`${this.client.token}:matchId`)) ?? longMatchId\n      const player = match?.players?.find(\n        (player) => player.account_id === Number(this.client.gsi?.player?.accountid)\n      )\n      const gcTeam =\n        player?.team_number === DotaGcTeam.DOTA_GC_TEAM_GOOD_GUYS\n          ? 'radiant'\n          : player?.team_number === DotaGcTeam.DOTA_GC_TEAM_BAD_GUYS\n            ? 'dire'\n            : null\n      const myTeam: Team | null =\n        typeof player?.team_number === 'number'\n          ? (gcTeam ?? null)\n          : (parseTeam(await redisClient.client.get(`${this.client.token}:playingTeam`)) ??\n            (this.client.gsi?.player?.team_name === 'radiant' ||\n            this.client.gsi?.player?.team_name === 'dire'\n              ? this.client.gsi?.player?.team_name\n              : null))\n\n      if (this.openingBets || matchId === null || matchId === undefined || matchId.length === 0) {\n        logger.debug('[BETS] Not closing bets', {\n          endingBets: this.endingBets,\n          name: this.client.name,\n          openingBets: this.openingBets,\n          playingMatchId: matchId,\n        })\n\n        if (matchId === null || matchId === undefined || matchId.length === 0) {\n          await this.resetClientState()\n        }\n        return\n      }\n\n      const betsEnabled = getValueOrDefault(\n        DBSettings.bets,\n        this.client.settings,\n        this.client.subscription\n      )\n      const heroSlot =\n        player?.player_slot ?? (await getRedisNumberValue(`${this.client.token}:playingHeroSlot`))\n      const heroName =\n        getHeroById(player?.hero_id)?.key ??\n        (await redisClient.client.get(`${this.client.token}:playingHero`))\n\n      const localWinner = this.resolveWinner(winningTeam, matchId)\n\n      // An early without waiting for ancient to blow up\n      // We have to check every few seconds with an api to see if the match is over\n      if (!localWinner) {\n        void this.checkEarlyDCWinner(matchId)\n        return\n      }\n\n      const scores = buildClosingScores({\n        gcMatch: match,\n        gcPlayer: player,\n        gsi: this.client.gsi,\n      })\n      const won = myTeam === localWinner\n      logger.info('[BETS] end bets won data', {\n        channel: this.client.name,\n        localWinner,\n        myTeam,\n        playingMatchId: matchId,\n        won,\n      })\n\n      // Both or one undefined\n      if (!myTeam) {\n        // Very rare case, but it can happen. Once every 7 days\n        logger.error('[BETS] trying to end bets but did not find localWinner or myTeam', {\n          channel: this.client.name,\n          matchId,\n        })\n        return\n      }\n\n      logger.debug('[BETS] Running end bets to award mmr and close predictions', {\n        matchId,\n        name: this.client.name,\n      })\n\n      const channel = this.client.name\n\n      // Pretty rare case, 26 times in 7 days. Usually when they test Dotabod in a custom lobby\n      // Custom lobbies create a match ID but don't report any stats\n      if (\n        (this.client.gsi?.map?.dire_score === null ||\n          this.client.gsi?.map?.dire_score === undefined ||\n          this.client.gsi.map.dire_score === 0) &&\n        (this.client.gsi?.map?.radiant_score === null ||\n          this.client.gsi?.map?.radiant_score === undefined ||\n          this.client.gsi.map.radiant_score === 0) &&\n        // After an early DC the live GSI can already be the next match, still at 0-0\n        this.client.gsi?.map?.matchid === matchId\n      ) {\n        logger.info('This is likely a no stats recorded match', {\n          matchId,\n          name: this.client.name,\n        })\n\n        if (this.client.stream_online) {\n          say(\n            this.client,\n            t('bets.notScored', {\n              emote: 'D:',\n              key: DBSettings.tellChatBets,\n              lng: this.client.locale,\n              matchId,\n            })\n          )\n          const predictionResponse = await supabase\n            .from('matches')\n            .select('predictionId')\n            .eq('matchId', matchId)\n            .eq('userId', this.client.token)\n            .is('won', null)\n            .single()\n          if (\n            predictionResponse.data?.predictionId !== null &&\n            predictionResponse.data?.predictionId !== undefined &&\n            predictionResponse.data.predictionId.length > 0\n          ) {\n            const oldBetId = await refundTwitchBet(\n              this.getChannelId(),\n              predictionResponse.data.predictionId\n            )\n            if (oldBetId !== null && oldBetId !== undefined && oldBetId.length > 0) {\n              await supabase\n                .from('matches')\n                .update({ predictionId: null, updated_at: new Date().toISOString() })\n                .eq('predictionId', oldBetId)\n            }\n          }\n        }\n        // No-stats match can never be resolved with !won/!lost; don't nag for it.\n        await this.suppressUnresolvedReminder(matchId)\n        await this.resetClientState()\n        return\n      }\n\n      // 0 is a correct lobby type meaning unranked\n      // https://github.com/dotabod/backend/issues/373#issuecomment-2366822786\n      // Default to ranked if we don't have valid data\n      const playingLobbyType = await getRedisNumberValue(\n        `${matchId}:${this.client.token}:lobbyType`\n      )\n      const playingGameMode = await getRedisNumberValue(`${matchId}:${this.client.token}:gameMode`)\n\n      // Use the lobby type from Redis if it exists (including 0)\n      // Otherwise default to ranked\n      const localLobbyType = playingLobbyType ?? LOBBY_TYPE_RANKED\n\n      const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)\n\n      await this.updateMMR({\n        // 22 is game mode for normal game non turbo\n        gameMode: playingGameMode ?? 22,\n        heroName,\n        heroSlot,\n        increase: won,\n        isParty,\n        lobbyType: localLobbyType,\n        matchId,\n        myTeam,\n        scores,\n      })\n\n      await this.storeLeaderboardStanding()\n\n      const TreadToggleData = this.treadsData\n      const toggleHandler = async () => {\n        const treadToggleData = await redisClient.getJson<typeof TreadToggleData>(\n          `${this.client.token}:treadtoggle`\n        )\n\n        if (\n          treadToggleData?.treadToggles !== null &&\n          treadToggleData?.treadToggles !== undefined &&\n          treadToggleData.treadToggles > 0 &&\n          this.client.stream_online\n        ) {\n          say(\n            this.client,\n            t('treadToggle', {\n              count: treadToggleData.treadToggles,\n              lng: this.client.locale,\n              manaCount: treadToggleData.manaSaved,\n              matchId,\n            })\n          )\n        }\n      }\n\n      try {\n        void toggleHandler()\n      } catch (error) {\n        logger.error('err toggleHandler', { error })\n      }\n\n      let predictionId: string | null = null\n      if (betsEnabled) {\n        try {\n          const predictionResponse = await supabase\n            .from('matches')\n            .select('predictionId')\n            .eq('matchId', matchId.toString())\n            .eq('userId', this.client.token)\n            .single()\n\n          if (\n            !predictionResponse.error &&\n            typeof predictionResponse.data?.predictionId === 'string' &&\n            predictionResponse.data.predictionId.length > 0\n          ) {\n            predictionId = predictionResponse.data.predictionId\n          } else {\n            logger.info('[BETS] Skipping Twitch closure because predictionId is unavailable', {\n              channel,\n              error: predictionResponse.error?.message,\n              matchId,\n            })\n          }\n        } catch (error) {\n          logger.info('[BETS] Skipping Twitch closure because predictionId is unreadable', {\n            channel,\n            error: error instanceof Error ? error.message : error,\n            matchId,\n          })\n        }\n      }\n\n      delayedQueue.addTask(getStreamDelay(this.client.settings, this.client.subscription), () => {\n        const message = won\n          ? t('bets.won', { emote: 'Happi', lng: this.client.locale })\n          : t('bets.lost', { emote: 'Happi', lng: this.client.locale })\n\n        say(this.client, message, { chattersKey: 'matchOutcome', delay: false })\n\n        if (\n          !betsEnabled ||\n          predictionId === null ||\n          predictionId === undefined ||\n          predictionId.length === 0\n        ) {\n          logger.debug('Bets are not enabled or no prediction was opened, stopping here', {\n            name: this.client.name,\n          })\n          this.resetClientState().catch(() => {\n            //\n          })\n          return\n        }\n\n        closeTwitchBet(\n          won,\n          this.getChannelId(),\n          matchId,\n          this.client.settings,\n          this.client.subscription\n        )\n          .then(() => {\n            logger.info('[BETS] end bets', {\n              didWin: won,\n              event: 'end_bets',\n              matchId,\n              name: this.client.name,\n              player_team: myTeam,\n              winning_team: localWinner,\n            })\n          })\n          .catch((error: unknown) => {\n            logger.error('[BETS] Error closing twitch bet', {\n              channel,\n              e: error instanceof Error ? error.message : error,\n              matchId,\n            })\n          })\n          .finally(() => {\n            this.resetClientState().catch((error) => {\n              logger.error('Error resetting client state', { error })\n            })\n          })\n      })\n    } catch (error) {\n      logger.error('Error closing bets', { error, name: this.client.name })\n    } finally {\n      this.endingBets = false\n    }\n  }"
-          }
-        ],
-        "message": "async method `closeBets` has a complexity of 78. Maximum allowed is 20.",
         "severity": "error"
       }
     },
@@ -23884,26 +23245,6 @@
         "severity": "error"
       }
     },
-    "bff732eef5819df381feea2fcd1f88f8740e2b966c553e68ece202c64c06e69f": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-unknown-parameters)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "})",
-              ".catch((error: unknown) => {",
-              "logger.error('[BETS] Error closing twitch bet', {"
-            ],
-            "message": "",
-            "span": "unknown"
-          }
-        ],
-        "message": "Parameter `error` leaves input unparsed. Accept a named domain type; run the expected schema or parser at the I/O boundary before calling this function.",
-        "severity": "error"
-      }
-    },
     "c0045de28559f3f25c4991a6534697c35af97eb590286f56f27b8dd061638fa4": {
       "count": 1,
       "diagnostic": {
@@ -23966,26 +23307,6 @@
           }
         ],
         "message": "Unexpected `await` of a non-Promise (non-\"Thenable\") value.",
-        "severity": "error"
-      }
-    },
-    "c0507632a3ba72c661034684a9625d529bd52c31ddd13dd2a3d175811d369a2f": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-callbacks)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              ".finally(() => {",
-              "this.resetClientState().catch((error) => {",
-              "logger.error('Error resetting client state', { error })"
-            ],
-            "message": "",
-            "span": "(error) => {\n              logger.error('Error resetting client state', { error })\n            }"
-          }
-        ],
-        "message": "Prefer `async`/`await` to the callback pattern",
         "severity": "error"
       }
     },
@@ -24820,26 +24141,6 @@
           }
         ],
         "message": "Async function used in a context where a void function is expected.",
-        "severity": "error"
-      }
-    },
-    "c760b92d18c76b13fb900da386ba8fcf8e0e87766c30d2981bbd9be7e21b883f": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(complexity)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "",
-              "private async checkEarlyDCWinner(matchId: string | number) {",
-              "// Prevent multiple concurrent early DC winner checks"
-            ],
-            "message": "",
-            "span": "(matchId: string | number) {\n    // Prevent multiple concurrent early DC winner checks\n    if (this.checkingEarlyDCWinner) {\n      logger.info('[BETS] Already checking early DC winner, skipping duplicate call', {\n        matchId,\n        name: this.client.name,\n      })\n      return\n    }\n\n    this.checkingEarlyDCWinner = true\n\n    // Check if the bet for this match is already closed in the database\n    const { data: matchData, error } = await supabase\n      .from('matches')\n      .select('won')\n      .is('won', null)\n      .eq('matchId', matchId.toString())\n      .eq('userId', this.client.token)\n      .single()\n\n    if (error !== null || matchData === null || matchData === undefined) {\n      logger.info('[BETS] Match already closed or not found, skipping early DC winner check', {\n        error: error?.message,\n        matchId,\n        name: this.client.name,\n      })\n      this.checkingEarlyDCWinner = false\n      return\n    }\n\n    logger.info('[BETS] Streamer exited the match before it ended with a winner', {\n      endingBets: this.endingBets,\n      matchId,\n      name: this.client.name,\n      openingBets: this.openingBets,\n    })\n\n    // Persist a snapshot so unresolved-match messages can show hero / KDA /\n    // score / length. The live packet that triggered the DC has usually shed\n    // these values (hero/player empty, scores back to 0), so the merge prefers\n    // the cached last-in-game snapshot for this match.\n    const cached =\n      this.lastInGameSnapshot?.matchId === matchId.toString() ? this.lastInGameSnapshot : null\n    const snapshotMatch = buildUnresolvedSnapshot({\n      cached,\n      gsi: this.client.gsi,\n      matchId: matchId.toString(),\n      now: new Date(),\n    })\n    // Only write while still unresolved and only if no snapshot exists yet, so a\n    // concurrent resolution can't be clobbered and re-entry can't reset updated_at\n    // (the reminder's 10-minute anchor). hero_name is set at bet-open and again\n    // on hero swap — only overwrite it when we actually have one.\n    const kdaForDb = {\n      assists: snapshotMatch.kda?.assists ?? null,\n      deaths: snapshotMatch.kda?.deaths ?? null,\n      duration: snapshotMatch.kda?.duration ?? null,\n      kills: snapshotMatch.kda?.kills ?? null,\n    }\n    await supabase\n      .from('matches')\n      .update({\n        ...(snapshotMatch.hero_name !== null &&\n        snapshotMatch.hero_name !== undefined &&\n        snapshotMatch.hero_name.length > 0\n          ? { hero_name: snapshotMatch.hero_name }\n          : {}),\n        dire_score: snapshotMatch.dire_score,\n        kda: kdaForDb,\n        radiant_score: snapshotMatch.radiant_score,\n        updated_at: snapshotMatch.updated_at,\n      })\n      .match({ matchId: matchId.toString(), userId: this.client.token })\n      .is('won', null)\n      .is('kda', null)\n\n    // Check if player is high MMR (8500+)\n    const isHighMmr = is8500Plus(this.client)\n\n    if (isHighMmr) {\n      // For high MMR players, skip automatic retries and prompt for manual resolution\n      logger.info('[BETS] High MMR player detected, prompting for manual resolution', {\n        matchId,\n        mmr: this.getMmr(),\n        name: this.client.name,\n      })\n\n      // Set pending manual resolution flag in Redis\n      await redisClient.client.set(\n        `${this.client.token}:pendingManualResolution`,\n        JSON.stringify({ matchId, timestamp: Date.now() })\n      )\n\n      // Send chat message to notify mods\n      const tellChatBets = getValueOrDefault(\n        DBSettings.tellChatBets,\n        this.client.settings,\n        this.client.subscription\n      )\n      if (tellChatBets && this.client.stream_online) {\n        say(\n          this.client,\n          t('bets.manualResolution', {\n            details: formatUnresolvedMatch(snapshotMatch),\n            emote: 'PauseChamp',\n            lng: this.client.locale,\n            matchId,\n          })\n        )\n      }\n\n      this.checkingEarlyDCWinner = false\n      return\n    }\n\n    // Set up retry parameters for lower MMR players\n    // Try up to 5 times\n    const MAX_RETRIES = 5\n    // 30 seconds between retries (total 2.5 minutes)\n    const RETRY_DELAY = 30_000\n    let retryCount = 0\n\n    const attemptFetchMatchData = async (): Promise<void> => {\n      // Check if they rejoined the match they disconnected from\n      if (this.client.gsi?.map?.matchid === matchId) {\n        logger.info('[BETS] Streamer rejoined the match, skipping early DC winner check', {\n          matchId,\n          name: this.client.name,\n        })\n        return\n      }\n\n      // Check if the bet for this match is already closed in the database\n      const { data: matchNotEnded, error } = await supabase\n        .from('matches')\n        .select('won')\n        // Null means there is a winner of this match\n        .is('won', null)\n        .eq('matchId', matchId.toString())\n        .eq('userId', this.client.token)\n        .single()\n\n      if (matchNotEnded === null || matchNotEnded === undefined || error !== null) {\n        logger.info('[BETS] Match already ended, skipping early DC winner check', {\n          matchId,\n          name: this.client.name,\n        })\n        return\n      }\n\n      if (retryCount >= MAX_RETRIES) {\n        // Handle exhausting all retries - prompt for manual resolution instead of refunding\n        if (this.client.stream_online) {\n          logger.info(\n            'Exceeded maximum retries for early DC match check, prompting for manual resolution',\n            {\n              matchId,\n              name: this.client.name,\n            }\n          )\n\n          // Set pending manual resolution flag in Redis\n          await redisClient.client.set(\n            `${this.client.token}:pendingManualResolution`,\n            JSON.stringify({ matchId, timestamp: Date.now() })\n          )\n\n          // Send chat message to notify mods\n          const tellChatBets = getValueOrDefault(\n            DBSettings.tellChatBets,\n            this.client.settings,\n            this.client.subscription\n          )\n          if (tellChatBets) {\n            say(\n              this.client,\n              t('bets.manualResolution', {\n                details: formatUnresolvedMatch(snapshotMatch),\n                emote: 'PauseChamp',\n                lng: this.client.locale,\n                matchId,\n              })\n            )\n          }\n        }\n\n        // Reset the flag since we've exhausted retries\n        this.checkingEarlyDCWinner = false\n        return\n      }\n\n      try {\n        // Request match data from Steam socket\n        const getMatchDetailsPromise = new Promise<MatchMinimalDetailsResponse>(\n          (resolve, reject) => {\n            steamSocket.emit(\n              'getMatchMinimalDetails',\n              { match_id: Number(matchId) },\n              (err: unknown, response: MatchMinimalDetailsResponse) => {\n                if (err !== null && err !== undefined) {\n                  reject(err)\n                } else {\n                  resolve(response)\n                }\n              }\n            )\n          }\n        )\n\n        const response = await getMatchDetailsPromise\n        const matchData = response?.matches?.[0]\n\n        // Check if we got a valid response with match outcome\n        if (\n          matchData !== undefined &&\n          typeof matchData.match_outcome === 'number' &&\n          [\n            EMatchOutcome.k_EMatchOutcome_RadVictory,\n            EMatchOutcome.k_EMatchOutcome_DireVictory,\n          ].includes(matchData.match_outcome)\n        ) {\n          logger.info('Successfully retrieved match result for early DC', {\n            matchId,\n            matchOutcome: matchData.match_outcome,\n            name: this.client.name,\n          })\n\n          // Determine winner based on match outcome\n          // k_EMatchOutcome_RadVictory = 2, k_EMatchOutcome_DireVictory = 3\n          const winningTeam =\n            matchData.match_outcome === EMatchOutcome.k_EMatchOutcome_RadVictory\n              ? 'radiant'\n              : 'dire'\n\n          // Reset flag before calling closeBets to prevent duplicate calls from closeBets\n          this.checkingEarlyDCWinner = false\n          await this.closeBets(winningTeam, response)\n        } else if (\n          matchData !== undefined &&\n          typeof matchData.match_outcome === 'number' &&\n          matchData.match_outcome > EMatchOutcome.k_EMatchOutcome_DireVictory\n        ) {\n          // Not scored\n          logger.info('Match not scored, skipping early DC winner check', {\n            matchId,\n            matchOutcome: matchData.match_outcome,\n            name: this.client.name,\n          })\n\n          // Reset flag before calling closeBets to prevent duplicate calls from closeBets\n          this.checkingEarlyDCWinner = false\n          logger.info('This is likely a no stats recorded match', {\n            matchId,\n            name: this.client.name,\n          })\n\n          if (this.client.stream_online) {\n            say(\n              this.client,\n              t('bets.notScored', {\n                emote: 'D:',\n                key: DBSettings.tellChatBets,\n                lng: this.client.locale,\n                matchId,\n              })\n            )\n            const predictionResponse = await supabase\n              .from('matches')\n              .select('predictionId')\n              .eq('matchId', matchId.toString())\n              .eq('userId', this.client.token)\n              .is('won', null)\n              .single()\n            if (\n              predictionResponse.data?.predictionId !== null &&\n              predictionResponse.data?.predictionId !== undefined &&\n              predictionResponse.data.predictionId.length > 0\n            ) {\n              const oldBetId = await refundTwitchBet(\n                this.getChannelId(),\n                predictionResponse.data.predictionId\n              )\n              if (oldBetId !== null && oldBetId !== undefined && oldBetId.length > 0) {\n                await supabase\n                  .from('matches')\n                  .update({ predictionId: null, updated_at: new Date().toISOString() })\n                  .eq('predictionId', oldBetId)\n              }\n            }\n          }\n          // No-stats match can never be resolved with !won/!lost; don't nag for it.\n          await this.suppressUnresolvedReminder(matchId)\n          await this.resetClientState()\n          return\n        } else {\n          // Invalid response, retry after delay\n          retryCount += 1\n          logger.info('Invalid match data response, scheduling retry', {\n            matchId,\n            maxRetries: MAX_RETRIES,\n            name: this.client.name,\n            response,\n            retryCount,\n          })\n\n          setTimeout(attemptFetchMatchData, RETRY_DELAY)\n        }\n      } catch (error) {\n        // Error occurred, retry after delay\n        retryCount += 1\n        logger.error('Error in early DC match check, scheduling retry', {\n          error,\n          matchId,\n          maxRetries: MAX_RETRIES,\n          name: this.client.name,\n          retryCount,\n        })\n\n        setTimeout(attemptFetchMatchData, RETRY_DELAY)\n      }\n    }\n\n    try {\n      // Start the first attempt\n      await attemptFetchMatchData()\n    } catch (error) {\n      // If any uncaught error occurs, reset the flag\n      logger.error('Uncaught error in checkEarlyDCWinner', {\n        error,\n        matchId,\n        name: this.client.name,\n      })\n      this.checkingEarlyDCWinner = false\n    }\n  }"
-          }
-        ],
-        "message": "private async method `checkEarlyDCWinner` has a complexity of 23. Maximum allowed is 20.",
         "severity": "error"
       }
     },
@@ -25926,26 +25227,6 @@
         "severity": "error"
       }
     },
-    "ce49a38716d0191fb56d1dbab8d61192af3a9893c66b02149a7f82ccdc972740": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-runtime-typeof)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "!predictionResponse.error &&",
-              "typeof predictionResponse.data?.predictionId === 'string' &&",
-              "predictionResponse.data.predictionId.length > 0"
-            ],
-            "message": "",
-            "span": "typeof predictionResponse.data?.predictionId"
-          }
-        ],
-        "message": "A `typeof` check narrows a representation without establishing its contract. Parse input at its I/O boundary, then branch on the domain value.",
-        "severity": "error"
-      }
-    },
     "ceb2ac99824c4dcd3a40077ba302be07e427b8a957861b7447f96ea798c4caf5": {
       "count": 1,
       "diagnostic": {
@@ -26019,22 +25300,6 @@
           }
         ],
         "message": "Replace module mocking with dependency injection through a real interface, service layer, or faithful test implementation.",
-        "severity": "error"
-      }
-    },
-    "cf3e444449a84ead772dbe4db75df87a070626b93ce6bc586352bb75a8edec4a": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-then)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": ["})", "this.resetClientState().catch(() => {", "//"],
-            "message": "",
-            "span": "catch"
-          }
-        ],
-        "message": "Prefer await to then()/catch()/finally()",
         "severity": "error"
       }
     },
@@ -26171,26 +25436,6 @@
           }
         ],
         "message": "Prefer `async`/`await` to the callback pattern",
-        "severity": "error"
-      }
-    },
-    "3ba8ded88eaaeae8e6707afd12a5be825363b248d41c221c8d5dc7f690179d2a": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(cognitive-complexity)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "",
-              "async closeBets(winningTeam: Team | null = null, gcData?: MatchClosingDetailsResponse) {",
-              "if (this.endingBets) {"
-            ],
-            "message": "",
-            "span": "closeBets"
-          }
-        ],
-        "message": "Refactor this function to reduce its Cognitive Complexity from 39 to the 20 allowed.",
         "severity": "error"
       }
     },
@@ -26715,26 +25960,6 @@
           }
         ],
         "message": "Unsafe member access .heroes on an `error` typed value.",
-        "severity": "error"
-      }
-    },
-    "d4562be22b76f0f44656dc81fb9427477fe622d482933f7ddefbbf5301d0c82e": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-assignment)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "try {",
-              "const { matchId: pendingMatchId } = JSON.parse(pendingResolution)",
-              ""
-            ],
-            "message": "",
-            "span": "{ matchId: pendingMatchId } = JSON.parse(pendingResolution)"
-          }
-        ],
-        "message": "Unsafe assignment of an any value.",
         "severity": "error"
       }
     },
@@ -27526,26 +26751,6 @@
           }
         ],
         "message": "Define a constant instead of duplicating this literal 6 times.",
-        "severity": "error"
-      }
-    },
-    "d9a132d73a29b4e56c520269342a6a24207ca38495de1994a12d5d621607a5b8": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(no-nested-conditional)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "? 'radiant'",
-              ": player?.team_number === DotaGcTeam.DOTA_GC_TEAM_BAD_GUYS",
-              "? 'dire'"
-            ],
-            "message": "",
-            "span": "player?.team_number === DotaGcTeam.DOTA_GC_TEAM_BAD_GUYS\n            ? 'dire'\n            : null"
-          }
-        ],
-        "message": "Extract this nested ternary operation into an independent statement.",
         "severity": "error"
       }
     },
@@ -28480,26 +27685,6 @@
           }
         ],
         "message": "Value-returning function used in a context where a void function is expected.",
-        "severity": "error"
-      }
-    },
-    "a8270a9419de692f299876362febfdde8ee19b2042da5b43c64c7eeb2a0180f7": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(complexity)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "",
-              "const attemptFetchMatchData = async (): Promise<void> => {",
-              "// Check if they rejoined the match they disconnected from"
-            ],
-            "message": "",
-            "span": "async (): Promise<void> => {\n      // Check if they rejoined the match they disconnected from\n      if (this.isBackInMatch(matchId)) {\n        logger.info('[BETS] Streamer rejoined the match, skipping early DC winner check', {\n          matchId,\n          name: this.client.name,\n        })\n        // Let the next exit from this match start a fresh check\n        this.checkingEarlyDCWinner = false\n        return\n      }\n\n      // Check if the bet for this match is already closed in the database\n      const { data: matchNotEnded, error } = await supabase\n        .from('matches')\n        .select('won')\n        // Null means there is a winner of this match\n        .is('won', null)\n        .eq('matchId', matchId.toString())\n        .eq('userId', this.client.token)\n        .single()\n\n      if (matchNotEnded === null || matchNotEnded === undefined || error !== null) {\n        logger.info('[BETS] Match already ended, skipping early DC winner check', {\n          matchId,\n          name: this.client.name,\n        })\n        return\n      }\n\n      if (retryCount >= MAX_RETRIES) {\n        // Handle exhausting all retries - prompt for manual resolution instead of refunding\n        if (this.client.stream_online) {\n          logger.info(\n            'Exceeded maximum retries for early DC match check, prompting for manual resolution',\n            {\n              matchId,\n              name: this.client.name,\n            }\n          )\n\n          // Set pending manual resolution flag in Redis\n          await redisClient.client.set(\n            `${this.client.token}:pendingManualResolution`,\n            JSON.stringify({ matchId, timestamp: Date.now() })\n          )\n\n          // Send chat message to notify mods\n          const tellChatBets = getValueOrDefault(\n            DBSettings.tellChatBets,\n            this.client.settings,\n            this.client.subscription\n          )\n          if (tellChatBets) {\n            say(\n              this.client,\n              t('bets.manualResolution', {\n                details: formatUnresolvedMatch(snapshotMatch),\n                emote: 'PauseChamp',\n                lng: this.client.locale,\n                matchId,\n              })\n            )\n          }\n        }\n\n        // Reset the flag since we've exhausted retries\n        this.checkingEarlyDCWinner = false\n        return\n      }\n\n      try {\n        // Request match data from Steam socket\n        const getMatchDetailsPromise = new Promise<MatchMinimalDetailsResponse>(\n          (resolve, reject) => {\n            steamSocket.emit(\n              'getMatchMinimalDetails',\n              { match_id: Number(matchId) },\n              (err: unknown, response: MatchMinimalDetailsResponse) => {\n                if (err !== null && err !== undefined) {\n                  reject(err)\n                } else {\n                  resolve(response)\n                }\n              }\n            )\n          }\n        )\n\n        const response = await getMatchDetailsPromise\n        const matchData = response?.matches?.[0]\n\n        // Check if we got a valid response with match outcome\n        if (\n          matchData !== undefined &&\n          typeof matchData.match_outcome === 'number' &&\n          [\n            EMatchOutcome.k_EMatchOutcome_RadVictory,\n            EMatchOutcome.k_EMatchOutcome_DireVictory,\n          ].includes(matchData.match_outcome)\n        ) {\n          logger.info('Successfully retrieved match result for early DC', {\n            matchId,\n            matchOutcome: matchData.match_outcome,\n            name: this.client.name,\n          })\n\n          // Determine winner based on match outcome\n          // k_EMatchOutcome_RadVictory = 2, k_EMatchOutcome_DireVictory = 3\n          const winningTeam =\n            matchData.match_outcome === EMatchOutcome.k_EMatchOutcome_RadVictory\n              ? 'radiant'\n              : 'dire'\n\n          // Reset flag before calling closeBets to prevent duplicate calls from closeBets\n          this.checkingEarlyDCWinner = false\n          await this.closeBets(winningTeam, response)\n        } else if (\n          matchData !== undefined &&\n          typeof matchData.match_outcome === 'number' &&\n          matchData.match_outcome > EMatchOutcome.k_EMatchOutcome_DireVictory\n        ) {\n          // Not scored\n          logger.info('Match not scored, skipping early DC winner check', {\n            matchId,\n            matchOutcome: matchData.match_outcome,\n            name: this.client.name,\n          })\n\n          // Reset flag before calling closeBets to prevent duplicate calls from closeBets\n          this.checkingEarlyDCWinner = false\n          logger.info('This is likely a no stats recorded match', {\n            matchId,\n            name: this.client.name,\n          })\n\n          if (this.client.stream_online) {\n            say(\n              this.client,\n              t('bets.notScored', {\n                emote: 'D:',\n                key: DBSettings.tellChatBets,\n                lng: this.client.locale,\n                matchId,\n              })\n            )\n            const predictionResponse = await supabase\n              .from('matches')\n              .select('predictionId')\n              .eq('matchId', matchId.toString())\n              .eq('userId', this.client.token)\n              .is('won', null)\n              .single()\n            if (\n              predictionResponse.data?.predictionId !== null &&\n              predictionResponse.data?.predictionId !== undefined &&\n              predictionResponse.data.predictionId.length > 0\n            ) {\n              const oldBetId = await refundTwitchBet(\n                this.getChannelId(),\n                predictionResponse.data.predictionId\n              )\n              if (oldBetId !== null && oldBetId !== undefined && oldBetId.length > 0) {\n                await supabase\n                  .from('matches')\n                  .update({ predictionId: null, updated_at: new Date().toISOString() })\n                  .eq('predictionId', oldBetId)\n              }\n            }\n          }\n          // No-stats match can never be resolved with !won/!lost; don't nag for it.\n          await this.suppressUnresolvedReminder(matchId)\n          await this.resetClientState()\n          return\n        } else {\n          // Invalid response, retry after delay\n          retryCount += 1\n          logger.info('Invalid match data response, scheduling retry', {\n            matchId,\n            maxRetries: MAX_RETRIES,\n            name: this.client.name,\n            response,\n            retryCount,\n          })\n\n          setTimeout(attemptFetchMatchData, RETRY_DELAY)\n        }\n      } catch (error) {\n        // Error occurred, retry after delay\n        retryCount += 1\n        logger.error('Error in early DC match check, scheduling retry', {\n          error,\n          matchId,\n          maxRetries: MAX_RETRIES,\n          name: this.client.name,\n          retryCount,\n        })\n\n        setTimeout(attemptFetchMatchData, RETRY_DELAY)\n      }\n    }"
-          }
-        ],
-        "message": "async function has a complexity of 27. Maximum allowed is 20.",
         "severity": "error"
       }
     },
@@ -29712,22 +28897,6 @@
           }
         ],
         "message": "Function `drain` does not capture any variables from its parent scope",
-        "severity": "error"
-      }
-    },
-    "ea67507936ea46e8ab04a59ee368eb0dfcaef00a6037bce4fd2c14931d9a47ba": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(prefer-destructuring)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [") {", "predictionId = predictionResponse.data.predictionId", "} else {"],
-            "message": "",
-            "span": "predictionId = predictionResponse.data.predictionId"
-          }
-        ],
-        "message": "Use Object destructuring.",
         "severity": "error"
       }
     },

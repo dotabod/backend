@@ -730,10 +730,9 @@ class GSIHandler implements GSIHandlerType {
   }
 
   private async expireManualResolution(client: SocketClient, matchId: string, newMatchId: string) {
-    const pendingResolution = await redisClient.client.get(
-      `${client.token}:pendingManualResolution`
-    )
-    if (!pendingResolution) {
+    const pendingResolution =
+      (await redisClient.client.get(`${client.token}:pendingManualResolution`)) ?? ''
+    if (pendingResolution.length === 0) {
       return
     }
 
@@ -762,10 +761,11 @@ class GSIHandler implements GSIHandlerType {
         .eq('userId', client.token)
         .is('won', null)
         .single()
-      if (!data?.predictionId) {
+      const predictionId = data?.predictionId ?? ''
+      if (predictionId.length === 0) {
         return
       }
-      await refundTwitchBet(this.getChannelId(), data.predictionId)
+      await refundTwitchBet(this.getChannelId(), predictionId)
 
       if (
         client.stream_online &&
@@ -793,9 +793,9 @@ class GSIHandler implements GSIHandlerType {
     }
 
     // GSI can clear or move to another match before the stream delay expires.
-    const heroName = gsi?.hero?.name
-    const matchId = map.matchid
-    if (!heroName || !matchId || matchId === '0') {
+    const heroName = gsi?.hero?.name ?? ''
+    const matchId = map.matchid ?? ''
+    if (heroName.length === 0 || matchId.length === 0 || matchId === '0') {
       return
     }
     const myTeam = player.team_name ?? ''
@@ -804,7 +804,7 @@ class GSIHandler implements GSIHandlerType {
       return
     }
 
-    if (playingMatchId && playingMatchId !== matchId) {
+    if (playingMatchId !== null && playingMatchId.length > 0 && playingMatchId !== matchId) {
       await this.expireManualResolution(client, playingMatchId, matchId)
       logger.info('[BETS] openBets resetClientState because stuck on old match id', {
         gsiMatchId: matchId,
@@ -818,7 +818,7 @@ class GSIHandler implements GSIHandlerType {
       return
     }
 
-    if (playingMatchId !== null && playingMatchId !== undefined && Number(playingMatchId) >= 0) {
+    if (playingMatchId !== null && Number(playingMatchId) >= 0) {
       return
     }
 
@@ -870,8 +870,9 @@ class GSIHandler implements GSIHandlerType {
       return
     }
 
-    if (existing?.id) {
-      logger.info('[BETS] Found a bet in the database', { id: existing.id })
+    const existingId = existing?.id ?? ''
+    if (existingId.length > 0) {
+      logger.info('[BETS] Found a bet in the database', { id: existingId })
     } else if (!client.stream_online) {
       logger.info('[BETS] Not opening bets bc stream is offline for', { name: client.name })
     } else if (client.token) {
@@ -1034,15 +1035,15 @@ class GSIHandler implements GSIHandlerType {
 
     try {
       const match = gcData?.matches?.[0]
-      const matchId = await this.getClosingMatchId(match)
-      if (this.openingBets || !matchId) {
+      const matchId = (await this.getClosingMatchId(match)) ?? ''
+      if (this.openingBets || matchId.length === 0) {
         logger.debug('[BETS] Not closing bets', {
           endingBets: this.endingBets,
           name: this.client.name,
           openingBets: this.openingBets,
           playingMatchId: matchId,
         })
-        if (!matchId) {
+        if (matchId.length === 0) {
           await this.resetClientState()
         }
         return
@@ -1110,8 +1111,9 @@ class GSIHandler implements GSIHandlerType {
         .eq('userId', this.client.token)
         .is('won', null)
         .single()
-      if (data?.predictionId) {
-        const refund = await refundTwitchBet(this.getChannelId(), data.predictionId)
+      const predictionId = data?.predictionId ?? ''
+      if (predictionId.length > 0) {
+        const refund = await refundTwitchBet(this.getChannelId(), predictionId)
         if (refund.status === 'refunded') {
           await supabase
             .from('matches')
@@ -1123,6 +1125,17 @@ class GSIHandler implements GSIHandlerType {
     // An unscored match has no result for !won or !lost to resolve.
     await this.suppressUnresolvedReminder(matchId)
     await this.resetClientState()
+  }
+
+  // After an early DC, GSI may already be reporting the next match at 0-0.
+  private isUnscoredMatch(matchId: string): boolean {
+    const map = this.client.gsi?.map
+    if (map?.matchid !== matchId) {
+      return false
+    }
+    const direScore = map.dire_score ?? 0
+    const radiantScore = map.radiant_score ?? 0
+    return direScore === 0 && radiantScore === 0
   }
 
   private async settleMatch(matchId: string, winner: Team, match?: ClosingMatch): Promise<void> {
@@ -1147,9 +1160,7 @@ class GSIHandler implements GSIHandlerType {
       return
     }
 
-    // After an early DC, GSI may already be reporting the next match at 0-0.
-    const map = this.client.gsi?.map
-    if (map?.matchid === matchId && (map.dire_score ?? 0) === 0 && (map.radiant_score ?? 0) === 0) {
+    if (this.isUnscoredMatch(matchId)) {
       await this.finishUnscoredMatch(matchId)
       return
     }
@@ -1244,7 +1255,7 @@ class GSIHandler implements GSIHandlerType {
         .eq('matchId', matchId)
         .eq('userId', token)
         .single()
-      if (!error && data?.predictionId) {
+      if (!error && (data?.predictionId ?? '').length > 0) {
         return true
       }
       logger.info('[BETS] Skipping Twitch closure because predictionId is unavailable', {
@@ -1314,44 +1325,7 @@ class GSIHandler implements GSIHandlerType {
       openingBets: this.openingBets,
     })
 
-    // Persist a snapshot so unresolved-match messages can show hero / KDA /
-    // score / length. The live packet that triggered the DC has usually shed
-    // these values (hero/player empty, scores back to 0), so the merge prefers
-    // the cached last-in-game snapshot for this match.
-    const cached =
-      this.lastInGameSnapshot?.matchId === matchId.toString() ? this.lastInGameSnapshot : null
-    const snapshotMatch = buildUnresolvedSnapshot({
-      cached,
-      gsi: this.client.gsi,
-      matchId: matchId.toString(),
-      now: new Date(),
-    })
-    // Only write while still unresolved and only if no snapshot exists yet, so a
-    // concurrent resolution can't be clobbered and re-entry can't reset updated_at
-    // (the reminder's 10-minute anchor). hero_name is set at bet-open and again
-    // on hero swap — only overwrite it when we actually have one.
-    const kdaForDb = {
-      assists: snapshotMatch.kda?.assists ?? null,
-      deaths: snapshotMatch.kda?.deaths ?? null,
-      duration: snapshotMatch.kda?.duration ?? null,
-      kills: snapshotMatch.kda?.kills ?? null,
-    }
-    await supabase
-      .from('matches')
-      .update({
-        ...(snapshotMatch.hero_name !== null &&
-        snapshotMatch.hero_name !== undefined &&
-        snapshotMatch.hero_name.length > 0
-          ? { hero_name: snapshotMatch.hero_name }
-          : {}),
-        dire_score: snapshotMatch.dire_score,
-        kda: kdaForDb,
-        radiant_score: snapshotMatch.radiant_score,
-        updated_at: snapshotMatch.updated_at,
-      })
-      .match({ matchId: matchId.toString(), userId: this.client.token })
-      .is('won', null)
-      .is('kda', null)
+    const snapshotMatch = await this.saveUnresolvedSnapshot(matchId)
 
     if (is8500Plus(this.client)) {
       logger.info('[BETS] High MMR player detected, prompting for manual resolution', {
@@ -1490,6 +1464,48 @@ class GSIHandler implements GSIHandlerType {
       })
       this.checkingEarlyDCWinner = false
     }
+  }
+
+  private async saveUnresolvedSnapshot(matchId: string | number): Promise<UnresolvedMatch> {
+    // Persist a snapshot so unresolved-match messages can show hero / KDA /
+    // score / length. The live packet that triggered the DC has usually shed
+    // these values (hero/player empty, scores back to 0), so the merge prefers
+    // the cached last-in-game snapshot for this match.
+    const cached =
+      this.lastInGameSnapshot?.matchId === matchId.toString() ? this.lastInGameSnapshot : null
+    const snapshotMatch = buildUnresolvedSnapshot({
+      cached,
+      gsi: this.client.gsi,
+      matchId: matchId.toString(),
+      now: new Date(),
+    })
+    // Only write while still unresolved and only if no snapshot exists yet, so a
+    // concurrent resolution can't be clobbered and re-entry can't reset updated_at
+    // (the reminder's 10-minute anchor). hero_name is set at bet-open and again
+    // on hero swap — only overwrite it when we actually have one.
+    const kdaForDb = {
+      assists: snapshotMatch.kda?.assists ?? null,
+      deaths: snapshotMatch.kda?.deaths ?? null,
+      duration: snapshotMatch.kda?.duration ?? null,
+      kills: snapshotMatch.kda?.kills ?? null,
+    }
+    await supabase
+      .from('matches')
+      .update({
+        ...(snapshotMatch.hero_name !== null &&
+        snapshotMatch.hero_name !== undefined &&
+        snapshotMatch.hero_name.length > 0
+          ? { hero_name: snapshotMatch.hero_name }
+          : {}),
+        dire_score: snapshotMatch.dire_score,
+        kda: kdaForDb,
+        radiant_score: snapshotMatch.radiant_score,
+        updated_at: snapshotMatch.updated_at,
+      })
+      .match({ matchId: matchId.toString(), userId: this.client.token })
+      .is('won', null)
+      .is('kda', null)
+    return snapshotMatch
   }
 
   private async requestManualResolution(
