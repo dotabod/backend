@@ -37,6 +37,7 @@ import type { InGameSnapshot } from './lib/build-unresolved-snapshot'
 import { blockTypes, pickSates } from './lib/consts'
 import { delayedQueue } from './lib/delayed-queue'
 import getHero from './lib/get-hero'
+import { cancelHeroSwap } from './lib/hero-swap-prediction.js'
 import { getHeroById } from './lib/heroes'
 import { isArcade } from './lib/is-arcade'
 import { isSpectator } from './lib/is-spectator'
@@ -301,6 +302,7 @@ class GSIHandler implements GSIHandlerType {
   }
 
   public async resetClientState() {
+    cancelHeroSwap(this)
     await deleteRedisData(this.client)
     this.blockCache = undefined
     this.mapBlocker.resetData()
@@ -1038,6 +1040,7 @@ class GSIHandler implements GSIHandlerType {
       return
     }
     this.endingBets = true
+    cancelHeroSwap(this)
 
     try {
       const match = gcData?.matches?.[0]

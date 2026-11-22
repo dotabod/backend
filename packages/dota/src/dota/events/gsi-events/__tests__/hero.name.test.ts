@@ -1,7 +1,3 @@
-// Regression tests for the hero-swap matches.hero_name bug. The handler
-// refunds + reopens the Twitch prediction on a mid-game hero swap but did
-// NOT update the matches row's hero_name — leaving stale hero info that
-// surfaced in !unresolved formatting and chat copy until closeBets ran.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
@@ -28,7 +24,8 @@ const openBetCalls: { heroName?: string }[] = []
 const heldTasks: HeldTask[] = []
 const redisStore: Record<string, string> = {}
 
-let nextPredictionId: string | null = 'old-prediction-id'
+let newPredictionId: string | null = 'new-prediction-id'
+let matchCanBeUpdated = true
 
 const supabaseMock = {
   from: () => {
@@ -37,18 +34,21 @@ const supabaseMock = {
       eq: (col: string, val: string) => {
         if (Object.keys(updateValues).length > 0) {
           updateCalls.push({ values: updateValues, whereCol: col, whereVal: val })
-          return Promise.resolve({ data: null, error: null })
         }
         return builder
       },
       is: () => builder,
+      maybeSingle: async () =>
+        await Promise.resolve({
+          data: matchCanBeUpdated ? { id: 'match-row' } : null,
+          error: null,
+        }),
       select: () => builder,
       single: async () =>
-        await Promise.resolve(
-          nextPredictionId !== null && nextPredictionId.length > 0
-            ? { data: { predictionId: nextPredictionId }, error: null }
-            : { data: null, error: { message: 'not found' } }
-        ),
+        await Promise.resolve({
+          data: { id: 'match-row', predictionId: 'old-prediction-id' },
+          error: null,
+        }),
       update: (values: Record<string, unknown>) => {
         updateValues = values
         return builder
@@ -79,7 +79,7 @@ vi.doMock('../../../../steam/ws', () => ({
 vi.doMock('../../../../twitch/lib/open-twitch-bet', () => ({
   openTwitchBet: async ({ heroName }: { heroName?: string }) => {
     openBetCalls.push({ heroName })
-    return await Promise.resolve({ id: 'new-prediction-id' })
+    return await Promise.resolve(newPredictionId === null ? undefined : { id: newPredictionId })
   },
 }))
 
@@ -119,6 +119,7 @@ await initTestI18n()
 // Import the handler module to register it on the global event emitter.
 await import('../hero.name')
 
+const { cancelHeroSwap } = await import('../../../lib/hero-swap-prediction.js')
 const { events } = await import('../../../global-event-emitter')
 const { gsiHandlers } = await import('../../../lib/consts')
 
@@ -167,7 +168,8 @@ describe('hero:name swap → matches.hero_name update', () => {
     for (const k of Object.keys(redisStore)) {
       delete redisStore[k]
     }
-    nextPredictionId = 'old-prediction-id'
+    newPredictionId = 'new-prediction-id'
+    matchCanBeUpdated = true
     registerFakeHandler()
     // Pre-state: openBets has already set the Redis keys for the original hero.
     redisStore[`${TOKEN}:playingHero`] = 'npc_dota_hero_lina'
@@ -196,22 +198,62 @@ describe('hero:name swap → matches.hero_name update', () => {
   })
 
   it('updates matches.hero_name even when the reopen fails (predictionId nulled out)', async () => {
-    openBetCalls.length = 0
-    // Make the reopen "fail" by returning no id — simulate openTwitchBet
-    // returning undefined on error (the real fn does this on caught errors).
-    vi.doMock('../../../../twitch/lib/open-twitch-bet', () => ({
-      openTwitchBet: async () => {},
-    }))
+    newPredictionId = null
 
     events.emit('hero:name', 'npc_dota_hero_pudge', TOKEN)
     await flush()
     expect(heldTasks).toHaveLength(1)
     await heldTasks[0].invoke()
 
-    // Either branch (success or failure) — the matches row must reflect the
-    // new hero. We don't care which branch ran here; we care that the row
-    // is no longer claiming the streamer is on Lina.
-    const heroUpdate = updateCalls.find((u) => u.values.hero_name === 'npc_dota_hero_pudge')
-    expect(heroUpdate).toBeDefined()
+    expect(updateCalls).toHaveLength(1)
+    expect(updateCalls[0].values).toMatchObject({
+      hero_name: 'npc_dota_hero_pudge',
+      predictionId: null,
+    })
+  })
+
+  it('does not reopen a refunded prediction after the match session resets', async () => {
+    events.emit('hero:name', 'npc_dota_hero_pudge', TOKEN)
+    await flush()
+    expect(refundCalls).toHaveLength(1)
+    expect(heldTasks).toHaveLength(1)
+
+    const handler = gsiHandlers.get(TOKEN)
+    if (handler === undefined) {
+      throw new Error('Expected a GSI handler')
+    }
+    cancelHeroSwap(handler)
+    await heldTasks[0].invoke()
+
+    expect(openBetCalls).toHaveLength(0)
+    expect(updateCalls).toHaveLength(0)
+  })
+
+  it('reopens only for the last hero when a streamer swaps twice during the delay', async () => {
+    events.emit('hero:name', 'npc_dota_hero_pudge', TOKEN)
+    await flush()
+    events.emit('hero:name', 'npc_dota_hero_axe', TOKEN)
+    await flush()
+
+    expect(heldTasks).toHaveLength(2)
+    await heldTasks[0].invoke()
+    await heldTasks[1].invoke()
+
+    expect(openBetCalls).toStrictEqual([{ heroName: 'Axe' }])
+    expect(updateCalls).toHaveLength(1)
+    expect(updateCalls[0].values).toMatchObject({ hero_name: 'npc_dota_hero_axe' })
+  })
+
+  it('refunds the replacement if the match closes before the replacement can be saved', async () => {
+    events.emit('hero:name', 'npc_dota_hero_pudge', TOKEN)
+    await flush()
+
+    matchCanBeUpdated = false
+    await heldTasks[0].invoke()
+
+    expect(refundCalls).toStrictEqual([
+      { channelId: 'twitch-channel-1', predictionId: 'old-prediction-id' },
+      { channelId: 'twitch-channel-1', predictionId: 'new-prediction-id' },
+    ])
   })
 })
