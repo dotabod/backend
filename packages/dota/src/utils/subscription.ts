@@ -173,10 +173,6 @@ export const getRequiredTier = function getRequiredTier(
   )
 }
 
-export const isChatterKey = function isChatterKey(key: string): boolean {
-  return key.startsWith('chatters.')
-}
-
 export const canAccessFeature = function canAccessFeature(
   feature: FeatureTier | GenericFeature,
   subscription: SubscriptionRow | null | undefined

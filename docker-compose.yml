@@ -85,7 +85,6 @@ services:
       - steam
       - twitch-chat
       - twitch-events
-    # random
     build:
       context: .
       dockerfile: ./packages/Dockerfile

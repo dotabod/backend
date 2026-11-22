@@ -180,7 +180,6 @@ vi.doMock('../../../lib/matchData', () => {
   }
   return {
     MatchDataService: FakeMatchDataService,
-    getStreamersInMatch: async () => await Promise.resolve(0),
   }
 })
 

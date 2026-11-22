@@ -5,42 +5,32 @@ import type { Socket } from 'socket.io'
 // Socket.io server instance with improved connection handling. The port opens in
 // setupSocketServer, once every connection handler is attached.
 export const io = new Server({
-  // Increase connection timeout
   connectTimeout: 45_000,
   cors: {
     methods: ['GET', 'POST'],
-    // Allow all origins,
     origin: '*',
   },
-  // Decrease ping interval for faster detection of disconnections
   pingInterval: 25_000,
-  // Increase ping timeout
   pingTimeout: 60_000,
-  // Support both WebSocket and polling
   transports: ['websocket', 'polling'],
 })
 
-// Map to track connected sockets
 const connectedSockets = new Map<string, boolean>()
 
-// Check if any sockets are connected
 export const hasDotabodSocket = function hasDotabodSocket(): boolean {
   return connectedSockets.size > 0
 }
 
-// Add a socket to the connected sockets map
 const addSocket = function addSocket(socketId: string): void {
   connectedSockets.set(socketId, true)
   logger.info(`Socket ${socketId} added, total sockets: ${connectedSockets.size}`)
 }
 
-// Remove a socket from the connected sockets map
 const removeSocket = function removeSocket(socketId: string): void {
   connectedSockets.delete(socketId)
   logger.info(`Socket ${socketId} removed, remaining sockets: ${connectedSockets.size}`)
 }
 
-// Emit a chat message to connected sockets
 export const emitChatMessage = function emitChatMessage(
   broadcasterLogin: string,
   chatterLogin: string,
@@ -59,7 +49,6 @@ export const emitChatMessage = function emitChatMessage(
   io.to('twitch-chat-messages').emit('msg', broadcasterLogin, chatterLogin, text, metadata)
 }
 
-// Emit an event to connected sockets
 export const emitEvent = function emitEvent(
   type: string,
   broadcasterId: string,
@@ -81,7 +70,6 @@ export const setupSocketServer = function setupSocketServer(
 
     try {
       void socket.join('twitch-chat-messages')
-      // Track this specific socket
       addSocket(socket.id)
     } catch (error) {
       logger.error('Could not join twitch-chat-messages socket', error)
@@ -125,7 +113,6 @@ export const setupSocketServer = function setupSocketServer(
 
   io.listen(port)
 
-  // Set up error handling for the server
   io.engine.on('connection_error', (err) => {
     logger.error('Socket.io server connection error:', err)
   })

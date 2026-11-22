@@ -31,57 +31,21 @@ const cardsSchema = z.array(
   })
 )
 
-// One cached entry point per match for roster/Mongo/cards lookups. Dispatch is polymorphic —
-// `ResolverChain` runs each `RosterResolver` in priority order and the first to claim wins. There
-// is NO post-hoc shape inference; each resolver self-tags with its source.
-//
-// Source of truth: every consumer that asks "what's in this match?" should go through this class
-// and ONLY this class. Does NOT touch the spectate-friend chain — see memory
-// `keep-spectate-friend-path`.
-//
-// **One instance = one query.** A rejection clears the relevant memoization slot so a transient
-// I/O failure doesn't poison the instance; but `client.gsi` is captured by reference, so don't
-// reuse an instance across distinct GSI ticks. Construct anew per query.
-
 /**
- * Service for resolving and querying match data (roster, Mongo doc, Steam cards) for a single
- * GSI tick / request. Dispatches resolver chain (gsi-spectator → sourcetv → vision → gsi-self)
- * and memoizes I/O for the lifetime of the instance.
- *
- * **Contract: construct a fresh instance per query.** Do not cache across distinct GSI ticks —
- * `client.gsi` is captured by reference and memoized values will go stale.
- *
- * Do:
- * ```ts
- * const mds = new MatchDataService(client)
- * const roster = await mds.resolveRoster()
- * const mmr = await mds.getAverageMmr() // dedupes Mongo I/O with resolveRoster()
- * ```
- *
- * Don't:
- * ```ts
- * // Reusing across ticks leaks stale state.
- * class Handler { private mds = new MatchDataService(this.client) }
- * ```
+ * Construct one instance per query so the match packet and memoized lookups stay in sync.
  */
 export class MatchDataService {
   private readonly chain: ResolverChain
   private readonly client: SocketClient
+  private readonly gsi: SocketClient['gsi']
   private readonly visionResolver: VisionResolver
 
   constructor(
     client: SocketClient,
     opts?: { visionFetcher?: VisionFetcher; chain?: ResolverChain }
   ) {
-    // Default chain in priority order. Tests can inject a custom chain (or a custom Vision
-    // fetcher) without touching `mock.module`.
-    // SourceTvResolver shares the class's memoized Mongo fetch — passing the bound
-    // `getDelayedGameDoc` means resolver lookups + `mds.getDelayedGameDoc()` + `getAverageMmr()`
-    // etc. all dedupe to one Mongo I/O per instance lifetime. The fetcher's `matchId` arg is
-    // ignored here because the class already knows its own; a unit-test stub WILL use the arg.
-    // `visionResolver` is kept as its own field (not just buried in the chain) so `fetchRoster`
-    // can reuse it for the name-backfill pass below without constructing a second instance.
     this.client = client
+    this.gsi = client.gsi
     this.visionResolver = new VisionResolver(opts?.visionFetcher)
     this.chain =
       opts?.chain ??
@@ -93,10 +57,8 @@ export class MatchDataService {
       ])
   }
 
-  // --- Synchronous state (no I/O) ---
-
   get matchId(): string | undefined {
-    const id = this.client.gsi?.map?.matchid
+    const id = this.gsi?.map?.matchid
     return id === undefined || id.length === 0 || id === '0' ? undefined : id
   }
 
@@ -113,19 +75,19 @@ export class MatchDataService {
   }
 
   get isSpectator(): boolean {
-    return isSpectator(this.client.gsi)
+    return isSpectator(this.gsi)
   }
 
   get isArcade(): boolean {
-    return isArcade(this.client.gsi)
+    return isArcade(this.gsi)
   }
 
   get isPlayingMatch(): boolean {
-    return isPlayingMatch(this.client.gsi)
+    return isPlayingMatch(this.gsi)
   }
 
   get hasWinTeam(): boolean {
-    const wt = this.client.gsi?.map?.win_team
+    const wt = this.gsi?.map?.win_team
     return wt !== undefined && wt.length > 0 && wt !== 'none'
   }
 
@@ -277,8 +239,7 @@ export class MatchDataService {
     return roster.players.find((p) => p.selected === true) ?? null
   }
 
-  // --- "Other Dotabod streamers in this match" count (matches table + roster supplement) ---
-
+  // Return a count only to avoid identifying other streamers across chats.
   async getStreamersInMatchCount(opts: { excludeUserId: string }): Promise<number> {
     const userIds = new Set<string>()
     const { matchId } = this
@@ -292,10 +253,7 @@ export class MatchDataService {
       }
     }
 
-    const roster = await this.resolveRoster()
-    const accountIds = roster.players
-      .map((p) => p.accountId)
-      .filter((id): id is number => id !== null && id > 0)
+    const accountIds = await this.getAccountIds()
     if (accountIds.length) {
       const { data } = await supabase
         .from('steam_accounts')
@@ -346,18 +304,18 @@ export class MatchDataService {
   // --- Internals ---
 
   private async fetchRoster(): Promise<ResolvedRoster> {
-    const ctx: ResolverContext = { gsi: this.client.gsi, matchId: this.matchId }
+    const ctx: ResolverContext = { gsi: this.gsi, matchId: this.matchId }
     const raw = await this.chain.resolve(ctx)
     if (!raw) {
       return normalize({
-        gsi: this.client.gsi,
+        gsi: ctx.gsi,
         matchPlayers: [],
         source: 'none',
       })
     }
     const backfilled = await this.backfillNamesFromVision(raw, ctx)
     return normalize({
-      gsi: this.client.gsi,
+      gsi: ctx.gsi,
       heroesStatus: backfilled.heroesStatus,
       matchPlayers: backfilled.matchPlayers,
       source: backfilled.source,
@@ -422,12 +380,7 @@ export class MatchDataService {
   }
 
   private async fetchCards(): Promise<Cards[]> {
-    const roster = await this.resolveRoster()
-    const accountIds = [
-      ...new Set(
-        roster.players.map((p) => p.accountId).filter((id): id is number => id !== null && id > 0)
-      ),
-    ]
+    const accountIds = await this.getAccountIds()
     if (!accountIds.length) {
       return []
     }

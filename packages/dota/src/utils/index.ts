@@ -22,17 +22,14 @@ export const steamID32toSteamID64 = function steamID32toSteamID64(steam32Id: num
 }
 
 export const fmtMSS = function fmtMSS(totalSeconds: number) {
-  // 👇️ get number of full minutes
   const minutes = Math.floor(totalSeconds / 60)
 
-  // 👇️ get remainder of seconds
   const seconds = totalSeconds % 60
 
   const padTo2Digits = function padTo2Digits(num: number) {
     return num.toString().padStart(2, '0')
   }
 
-  // ✅ format as MM:SS
   return `${padTo2Digits(minutes)}:${padTo2Digits(seconds)}`
 }
 

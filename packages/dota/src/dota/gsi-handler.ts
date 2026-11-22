@@ -41,7 +41,7 @@ import { cancelHeroSwap } from './lib/hero-swap-prediction.js'
 import { getHeroById } from './lib/heroes'
 import { isArcade } from './lib/is-arcade'
 import { isSpectator } from './lib/is-spectator'
-import { getStreamersInMatch, MatchDataService } from './lib/matchData'
+import { MatchDataService } from './lib/matchData'
 import { getRankDetail } from './lib/ranks'
 import {
   formatUnresolvedMatch,
@@ -400,7 +400,8 @@ class GSIHandler implements GSIHandlerType {
     if (!this.client.stream_online) {
       return
     }
-    if (matchId === null || matchId === undefined || matchId.length === 0 || matchId === '0') {
+    const matchData = new MatchDataService(this.client)
+    if (matchId === undefined || matchId !== matchData.matchId) {
       return
     }
 
@@ -419,12 +420,10 @@ class GSIHandler implements GSIHandlerType {
       return
     }
 
-    const count = await getStreamersInMatch({
-      client: this.client,
+    const count = await matchData.getStreamersInMatchCount({
       excludeUserId: this.client.token,
-      matchId,
     })
-    if (count <= 0) {
+    if (count <= 0 || this.client.gsi?.map?.matchid !== matchId) {
       return
     }
 

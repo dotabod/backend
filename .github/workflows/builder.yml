@@ -26,56 +26,49 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Single source of truth for the build dependency graph. paths-filter
-      # diffs the full push range (github.event.before..after), so multi-commit
-      # pushes can't skip a rebuild. package.json/pnpm-lock.yaml are listed for every
-      # service since they all share the root lockfile + pnpm install.
+      # Diff the full push range so an earlier commit in a push can trigger a rebuild.
       - uses: dorny/paths-filter@v4.0.3
         id: filter
         with:
           filters: |
-            dota:
-              - 'packages/dota/**'
+            shared:
               - 'packages/profanity-filter/**'
               - 'packages/shared-utils/**'
+              - 'packages/*/package.json'
+              - 'packages/steam/healthcheck.mjs'
               - 'packages/Dockerfile'
+              - '.dockerignore'
               - 'docker-compose.yml'
               - 'package.json'
               - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'patches/**'
+              - 'tsconfig.json'
+              - 'tsdown.config.ts'
               - '.github/workflows/builder.yml'
+            dota:
+              - 'packages/dota/**'
             twitch-chat:
               - 'packages/twitch-chat/**'
-              - 'packages/shared-utils/**'
-              - 'packages/Dockerfile'
-              - 'docker-compose.yml'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
-              - '.github/workflows/builder.yml'
             steam:
               - 'packages/steam/**'
-              - 'packages/shared-utils/**'
-              - 'packages/Dockerfile'
-              - 'docker-compose.yml'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
-              - '.github/workflows/builder.yml'
             twitch-events:
               - 'packages/twitch-events/**'
-              - 'packages/shared-utils/**'
-              - 'packages/Dockerfile'
-              - 'docker-compose.yml'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
-              - '.github/workflows/builder.yml'
 
       - name: Select services to build
         id: select
+        env:
+          CHANGED_FILTERS: ${{ steps.filter.outputs.changes }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo 'services=["dota","twitch-chat","steam","twitch-events"]' >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] || jq -e 'index("shared") != null' <<< "$CHANGED_FILTERS" >/dev/null; then
+            services=$(docker compose config --format json | jq -c '
+              [.services | to_entries[]
+                | select(.value.build.dockerfile | . == "./packages/Dockerfile" or . == "packages/Dockerfile")
+                | .key]')
           else
-            echo 'services=${{ steps.filter.outputs.changes }}' >> "$GITHUB_OUTPUT"
+            services=$CHANGED_FILTERS
           fi
+          echo "services=$services" >> "$GITHUB_OUTPUT"
 
   build:
     needs: changes

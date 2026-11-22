@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { SubscriptionRow } from '../../types/subscription.ts'
-import { canAccessFeature, getRequiredTier, isChatterKey } from '../subscription.ts'
+import { canAccessFeature, getRequiredTier } from '../subscription.ts'
 
 const sub = (overrides: Partial<SubscriptionRow>): SubscriptionRow => ({
   id: 's1',
@@ -30,16 +30,6 @@ describe(getRequiredTier, () => {
 
   it('falls back to PRO for an unknown feature', () => {
     expect(getRequiredTier('not-a-real-feature')).toBe('PRO')
-  })
-})
-
-describe(isChatterKey, () => {
-  it('is true for chatters.* keys', () => {
-    expect(isChatterKey('chatters.midas')).toBeTruthy()
-  })
-
-  it('is false for non-chatter keys', () => {
-    expect(isChatterKey('mmr')).toBeFalsy()
   })
 })
 

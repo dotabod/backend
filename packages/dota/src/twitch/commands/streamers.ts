@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 
 import { isPlayingMatch } from '../../dota/lib/is-playing-match'
-import { getStreamersInMatch } from '../../dota/lib/matchData'
+import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
 import type { CommandDefinition } from '../lib/command-handler.ts'
@@ -31,7 +31,9 @@ export const streamersCommand: CommandDefinition = {
       return
     }
 
-    const count = await getStreamersInMatch({ client, excludeUserId: client.token })
+    const count = await new MatchDataService(client).getStreamersInMatchCount({
+      excludeUserId: client.token,
+    })
 
     chatClient.say(
       channel,

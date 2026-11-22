@@ -78,10 +78,6 @@ describe('Dotabod profile URLs', () => {
     expect(dotabodMatchHistoryUrl({ name: '#Streamer' })).toBe('dotabod.com/streamer/matches')
   })
 
-  it('returns the first-party URL for 8500+ accounts', () => {
-    expect(dotabodMatchHistoryUrl({ name: 'streamer' })).toBe('dotabod.com/streamer/matches')
-  })
-
   it('returns empty when the channel name is missing', () => {
     expect(dotabodProfileUrl('')).toBe('')
     expect(dotabodMatchHistoryUrl({ name: '' })).toBe('')
