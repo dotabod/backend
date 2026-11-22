@@ -1,7 +1,7 @@
 import { t } from 'i18next'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { createPacketStub, flushAsync } from '../../../__tests__/shared-mocks.ts'
+import { createPacketStub } from '../../../__tests__/shared-mocks.ts'
 import { commandHandler, liveGsi, makeMessage, resetState, state } from './setup-mocks.ts'
 
 // Commands that talk to the overlay through the (stubbed) socket.io server.
@@ -79,7 +79,6 @@ describe('!resetwl', () => {
   it('stores a WL-only reset marker and confirms', async () => {
     const message = makeMessage({ content: '!resetwl' })
     await commandHandler.handleMessage(message)
-    await flushAsync()
     expect(state.updateCalls).toHaveLength(0)
     expect(state.upsertCalls).toHaveLength(1)
     expect(state.upsertCalls[0]).toStrictEqual({
@@ -105,7 +104,6 @@ describe('!resetwl', () => {
     await commandHandler.handleMessage(
       makeMessage({ content: '!resetwl', permission: 0, userName: 'viewer' })
     )
-    await flushAsync()
     expect(state.updateCalls).toHaveLength(0)
     expect(state.upsertCalls).toHaveLength(0)
   })

@@ -4,10 +4,9 @@ import { t } from 'i18next'
 import { modMode } from '../../dota/lib/consts'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('modsonly', {
+export const modsonlyCommand: CommandDefinition = {
   aliases: ['modsonlyoff', 'modsonlyon'],
   cooldown: 0,
   dbkey: DBSettings.commandModsonly,
@@ -52,5 +51,6 @@ commandHandler.registerCommand('modsonly', {
       message.user.messageId
     )
   },
+  name: 'modsonly',
   permission: 2,
-})
+}

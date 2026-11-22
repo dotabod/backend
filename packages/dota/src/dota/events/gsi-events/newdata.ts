@@ -5,8 +5,6 @@ import { redisClient } from '../../../db/redis-instance'
 import { DBSettings, ENABLE_SPECTATE_FRIEND_GAME, getValueOrDefault } from '../../../settings'
 import MongoDBSingleton from '../../../steam/mongo-db-singleton'
 import { steamSocket } from '../../../steam/ws'
-// Import commandHandler here
-import commandHandler from '../../../twitch/lib/command-handler'
 import { findSpectatorIdx } from '../../../twitch/lib/find-gsi-by-account-id'
 import { ChatMessageType, validEventTypes } from '../../../types'
 import type {
@@ -26,7 +24,7 @@ import type { GSIHandlerType } from '../../gsi-handler-types'
 import { checkPassiveMidas } from '../../lib/check-midas'
 import { checkPassiveTp } from '../../lib/check-passive-tp'
 import { calculateManaSaved } from '../../lib/check-tread-toggle'
-import { scheduleVisionClip } from '../../lib/clip-schedule.ts'
+import { scheduleVisionClip } from '../../lib/clip-schedule.js'
 import { DelayedCommands } from '../../lib/delayed-commands'
 import { getSpectatorPlayers } from '../../lib/get-spectator-players'
 import { isPlayingMatch } from '../../lib/is-playing-match'
@@ -78,6 +76,7 @@ const chatterMatchFound = async function chatterMatchFound(client: SocketClient)
     })
 
     if (autoCommands.length > 0) {
+      const { commandHandler } = await import('../../../twitch/command-catalog.js')
       for (const commandKey of autoCommands) {
         // Find the command in DelayedCommands that matches this key
         const commandInfo = DelayedCommands.find((cmd) => cmd.key === commandKey)
@@ -699,7 +698,90 @@ const _maybeSendTooltipData = async (dotaClient: GSIHandlerType) => {
   await sendExtensionPubSubBroadcastMessageIfChanged(dotaClient, messageToSend)
 }
 
-// Catch all
+const rememberPlayingHeroSlot = async function rememberPlayingHeroSlot(
+  client: SocketClient
+): Promise<boolean> {
+  const purchaser = client.gsi?.items?.teleport0?.purchaser
+
+  // Use in-memory cache first to avoid Redis call on every tick
+  let playingHeroSlot = playingHeroSlotCache.get(client.token)
+  if (playingHeroSlot === undefined) {
+    // Not in cache, check Redis
+    playingHeroSlot = await getRedisNumberValue(`${client.token}:playingHeroSlot`)
+    // Cache the result (including null)
+    playingHeroSlotCache.set(client.token, playingHeroSlot)
+  }
+
+  if (playingHeroSlot === null && typeof purchaser === 'number') {
+    await Promise.all([
+      redisClient.client.set(`${client.token}:playingHeroSlot`, purchaser),
+      saveMatchData(client),
+      // Items only exist once the streamer has loaded into the match with picks locked
+      // in, so this is a per-match, MMR-agnostic "match found" signal — unlike the
+      // steamServerId/lobbyType chain above, it doesn't depend on the (permanently
+      // disabled) ENABLE_SPECTATE_FRIEND_GAME flow. The .catch keeps a failure here from
+      // rejecting this Promise.all and blocking the cache update below.
+      client.steam32Id !== null && client.steam32Id !== 0
+        ? chatterMatchFound(client).catch((error) => {
+            logger.error('[AUTO_COMMANDS] Error triggering chatterMatchFound', { error })
+          })
+        : Promise.resolve(),
+    ])
+    playingHeroSlotCache.set(client.token, purchaser)
+
+    // This is the first time we've seen the hero slot, so we can't check anything else yet
+    return true
+  }
+
+  return false
+}
+
+const runMatchUpdates = async function runMatchUpdates(
+  dotaClient: GSIHandlerType,
+  data: Packet,
+  setup: readonly Promise<unknown>[]
+): Promise<void> {
+  const {
+    powerTreads: { enabled: treadsChatterEnabled },
+  } = getValueOrDefault(
+    DBSettings.chatters,
+    dotaClient.client.settings,
+    dotaClient.client.subscription,
+    'powerTreads'
+  )
+  let calculateManaSavedPromise: Promise<void> | null = null
+  if (treadsChatterEnabled) {
+    try {
+      calculateManaSavedPromise = calculateManaSaved(dotaClient)
+    } catch (error) {
+      logger.error('err calculateManaSaved', { error })
+    }
+  }
+
+  const saveMatchDataPromise = saveMatchData(dotaClient.client)
+  const handleNewEventsPromise = handleNewEvents(data, dotaClient)
+  const openBetsPromise = dotaClient.openBets(dotaClient.client)
+  const checkPassiveMidasPromise = checkPassiveMidas(dotaClient.client)
+  const checkPassiveTpPromise = checkPassiveTp(dotaClient.client)
+  const checkNeutralItemsPromise = dotaClient.neutralItemTimer.checkNeutralItems()
+
+  const promisesToExecute = [
+    ...setup,
+    saveMatchDataPromise,
+    handleNewEventsPromise,
+    openBetsPromise,
+    calculateManaSavedPromise,
+    checkPassiveMidasPromise,
+    checkPassiveTpPromise,
+    checkNeutralItemsPromise,
+  ].filter((promise) => promise !== undefined && promise !== null)
+
+  // Use Promise.allSettled so one failure doesn't stop the others. Each
+  // sub-promise has its own try/catch + logger inside; logging again here
+  // turned a single broken sub-promise into one error log per GSI frame.
+  await Promise.allSettled(promisesToExecute)
+}
+
 eventHandler.registerEvent('newdata', {
   allowMultiAccount: true,
   handler: async (dotaClient, data: Packet) => {
@@ -741,93 +823,11 @@ eventHandler.registerEvent('newdata', {
       return
     }
 
-    // minimap overlay is unused in prod — disabled to skip per-tick parse; revive by uncommenting
-    // only if they're in a match ^ and they're a beta tester
-    // if (dotaClient.client.beta_tester && dotaClient.client.stream_online) {
-    //   const enabled = getValueOrDefault(
-    //     DBSettings['minimap-blocker'],
-    //     dotaClient.client.settings,
-    //     dotaClient.client.subscription,
-    //   )
-    //   if (enabled) minimapParser.init(data, dotaClient.mapBlocker)
-    // }
-    // Can't just !dotaClient.heroSlot because it can be 0
-    const purchaser = dotaClient.client.gsi?.items?.teleport0?.purchaser
-
-    // Use in-memory cache first to avoid Redis call on every tick
-    let playingHeroSlot = playingHeroSlotCache.get(dotaClient.client.token)
-    if (playingHeroSlot === undefined) {
-      // Not in cache, check Redis
-      playingHeroSlot = await getRedisNumberValue(`${dotaClient.client.token}:playingHeroSlot`)
-      // Cache the result (including null)
-      playingHeroSlotCache.set(dotaClient.client.token, playingHeroSlot)
-    }
-
-    if (playingHeroSlot === null && typeof purchaser === 'number') {
-      // Update both Redis and cache
-      await Promise.all([
-        redisClient.client.set(`${dotaClient.client.token}:playingHeroSlot`, purchaser),
-        saveMatchData(dotaClient.client),
-        // Items only exist once the streamer has loaded into the match with picks locked
-        // in, so this is a per-match, MMR-agnostic "match found" signal — unlike the
-        // steamServerId/lobbyType chain above, it doesn't depend on the (permanently
-        // disabled) ENABLE_SPECTATE_FRIEND_GAME flow. The .catch keeps a failure here from
-        // rejecting this Promise.all and blocking the cache update below.
-        dotaClient.client.steam32Id !== null && dotaClient.client.steam32Id !== 0
-          ? chatterMatchFound(dotaClient.client).catch((error) => {
-              logger.error('[AUTO_COMMANDS] Error triggering chatterMatchFound', { error })
-            })
-          : Promise.resolve(),
-      ])
-      // Update cache with the new value
-      playingHeroSlotCache.set(dotaClient.client.token, purchaser)
-
-      // This is the first time we've seen the hero slot, so we can't check anything else yet
+    if (await rememberPlayingHeroSlot(dotaClient.client)) {
       return
     }
 
-    const {
-      powerTreads: { enabled: treadsChatterEnabled },
-    } = getValueOrDefault(
-      DBSettings.chatters,
-      dotaClient.client.settings,
-      dotaClient.client.subscription,
-      'powerTreads'
-    )
-    let calculateManaSavedPromise: Promise<void> | null = null
-    if (treadsChatterEnabled) {
-      try {
-        calculateManaSavedPromise = calculateManaSaved(dotaClient)
-      } catch (error) {
-        logger.error('err calculateManaSaved', { error })
-      }
-    }
-
-    // saveMatchData checks and returns early if steam is found
-    const saveMatchDataPromise = saveMatchData(dotaClient.client)
-    const handleNewEventsPromise = handleNewEvents(data, dotaClient)
-    const openBetsPromise = dotaClient.openBets(dotaClient.client)
-    const checkPassiveMidasPromise = checkPassiveMidas(dotaClient.client)
-    const checkPassiveTpPromise = checkPassiveTp(dotaClient.client)
-    const checkNeutralItemsPromise = dotaClient.neutralItemTimer.checkNeutralItems()
-
-    // Create an array of promises, filtering out any that are undefined or null
-    const promisesToExecute = [
-      updateSteam32IdPromise,
-      setupOBSBlockersPromise,
-      saveMatchDataPromise,
-      handleNewEventsPromise,
-      openBetsPromise,
-      calculateManaSavedPromise,
-      checkPassiveMidasPromise,
-      checkPassiveTpPromise,
-      checkNeutralItemsPromise,
-    ].filter((promise) => promise !== undefined && promise !== null)
-
-    // Use Promise.allSettled so one failure doesn't stop the others. Each
-    // sub-promise has its own try/catch + logger inside; logging again here
-    // turned a single broken sub-promise into one error log per GSI frame.
-    await Promise.allSettled(promisesToExecute)
+    await runMatchUpdates(dotaClient, data, [updateSteam32IdPromise, setupOBSBlockersPromise])
   },
 })
 

@@ -9,8 +9,7 @@ import { MatchDataService } from '../../dota/lib/matchData'
 import MongoDBSingleton from '../../steam/mongo-db-singleton'
 import { requestSteam } from '../../steam/request'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
 const fetchUserByName = async (name: string) => {
   const { data: user, error } = await supabase
@@ -223,7 +222,7 @@ const handleSubscriptionCommand = (message: MessageType) => {
   chatClient.whisper(message.user.userId, JSON.stringify(message.channel.client.subscription))
 }
 
-commandHandler.registerCommand('test', {
+export const testCommand: CommandDefinition = {
   handler: async (message, args) => {
     switch (args[0]) {
       case 'subscription': {
@@ -239,7 +238,7 @@ commandHandler.registerCommand('test', {
         break
       }
       case '2m': {
-        void handle2mDataCommand(message)
+        await handle2mDataCommand(message)
         break
       }
       case 'reset': {
@@ -251,7 +250,7 @@ commandHandler.registerCommand('test', {
         break
       }
       case 'card': {
-        void handleCardCommand(message, args)
+        await handleCardCommand(message, args)
         break
       }
       case 'logs': {
@@ -259,7 +258,7 @@ commandHandler.registerCommand('test', {
         break
       }
       case 'server': {
-        void handleServerCommand(message, args)
+        await handleServerCommand(message, args)
         break
       }
       default: {
@@ -268,5 +267,6 @@ commandHandler.registerCommand('test', {
     }
   },
 
+  name: 'test',
   permission: 4,
-})
+}

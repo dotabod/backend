@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { commandClusters } from '../suggest-command.js'
 import { baseMatchRow, commandHandler, makeMessage, resetState, state } from './setup-mocks.ts'
+
+const { CommandHandler } = await import('../command-handler.js')
 
 // End-to-end integration tests that exercise `commandHandler.handleMessage()`:
 //   parsing → alias resolution → settings/subscription gate → permission check
@@ -18,14 +21,18 @@ describe('CommandHandler dispatch (integration)', () => {
 
   describe('handler errors', () => {
     it('logs a throwing handler instead of rejecting to the process handler', async () => {
-      commandHandler.registerCommand('throwsfortest', {
-        handler: () => {
-          throw new Error('boom')
-        },
-      })
+      const handler = new CommandHandler(
+        [
+          {
+            handler: () => Promise.reject(new Error('boom')),
+            name: 'throwsfortest',
+          },
+        ],
+        []
+      )
 
       await expect(
-        commandHandler.handleMessage(makeMessage({ content: '!throwsfortest' }))
+        handler.handleMessage(makeMessage({ content: '!throwsfortest' }))
       ).resolves.toBeUndefined()
       expect(state.loggerErrorCalls).toHaveLength(1)
       expect(state.loggerErrorCalls[0].message).toBe('[COMMAND] Handler threw')
@@ -34,11 +41,6 @@ describe('CommandHandler dispatch (integration)', () => {
   })
 
   describe('parsing', () => {
-    it('exposes command parsing to isolated diagnostic runners', () => {
-      expect(commandHandler.parseMessage).toBeTypeOf('function')
-      expect(commandHandler.parseMessage(makeMessage({ content: '!np' }))).toStrictEqual(['np'])
-    })
-
     it('dispatches !recent and the handler emits chat output', async () => {
       state.recentList = [{ hero_name: 'npc_dota_hero_lina', matchId: '7777777777', won: true }]
       await commandHandler.handleMessage(makeMessage({ content: '!recent', permission: 2 }))
@@ -76,6 +78,22 @@ describe('CommandHandler dispatch (integration)', () => {
   })
 
   describe('alias resolution', () => {
+    it('accepts the registered !win% alias', async () => {
+      await commandHandler.handleMessage(
+        makeMessage({ clientOverrides: { stream_online: true }, content: '!win%' })
+      )
+
+      expect(state.chatSayCalls).toHaveLength(1)
+    })
+
+    it('lists only registered public commands in suggestion groups', () => {
+      for (const alias of commandClusters.flat()) {
+        const definition = commandHandler.lookup(alias)
+        expect(definition).toBeDefined()
+        expect(definition?.permission ?? 0).toBe(0)
+      }
+    })
+
     it('routes !history to the !recent handler', async () => {
       state.recentList = []
       await commandHandler.handleMessage(makeMessage({ content: '!history', permission: 2 }))
@@ -94,14 +112,17 @@ describe('CommandHandler dispatch (integration)', () => {
   })
 
   describe('permission gating', () => {
-    it('blocks viewers (permission=0) from running !recent', async () => {
-      state.recentList = [{ hero_name: 'npc_dota_hero_lina', matchId: '7777777777', won: true }]
-
+    it('lets a moderator run a command immediately after a viewer tries its alias', async () => {
       await commandHandler.handleMessage(
-        makeMessage({ content: '!recent', permission: 0, userName: 'someViewer' })
+        makeMessage({ content: '!history', permission: 0, userName: 'someViewer' })
       )
-
       expect(state.chatSayCalls).toHaveLength(0)
+
+      await commandHandler.handleMessage(makeMessage({ content: '!recent', permission: 2 }))
+      expect(state.chatSayCalls).toHaveLength(1)
+
+      await commandHandler.handleMessage(makeMessage({ content: '!matches', permission: 2 }))
+      expect(state.chatSayCalls).toHaveLength(1)
     })
 
     it('blocks subscribers (permission=1) from running !won', async () => {

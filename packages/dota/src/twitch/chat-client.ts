@@ -1,7 +1,7 @@
 import { findUserByName } from '../dota/lib/connected-streamers'
 import { DBSettings, getValueOrDefault } from '../settings'
 import { twitchChat } from '../steam/ws'
-import { suggestionContext } from './lib/suggestion-context'
+import { commandContext } from './lib/command-context.js'
 
 // Rate limiting constants
 const MAX_WHISPERS_PER_SECOND = 3
@@ -53,7 +53,6 @@ const sendWhisper = (channel: string, text: string) => {
   setTimeout(() => (whispersInLastMinute -= 1), 60_000)
 }
 
-// Chat client object
 export const chatClient = {
   say: (
     channel: string,
@@ -61,7 +60,10 @@ export const chatClient = {
     reply_parent_message_id?: string,
     bypassDisableCheck = false
   ): void => {
-    const user = findUserByName(channel.toLowerCase().replace('#', ''))
+    const channelName = channel.toLowerCase().replace('#', '')
+    const activeCommand = commandContext.getStore()
+    const replyContext = activeCommand?.channelName === channelName ? activeCommand : undefined
+    const user = replyContext === undefined ? findUserByName(channelName) : replyContext.client
     const hasNewestScopes = user?.Account?.scope?.includes('channel:bot')
     const providerAccountId = user?.Account?.providerAccountId
 
@@ -82,14 +84,10 @@ export const chatClient = {
         }
       }
 
-      // Consume a pending command-suggestion suffix from the active command
-      // context (set by CommandHandler.handleMessage). Appended to the first
-      // outgoing message so we don't send a separate "Also try !x" line.
-      const ctx = suggestionContext.getStore()
       let finalText = text
-      if (ctx?.suffix !== null && ctx?.suffix !== undefined && ctx.suffix.length > 0) {
-        finalText = `${text} · ${ctx.suffix}`
-        ctx.suffix = null
+      if (replyContext && replyContext.suffix !== null) {
+        finalText = `${text} · ${replyContext.suffix}`
+        replyContext.suffix = null
       }
 
       twitchChat.emit('say', providerAccountId, finalText, reply_parent_message_id)
@@ -99,7 +97,7 @@ export const chatClient = {
   // "nothing to show" replies (e.g. the auto-clipping-disabled note) where a
   // trailing "Also try !x" would point viewers at an equally-dataless sibling.
   sayWithoutSuggestion: (channel: string, text: string, reply_parent_message_id?: string): void => {
-    const ctx = suggestionContext.getStore()
+    const ctx = commandContext.getStore()
     if (ctx) {
       ctx.suffix = null
     }

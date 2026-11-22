@@ -1,4 +1,3 @@
-import './command-loader'
 import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 import {
   EventSubChannelPollBeginEvent,
@@ -10,8 +9,6 @@ import {
   EventSubChannelPredictionProgressEvent,
 } from '@twurple/eventsub-base'
 import { t } from 'i18next'
-import { io as socketIo } from 'socket.io-client'
-import type { Socket } from 'socket.io-client'
 
 import getDBUser from '../db/get-db-user'
 import findUser, { getTokenFromTwitchId } from '../dota/lib/connected-streamers'
@@ -22,7 +19,7 @@ import { DBSettings, getValueOrDefault } from '../settings'
 import { twitchChat } from '../steam/ws'
 import { chatClient } from './chat-client'
 import { checkAltAccount } from './check-alt-account'
-import commandHandler from './lib/command-handler'
+import { commandHandler } from './command-catalog.js'
 
 // Map to track the last time a rank warning message was sent to a channel
 const lastRankWarningTimestamps: Record<string, number> = {}
@@ -209,22 +206,6 @@ twitchChat.on(
       return
     }
 
-    const isBotDisabled = getValueOrDefault(
-      DBSettings.commandDisable,
-      client.settings,
-      client.subscription
-    )
-    const toggleCommand = commandHandler.commands.get('toggle')
-    if (
-      isBotDisabled &&
-      toggleCommand?.aliases?.includes(text.replace('!', '').split(' ')[0]) !== true &&
-      text.split(' ')[0] !== '!toggle'
-    ) {
-      logger.debug('Bot is disabled', { channel, text, user })
-      return
-    }
-
-    // Handle the incoming message using the command handler
     // to address v7 twurple removing #, but my db having # for command stats
     // add a hashtag to the beginning of the channel name if its not there already
     const channelName = channel.startsWith('#') ? channel : `#${channel}`
@@ -270,9 +251,4 @@ twitchChat.on('event', (eventName: keyof typeof events, broadcasterId: string, d
   }
 
   server.io.to(token).emit('channelPollOrBet', data, eventName)
-})
-
-export const twitchEvent: Socket = socketIo(`ws://${process.env.HOST_TWITCH_EVENTS}:5015`)
-twitchEvent.on('connect', () => {
-  logger.info('We alive on dotabod twitch events server!')
 })

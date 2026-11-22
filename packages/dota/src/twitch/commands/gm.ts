@@ -6,9 +6,9 @@ import { DBSettings } from '../../settings'
 import { gameMedals } from '../../steam/medals'
 import { chatClient } from '../chat-client'
 import { clippingDisabledNote } from '../lib/clipping-note'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('gm', {
+export const gmCommand: CommandDefinition = {
   aliases: ['medals', 'ranks'],
   dbkey: DBSettings.commandGM,
   handler: async (message) => {
@@ -67,5 +67,6 @@ commandHandler.registerCommand('gm', {
       )
     }
   },
+  name: 'gm',
   onlyOnline: true,
-})
+}

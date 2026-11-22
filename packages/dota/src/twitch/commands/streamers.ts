@@ -4,9 +4,9 @@ import { isPlayingMatch } from '../../dota/lib/is-playing-match'
 import { getStreamersInMatch } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('streamers', {
+export const streamersCommand: CommandDefinition = {
   dbkey: DBSettings.commandStreamers,
   handler: async (message) => {
     const {
@@ -39,4 +39,5 @@ commandHandler.registerCommand('streamers', {
       message.user.messageId
     )
   },
-})
+  name: 'streamers',
+}

@@ -1,8 +1,7 @@
 import { t } from 'i18next'
 
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
 const contributors = [
   { contributors: ['@techleed'], language: 'English', locale: 'en' },
@@ -22,7 +21,7 @@ const contributors = [
   { contributors: ['PoliG^', '@ProximusPL'], language: 'Polish', locale: 'pl-PL' },
 ]
 
-commandHandler.registerCommand('locale', {
+export const localeCommand: CommandDefinition = {
   aliases: ['translation', 'translatedby'],
   handler: (message: MessageType) => {
     const translators = contributors.find((c) => c.locale === message.channel.client.locale)
@@ -50,5 +49,6 @@ commandHandler.registerCommand('locale', {
       message.user.messageId
     )
   },
+  name: 'locale',
   permission: 0,
-})
+}

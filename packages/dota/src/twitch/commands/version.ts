@@ -1,6 +1,6 @@
 import { steamSocket, twitchChat, twitchEvents } from '../../steam/ws'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 import { fetchSocketVersion, runVersionCommand } from './version-handler'
 import type { VersionCommandDependencies } from './version-handler'
 
@@ -23,8 +23,9 @@ const versionCommandDependencies: VersionCommandDependencies = {
   },
 }
 
-commandHandler.registerCommand('version', {
+export const versionCommand: CommandDefinition = {
   handler: async (message) => {
     await runVersionCommand(message, versionCommandDependencies)
   },
-})
+  name: 'version',
+}

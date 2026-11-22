@@ -3,8 +3,7 @@ import { t } from 'i18next'
 import { getTodayHeroStats } from '../../db/get-today-hero-stats'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
 // Twitch chat limit is 500 characters
 const TWITCH_CHAR_LIMIT = 500
@@ -51,7 +50,7 @@ const splitIntoMessages = function splitIntoMessages(
   return messages
 }
 
-commandHandler.registerCommand('today', {
+export const todayCommand: CommandDefinition = {
   aliases: ['td'],
   dbkey: DBSettings.commandToday,
   handler: async (message: MessageType) => {
@@ -144,4 +143,5 @@ commandHandler.registerCommand('today', {
       chatClient.say(channel, msg, i === 0 ? message.user.messageId : undefined)
     }
   },
-})
+  name: 'today',
+}

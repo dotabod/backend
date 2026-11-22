@@ -4,10 +4,9 @@ import { t } from 'i18next'
 import { plebMode } from '../../dota/lib/consts'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('pleb', {
+export const plebCommand: CommandDefinition = {
   dbkey: DBSettings.commandPleb,
   handler: async (message: MessageType) => {
     const {
@@ -34,5 +33,6 @@ commandHandler.registerCommand('pleb', {
       })
     }
   },
+  name: 'pleb',
   permission: 2,
-})
+}

@@ -3,11 +3,10 @@ import { t } from 'i18next'
 import getHero from '../../dota/lib/get-hero'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 import { findResolvedMatchesInSession } from '../lib/resolve-match'
 
-commandHandler.registerCommand('recent', {
+export const recentCommand: CommandDefinition = {
   aliases: ['history', 'matches'],
   cooldown: 10_000,
   // Reuse the same setting as won/lost commands
@@ -51,5 +50,6 @@ commandHandler.registerCommand('recent', {
     )
   },
   // Mods and broadcaster only,
+  name: 'recent',
   permission: 2,
-})
+}

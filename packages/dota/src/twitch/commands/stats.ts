@@ -8,7 +8,7 @@ import { findRealtimePlayer, getRealtimeStats } from '../../steam/realtime-stats
 import type { SocketClient } from '../../types'
 import CustomError from '../../utils/custom-error'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 import { profileLink } from './profile-link'
 
 const getRealtimeStatsOrThrow = async function getRealtimeStatsOrThrow({
@@ -105,7 +105,7 @@ const getStats = async function getStats({
   }
 }
 
-commandHandler.registerCommand('stats', {
+export const statsCommand: CommandDefinition = {
   aliases: ['stat', 'kda', 'lh', 'gold', 'networth', 'level'],
   dbkey: DBSettings.commandItems,
   handler: async (message, args, command) => {
@@ -146,5 +146,6 @@ commandHandler.registerCommand('stats', {
       chatClient.say(client.name, msg, message.user.messageId)
     }
   },
+  name: 'stats',
   onlyOnline: true,
-})
+}

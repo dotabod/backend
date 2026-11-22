@@ -1,11 +1,11 @@
-import { announceCapturedCosmetics } from '../../lib/announce-cosmetics.ts'
-import { scheduleVisionClip } from '../../lib/clip-schedule.ts'
-import { isPlayingMatch } from '../../lib/is-playing-match.ts'
-import eventHandler from '../event-handler.ts'
+import { announceCapturedCosmetics } from '../../lib/announce-cosmetics.js'
+import { scheduleVisionClip } from '../../lib/clip-schedule.js'
+import { isPlayingMatch } from '../../lib/is-playing-match.js'
+import eventHandler from '../event-handler.js'
 
 eventHandler.registerEvent('map:game_state', {
   handler: async ({ client }, gameState: string) => {
-    if (!isPlayingMatch(client.gsi, false)) {
+    if (!client.stream_online || !isPlayingMatch(client.gsi, false)) {
       return
     }
 

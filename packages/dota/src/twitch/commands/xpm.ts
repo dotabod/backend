@@ -3,10 +3,10 @@ import { t } from 'i18next'
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 import { findAccountFromCmd } from '../lib/find-gsi-by-account-id'
 
-commandHandler.registerCommand('xpm', {
+export const xpmCommand: CommandDefinition = {
   dbkey: DBSettings.commandXPM,
   handler: async (message, args, command) => {
     const {
@@ -38,5 +38,6 @@ commandHandler.registerCommand('xpm', {
       )
     }
   },
+  name: 'xpm',
   onlyOnline: true,
-})
+}

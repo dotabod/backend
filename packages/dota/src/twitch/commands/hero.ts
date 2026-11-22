@@ -6,8 +6,7 @@ import { hasCurrentGameContext } from '../../dota/lib/get-current-match-id'
 import { getHeroByName, getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 import { findAccountFromCmd } from '../lib/find-gsi-by-account-id'
 
 const handleNotPlaying = function handleNotPlaying(message: MessageType): void {
@@ -100,7 +99,7 @@ const handleRequestedHero = async function handleRequestedHero(
   })
 }
 
-commandHandler.registerCommand('hero', {
+export const heroCommand: CommandDefinition = {
   dbkey: DBSettings.commandHero,
   handler: async (message, args, command) => {
     const { locale } = message.channel.client
@@ -160,5 +159,6 @@ commandHandler.registerCommand('hero', {
       )
     }
   },
+  name: 'hero',
   onlyOnline: true,
-})
+}

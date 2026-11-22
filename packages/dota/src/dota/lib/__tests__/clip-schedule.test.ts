@@ -42,8 +42,8 @@ const makeDeps = function makeDeps() {
   return {
     armed,
     deps,
-    scheduler: new ClipScheduler(deps),
     getRunCalls: () => runCalls,
+    scheduler: new ClipScheduler(deps),
     setNow: (n: number) => {
       now = n
     },
@@ -91,9 +91,7 @@ describe('clipSchedule', () => {
   })
 
   it('runs an in-process task after a failed write when Redis recovers before it fires', async () => {
-    h.deps.zAdd = async () => {
-      throw new Error('Redis unavailable')
-    }
+    h.deps.zAdd = () => Promise.reject(new Error('Redis unavailable'))
 
     await h.scheduler.schedule(5000, PAYLOAD)
     await h.armed[0].cb()

@@ -8,9 +8,9 @@ import { generateRoshanMessage } from '../../dota/events/gsi-events/rosh-res'
 import { isPlayingMatch } from '../../dota/lib/is-playing-match'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('roshan', {
+export const roshanCommand: CommandDefinition = {
   aliases: ['rosh', 'aegis'],
   dbkey: DBSettings.commandRosh,
   handler: async (message) => {
@@ -58,5 +58,6 @@ commandHandler.registerCommand('roshan', {
 
     chatClient.say(channel, msgs.join(' · '), message.user.messageId)
   },
+  name: 'roshan',
   onlyOnline: true,
-})
+}

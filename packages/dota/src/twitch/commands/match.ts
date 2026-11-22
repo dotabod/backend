@@ -2,10 +2,9 @@ import { t } from 'i18next'
 
 import { getCurrentRosterMatchId, isCurrentCustomGame } from '../../dota/lib/get-current-match-id'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('match', {
+export const matchCommand: CommandDefinition = {
   aliases: ['matchid'],
   handler: (message: MessageType) => {
     const {
@@ -30,5 +29,6 @@ commandHandler.registerCommand('match', {
       message.user.messageId
     )
   },
+  name: 'match',
   onlyOnline: true,
-})
+}

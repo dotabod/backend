@@ -2,8 +2,8 @@ import { logger } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
 import { gsiHandlers } from '../dota/lib/consts'
+import { twitchEvents } from '../steam/ws.js'
 import { chatClient } from './chat-client'
-import { twitchEvent } from './index'
 
 // Deduplication cache to prevent duplicate toggle messages
 const toggleMessageCache = new Map<string, { timestamp: number; disabled: boolean }>()
@@ -43,7 +43,7 @@ export const toggleDotabod = function toggleDotabod(
     gsiHandler?.disable()
   } else {
     logger.info('[GSI] Enabling client', { channel, token })
-    twitchEvent.emit('enable', gsiHandler?.getChannelId())
+    twitchEvents.emit('enable', gsiHandler?.getChannelId())
     gsiHandler?.enable()
   }
 

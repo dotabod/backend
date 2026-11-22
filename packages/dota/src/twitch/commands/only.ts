@@ -4,8 +4,7 @@ import { t } from 'i18next'
 import { ranks } from '../../dota/lib/consts'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
 // Extract unique rank titles and map them to their base tier values
 const rankTitles: Record<string, number> = {}
@@ -24,7 +23,7 @@ for (const rank of ranks) {
 // Add immortal (not in ranks array because it's special)
 rankTitles.immortal = 80
 
-commandHandler.registerCommand('only', {
+export const onlyCommand: CommandDefinition = {
   cooldown: 0,
   dbkey: DBSettings.commandOnly,
   handler: async (message: MessageType, args: string[]) => {
@@ -153,5 +152,6 @@ commandHandler.registerCommand('only', {
     )
   },
   // Mod or broadcaster only,
+  name: 'only',
   permission: 2,
-})
+}

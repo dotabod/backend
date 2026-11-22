@@ -2,9 +2,9 @@ import { t } from 'i18next'
 
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('winprobability', {
+export const winprobabilityCommand: CommandDefinition = {
   aliases: ['win%', 'wp'],
   dbkey: DBSettings.commandWinProbability,
   handler: (message) => {
@@ -28,5 +28,6 @@ commandHandler.registerCommand('winprobability', {
       message.user.messageId
     )
   },
+  name: 'winprobability',
   onlyOnline: true,
-})
+}

@@ -1,10 +1,9 @@
 import { t } from 'i18next'
 
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('dotabod', {
+export const dotabodCommand: CommandDefinition = {
   handler: (message: MessageType) => {
     const {
       channel: { name: channel, client },
@@ -16,4 +15,5 @@ commandHandler.registerCommand('dotabod', {
       message.user.messageId
     )
   },
-})
+  name: 'dotabod',
+}

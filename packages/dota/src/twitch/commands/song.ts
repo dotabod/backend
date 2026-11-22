@@ -4,8 +4,7 @@ import { z } from 'zod'
 
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
 // Last.fm's JSON API returns track/artist/album names with HTML-encoded entities
 // (e.g. "&#39;" for "'", "&amp;" for "&"). Twitch chat doesn't render HTML, so
@@ -69,7 +68,7 @@ const getModeratedTrack = async function getModeratedTrack(track: LastFmTrack): 
   }
 }
 
-commandHandler.registerCommand('song', {
+export const songCommand: CommandDefinition = {
   aliases: ['lastfm', 'music', 'nowplaying'],
   dbkey: DBSettings.commandLastFm,
   handler: async (message: MessageType) => {
@@ -136,5 +135,6 @@ commandHandler.registerCommand('song', {
       chatClient.say(channel, t('songError', { lng: client.locale }), message.user.messageId)
     }
   },
+  name: 'song',
   onlyOnline: true,
-})
+}

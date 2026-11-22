@@ -2,10 +2,9 @@ import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('delay', {
+export const delayCommand: CommandDefinition = {
   aliases: ['streamdelay'],
   dbkey: DBSettings.commandDelay,
   handler: (message: MessageType) => {
@@ -23,5 +22,6 @@ commandHandler.registerCommand('delay', {
       message.user.messageId
     )
   },
+  name: 'delay',
   onlyOnline: true,
-})
+}

@@ -3,9 +3,9 @@ import { t } from 'i18next'
 
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('setdelay', {
+export const setdelayCommand: CommandDefinition = {
   aliases: ['delay=', 'setstreamdelay', 'streamdelay='],
   cooldown: 0,
   handler: async (message, args) => {
@@ -53,5 +53,6 @@ commandHandler.registerCommand('setdelay', {
       message.user.messageId
     )
   },
+  name: 'setdelay',
   permission: 2,
-})
+}

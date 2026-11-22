@@ -4,8 +4,7 @@ import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import type { Player, SocketClient } from '../../types'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 import { findAccountFromCmd } from '../lib/find-gsi-by-account-id'
 
 type LookupPlayer = Awaited<ReturnType<typeof findAccountFromCmd>>['player']
@@ -96,8 +95,9 @@ const handleGpm = async function handleGpm(
   }
 }
 
-commandHandler.registerCommand('gpm', {
+export const gpmCommand: CommandDefinition = {
   dbkey: DBSettings.commandGPM,
   handler: handleGpm,
+  name: 'gpm',
   onlyOnline: true,
-})
+}

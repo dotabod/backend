@@ -9,7 +9,7 @@ import { hasCurrentGameContext } from '../../dota/lib/get-current-match-id'
 import { getHeroById, getHeroNameOrColor, withHeroLink } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 import { findAccountFromCmd } from '../lib/find-gsi-by-account-id'
 
 type LookupHero = Awaited<ReturnType<typeof findAccountFromCmd>>['hero']
@@ -63,7 +63,7 @@ const getHeroInnate = function getHeroInnate(
   return undefined
 }
 
-commandHandler.registerCommand('innate', {
+export const innateCommand: CommandDefinition = {
   dbkey: DBSettings.commandInnate,
   handler: async (message, args, command) => {
     const {
@@ -131,5 +131,6 @@ commandHandler.registerCommand('innate', {
       )
     }
   },
+  name: 'innate',
   onlyOnline: true,
-})
+}

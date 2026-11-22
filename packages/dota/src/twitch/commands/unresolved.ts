@@ -3,10 +3,9 @@ import { t } from 'i18next'
 import { formatUnresolvedMatch, getUnresolvedMatches } from '../../dota/lib/unresolved-matches'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('unresolved', {
+export const unresolvedCommand: CommandDefinition = {
   aliases: ['pending'],
   cooldown: 10_000,
   // Reuse the same setting as won/lost commands
@@ -45,5 +44,6 @@ commandHandler.registerCommand('unresolved', {
     )
   },
   // Mods and broadcaster only,
+  name: 'unresolved',
   permission: 2,
-})
+}

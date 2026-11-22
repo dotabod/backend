@@ -1,6 +1,3 @@
-import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
@@ -21,22 +18,18 @@ const noopLogger = {
 
 vi.doMock('@dotabod/shared-utils', () => buildSharedUtilsMock({ logger: noopLogger, supabase: {} }))
 
-// Stub the CommandHandler singleton with just the `.commands` map the
-// dispatcher needs for per-candidate dbkey lookup. Avoids dragging in the
-// full handler (which would pull in all 50+ command modules).
-const fakeCommands = new Map<string, { dbkey?: SettingKeys }>([
-  ['today', { dbkey: 'commandToday' }],
-  ['lgs', { dbkey: 'commandLGS' }],
-  ['wl', { dbkey: 'commandWL' }],
+const fakeCommands = new Map<string, { name: string; dbkey: SettingKeys }>([
+  ['today', { dbkey: 'commandToday', name: 'today' }],
+  ['lgs', { dbkey: 'commandLGS', name: 'lgs' }],
+  ['wl', { dbkey: 'commandWL', name: 'wl' }],
+  ['builds', { dbkey: 'commandBuilds', name: 'd2pt' }],
+  ['hero', { dbkey: 'commandHero', name: 'hero' }],
 ])
-vi.doMock('../command-handler.ts', () => ({
-  default: { commands: fakeCommands },
-}))
+const lookup = (name: string) => fakeCommands.get(name)
 
 await initTestI18n()
 
-const { commandClusters, prepareSuggestionSuffix, suggestionContext, _resetSuggestionState } =
-  await import('../suggest-command.ts')
+const { prepareSuggestionSuffix, _resetSuggestionState } = await import('../suggest-command.ts')
 
 const makeMessage = function makeMessage(
   over: { settings?: { key: string; value: unknown }[] } = {}
@@ -59,7 +52,7 @@ const makeMessage = function makeMessage(
 const runUntilSuggestion = function runUntilSuggestion(cmd: string, msg: MessageType, count = 4) {
   let last: string | null = null
   for (let i = 0; i < count; i += 1) {
-    last = prepareSuggestionSuffix(cmd, msg, fakeCommands)
+    last = prepareSuggestionSuffix(cmd, msg, lookup)
   }
   return last
 }
@@ -81,9 +74,9 @@ describe('prepareSuggestionSuffix', () => {
   it('emits a suffix on the throttle boundary and not before', () => {
     const msg = makeMessage()
     for (let i = 0; i < 3; i += 1) {
-      expect(prepareSuggestionSuffix('today', msg, fakeCommands)).toBeNull()
+      expect(prepareSuggestionSuffix('today', msg, lookup)).toBeNull()
     }
-    const suffix = prepareSuggestionSuffix('today', msg, fakeCommands)
+    const suffix = prepareSuggestionSuffix('today', msg, lookup)
     expect(suffix).toBeTruthy()
     expect(suffix).toMatch(/!(lgs|wl)/u)
   })
@@ -100,6 +93,13 @@ describe('prepareSuggestionSuffix', () => {
     expect(suffix).not.toContain('!lgs')
   })
 
+  it('uses the canonical setting for a suggested alias', () => {
+    expect(runUntilSuggestion('hero', makeMessage())).toContain('!builds')
+    _resetSuggestionState()
+    const message = makeMessage({ settings: [{ key: 'commandBuilds', value: false }] })
+    expect(runUntilSuggestion('hero', message)).toBeNull()
+  })
+
   it('does not repeat the same suggestion within the dedupe window', () => {
     const msg = makeMessage({ settings: [{ key: 'commandWL', value: false }] })
     const first = runUntilSuggestion('today', msg)
@@ -107,68 +107,5 @@ describe('prepareSuggestionSuffix', () => {
     const second = runUntilSuggestion('today', msg)
     // Only !lgs is eligible and it was just used → no repeat.
     expect(second).toBeNull()
-  })
-})
-
-describe('commandClusters', () => {
-  it('does not include any mod-only command', () => {
-    // Scan every command file for `permission: 2` and extract its registered
-    // name from registerCommand('<name>', ...). Suggestions go out to all chat
-    // viewers, so suggesting a command they cannot run is a bad UX.
-    const commandsDir = join(import.meta.dirname, '..', '..', 'commands')
-    const modCommands = new Set<string>()
-    for (const file of readdirSync(commandsDir)) {
-      if (!file.endsWith('.ts') || file.endsWith('.test.ts')) {
-        continue
-      }
-      const source = readFileSync(join(commandsDir, file), 'utf-8')
-      if (!/permission:\s*2\b/u.test(source)) {
-        continue
-      }
-      const match = /registerCommand\(\s*['"]([^'"]+)['"]/u.exec(source)
-      if (match) {
-        modCommands.add(match[1])
-      }
-    }
-    // sanity: scanner picked something up
-    expect(modCommands.size).toBeGreaterThan(0)
-
-    const offenders: string[] = []
-    for (const cluster of commandClusters) {
-      for (const cmd of cluster) {
-        if (modCommands.has(cmd)) {
-          offenders.push(cmd)
-        }
-      }
-    }
-    expect(offenders).toStrictEqual([])
-  })
-})
-
-describe('suggestionContext', () => {
-  it('propagates the suffix through async/await and lets a consumer null it out', async () => {
-    const ctx = { suffix: 'Also try !lgs' }
-    await suggestionContext.run(ctx, async () => {
-      await Promise.resolve()
-      const store = suggestionContext.getStore()
-      expect(store?.suffix).toBe('Also try !lgs')
-      // Consumer (chatClient.say) is responsible for nulling after first use.
-      store!.suffix = null
-    })
-    // After the run scope, the store is no longer reachable.
-    expect(suggestionContext.getStore()).toBeUndefined()
-  })
-
-  it('isolates suffixes between concurrent command invocations', async () => {
-    const a = suggestionContext.run({ suffix: 'A' }, async () => {
-      await Promise.resolve()
-      return suggestionContext.getStore()?.suffix
-    })
-    const b = suggestionContext.run({ suffix: 'B' }, async () => {
-      await Promise.resolve()
-      return suggestionContext.getStore()?.suffix
-    })
-    await expect(a).resolves.toBe('A')
-    await expect(b).resolves.toBe('B')
   })
 })

@@ -1,7 +1,7 @@
 import { logger } from '@dotabod/shared-utils'
 
 import type { SocketClient } from '../types'
-import { clipScheduler } from './lib/clip-schedule.ts'
+import { clipScheduler } from './lib/clip-schedule.js'
 import {
   gsiHandlers,
   lookingupToken,

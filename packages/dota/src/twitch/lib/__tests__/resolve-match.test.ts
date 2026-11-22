@@ -679,25 +679,12 @@ const buildMessage = function buildMessage(args: string[], clientOverrides: Part
 }
 
 const getRegisteredCommand = function getRegisteredCommand(name: string) {
-  const command = commandHandler.commands.get(name)
+  const command = commandHandler.lookup(name)
   if (command === undefined) {
     throw new Error(`Expected command "${name}" to be registered`)
   }
   return command
 }
-
-describe('command registration', () => {
-  it('registers !recent with its aliases', () => {
-    expect(commandHandler.commands.has('recent')).toBeTruthy()
-    expect(commandHandler.aliases.get('history')).toBe('recent')
-    expect(commandHandler.aliases.get('matches')).toBe('recent')
-  })
-
-  it('registers !won and !lost', () => {
-    expect(commandHandler.commands.has('won')).toBeTruthy()
-    expect(commandHandler.commands.has('lost')).toBeTruthy()
-  })
-})
 
 describe('!recent command handler', () => {
   beforeEach(() => {

@@ -7,10 +7,9 @@ import { isSpectator } from '../../dota/lib/is-spectator'
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { getRedisNumberValue } from '../../utils/index'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('wl', {
+export const wlCommand: CommandDefinition = {
   aliases: ['score', 'winrate', 'wr'],
   dbkey: DBSettings.commandWL,
   handler: async (message: MessageType) => {
@@ -75,4 +74,5 @@ commandHandler.registerCommand('wl', {
       logger.error('[WL] Error getting WL', { channelId, error, name: client.name })
     }
   },
-})
+  name: 'wl',
+}

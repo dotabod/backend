@@ -2,10 +2,9 @@ import { t } from 'i18next'
 
 import { server } from '../../dota/server'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('refresh', {
+export const refreshCommand: CommandDefinition = {
   handler: (message: MessageType) => {
     const {
       channel: { name: channel, client },
@@ -20,5 +19,6 @@ commandHandler.registerCommand('refresh', {
     }
   },
 
+  name: 'refresh',
   permission: 2,
-})
+}

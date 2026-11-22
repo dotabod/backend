@@ -88,7 +88,10 @@ vi.mock('@dotabod/shared-utils', () => ({
 
 vi.mock('../../db/get-db-user', () => ({ default: getDBUser }))
 vi.mock('../../db/get-wl', () => ({ getWL }))
-vi.mock('../../twitch/index', () => ({ twitchEvent: { emit: vi.fn() } }))
+vi.mock('../../steam/ws.js', () => ({
+  steamSocket: { connected: false },
+  twitchEvents: { emit: vi.fn() },
+}))
 vi.mock('../dota-patch-checker', () => ({ initDotaPatchChecker: vi.fn() }))
 vi.mock('../gsi-handler', () => ({ emitMinimapBlockerStatus: vi.fn() }))
 vi.mock('../global-event-emitter', () => ({

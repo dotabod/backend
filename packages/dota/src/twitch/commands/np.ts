@@ -11,8 +11,7 @@ import { notablePlayers } from '../../steam/notableplayers'
 import type { SocketClient } from '../../types'
 import { chatClient } from '../chat-client'
 import { clippingDisabledNote } from '../lib/clipping-note'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
 type Roster = Awaited<ReturnType<MatchDataService['resolveRoster']>>
 
@@ -68,7 +67,7 @@ const sendNotablePlayers = async function sendNotablePlayers({
   }
 }
 
-commandHandler.registerCommand('np', {
+export const npCommand: CommandDefinition = {
   dbkey: DBSettings.commandNP,
   handler: async (message, args) => {
     const [addOrRemove, forSteam32Id, ...name] = args
@@ -171,10 +170,7 @@ commandHandler.registerCommand('np', {
       }
     }
 
-    if (
-      commandHandler.hasPermission(message.user, 2) &&
-      (addOrRemove === 'add' || addOrRemove === 'remove')
-    ) {
+    if (message.user.permission >= 2 && (addOrRemove === 'add' || addOrRemove === 'remove')) {
       try {
         await addRemoveHandler()
       } catch (error) {
@@ -226,4 +222,5 @@ commandHandler.registerCommand('np', {
       twitchChannelId,
     })
   },
-})
+  name: 'np',
+}

@@ -6,8 +6,7 @@ import { getDotabodRankProfile, getRankDescription, getRankTitle } from '../../d
 import { DBSettings, getValueOrDefault } from '../../settings'
 import type { SocketClient } from '../../types'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
 type SteamAccount = SocketClient['SteamAccount'][number]
 
@@ -196,7 +195,7 @@ const sendStreamerRank = async function sendStreamerRank(message: MessageType): 
   await sendAccountRank(message, account, showRankMmr, unknownMessage)
 }
 
-commandHandler.registerCommand('mmr', {
+export const mmrCommand: CommandDefinition = {
   aliases: ['rank', 'medal'],
   dbkey: DBSettings.commandMmr,
   handler: async (message: MessageType, args: string[]) => {
@@ -208,4 +207,5 @@ commandHandler.registerCommand('mmr', {
     }
     await sendStreamerRank(message)
   },
-})
+  name: 'mmr',
+}

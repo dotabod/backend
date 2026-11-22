@@ -1,7 +1,6 @@
 import { t } from 'i18next'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { flushAsync } from '../../../__tests__/shared-mocks.ts'
 import { DBSettings } from '../../../settings.ts'
 import { commandHandler, makeMessage, resetState, state } from './setup-mocks.ts'
 
@@ -16,7 +15,6 @@ beforeEach(() => {
 describe('!beta', () => {
   it('flips beta_tester and announces it', async () => {
     await commandHandler.handleMessage(makeMessage({ content: '!beta' }))
-    await flushAsync()
     expect(state.updateCalls).toHaveLength(1)
     expect(state.updateCalls[0].values).toMatchObject({ beta_tester: true })
     expect(state.chatSayCalls).toHaveLength(1)
@@ -26,7 +24,6 @@ describe('!beta', () => {
     await commandHandler.handleMessage(
       makeMessage({ content: '!beta', permission: 0, userName: 'viewer' })
     )
-    await flushAsync()
     expect(state.updateCalls).toHaveLength(0)
   })
 })
@@ -44,13 +41,13 @@ describe('!toggle', () => {
     })
   })
 
-  it('routes to commandDisable.enable when currently disabled', async () => {
+  it('accepts the !enable alias when currently disabled', async () => {
     await commandHandler.handleMessage(
       makeMessage({
         clientOverrides: {
           settings: [{ key: DBSettings.commandDisable, value: true }],
         },
-        content: '!toggle',
+        content: '!ENABLE',
       })
     )
     expect(state.upsertCalls).toHaveLength(0)

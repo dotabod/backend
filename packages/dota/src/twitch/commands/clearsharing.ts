@@ -3,9 +3,9 @@ import { t } from 'i18next'
 
 import { redisClient } from '../../db/redis-instance'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('clearsharing', {
+export const clearsharingCommand: CommandDefinition = {
   aliases: ['forcelink'],
   cooldown: 30,
   handler: async (message) => {
@@ -40,5 +40,6 @@ commandHandler.registerCommand('clearsharing', {
       )
     }
   },
+  name: 'clearsharing',
   permission: 2,
-})
+}

@@ -1,9 +1,10 @@
 import { commandDisable } from '@dotabod/shared-utils'
 
 import { DBSettings, getValueOrDefault } from '../../settings'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('toggle', {
+export const toggleCommand: CommandDefinition = {
+  allowWhenDisabled: true,
   aliases: ['disable', 'enable'],
   cooldown: 0,
   handler: async (message) => {
@@ -27,5 +28,6 @@ commandHandler.registerCommand('toggle', {
           disabled_by: message.user.name,
         }))
   },
+  name: 'toggle',
   permission: 2,
-})
+}

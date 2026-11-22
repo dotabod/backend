@@ -256,14 +256,18 @@ export class ClipScheduler {
     detect_in_game: new MatchIdMemory(),
   }
 
-  constructor(private readonly deps: ClipScheduleDeps) {}
+  private readonly deps: ClipScheduleDeps
 
-  get matchesByPhase(): { draft: number; inGame: number } {
+  constructor(deps: ClipScheduleDeps) {
+    this.deps = deps
+  }
+
+  get matchesByPhase() {
     return { draft: this.matches.detect_draft.size, inGame: this.matches.detect_in_game.size }
   }
 
   private claim({ accountId, detectPath, matchId }: ClipTaskPayload): boolean {
-    if (!matchId) {
+    if (matchId === undefined || matchId.length === 0) {
       return true
     }
     const matches = this.matches[detectPath]
@@ -413,7 +417,7 @@ export const scheduleVisionClip = async function scheduleVisionClip(
   const matchId = client.gsi?.map?.matchid
   const logContext = { matchId, name: client.name, state: gameState }
   const accountId = client.Account?.providerAccountId
-  if (!accountId) {
+  if (accountId === undefined || accountId.length === 0) {
     logger.error(`${phase.logPrefix} No account ID found`, logContext)
     return
   }

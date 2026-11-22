@@ -3,7 +3,7 @@ import { t } from 'i18next'
 
 import { server } from '../../dota/server'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
 const notifyStreamStatus = function notifyStreamStatus(
   channelName: string,
@@ -42,7 +42,7 @@ const updateStreamStatus = async function updateStreamStatus(
     .eq('id', token)
 }
 
-commandHandler.registerCommand('online', {
+export const onlineCommand: CommandDefinition = {
   aliases: ['offline'],
   cooldown: 0,
   handler: async (message, _args, command) => {
@@ -73,5 +73,6 @@ commandHandler.registerCommand('online', {
     notifyStreamStatus(message.channel.name, client.locale, state, oppositeCommand)
     refreshSettings(client.token)
   },
+  name: 'online',
   permission: 2,
-})
+}

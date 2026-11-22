@@ -3,10 +3,10 @@ import { t } from 'i18next'
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 import { findAccountFromCmd } from '../lib/find-gsi-by-account-id'
 
-commandHandler.registerCommand('d2pt', {
+export const d2ptCommand: CommandDefinition = {
   aliases: ['dota2pt', 'build', 'builds', 'getbuild'],
   dbkey: DBSettings.commandBuilds,
   handler: async (message, args, command) => {
@@ -37,5 +37,6 @@ commandHandler.registerCommand('d2pt', {
       )
     }
   },
+  name: 'd2pt',
   onlyOnline: true,
-})
+}

@@ -2,10 +2,9 @@ import { t } from 'i18next'
 
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('steam', {
+export const steamCommand: CommandDefinition = {
   aliases: ['steamid', 'account'],
   dbkey: DBSettings.commandSteam,
   handler: (message: MessageType) => {
@@ -29,5 +28,6 @@ commandHandler.registerCommand('steam', {
       message.user.messageId
     )
   },
+  name: 'steam',
   permission: 2,
-})
+}

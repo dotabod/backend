@@ -11,8 +11,7 @@ import { z } from 'zod'
 import getDBUser from '../db/get-db-user'
 import { getWL } from '../db/get-wl'
 import { MAX_WL_STATS_DAYS, normalizeStatsStartDate } from '../db/win-loss-window'
-import { steamSocket } from '../steam/ws'
-import { twitchEvent } from '../twitch/index'
+import { steamSocket, twitchEvents } from '../steam/ws.js'
 import { closeTwitchBetById } from '../twitch/lib/resolve-match'
 import type { Abilities, Items, SocketClient } from '../types'
 import { getDiagnosticPayload } from './diagnostic-payload'
@@ -632,7 +631,7 @@ class GSIServer implements GSIServerInterface {
         // Update timestamp for rate limiting
         resubscribeRequestTimestamps.set(token, now)
 
-        twitchEvent.emit('resubscribe', user.providerAccountId)
+        twitchEvents.emit('resubscribe', user.providerAccountId)
         res.status(200).json({ status: 'ok' })
       })
     )

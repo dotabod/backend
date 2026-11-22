@@ -8,7 +8,7 @@ import { hasCurrentGameContext } from '../../dota/lib/get-current-match-id'
 import { getHeroById, getHeroNameOrColor, withHeroLink } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 import { findAccountFromCmd } from '../lib/find-gsi-by-account-id'
 
 const heroSchema = z.object({ id: z.number() })
@@ -29,7 +29,7 @@ const isValidHero = function isValidHero(hero: { id?: number } | null | undefine
   return heroData !== null && heroData !== undefined
 }
 
-commandHandler.registerCommand('aghs', {
+export const aghsCommand: CommandDefinition = {
   dbkey: DBSettings.commandAghs,
   handler: async (message, args, command) => {
     const {
@@ -111,5 +111,6 @@ commandHandler.registerCommand('aghs', {
       )
     }
   },
+  name: 'aghs',
   onlyOnline: true,
-})
+}

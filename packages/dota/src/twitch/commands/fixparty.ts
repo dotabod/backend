@@ -5,7 +5,7 @@ import { MULTIPLIER_PARTY } from '../../db/get-wl'
 import { updateMmr } from '../../dota/lib/update-mmr'
 import { dotabodMatchHistoryUrl } from '../../utils/index'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
 interface PartyMmr {
   currentMmr: number
@@ -26,7 +26,7 @@ const togglePartyMmr = function togglePartyMmr({
   return didWin ? newmmr - delta : newmmr + delta
 }
 
-commandHandler.registerCommand('fixparty', {
+export const fixpartyCommand: CommandDefinition = {
   aliases: ['fixsolo'],
   cooldown: 0,
   handler: async (message) => {
@@ -79,5 +79,6 @@ commandHandler.registerCommand('fixparty', {
       })
       .eq('id', bet.id)
   },
+  name: 'fixparty',
   permission: 2,
-})
+}

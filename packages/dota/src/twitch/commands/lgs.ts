@@ -7,7 +7,7 @@ import getHero from '../../dota/lib/get-hero'
 import { DBSettings } from '../../settings'
 import { dotabodMatchHistoryUrl } from '../../utils/index'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
 const matchKdaSchema = z.object({
   assists: z.number().nullable(),
@@ -15,7 +15,7 @@ const matchKdaSchema = z.object({
   kills: z.number().nullable(),
 })
 
-commandHandler.registerCommand('lgs', {
+export const lgsCommand: CommandDefinition = {
   aliases: ['lastgamescore', 'lgscore', 'lgwl'],
   dbkey: DBSettings.commandLGS,
   handler: async (message) => {
@@ -112,4 +112,5 @@ commandHandler.registerCommand('lgs', {
 
     chatClient.say(message.channel.name, returnMsg.join(' · '), message.user.messageId)
   },
-})
+  name: 'lgs',
+}

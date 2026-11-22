@@ -3,9 +3,9 @@ import { t } from 'i18next'
 import { gsiHandlers } from '../../dota/lib/consts'
 import { server } from '../../dota/server'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('count', {
+export const countCommand: CommandDefinition = {
   handler: async (message) => {
     const connectedSockets = await server.io.fetchSockets()
     const sockets = connectedSockets.length
@@ -23,4 +23,5 @@ commandHandler.registerCommand('count', {
 
     chatClient.say(message.channel.name, bothParts, message.user.messageId)
   },
-})
+  name: 'count',
+}

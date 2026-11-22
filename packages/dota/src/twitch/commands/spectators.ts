@@ -5,9 +5,9 @@ import { DBSettings } from '../../settings'
 import MongoDBSingleton from '../../steam/mongo-db-singleton'
 import type { DelayedGames } from '../../types'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('spectators', {
+export const spectatorsCommand: CommandDefinition = {
   aliases: ['specs'],
   dbkey: DBSettings.commandSpectators,
   handler: async (message) => {
@@ -61,5 +61,6 @@ commandHandler.registerCommand('spectators', {
       mongo.close()
     }
   },
+  name: 'spectators',
   onlyOnline: true,
-})
+}

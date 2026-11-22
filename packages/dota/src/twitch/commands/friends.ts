@@ -2,10 +2,9 @@ import { t } from 'i18next'
 
 import { isPlayingMatch } from '../../dota/lib/is-playing-match'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('friends', {
+export const friendsCommand: CommandDefinition = {
   handler: (message: MessageType) => {
     const {
       channel: { name: channel, client },
@@ -36,5 +35,6 @@ commandHandler.registerCommand('friends', {
     )
   },
 
+  name: 'friends',
   permission: 4,
-})
+}

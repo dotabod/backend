@@ -9,7 +9,7 @@ import { findRealtimePlayer, getRealtimeStats } from '../../steam/realtime-stats
 import type { Item, SocketClient } from '../../types'
 import CustomError from '../../utils/custom-error'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 import { profileLink } from './profile-link'
 
 const DOTA_ITEM_BY_SHORTNAME = new Map(Object.entries(DOTA_ITEMS))
@@ -120,7 +120,7 @@ const getItems = async function getItems({
   }
 }
 
-commandHandler.registerCommand('items', {
+export const itemsCommand: CommandDefinition = {
   aliases: ['item'],
   dbkey: DBSettings.commandItems,
   handler: async (message, args, command) => {
@@ -155,5 +155,6 @@ commandHandler.registerCommand('items', {
       chatClient.say(client.name, msg, message.user.messageId)
     }
   },
+  name: 'items',
   onlyOnline: true,
-})
+}

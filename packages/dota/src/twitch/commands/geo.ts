@@ -9,10 +9,9 @@ import { getSteamPlayerSummaries } from '../../steam/player-summaries'
 import CustomError from '../../utils/custom-error'
 import { is8500Plus } from '../../utils/index'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('geo', {
+export const geoCommand: CommandDefinition = {
   aliases: ['country', 'location'],
   dbkey: DBSettings.commandGeo,
   handler: async (message: MessageType) => {
@@ -91,5 +90,6 @@ commandHandler.registerCommand('geo', {
       chatClient.say(channel, reply, message.user.messageId)
     }
   },
+  name: 'geo',
   permission: 2,
-})
+}

@@ -4,13 +4,6 @@ import { DBSettings, getValueOrDefault } from '../../settings'
 import type { SettingKeys } from '../../settings'
 import type { SocketClient } from '../../types'
 
-export { suggestionContext } from './suggestion-context'
-
-// The declarative API: group related commands together. Each command's
-// suggestions are the other members of any cluster it appears in.
-// Adding a relation is a one-line edit — append to a cluster or add a new one.
-// Use canonical command names only (aliases are normalized before lookup).
-// Exported for the no-mod-commands guard test in __tests__/suggestCommand.test.ts.
 export const commandClusters: readonly (readonly string[])[] = [
   ['today', 'lgs', 'wl'],
   ['np', 'gm', 'avg', 'smurfs', 'ranked'],
@@ -20,34 +13,19 @@ export const commandClusters: readonly (readonly string[])[] = [
   ['rosh', 'spectators', 'winprobability'],
 ]
 
-const relatedIndex: ReadonlyMap<string, readonly string[]> = (() => {
-  const acc = new Map<string, string[]>()
-  for (const cluster of commandClusters) {
-    for (const cmd of cluster) {
-      const list = acc.get(cmd) ?? []
-      for (const sibling of cluster) {
-        if (sibling !== cmd && !list.includes(sibling)) {
-          list.push(sibling)
-        }
-      }
-      acc.set(cmd, list)
-    }
-  }
-  return acc
-})()
-
-// Show a suggestion every Nth invocation per channel so the hint is visible
-// but not spammy. 4 → roughly once every four commands.
 const SUGGEST_EVERY = 4
-// Don't repeat the same suggestion to a channel within this window.
 const REPEAT_WINDOW_MS = 30 * 60 * 1000
 
 const invocationCount = new Map<string, number>()
 const lastSuggested = new Map<string, { cmd: string; ts: number }>()
 
 interface SuggestionCommandOptions {
+  name: string
   dbkey?: SettingKeys
+  permission?: number
 }
+
+type LookupCommand = (name: string) => SuggestionCommandOptions | undefined
 
 interface SuggestionMessage {
   channel: {
@@ -59,18 +37,22 @@ interface SuggestionMessage {
 
 const isCandidateEnabled = function isCandidateEnabled(
   candidate: string,
-  commands: ReadonlyMap<string, SuggestionCommandOptions>,
+  lookup: LookupCommand,
   settings: SuggestionMessage['channel']['settings'],
   subscription: SuggestionMessage['channel']['client']['subscription']
 ): boolean {
-  const dbkey = commands.get(candidate)?.dbkey
+  const command = lookup(candidate)
+  if (command === undefined || (command.permission ?? 0) > 0) {
+    return false
+  }
+  const { dbkey } = command
   return dbkey === undefined || Boolean(getValueOrDefault(dbkey, settings, subscription))
 }
 
 const pickCandidate = function pickCandidate(
   channelId: string,
   candidates: readonly string[],
-  commands: ReadonlyMap<string, SuggestionCommandOptions>,
+  lookup: LookupCommand,
   settings: SuggestionMessage['channel']['settings'],
   subscription: SuggestionMessage['channel']['client']['subscription']
 ): string | null {
@@ -79,24 +61,23 @@ const pickCandidate = function pickCandidate(
   for (const candidate of candidates) {
     const wasRecentlySuggested =
       recent !== undefined && recent.cmd === candidate && now - recent.ts < REPEAT_WINDOW_MS
-    if (!wasRecentlySuggested && isCandidateEnabled(candidate, commands, settings, subscription)) {
+    if (!wasRecentlySuggested && isCandidateEnabled(candidate, lookup, settings, subscription)) {
       return candidate
     }
   }
   return null
 }
 
-// Decides whether the current command invocation should carry a suggestion
-// suffix. Returns the localized suffix string (without leading separator) or
-// null. CommandHandler runs the handler inside `suggestionContext.run({ suffix })`
-// so chatClient.say can consume it.
 export const prepareSuggestionSuffix = function prepareSuggestionSuffix(
   commandName: string,
   message: SuggestionMessage,
-  commands: ReadonlyMap<string, SuggestionCommandOptions>
+  lookup: LookupCommand
 ): string | null {
-  const candidates = relatedIndex.get(commandName)
-  if (candidates === undefined || candidates.length === 0) {
+  const clusters = commandClusters.filter((cluster) =>
+    cluster.some((name) => lookup(name)?.name === commandName)
+  )
+  const candidates = clusters.flat().filter((name) => lookup(name)?.name !== commandName)
+  if (candidates.length === 0) {
     return null
   }
 
@@ -119,7 +100,7 @@ export const prepareSuggestionSuffix = function prepareSuggestionSuffix(
   const candidate = pickCandidate(
     channel.id,
     candidates,
-    commands,
+    lookup,
     channel.settings,
     channel.client.subscription
   )

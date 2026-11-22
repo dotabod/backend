@@ -3,9 +3,9 @@ import { t } from 'i18next'
 
 import { DBSettings, getValueOrDefault } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('mute', {
+export const muteCommand: CommandDefinition = {
   aliases: ['unmute'],
   cooldown: 0,
   handler: async (message) => {
@@ -39,5 +39,6 @@ commandHandler.registerCommand('mute', {
       message.user.messageId
     )
   },
+  name: 'mute',
   permission: 2,
-})
+}

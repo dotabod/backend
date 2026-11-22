@@ -4,9 +4,9 @@ import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import { smurfs } from '../../steam/smurfs'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('smurfs', {
+export const smurfsCommand: CommandDefinition = {
   aliases: ['lifetimes', 'totals', 'games', 'smurf'],
   dbkey: DBSettings.commandSmurfs,
   handler: async (message) => {
@@ -48,5 +48,6 @@ commandHandler.registerCommand('smurfs', {
       )
     }
   },
+  name: 'smurfs',
   onlyOnline: true,
-})
+}

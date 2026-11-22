@@ -3,7 +3,7 @@ import { t } from 'i18next'
 import { updateMmr } from '../../dota/lib/update-mmr'
 import type { UpdateMmrParams } from '../../dota/lib/update-mmr'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
 // `num` is undefined when the command is sent with no argument (`!setmmr`).
 const isNumberValid = (num: string | undefined): boolean => {
@@ -41,7 +41,7 @@ const getAccountPromptKey = function getAccountPromptKey(
   return 'unknownSteam'
 }
 
-commandHandler.registerCommand('setmmr', {
+export const setmmrCommand: CommandDefinition = {
   aliases: ['mmr=', 'mmrset'],
   cooldown: 0,
   handler: async (message, args) => {
@@ -108,6 +108,7 @@ commandHandler.registerCommand('setmmr', {
       token: client.token,
     })
   },
+  name: 'setmmr',
   onlyOnline: false,
   permission: 2,
-})
+}

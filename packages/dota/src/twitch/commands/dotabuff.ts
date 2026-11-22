@@ -4,12 +4,11 @@ import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { dotabodProfileUrl } from '../../utils/index'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 import { getDotabodProfileUrl } from '../lib/get-dotabod-profile'
 import { profileLink } from './profile-link'
 
-commandHandler.registerCommand('dotabuff', {
+export const dotabuffCommand: CommandDefinition = {
   dbkey: DBSettings.commandDotabuff,
   handler: async (message: MessageType, args: string[], command) => {
     const {
@@ -74,4 +73,5 @@ commandHandler.registerCommand('dotabuff', {
       )
     }
   },
-})
+  name: 'dotabuff',
+}

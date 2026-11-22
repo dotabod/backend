@@ -7,9 +7,9 @@ import { DBSettings } from '../../settings'
 import MongoDBSingleton from '../../steam/mongo-db-singleton'
 import type { DelayedGames } from '../../types'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('ranked', {
+export const rankedCommand: CommandDefinition = {
   aliases: ['isranked'],
   dbkey: DBSettings.commandRanked,
   handler: async (message) => {
@@ -92,5 +92,6 @@ commandHandler.registerCommand('ranked', {
       message.user.messageId
     )
   },
+  name: 'ranked',
   onlyOnline: true,
-})
+}

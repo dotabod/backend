@@ -4,9 +4,9 @@ import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import lastgame from '../../steam/lastgame'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('lg', {
+export const lgCommand: CommandDefinition = {
   aliases: ['lastgame'],
   dbkey: DBSettings.commandLG,
   handler: async (message) => {
@@ -50,5 +50,6 @@ commandHandler.registerCommand('lg', {
       )
     }
   },
+  name: 'lg',
   onlyOnline: true,
-})
+}

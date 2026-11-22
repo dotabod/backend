@@ -1,7 +1,7 @@
 import { captureCosmetics } from '../../dota/lib/capture-cosmetics'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 import { runSetCommand } from './set-handler'
 
 const setCommandDependencies = {
@@ -9,11 +9,12 @@ const setCommandDependencies = {
   say: chatClient.say,
 }
 
-commandHandler.registerCommand('set', {
+export const setCommand: CommandDefinition = {
   aliases: ['cosmetics', 'loadout'],
   dbkey: DBSettings.commandSet,
   handler: async (message) => {
     await runSetCommand(message, setCommandDependencies)
   },
+  name: 'set',
   onlyOnline: true,
-})
+}

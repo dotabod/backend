@@ -6,9 +6,9 @@ import { MatchDataService } from '../../dota/lib/matchData'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
 import { clippingDisabledNote } from '../lib/clipping-note'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('avg', {
+export const avgCommand: CommandDefinition = {
   dbkey: DBSettings.commandAvg,
   handler: async (message) => {
     const {
@@ -66,5 +66,6 @@ commandHandler.registerCommand('avg', {
       )
     }
   },
+  name: 'avg',
   onlyOnline: true,
-})
+}

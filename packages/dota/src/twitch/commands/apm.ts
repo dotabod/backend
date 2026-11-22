@@ -3,10 +3,10 @@ import { t } from 'i18next'
 import { getHeroNameOrColor } from '../../dota/lib/heroes'
 import { DBSettings } from '../../settings'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 import { profileLink } from './profile-link'
 
-commandHandler.registerCommand('apm', {
+export const apmCommand: CommandDefinition = {
   dbkey: DBSettings.commandAPM,
   handler: async (message, args, command) => {
     const {
@@ -53,5 +53,6 @@ commandHandler.registerCommand('apm', {
       )
     }
   },
+  name: 'apm',
   onlyOnline: true,
-})
+}

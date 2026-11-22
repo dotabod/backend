@@ -1,10 +1,9 @@
 import { t } from 'i18next'
 
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
-import type { MessageType } from '../lib/command-handler'
+import type { CommandDefinition, MessageType } from '../lib/command-handler.ts'
 
-commandHandler.registerCommand('ping', {
+export const pingCommand: CommandDefinition = {
   handler: (message: MessageType) => {
     chatClient.say(
       message.channel.name,
@@ -12,4 +11,5 @@ commandHandler.registerCommand('ping', {
       message.user.messageId
     )
   },
-})
+  name: 'ping',
+}

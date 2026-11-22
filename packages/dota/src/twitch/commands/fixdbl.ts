@@ -5,7 +5,7 @@ import { MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/get-wl'
 import { updateMmr } from '../../dota/lib/update-mmr'
 import { dotabodMatchHistoryUrl } from '../../utils/index'
 import { chatClient } from '../chat-client'
-import commandHandler from '../lib/command-handler'
+import type { CommandDefinition } from '../lib/command-handler.ts'
 
 interface DoubledownMmr {
   currentMmr: number
@@ -24,7 +24,7 @@ export const toggleDoubledownMmr = function toggleDoubledownMmr({
   return currentMmr + change * (didWin === wasDoubledown ? -1 : 1)
 }
 
-commandHandler.registerCommand('fixdbl', {
+export const fixdblCommand: CommandDefinition = {
   aliases: ['fixdd'],
   cooldown: 0,
   handler: async (message) => {
@@ -77,5 +77,6 @@ commandHandler.registerCommand('fixdbl', {
       })
       .eq('id', bet.id)
   },
+  name: 'fixdbl',
   permission: 2,
-})
+}
