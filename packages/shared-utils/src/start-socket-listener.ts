@@ -17,7 +17,7 @@ export function startSocketListener<
   port,
 }: {
   onConnection: (socket: Socket<Incoming, Outgoing>) => void
-  onConnectionError?: (error: unknown) => void
+  onConnectionError?: (error: { message: string }) => void
   options?: Partial<ServerOptions>
   port: number
 }): SocketListener<Outgoing> {

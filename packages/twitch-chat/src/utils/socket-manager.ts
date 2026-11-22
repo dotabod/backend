@@ -16,6 +16,7 @@ const options: Partial<ServerOptions> = {
   transports: ['websocket', 'polling'],
 }
 
+const CHAT_ROOM = 'twitch-chat-messages'
 const connectedSockets = new Map<string, boolean>()
 
 export const hasDotabodSocket = function hasDotabodSocket(): boolean {
@@ -47,7 +48,7 @@ export const emitChatMessage = function emitChatMessage(
     messageId: string
   }
 ): void {
-  listener?.to('twitch-chat-messages').emit('msg', broadcasterLogin, chatterLogin, text, metadata)
+  listener?.to(CHAT_ROOM).emit('msg', broadcasterLogin, chatterLogin, text, metadata)
 }
 
 export const emitEvent = function emitEvent(
@@ -55,7 +56,7 @@ export const emitEvent = function emitEvent(
   broadcasterId: string,
   data: unknown
 ): void {
-  listener?.to('twitch-chat-messages').emit('event', type, broadcasterId, data)
+  listener?.to(CHAT_ROOM).emit('event', type, broadcasterId, data)
 }
 
 export const setupSocketServer = function setupSocketServer(
@@ -66,7 +67,7 @@ export const setupSocketServer = function setupSocketServer(
     logger.info(`Found a connection! Socket ID: ${socket.id}`)
 
     try {
-      void socket.join('twitch-chat-messages')
+      void socket.join(CHAT_ROOM)
       addSocket(socket.id)
     } catch (error) {
       logger.error('Could not join twitch-chat-messages socket', error)
