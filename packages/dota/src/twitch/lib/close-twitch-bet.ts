@@ -136,14 +136,10 @@ export const closeTwitchBetById = async function closeTwitchBetById(
       return false
     }
 
-    const result = await settlePrediction(
-      api.predictions,
-      prediction,
-      twitchId,
-      matchId,
-      won,
-      client
-    )
+    const result = await settlePrediction(api.predictions, prediction, twitchId, matchId, won, {
+      ...client,
+      settings: [],
+    })
     if (result !== 'resolved') {
       return result === 'refunded'
     }
