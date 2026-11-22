@@ -108,10 +108,9 @@ export class CommandHandler {
     }
     // A rejected command would otherwise reach the service's fatal unhandledRejection handler.
     try {
-      await commandContext.run(
-        context,
-        async () => await this.dispatch(definition, message, args, command)
-      )
+      await commandContext.run(context, async () => {
+        await this.dispatch(definition, message, args, command)
+      })
     } catch (error) {
       logger.error('[COMMAND] Handler threw', {
         channel: message.channel.name,
@@ -146,15 +145,14 @@ export class CommandHandler {
     const cooldownKey = `${channel.id}.${name}`
     const onCooldown = !admin && (this.cooldowns.get(cooldownKey) ?? 0) > now
 
-    if (
-      !admin &&
-      dbkey !== undefined &&
-      !Boolean(getValueOrDefault(dbkey, settings, client.subscription))
-    ) {
-      if (!onCooldown) {
-        this.notifySubscriptionRequired(definition, message, dbkey, cooldownKey, now)
+    if (!admin && dbkey !== undefined) {
+      const enabled = Boolean(getValueOrDefault(dbkey, settings, client.subscription))
+      if (!enabled) {
+        if (!onCooldown) {
+          this.notifySubscriptionRequired(definition, message, dbkey, cooldownKey, now)
+        }
+        return
       }
-      return
     }
 
     if (definition.onlyOnline === true && !client.stream_online) {
@@ -191,9 +189,10 @@ export class CommandHandler {
     now: number
   ): void {
     const { client, settings } = channel
+    const configured = Boolean(getRawSettingValue(dbkey, settings))
     if (
       (this.noticeCooldowns.get(cooldownKey) ?? 0) > now ||
-      !Boolean(getRawSettingValue(dbkey, settings)) ||
+      !configured ||
       canAccessFeature(dbkey, client.subscription).hasAccess
     ) {
       return

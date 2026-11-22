@@ -234,6 +234,48 @@ def test_worker_clip_branch_saves_result_without_frame_image_url():
     assert statuses == ["processing", "completed"]
 
 
+def test_worker_persists_a_names_only_draft_once_and_completes_it():
+    db = MagicMock()
+    clip_request = {
+        "request_id": "draft",
+        "request_type": "clip",
+        "clip_url": "https://clips.twitch.tv/abc",
+        "clip_id": "abc",
+        "debug": False,
+        "force": True,
+        "include_image": False,
+        "only_draft": True,
+        "match_id": "8900",
+    }
+    draft = {"is_draft": True, "draft_player_order": ["Alice", None]}
+    with patch.object(api_server, "process_clip_url", return_value=draft):
+        _run_worker_once(db, clip_request)
+
+    db.save_clip_result.assert_called_once()
+    assert db.save_clip_result.call_args.args[2]["draft_player_order"] == ["Alice", None]
+    db.update_queue_status.assert_called_with("draft", "completed", result_id="abc")
+
+
+def test_worker_never_completes_a_clip_when_persistence_fails():
+    db = MagicMock()
+    db.save_clip_result.return_value = False
+    clip_request = {
+        "request_id": "draft",
+        "request_type": "clip",
+        "clip_url": "https://clips.twitch.tv/abc",
+        "clip_id": "abc",
+        "debug": False,
+        "force": True,
+        "include_image": False,
+        "only_draft": True,
+    }
+    draft = {"is_draft": True, "draft_player_order": ["Alice"]}
+    with patch.object(api_server, "process_clip_url", return_value=draft):
+        _run_worker_once(db, clip_request)
+
+    db.update_queue_status.assert_called_with("draft", "failed", failure_reason="transient")
+
+
 def test_worker_stream_branch_does_not_call_save_clip_result():
     db = MagicMock()
     stream_request = {
@@ -560,7 +602,7 @@ def test_clip_request_reuses_completed_match_result():
 
 def test_clip_request_returns_cached_draft_when_only_draft():
     db = MagicMock()
-    db.get_clip_result.return_value = {"is_draft": True, "players": [], "saved_image_path": None}
+    db.get_clip_result.return_value = {"is_draft": True, "draft_player_order": ["Alice"]}
     with patch.object(api_server, "db_client", db):
         result = api_server.process_clip_request(
             clip_url="u", clip_id="abc", only_draft=True,
@@ -581,7 +623,7 @@ def test_clip_request_returns_filtered_cache_for_non_draft():
     with patch.object(api_server, "db_client", db):
         result = api_server.process_clip_request(
             clip_url="u", clip_id="abc", only_draft=False,
-            add_to_queue=False, from_worker=True,
+            add_to_queue=False, from_worker=False,
         )
     assert set(result.keys()) == {"saved_image_path", "players", "heroes"}
     assert "extra" not in result

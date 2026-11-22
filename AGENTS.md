@@ -72,7 +72,7 @@ Non-obvious constraints, all verified against production data — re-deriving th
 
 - **The draft name strip is not in slot order.** Three verified alignments give three different permutations; only draft index 0 (Radiant captain) is stable. Draft↔roster merging must go through the fuzzy _name_ matcher (`_align_players_with_draft`), never a positional join. An in-game result with `draft_alignment.mapping == {}` is correct behaviour, not a bug — the in-game top bar shows no names to match on.
 - **In-game hero confidence runs low** (mean ~0.66; only ~20% of slots reach the 0.75 `HERO_CONFIDENCE_THRESHOLD`), and no clean cutoff exists — a measured _wrong_ read scored 0.416 while a _correct_ one scored 0.386. Don't add score gates; anchor on GSI, which knows the streamer's own hero exactly (`correctSelfHeroWithGsi` in `VisionResolver.ts`).
-- **Draft rows in `processing_queue` are always `status='failed'`**, even when they succeed. Check `clip_results` for the real outcome.
+- **Historical draft rows in `processing_queue` can show `status='failed'` for a successful capture.** Check `clip_results` for the actual detection result.
 - `- GLOBAL_DELAY` at the `scheduleClip` sites intentionally cancels the `+ GLOBAL_DELAY` inside `getStreamDelay()` — that 7s is for chat, not clips.
 
 Debugging tools live in `scripts/clip-debug/` (`query_match.sh` for a match's full clip history, `scan_clip.py` to see what a clip's frames actually contain plus the `STRATEGY TIME` countdown that tells you where it landed). The **`dota-vision-roster-debug` skill** has the full workflow, the DB/API recipes, and a list of plausible-sounding fixes that measurement has already disproved — read it before changing clip timing or alignment code.

@@ -6,6 +6,8 @@ The `@app.before_request` hook would otherwise run the heavy `initialize_app`
 (network + template load), so the fixture marks the app pre-initialized.
 """
 
+import json
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -252,3 +254,22 @@ def test_detect_draft_non_numeric_match_id_returns_400(client):
     assert resp.status_code == 400
     assert "match_id" in resp.get_json()["error"]
     pcr.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("status", "heroes_status"),
+    [("draft", "waiting"), ("processing", "waiting"), ("failed", "failed")],
+)
+def test_match_returns_draft_names_while_heroes_are_unavailable(client, status, heroes_status):
+    draft = json.loads(Path(__file__).with_name("fixtures").joinpath("draft-detection.json").read_text())
+    with patch.object(api_server, "db_client") as db:
+        db.check_for_match_processing.return_value = {"found": True, "status": status}
+        db.get_latest_draft_for_match.return_value = draft
+        response = client.get("/match/8900")
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["match_id"] == "8900"
+    assert body["draft_player_order"] == draft["draft_player_order"]
+    assert body["heroes"] == []
+    assert body["heroes_status"] == heroes_status

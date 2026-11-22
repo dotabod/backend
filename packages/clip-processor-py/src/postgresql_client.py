@@ -570,23 +570,25 @@ class PostgresClient:
                     'request_id': queue_row['request_id']
                 }
 
-            # Check for failed requests
+            # Old workers marked names-only drafts as failed. A gameplay
+            # failure can describe hero availability even when a draft exists.
             query = f"""
-            SELECT request_id, clip_id FROM {self.queue_table}
+            SELECT request_id, clip_id, only_draft FROM {self.queue_table}
             WHERE match_id = %s AND status = 'failed'
-            ORDER BY completed_at DESC
+            ORDER BY COALESCE(only_draft, FALSE), completed_at DESC
             LIMIT 1
             """
             cursor.execute(query, (match_id,))
             failed_row = cursor.fetchone()
+            failure = {
+                'found': True,
+                'status': 'failed',
+                'clip_id': failed_row.get('clip_id'),
+                'request_id': failed_row['request_id']
+            } if failed_row else None
 
-            if failed_row:
-                return {
-                    'found': True,
-                    'status': 'failed',
-                    'clip_id': failed_row.get('clip_id'),
-                    'request_id': failed_row['request_id']
-                }
+            if failed_row and not failed_row.get('only_draft'):
+                return failure
 
             # If no completed non-draft result, check if a draft-only result exists
             query = f"""
@@ -607,10 +609,7 @@ class PostgresClient:
                     'clip_id': draft_row['clip_id']
                 }
 
-            # No match found in results or queue
-            return {
-                'found': False
-            }
+            return failure or {'found': False}
 
         except Exception as e:
             logger.error(f"Error checking match processing status: {str(e)}")

@@ -31,7 +31,7 @@ scripts/clip-debug/query_match.sh 8916275620
 
 Reads the production clip-processor Postgres (db `clip_processor`, port 5439). The script checks the current host's Coolify containers first—this workspace normally runs directly on `oracle`—and uses the `oracle` SSH alias only when the production container is not locally accessible. The container name carries a deploy-specific suffix, so the script rediscovers it each run.
 
-Gotcha worth knowing: draft requests (`only_draft=true`) are **always** marked `failed` even when they succeed and write a row to `clip_results` — so a "failed" draft row is usually a mislabeled success. Only `only_draft=false` status is meaningful.
+Older workers marked successful draft requests (`only_draft=true`) as `failed`. Check `clip_results` to confirm whether those captures produced names.
 
 ## Fetching the live API's view of a match
 

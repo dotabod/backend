@@ -556,7 +556,11 @@ class Dota {
     }
 
     if (!this.isProduction()) {
-      this.exit().catch((error) => logger.error('err steam error', { error }))
+      try {
+        this.exit()
+      } catch (error) {
+        logger.error('err steam error', { error })
+      }
       return
     }
     this.scheduleReconnect()
@@ -618,6 +622,7 @@ class Dota {
         this.dota2.requestMatchDetails(matchIds, (err: unknown, data: unknown) => {
           if (err !== null && err !== undefined) {
             reject(err)
+            return
           }
           resolve(data)
         })
@@ -748,6 +753,7 @@ class Dota {
           if (err !== null && err !== undefined) {
             logger.error('[STEAM] Error getting medal', { account, err })
             reject(err)
+            return
           }
           resolve(card)
         })
@@ -872,6 +878,7 @@ class Dota {
           (err: unknown, data: MatchMinimalDetailsResponse) => {
             if (err !== null && err !== undefined) {
               reject(err)
+              return
             }
             resolve(data)
           }
@@ -903,7 +910,7 @@ class Dota {
 
 const activeRequests = new Map<string, Promise<DelayedGames>>()
 
-export const GetRealTimeStats = async (
+export const getRealTimeStats = async (
   {
     match_id,
     refetchCards = false,

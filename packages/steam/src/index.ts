@@ -2,7 +2,7 @@ import { startHeartbeat } from '@dotabod/shared-utils'
 
 import { initSpectatorProtobuff } from './init-spectator-protobuff'
 import { createSocketServer } from './socket-server.js'
-import Dota, { GetRealTimeStats } from './steam'
+import Dota, { getRealTimeStats } from './steam'
 import type { MatchMinimalDetailsResponse } from './types/match-minimal-details'
 import { logger } from './utils/logger'
 
@@ -150,14 +150,14 @@ const socketIoServer = createSocketServer((socket, server) => {
 
   socket.on(
     'getRealTimeStats',
-    async (data: Parameters<typeof GetRealTimeStats>[0], callback: callback) => {
+    async (data: Parameters<typeof getRealTimeStats>[0], callback: callback) => {
       if (!isConnectedToSteam) {
         callback('Steam not connected', null)
         return
       }
       try {
         const result = await withTimeout(
-          GetRealTimeStats(data, (match) => {
+          getRealTimeStats(data, (match) => {
             server.to('steam').emit('saveHeroesForMatchId', match)
           })
         )

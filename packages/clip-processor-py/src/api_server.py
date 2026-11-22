@@ -40,8 +40,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 logger.info("=== API Server logging initialized ===")
-NUM_WORKER_THREADS = int(os.environ.get('NUM_WORKER_THREADS', '5'))
-worker_threads = []
 
 
 # Import the hero detection and hero data modules
@@ -116,138 +114,112 @@ def parse_bool_param(value, default=False):
 
     return default
 
-# Global lock for queue processing
 queue_lock = Lock()
-# Flag to indicate if worker thread is running
-worker_running = False
-# Flag to track if app is initialized
+initialization_lock = Lock()
+worker_lock = Lock()
+worker_thread = None
 app_initialized = False
 
 def initialize_app():
     """Initialize the application - load hero data, setup database, start worker thread."""
     global heroes_data, app_initialized
 
-    # Only initialize once
-    if app_initialized:
-        logger.info("App already initialized, skipping initialization")
-        return True
+    with initialization_lock:
+        if app_initialized:
+            logger.info("App already initialized, skipping initialization")
+            return True
 
-    try:
-        # Step 1: Refresh hero metadata and portrait assets before template loading.
-        logger.info("Refreshing hero data and abilities...")
-        hero_abilities = get_hero_data(refresh=True)
-        if not hero_abilities:
-            logger.error("Failed to load hero abilities")
-            return False
-        logger.info(f"Successfully loaded abilities for {len(hero_abilities)} heroes")
-
-        # Step 1.5: Load hero templates after the roster refresh so new heroes are matchable.
-        logger.info("Loading hero templates...")
-        heroes_data = load_heroes_data()
-        if not heroes_data:
-            logger.error("Failed to load hero templates")
-            return False
-        logger.info(f"Successfully loaded templates for {len(heroes_data)} heroes")
-
-        # Step 2: Run database migrations
         try:
-            logger.info("Running database migrations...")
-            # Import here to avoid circular imports
-            from src.db_migration import run_migrations
-            if run_migrations():
-                logger.info("Database migrations completed successfully")
+            # Step 1: Refresh hero metadata and portrait assets before template loading.
+            logger.info("Refreshing hero data and abilities...")
+            hero_abilities = get_hero_data(refresh=True)
+            if not hero_abilities:
+                logger.error("Failed to load hero abilities")
+                return False
+            logger.info(f"Successfully loaded abilities for {len(hero_abilities)} heroes")
+
+            # Step 1.5: Load hero templates after the roster refresh so new heroes are matchable.
+            logger.info("Loading hero templates...")
+            heroes_data = load_heroes_data()
+            if not heroes_data:
+                logger.error("Failed to load hero templates")
+                return False
+            logger.info(f"Successfully loaded templates for {len(heroes_data)} heroes")
+
+            # Step 2: Run database migrations
+            try:
+                logger.info("Running database migrations...")
+                # Import here to avoid circular imports
+                from src.db_migration import run_migrations
+                if run_migrations():
+                    logger.info("Database migrations completed successfully")
+                else:
+                    logger.warning("Database migrations failed, some features may not work correctly")
+            except Exception as e:
+                logger.error(f"Error running database migrations: {e}")
+                logger.warning("Continuing without migrations, some features may not work correctly")
+
+            # Step 3: Initialize PostgreSQL client
+            logger.info("Initializing PostgreSQL client...")
+            if not db_client.initialize():
+                logger.error("Failed to initialize PostgreSQL client, caching will be disabled")
+                # We still continue as this is not fatal
             else:
-                logger.warning("Database migrations failed, some features may not work correctly")
+                logger.info("PostgreSQL client initialized successfully")
+
+            # Step 4: Start the worker thread
+            logger.info("Starting worker thread...")
+            start_worker_thread()
+
+            # Step 5: Start the worker monitoring thread
+            if os.environ.get('RUN_LOCALLY') != 'true':
+                start_worker_monitor()
+                start_failed_clip_sweeper()
+                start_temp_cleanup_sweeper()
+
+            # Mark as initialized
+            app_initialized = True
+            logger.info("Application initialization complete")
+            return True
+
         except Exception as e:
-            logger.error(f"Error running database migrations: {e}")
-            logger.warning("Continuing without migrations, some features may not work correctly")
+            logger.error(f"Error during app initialization: {e}")
+            logger.error(traceback.format_exc())
+            return False
 
-        # Step 3: Initialize PostgreSQL client
-        logger.info("Initializing PostgreSQL client...")
-        if not db_client.initialize():
-            logger.error("Failed to initialize PostgreSQL client, caching will be disabled")
-            # We still continue as this is not fatal
-        else:
-            logger.info("PostgreSQL client initialized successfully")
 
-        # Step 4: Start the worker thread
-        logger.info("Starting worker thread...")
-        start_worker_thread()
+def worker_is_running():
+    thread = worker_thread
+    return thread is not None and thread.is_alive()
 
-        # Step 5: Start the worker monitoring thread
-        if os.environ.get('RUN_LOCALLY') != 'true':
-            start_worker_monitor()
-            start_failed_clip_sweeper()
-            start_temp_cleanup_sweeper()
-
-        # Mark as initialized
-        app_initialized = True
-        logger.info("Application initialization complete")
-        return True
-
-    except Exception as e:
-        logger.error(f"Error during app initialization: {e}")
-        logger.error(traceback.format_exc())
-        return False
 
 def start_worker_thread():
-    """Start multiple worker threads to process queued requests if not already running."""
-    global worker_running, worker_threads
+    """Start the worker if needed. Detector state is shared within the process."""
+    global worker_thread
 
-    # Don't start worker thread if running locally
     if os.environ.get('RUN_LOCALLY') == 'true':
-        logger.info("Running locally, not starting worker thread")
         return
 
-    if not worker_running:
-        worker_running = True
-        worker_threads = []
-
-        for i in range(NUM_WORKER_THREADS):
+    with worker_lock:
+        if not worker_is_running():
             worker_thread = threading.Thread(
                 target=process_queue_worker,
                 daemon=True,
-                name=f"Worker-{i+1}"
+                name="VisionQueueWorker"
             )
             worker_thread.start()
-            worker_threads.append(worker_thread)
-            logger.info(f"Started queue worker thread {i+1}/{NUM_WORKER_THREADS}")
+            logger.info("Started queue worker")
 
-        logger.info(f"Started {NUM_WORKER_THREADS} queue worker threads")
-    else:
-        logger.debug("Worker threads are already running")
 
-# Update start_worker_monitor to check all threads
 def start_worker_monitor():
-    """Start a thread to monitor the worker threads and restart them if needed."""
-    def check_worker_threads():
-        global worker_running, worker_threads
-
-        logger.debug(f"Checking worker threads status. Current status: running={worker_running}, threads={len(worker_threads)}")
-
-        # Check if any threads have died
-        alive_threads = [t for t in worker_threads if t.is_alive()]
-        dead_count = len(worker_threads) - len(alive_threads)
-
-        if dead_count > 0 or not worker_running:
-            logger.warning(f"Found {dead_count} dead worker threads, restarting all workers...")
-            worker_running = False
-            worker_threads = []
+    def check_worker():
+        while True:
+            time.sleep(300)
+            reset_stuck_processing_requests()
             start_worker_thread()
 
-        # Also check for stuck requests
-        reset_stuck_processing_requests()
-
-    def periodic_worker_check():
-        while True:
-            time.sleep(300)  # Check every 5 minutes (reduced from 60s)
-            check_worker_threads()
-
-    # Start the monitor thread
-    monitor_thread = threading.Thread(target=periodic_worker_check, daemon=True)
-    monitor_thread.start()
+    threading.Thread(target=check_worker, daemon=True).start()
     logger.info("Started worker monitoring thread")
-
 
 # Twitch breakages (GQL hash rotation, CloudFront 404s, ...) usually end on
 # Twitch's side, not ours. Without a sweeper, every failure during the window
@@ -338,9 +310,42 @@ def start_temp_cleanup_sweeper():
     logger.info(f"Started temp file cleanup sweeper (every {TEMP_CLEANUP_INTERVAL_S}s, TTL {TEMP_FILE_TTL_S}s)")
 
 
+def detection_succeeded(result, only_draft):
+    if not isinstance(result, dict) or 'error' in result:
+        return False
+    if only_draft:
+        return result.get('is_draft') is True and any(result.get('draft_player_order') or [])
+    return bool(result.get('players'))
+
+
+def complete_detection_request(request, result, processing_time):
+    request_id = request['request_id']
+    if not detection_succeeded(result, bool(request.get('only_draft'))):
+        db_client.update_queue_status(request_id, 'failed', failure_reason='permanent')
+        logger.error("Detection produced no usable data for %s", request_id)
+        return
+
+    clip_id = request.get('clip_id')
+    if request['request_type'] in ('clip', 'clip_in_game') and clip_id:
+        stored_result = {**result, 'processing_time': f"{processing_time:.2f}s"}
+        stored_result.pop('frame_image_url', None)
+        if not db_client.save_clip_result(
+            clip_id,
+            request['clip_url'],
+            stored_result,
+            processing_time_seconds=processing_time,
+            match_id=request.get('match_id')
+        ):
+            db_client.update_queue_status(request_id, 'failed', failure_reason='transient')
+            logger.error("Failed to save detection result for %s", request_id)
+            return
+
+    db_client.update_queue_status(request_id, 'completed', result_id=clip_id)
+    logger.info("Completed detection request %s", request_id)
+
+
 def process_queue_worker():
     """Worker thread function to process queued requests."""
-    global worker_running
 
     thread_name = threading.current_thread().name
     logger.info(f"[{thread_name}] Queue worker thread started")
@@ -377,7 +382,6 @@ def process_queue_worker():
             start_time = time.time()
 
             try:
-                # ... existing processing logic (lines 278-353) remains the same ...
                 if request['request_type'] in ('clip', 'clip_in_game'):
                     in_game = request['request_type'] == 'clip_in_game'
                     match_id = request.get('match_id')
@@ -483,29 +487,7 @@ def process_queue_worker():
                         db_client.update_queue_status(request['request_id'], 'failed', failure_reason=reason)
                         logger.error(f"[{thread_name}] Failed request {request['request_id']} ({reason}): {error}")
                 else:
-                    if isinstance(result, dict) and ('error' in result or not result.get('players', [])):
-                        # No-players or explicit error in payload — retrying the
-                        # same clip won't suddenly produce a roster.
-                        db_client.update_queue_status(request['request_id'], 'failed', failure_reason='permanent')
-                        logger.error(f"[{thread_name}] Failed request {request['request_id']}: {result.get('error', 'No heroes detected')}")
-                    else:
-                        if result and isinstance(result, dict):
-                            result['processing_time'] = f"{processing_time:.2f}s"
-
-                            if request['request_type'] in ('clip', 'clip_in_game') and request['clip_id']:
-                                if 'frame_image_url' in result:
-                                    del result['frame_image_url']
-
-                                db_client.save_clip_result(
-                                    request['clip_id'],
-                                    request['clip_url'],
-                                    result,
-                                    processing_time_seconds=processing_time,
-                                    match_id=request.get('match_id')
-                                )
-
-                        db_client.update_queue_status(request['request_id'], 'completed', result_id=request.get('clip_id'))
-                        logger.info(f"[{thread_name}] Completed request {request['request_id']}")
+                    complete_detection_request(request, result, processing_time)
 
             # Small sleep between requests
             time.sleep(1.0)
@@ -514,7 +496,6 @@ def process_queue_worker():
         logger.error(f"[{thread_name}] Queue worker thread error: {e}")
         logger.error(traceback.format_exc())
     finally:
-        # Don't set worker_running to False here since other threads might still be running
         logger.info(f"[{thread_name}] Queue worker thread stopped")
 
 # Initialize app before first request
@@ -587,8 +568,6 @@ def debug_queue():
             LIMIT 10
         """)
         recent_requests = cursor.fetchall()
-        alive_threads = [t.name for t in worker_threads if t.is_alive()] if worker_threads else []
-        worker_status = f"running: {len(alive_threads)}/{NUM_WORKER_THREADS} threads active: {alive_threads}"
 
         # Format datetime objects for JSON and prepare force processing URL
         for req in recent_requests:
@@ -605,11 +584,11 @@ def debug_queue():
         db_client._return_connection(conn)
 
         # Check worker thread status
-        worker_status = "running" if worker_running else "not running"
+        worker_status = "running" if worker_is_running() else "not running"
 
         # Manual restart option
         restart = parse_bool_param(request.args.get('restart'))
-        if restart and not worker_running:
+        if restart and not worker_is_running():
             start_worker_thread()
             worker_status = "restarted"
 
@@ -619,9 +598,12 @@ def debug_queue():
             num_reset = reset_stuck_processing_requests()
             worker_status = f"{worker_status}, reset {num_reset} stuck requests"
 
+        thread = worker_thread
+        alive_threads = [thread.name] if thread is not None and thread.is_alive() else []
+
         return jsonify({
             'worker_status': worker_status,
-            'num_workers': NUM_WORKER_THREADS,
+            'num_workers': 1,
             'alive_threads': alive_threads,
             'app_initialized': app_initialized,
             'queue_status': [dict(row) for row in status_counts],
@@ -1099,11 +1081,13 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
         # Check for cached result if not forced to reprocess
         if clip_id:
             cached_result = db_client.get_clip_result(clip_id)
-            if cached_result:
+            if detection_succeeded(cached_result, only_draft):
                 logger.info(f"Returning cached result for clip ID: {clip_id}")
+                if from_worker:
+                    return cached_result
 
                 # If we need to include the image but it's not in the cached result
-                if include_image and 'frame_image_url' not in cached_result and 'best_frame_path' in cached_result and not from_worker:
+                if include_image and 'frame_image_url' not in cached_result and 'best_frame_path' in cached_result:
                     frame_path = cached_result.get('best_frame_path')
                     if frame_path and Path(frame_path).exists():
                         image_url, saved_image_path = get_image_url(frame_path, clip_id)
@@ -1114,24 +1098,17 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
                             db_client.save_clip_result(clip_id, clip_url, cached_result, match_id=match_id)
 
                 # Replace placeholder with real host URL if needed
-                if 'saved_image_path' in cached_result and cached_result['saved_image_path'] and '__HOST_URL__' in cached_result['saved_image_path']:
+                if 'saved_image_path' in cached_result and cached_result['saved_image_path'] and '__HOST_URL__' in cached_result['saved_image_path'] and not from_worker:
                     host_url = request.host_url.rstrip('/')
                     cached_result['saved_image_path'] = cached_result['saved_image_path'].replace('__HOST_URL__', host_url)
 
-                # For draft-only requests, only return cached result if it is a draft
-                if only_draft and cached_result.get('is_draft'):
+                if only_draft:
                     return cached_result
-                elif only_draft:
-                    # Cached result exists but is not draft; proceed to process draft
-                    pass
-                else:
-                    # For non-draft, return filtered strategy result
-                    filtered_result = {
-                        'saved_image_path': cached_result.get('saved_image_path'),
-                        'players': cached_result.get('players', []),
-                        'heroes': cached_result.get('heroes', [])
-                    }
-                    return filtered_result
+                return {
+                    'saved_image_path': cached_result.get('saved_image_path'),
+                    'players': cached_result.get('players', []),
+                    'heroes': cached_result.get('heroes', [])
+                }
 
     # Skip queueing when running locally
     if os.environ.get('RUN_LOCALLY') == 'true':
@@ -1232,27 +1209,13 @@ def process_clip_request(clip_url, clip_id, debug=False, force=False, include_im
             except Exception as e:
                 logger.warning(f"Draft alignment failed: {e}")
 
-        if clip_id:
-            # Skip saving frame_image_url when called from worker thread
-            result_to_save = result.copy()
-            if from_worker and 'frame_image_url' in result_to_save:
-                del result_to_save['frame_image_url']
-
-            # Cache the result
-            success = db_client.save_clip_result(clip_id, clip_url, result_to_save, processing_time_seconds=processing_time, match_id=match_id)
-            if success:
-                logger.info(f"Cached result for clip ID: {clip_id}" + (f", match ID: {match_id}" if match_id else ""))
+        if not from_worker and clip_id and detection_succeeded(result, only_draft):
+            if db_client.save_clip_result(
+                clip_id, clip_url, result, processing_time_seconds=processing_time, match_id=match_id
+            ):
+                logger.info("Cached result for clip ID: %s", clip_id)
             else:
-                logger.warning(f"Failed to cache result for clip ID: {clip_id}")
-
-                # Try to include the image even if we couldn't cache the result
-                if include_image and not from_worker and 'frame_image_url' not in result and 'best_frame_info' in result and 'frame_path' in result['best_frame_info']:
-                    frame_path = result['best_frame_info']['frame_path']
-                    image_url, saved_image_path = get_image_url(frame_path, clip_id)
-                    if image_url:
-                        result['frame_image_url'] = image_url
-                        result['saved_image_path'] = saved_image_path
-                        result['best_frame_path'] = str(frame_path)
+                logger.warning("Failed to cache result for clip ID: %s", clip_id)
 
         return result
     else:
@@ -1578,7 +1541,7 @@ def metrics():
         'cpu_percent': process.cpu_percent(interval=1),
         'memory_mb': process.memory_info().rss / 1024 / 1024,
         'num_threads': process.num_threads(),
-        'worker_running': worker_running,
+        'worker_running': worker_is_running(),
         'app_initialized': app_initialized
     })
 
@@ -1634,7 +1597,7 @@ def reset_stuck_processing_requests(timeout_minutes=2):
             logger.info(f"Reset {total_reset} stuck processing requests: {request_ids}")
 
             # If worker isn't running, restart it
-            if not worker_running:
+            if not worker_is_running():
                 start_worker_thread()
                 logger.info("Restarted worker thread after resetting stuck requests")
 
@@ -1650,7 +1613,7 @@ def _draft_response(match_id, status, heroes_status):
     draft = db_client.get_latest_draft_for_match(match_id)
     if not draft:
         return None
-    draft['match_id'] = match_id
+    draft = {**draft, 'match_id': match_id, 'heroes': []}
     if status is not None:
         draft['status'] = status
     draft['heroes_status'] = heroes_status

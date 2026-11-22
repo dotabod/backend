@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
+import draftDetection from '../../../../../../../clip-processor-py/tests/fixtures/draft-detection.json'
 import { VisionResolver } from '../../resolvers/vision-resolver'
 
 const ctx = (matchId?: string) => ({ gsi: undefined, matchId })
@@ -41,20 +42,22 @@ describe(VisionResolver, () => {
     expect(out?.matchPlayers.length).toBe(10)
   })
 
-  it('self-tags as vision-draft when payload has only draft_player_order', async () => {
-    const r = new VisionResolver(
-      async () =>
-        await Promise.resolve({
-          draft_player_order: ['A', 'B', 'C', 'D', 'E'],
-          heroes: [],
-          heroes_status: 'waiting',
-          match_id: '12345',
-        })
-    )
-    const out = await r.resolve(ctx('12345'))
-    expect(out?.source).toBe('vision-draft')
-    expect(out?.heroesStatus).toBe('waiting')
-    expect(out?.matchPlayers.length).toBe(5)
+  it('accepts a names-only draft from an older Vision server', async () => {
+    vi.stubEnv('VISION_API_HOST', 'vision.example')
+    const fetch = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        Response.json({ ...draftDetection, heroes_status: 'waiting', match_id: '12345' })
+      )
+    try {
+      const out = await new VisionResolver().resolve(ctx('12345'))
+      expect(out?.source).toBe('vision-draft')
+      expect(out?.heroesStatus).toBe('waiting')
+      expect(out?.matchPlayers.map((player) => player.player_name)).toContain('Topson')
+    } finally {
+      fetch.mockRestore()
+      vi.unstubAllEnvs()
+    }
   })
 
   it("preserves heroes_status: 'failed' for vision-draft", async () => {

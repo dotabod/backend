@@ -3431,26 +3431,6 @@
         "severity": "error"
       }
     },
-    "1816646a2281bad2f4ce9abad42d5637551a1ece9279919957c5e812619b5c74": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(use-unknown-in-catch-callback-variable)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "if (!this.isProduction()) {",
-              "this.exit().catch((error) => logger.error('err steam error', { error }))",
-              "return"
-            ],
-            "message": "",
-            "span": "error"
-          }
-        ],
-        "message": "Prefer the safe `: unknown` for a `catch` callback variable.",
-        "severity": "error"
-      }
-    },
     "1867addf782c56de674f00a233cc12b994348b585b571f29e9fe8ecd367bf6cd": {
       "count": 1,
       "diagnostic": {
@@ -3488,26 +3468,6 @@
           }
         ],
         "message": "This dictionary's unknown value type gives callers no concrete value contract. Use an owner/schema-derived value type; parse external payloads before insertion.",
-        "severity": "error"
-      }
-    },
-    "18b3c9597c0481eb3e5b75dfa8d69b01cf3ce84f277be1ded7246e52adef1254": {
-      "count": 1,
-      "diagnostic": {
-        "code": "unicorn(consistent-function-scoping)",
-        "file": "packages/steam/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "// Add timeout for long-running operations (e.g., 30 seconds)",
-              "const withTimeout = async <T>(fn: Promise<T>, timeoutMs = 30_000): Promise<T> =>",
-              "await Promise.race(["
-            ],
-            "message": "",
-            "span": "withTimeout"
-          }
-        ],
-        "message": "Function `withTimeout` does not capture any variables from its parent scope",
         "severity": "error"
       }
     },
@@ -6106,26 +6066,6 @@
         "severity": "error"
       }
     },
-    "2b8bad0af2ec89627780777ac6435379a1032c64bf0967c701d98ebb1a01f628": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(strict-void-return)",
-        "file": "packages/steam/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "new Promise<never>((_, reject) =>",
-              "setTimeout(() => {",
-              "reject(new Error('Operation timed out'))"
-            ],
-            "message": "",
-            "span": "setTimeout(() => {\n          reject(new Error('Operation timed out'))\n        }, timeoutMs)"
-          }
-        ],
-        "message": "Value returned in a context where a void return is expected.",
-        "severity": "error"
-      }
-    },
     "2bb239a17edeccdf3dd14689001e3d69ae95ed464c37f2596c1ec032dc50e052": {
       "count": 1,
       "diagnostic": {
@@ -7525,26 +7465,6 @@
         "severity": "error"
       }
     },
-    "34f8bd7d05521d6ac3181b9cf622ed286ebeb1776e7d19e4da026c3a5bae5f10": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-promise-executor-return)",
-        "file": "packages/steam/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "new Promise<never>((_, reject) =>",
-              "setTimeout(() => {",
-              "reject(new Error('Operation timed out'))"
-            ],
-            "message": "",
-            "span": "setTimeout(() => {\n          reject(new Error('Operation timed out'))\n        }, timeoutMs)"
-          }
-        ],
-        "message": "Return statement should not be used in Promise executor.",
-        "severity": "error"
-      }
-    },
     "35092bf2f2b006ef65a693e7cb33176617bfe2576fbb752876e1aee6ffafabf3": {
       "count": 1,
       "diagnostic": {
@@ -7759,26 +7679,6 @@
           }
         ],
         "message": "Enforces a maximum number assertion calls in a test body.",
-        "severity": "error"
-      }
-    },
-    "36fe0a3cf6b8121d7d4971f5310297592442aa1959cfa47b37fb14fd7ca3a8d5": {
-      "count": 2,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-callbacks)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              ".then(() => process.exit(0))",
-              ".catch((error) => {",
-              "logger.info('[STEAM]', error)"
-            ],
-            "message": "",
-            "span": "(error) => {\n        logger.info('[STEAM]', error)\n      }"
-          }
-        ],
-        "message": "Prefer `async`/`await` to the callback pattern",
         "severity": "error"
       }
     },
@@ -8677,26 +8577,6 @@
         "severity": "error"
       }
     },
-    "3d573c126190e29b9a14f36f196b375ff00e8412c1f6c5d1924844a749bc5873": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-non-null-assertion)",
-        "file": "packages/dota/src/twitch/index.ts",
-        "labels": [
-          {
-            "context": [
-              "// Do this as the bot which should be a moderator in the channel",
-              "await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {",
-              "const requiredRank ="
-            ],
-            "message": "",
-            "span": "process.env.TWITCH_BOT_PROVIDERID!"
-          }
-        ],
-        "message": "Forbidden non-null assertion.",
-        "severity": "error"
-      }
-    },
     "3d75ed514618ba41178f4bfd5a753f9ab38c1cc6a821e29fa828fe565efa5ed8": {
       "count": 1,
       "diagnostic": {
@@ -9513,22 +9393,6 @@
           }
         ],
         "message": "Unsafe type assertion: type '\"advancedBets\" | \"aegis\" | \"autoCommandsOnMatchStart\" | \"autoOptInNewFeatures\" | \"autoTranslate\" | \"battlepass\" | \"bets\" | \"betsInfo\" | \"chatter\" | \"chatters\" | \"chatters.bounties\" | ... 115 more ... | \"wlStatsStartDate\"' is more narrow than the original type.",
-        "severity": "error"
-      }
-    },
-    "42559fa0e9648e27c26da1a87cf4b898054a847d15486aaa125064715a631afe": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(no-multiple-resolved)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": ["}", "resolve(data)", "})"],
-            "message": "",
-            "span": "resolve(data)"
-          }
-        ],
-        "message": "Promise should not be resolved multiple times. Promise is potentially resolved on line 621.",
         "severity": "error"
       }
     },
@@ -14197,26 +14061,6 @@
         "severity": "error"
       }
     },
-    "635fb5da38b63b9716122da45ecb0f20261be415108b3f6e916d4387dcf47a4a": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(strict-void-return)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "})",
-              ".on('uncaughtException', (e) => logger.error('uncaughtException', e))",
-              ""
-            ],
-            "message": "",
-            "span": "logger.error('uncaughtException', e)"
-          }
-        ],
-        "message": "Value returned in a context where a void return is expected.",
-        "severity": "error"
-      }
-    },
     "637307890f1db960aa08d83a9eaf080bd3072806d8b7222f4fef05f559f47954": {
       "count": 1,
       "diagnostic": {
@@ -15274,22 +15118,6 @@
         "severity": "error"
       }
     },
-    "6d1966ce6a00e6b5d5f472bd1f1883449f02b59cab3eb69c814abc7a47c90271": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(avoid-new)",
-        "file": "packages/steam/src/index.ts",
-        "labels": [
-          {
-            "context": ["fn,", "new Promise<never>((_, reject) =>", "setTimeout(() => {"],
-            "message": "",
-            "span": "new Promise<never>((_, reject) =>\n        setTimeout(() => {\n          reject(new Error('Operation timed out'))\n        }, timeoutMs)\n      )"
-          }
-        ],
-        "message": "Avoid creating new promises",
-        "severity": "error"
-      }
-    },
     "6d4b793cea1e17046f4fdf506dbb906e416d569daae9083e225844f571990e7b": {
       "count": 1,
       "diagnostic": {
@@ -16309,22 +16137,6 @@
           }
         ],
         "message": "Value returned in a context where a void return is expected.",
-        "severity": "error"
-      }
-    },
-    "773ac372877ed4437971a1e5d80f87241139a26f30a7e84bdde4654c3970888b": {
-      "count": 2,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-then)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [".exit()", ".then(() => process.exit(0))", ".catch((error) => {"],
-            "message": "",
-            "span": "then"
-          }
-        ],
-        "message": "Prefer await to then()/catch()/finally()",
         "severity": "error"
       }
     },
@@ -20872,26 +20684,6 @@
         "severity": "error"
       }
     },
-    "98af1ce2f050934672780d07c4001d7987731fbcf80e5959e5f9a6a5634f0812": {
-      "count": 2,
-      "diagnostic": {
-        "code": "typescript(use-unknown-in-catch-callback-variable)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              ".then(() => process.exit(0))",
-              ".catch((error) => {",
-              "logger.info('[STEAM]', error)"
-            ],
-            "message": "",
-            "span": "error"
-          }
-        ],
-        "message": "Prefer the safe `: unknown` for a `catch` callback variable.",
-        "severity": "error"
-      }
-    },
     "98c89fb6d0a9ea31d97b3fae510b2f869ecea61161eaaf6aef9f0df22fdf6e72": {
       "count": 1,
       "diagnostic": {
@@ -24029,22 +23821,6 @@
         "severity": "error"
       }
     },
-    "ae95d2c8e81adf3b17c8f5b4a72bbbd06afb33f9c3bcb0e96ddf353d2c18629a": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(function-name)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": ["", "export const GetRealTimeStats = async ({", "match_id,"],
-            "message": "",
-            "span": "GetRealTimeStats"
-          }
-        ],
-        "message": "Rename this 'GetRealTimeStats' function to match the regular expression '^[_a-z][a-zA-Z0-9]*$'.",
-        "severity": "error"
-      }
-    },
     "aea888b0d9a237925496ea54307a63c4444ef4077dc301c1c8c171b72c327cb3": {
       "count": 1,
       "diagnostic": {
@@ -26401,22 +26177,6 @@
         "severity": "error"
       }
     },
-    "c1376fc2e63d2f46ed0bf4d5e93d904e7c28cda426d0f2cfe69b95f99237fdc1": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(no-multiple-resolved)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": ["}", "resolve(data)", "}"],
-            "message": "",
-            "span": "resolve(data)"
-          }
-        ],
-        "message": "Promise should not be resolved multiple times. Promise is potentially resolved on line 875.",
-        "severity": "error"
-      }
-    },
     "c14126100713d389d2e5537ef4b297f11132a2f400ccbfe684499f304bd4c914": {
       "count": 1,
       "diagnostic": {
@@ -27257,22 +27017,6 @@
         "severity": "error"
       }
     },
-    "c7733173c1c6f9e18bd97ad6d7a282f874ffc11311d66414a0616a8b4ae333fd": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(param-names)",
-        "file": "packages/steam/src/index.ts",
-        "labels": [
-          {
-            "context": ["fn,", "new Promise<never>((_, reject) =>", "setTimeout(() => {"],
-            "message": "",
-            "span": "_"
-          }
-        ],
-        "message": "Promise constructor parameters must be named to match `^_?resolve$`",
-        "severity": "error"
-      }
-    },
     "c7ad9faf1c9ce4283ac948c170c395bc8cb98e7bdd64d6364875e79376e461db": {
       "count": 1,
       "diagnostic": {
@@ -27286,26 +27030,6 @@
           }
         ],
         "message": "Placing a void expression inside another expression is forbidden.",
-        "severity": "error"
-      }
-    },
-    "c7db123f47d0fede44d85a56b8f12ecdcb556af6826a8c33f478053678556cb5": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-assignment)",
-        "file": "packages/dota/src/dota/events/gsi-events/newdata.ts",
-        "labels": [
-          {
-            "context": [
-              "? chatterMatchFound(dotaClient.client).catch((error) => {",
-              "logger.error('[AUTO_COMMANDS] Error triggering chatterMatchFound', { error })",
-              "})"
-            ],
-            "message": "",
-            "span": "error"
-          }
-        ],
-        "message": "Unsafe assignment of an any value.",
         "severity": "error"
       }
     },
@@ -31473,22 +31197,6 @@
         "severity": "error"
       }
     },
-    "e31fae80ead62c97400187c27dd5da37ef21a743aea2c8aea20c561de9048868": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(no-multiple-resolved)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": ["}", "resolve(card)", "})"],
-            "message": "",
-            "span": "resolve(card)"
-          }
-        ],
-        "message": "Promise should not be resolved multiple times. Promise is potentially resolved on line 751.",
-        "severity": "error"
-      }
-    },
     "e3255aee8dcc57d8292b3f55c585eb325ab3b587079be2c384c7cff2290f98d5": {
       "count": 1,
       "diagnostic": {
@@ -31874,26 +31582,6 @@
           }
         ],
         "message": "Use Array destructuring.",
-        "severity": "error"
-      }
-    },
-    "e5b9238a9e9af3a054dd400eb3557bd6badf77b2f674b096698f2c5fba856fed": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(avoid-new)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "public async exit(): Promise<boolean> {",
-              "return await new Promise((resolve) => {",
-              "clearInterval(this.interval)"
-            ],
-            "message": "",
-            "span": "new Promise((resolve) => {\n      clearInterval(this.interval)\n      clearInterval(this.gcTick)\n      this.resetReconnectBackoff()\n      this.dota2.exit()\n      logger.info('[STEAM] Manually closed dota')\n      try {\n        this.user.logOff()\n      } catch {\n        // logOff throws if we're not currently logged on — safe to ignore.\n      }\n      logger.info('[STEAM] Manually closed steam')\n      this.user.removeAllListeners()\n      this.dota2.removeAllListeners()\n      logger.info('[STEAM] Removed all listeners from dota and steam')\n      resolve(true)\n    })"
-          }
-        ],
-        "message": "Avoid creating new promises",
         "severity": "error"
       }
     },
@@ -34014,26 +33702,6 @@
           }
         ],
         "message": "Do not nest ternary expressions.",
-        "severity": "error"
-      }
-    },
-    "f4630033f91b40dae7d9c65989b9e0e4313f77c2fa501b6dea97c53670f0f693": {
-      "count": 2,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-then)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              ".then(() => process.exit(0))",
-              ".catch((error) => {",
-              "logger.info('[STEAM]', error)"
-            ],
-            "message": "",
-            "span": "catch"
-          }
-        ],
-        "message": "Prefer await to then()/catch()/finally()",
         "severity": "error"
       }
     },

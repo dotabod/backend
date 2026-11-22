@@ -24,7 +24,10 @@ describe('CommandHandler dispatch (integration)', () => {
       const handler = new CommandHandler(
         [
           {
-            handler: async () => await Promise.reject(new Error('boom')),
+            handler: async () => {
+              await Promise.resolve()
+              throw new Error('boom')
+            },
             name: 'throwsfortest',
           },
         ],

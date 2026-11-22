@@ -6,6 +6,8 @@ export const createSocketServer = function createSocketServer(
   port = 5035
 ): Server {
   const server = new Server()
-  server.on('connection', (socket) => onConnection(socket, server))
+  server.on('connection', (socket) => {
+    onConnection(socket, server)
+  })
   return server.listen(port)
 }

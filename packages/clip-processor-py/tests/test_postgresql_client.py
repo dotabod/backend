@@ -47,6 +47,20 @@ def test_match_processing_returns_draft(db_client, mock_cursor):
     assert mock_cursor.execute.call_count == 4
 
 
+def test_historical_failed_draft_does_not_mark_heroes_failed(db_client, mock_cursor):
+    mock_cursor.fetchone.side_effect = [
+        None,
+        None,
+        {"request_id": "old-draft", "clip_id": "c1", "only_draft": True},
+        {"clip_id": "c1"},
+    ]
+    assert db_client.check_for_match_processing("m1") == {
+        "found": True,
+        "status": "draft",
+        "clip_id": "c1",
+    }
+
+
 def test_match_processing_not_found(db_client, mock_cursor):
     mock_cursor.fetchone.side_effect = [None, None, None, None]
     out = db_client.check_for_match_processing("m1")

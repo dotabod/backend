@@ -392,7 +392,6 @@ The service can be configured using environment variables:
 
 - `PORT`: The port to run the server on (default: 5000)
 - `DATABASE_URL`: PostgreSQL connection string (default: postgresql://postgres:postgres@localhost:5432/clip_processor)
-- `MAX_CONCURRENT_WORKERS`: Maximum number of concurrent processing workers (default: 1)
 - `QUEUE_POLLING_INTERVAL`: Interval to check for new items in the queue (seconds, default: 1)
 
 ## Database Migrations

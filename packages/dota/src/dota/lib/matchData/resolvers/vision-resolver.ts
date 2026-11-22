@@ -18,7 +18,7 @@ const visionApiHeroSchema = z.object({
 })
 const visionApiResponseSchema = z.object({
   draft_player_order: z.array(z.string().nullable()).optional(),
-  heroes: z.array(visionApiHeroSchema),
+  heroes: z.array(visionApiHeroSchema).default([]),
   heroes_status: z.enum(['waiting', 'failed']).optional(),
   match_id: z.string(),
 })

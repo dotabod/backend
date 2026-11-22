@@ -15,7 +15,6 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@db:5439/clip_processor
       - PYTHONUNBUFFERED=1
       - PYTHONPATH=/app:/app/src
-      - MAX_CONCURRENT_WORKERS=1 # Limit to one concurrent process
       - QUEUE_POLLING_INTERVAL=1 # Check queue every 1 second
     deploy:
       resources:

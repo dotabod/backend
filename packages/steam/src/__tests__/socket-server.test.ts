@@ -41,9 +41,6 @@ describe('createSocketServer round-trip', () => {
       }
     )
     try {
-      const { promise: ready, resolve } = Promise.withResolvers<void>()
-      client.once('serverReady', resolve)
-      await ready
       const reply = await client.emitWithAck('ping', 'hello')
       expect(reply).toBe('pong:hello')
     } finally {

@@ -698,6 +698,19 @@ const _maybeSendTooltipData = async (dotaClient: GSIHandlerType) => {
   await sendExtensionPubSubBroadcastMessageIfChanged(dotaClient, messageToSend)
 }
 
+const announceLoadedMatch = async function announceLoadedMatch(
+  client: SocketClient
+): Promise<void> {
+  if (client.steam32Id === null || client.steam32Id === 0) {
+    return
+  }
+  try {
+    await chatterMatchFound(client)
+  } catch (error) {
+    logger.error('[AUTO_COMMANDS] Error triggering chatterMatchFound', { error })
+  }
+}
+
 const rememberPlayingHeroSlot = async function rememberPlayingHeroSlot(
   client: SocketClient
 ): Promise<boolean> {
@@ -721,11 +734,7 @@ const rememberPlayingHeroSlot = async function rememberPlayingHeroSlot(
       // steamServerId/lobbyType chain above, it doesn't depend on the (permanently
       // disabled) ENABLE_SPECTATE_FRIEND_GAME flow. The .catch keeps a failure here from
       // rejecting this Promise.all and blocking the cache update below.
-      client.steam32Id !== null && client.steam32Id !== 0
-        ? chatterMatchFound(client).catch((error: unknown) => {
-            logger.error('[AUTO_COMMANDS] Error triggering chatterMatchFound', { error })
-          })
-        : Promise.resolve(),
+      announceLoadedMatch(client),
     ])
     playingHeroSlotCache.set(client.token, purchaser)
 

@@ -63,8 +63,19 @@ jobs:
       - name: Build all packages
         run: pnpm run build:all
 
+  vision-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: packages/clip-processor-py
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - run: uv run --locked --python 3.14 pytest
+
   build-images:
-    needs: test
+    needs: [test, vision-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     uses: ./.github/workflows/builder.yml
     permissions:

@@ -133,6 +133,23 @@ const enforceRankRequirement = async function enforceRankRequirement({
 
 const lastMissingUserMessageTimestamps: Record<string, number> = {}
 
+interface ChatUserInfo {
+  isMod: boolean
+  isBroadcaster: boolean
+  isSubscriber: boolean
+  userId: string
+}
+
+const chatPermission = function chatPermission(user: ChatUserInfo): number {
+  if (user.isBroadcaster) {
+    return 3
+  }
+  if (user.isMod) {
+    return 2
+  }
+  return user.isSubscriber ? 1 : 0
+}
+
 twitchChat.on(
   'msg',
   async (
@@ -145,12 +162,7 @@ twitchChat.on(
       messageId,
     }: {
       channelId: string
-      userInfo: {
-        isMod: boolean
-        isBroadcaster: boolean
-        isSubscriber: boolean
-        userId: string
-      }
+      userInfo: ChatUserInfo
       messageId: string
     }
   ) => {
@@ -159,8 +171,8 @@ twitchChat.on(
       return
     }
 
-    // Skip rank check for mods and broadcasters
-    const isStaff = userInfo.isMod || userInfo.isBroadcaster
+    const permission = chatPermission(userInfo)
+    const isStaff = permission >= 2
 
     // So we can get the users settings cuz some commands are disabled
     // This runs every command, but its cached so no hit on db
@@ -212,10 +224,7 @@ twitchChat.on(
     }
 
     // Letting one pleb in
-    if (
-      plebMode.has(channelId) &&
-      !(userInfo.isMod || userInfo.isBroadcaster || userInfo.isSubscriber)
-    ) {
+    if (plebMode.has(channelId) && permission === 0) {
       plebMode.delete(channelId)
       const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID)
       await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {
@@ -244,7 +253,7 @@ twitchChat.on(
       user: {
         messageId,
         name: user,
-        permission: userInfo.isBroadcaster ? 3 : userInfo.isMod ? 2 : userInfo.isSubscriber ? 1 : 0,
+        permission,
         userId: userInfo.userId,
       },
     })

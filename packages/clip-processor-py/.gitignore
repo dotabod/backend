@@ -27,6 +27,7 @@ temp/
 *.jpg
 *.png
 *.json
+!tests/fixtures/*.json
 
 # Reference images
 assets/reference.png
