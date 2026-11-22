@@ -3,7 +3,7 @@ import { setTimeout as delay } from 'node:timers/promises'
 import { logger } from '@dotabod/shared-utils'
 
 import { LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../../db/get-wl'
-import type { SocketClient } from '../../types'
+import type { closeTwitchBetById } from '../../twitch/lib/close-twitch-bet.js'
 import type { GSIHandlerType } from '../gsi-handler-types'
 import { applyVerification, decideVerification, fetchValveMatch } from './match-verification'
 import type {
@@ -27,14 +27,7 @@ const CHECKS_PER_RUN = 100
 const REQUEST_SPACING_MS = 500
 
 export interface MatchVerifierDeps {
-  closePrediction: (
-    won: boolean,
-    channelId: string,
-    predictionId: string,
-    matchId: string,
-    settings?: SocketClient['settings'],
-    subscription?: SocketClient['subscription']
-  ) => Promise<boolean>
+  closePrediction: typeof closeTwitchBetById
   handlers: ReadonlyMap<string, GSIHandlerType>
   isConnected: () => boolean
   request: MatchRequester
@@ -77,14 +70,7 @@ const onlineEffectsFor = function onlineEffectsFor(
     async closePrediction(match, won) {
       const channelId = handler.getChannelId()
       if (match.predictionId !== null && match.predictionId.length > 0 && channelId.length > 0) {
-        await deps.closePrediction(
-          won,
-          channelId,
-          match.predictionId,
-          match.matchId,
-          client.settings,
-          client.subscription
-        )
+        await deps.closePrediction(won, channelId, match.predictionId, match.matchId, client)
       }
     },
     refreshWinLoss() {

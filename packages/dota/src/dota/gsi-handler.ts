@@ -1302,13 +1302,7 @@ class GSIHandler implements GSIHandlerType {
           return
         }
 
-        closeTwitchBet(
-          won,
-          this.getChannelId(),
-          matchId,
-          this.client.settings,
-          this.client.subscription
-        )
+        closeTwitchBet(won, this.getChannelId(), matchId, this.client)
           .then(() => {
             logger.info('[BETS] end bets', {
               didWin: won,
