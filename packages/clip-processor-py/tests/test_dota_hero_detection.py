@@ -275,34 +275,7 @@ def test_read_rank_font_exact_reads_both_languages(label, value):
     """
     frame = _render_rank_badge(label, value)
     h, w = frame.shape[:2]
-    actual = dhd._read_rank_font_exact(frame, 10, 8, w - 10, h - 8)
-    if actual != value:
-        from glyph_matcher import text_signal
-        from PIL import features
-
-        matcher = dhd._get_rank_matcher()
-        band = text_signal(frame)
-        reads = {}
-        if matcher is not None:
-            for candidate in dhd._RANK_LABELS:
-                match = matcher.find_anchor(band, {candidate: candidate})
-                if match is None:
-                    continue
-                _, score, x, y = match
-                pen = x + matcher.advance(candidate + " ")
-                reads[candidate] = (
-                    score, x, y, pen,
-                    matcher.read_glyphs(band, pen, y, "0123456789", 3, min_score=dhd._RANK_MIN_GLYPH),
-                    matcher.read_glyphs(
-                        band, pen, y, "0123456789", 4, min_score=dhd._RANK_MIN_GLYPH,
-                        pre_advance={1: matcher.advance(" ")},
-                    ),
-                )
-        pytest.fail(
-            f"Read {actual!r} for {label} {value}. "
-            f"FreeType={features.version('freetype2')}, RAQM={features.version('raqm')}, "
-            f"readings={reads!r}"
-        )
+    assert dhd._read_rank_font_exact(frame, 10, 8, w - 10, h - 8) == value
 
 
 def test_read_rank_font_exact_joins_the_thousands_separator():
@@ -860,26 +833,21 @@ def test_get_top_hero_matches_empty_data_returns_empty():
 def test_get_top_hero_matches_ranks_matching_template_first(monkeypatch):
     monkeypatch.delenv("ADD_BORDER", raising=False)
     monkeypatch.delenv("APPLY_BLUR", raising=False)
-    # Icon with real spatial structure (left half dark, right half bright) so the
-    # score reflects template similarity rather than the trivial 1.0 a flat image
-    # always yields. The hero whose template mirrors that split must win.
     icon = np.zeros((66, 108, 3), np.uint8)
     icon[:, 54:] = 255
     matching = np.zeros((72, 128, 3), np.uint8)
-    matching[:, 64:] = 255              # same split as the icon
+    matching[:, 64:] = 255
     inverted = np.full((72, 128, 3), 255, np.uint8)
-    inverted[:, 64:] = 0               # opposite split -> should score far lower
+    inverted[:, 64:] = 0
     heroes_data = [
         {"id": 7, "name": "npc_dota_hero_axe", "localized_name": "Axe",
          "variants": [{"variant": "base", "cached_template": matching}]},
         {"id": 9, "name": "npc_dota_hero_mirana", "localized_name": "Mirana",
          "variants": [{"variant": "base", "cached_template": inverted}]},
     ]
-    matches = dhd.get_top_hero_matches(icon, heroes_data, min_score=0.0)
-    assert matches[0]["hero_id"] == 7
+    matches = dhd.get_top_hero_matches(icon, heroes_data, min_score=0.5)
+    assert [match["hero_id"] for match in matches] == [7]
     assert matches[0]["match_score"] > 0.8
-    inverted_score = next(m["match_score"] for m in matches if m["hero_id"] == 9)
-    assert matches[0]["match_score"] > inverted_score + 0.5  # clearly discriminative
 
 
 # --------------------------------------------------------------------------- #

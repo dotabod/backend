@@ -6260,26 +6260,6 @@
         "severity": "error"
       }
     },
-    "31e5e0fbc0ec44805e9fd0f3c9410161af35660530d0aeb77cf2ff7fa9f0f370": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(require-mock-type-parameters)",
-        "file": "packages/dota/src/dota/__tests__/gsi-server-connection.test.ts",
-        "labels": [
-          {
-            "context": [
-              "}))",
-              "vi.mock('../lib/twitch-utils', () => ({ deleteClipsBatch: vi.fn() }))",
-              "vi.mock('../setup-signals', () => ({ recordOverlaySocketActivity }))"
-            ],
-            "message": "",
-            "span": "fn"
-          }
-        ],
-        "message": "Missing type parameters on mock function call",
-        "severity": "error"
-      }
-    },
     "3233f4834c36be56f20f881893f01fbd9daac27c75e3cfb24885ef770834dad0": {
       "count": 1,
       "diagnostic": {
@@ -9756,26 +9736,6 @@
         "severity": "error"
       }
     },
-    "4b7f493c7b7b7c4719801ae335359f1b6921e34343e9b687527df8422427902f": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(prefer-import-in-mock)",
-        "file": "packages/dota/src/dota/__tests__/gsi-server-connection.test.ts",
-        "labels": [
-          {
-            "context": [
-              "}))",
-              "vi.mock('../lib/twitch-utils', () => ({ deleteClipsBatch: vi.fn() }))",
-              "vi.mock('../setup-signals', () => ({ recordOverlaySocketActivity }))"
-            ],
-            "message": "",
-            "span": "'../lib/twitch-utils', () => ({ deleteClipsBatch: vi.fn() })"
-          }
-        ],
-        "message": "Mocked modules must be dynamic imported.",
-        "severity": "error"
-      }
-    },
     "4b946d6d826995d55544ac5f50f9808d8dd0dd130cc6401d60bbac767fe8608c": {
       "count": 1,
       "diagnostic": {
@@ -9793,26 +9753,6 @@
           }
         ],
         "message": "Unexpected `await` inside a loop.",
-        "severity": "error"
-      }
-    },
-    "4bc158c192a4306ed1080f340c9d998f59ac83664b12183c85db2588445a6a77": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-unused-vars)",
-        "file": "packages/dota/src/db/__tests__/watcher-mocks.ts",
-        "labels": [
-          {
-            "context": [
-              "// real data; other tables resolve to empty.",
-              "const sbBuilder = function sbBuilder(_table: string) {",
-              "const b: unknown = {"
-            ],
-            "message": "",
-            "span": "_table"
-          }
-        ],
-        "message": "Parameter '_table' is declared but never used.",
         "severity": "error"
       }
     },
@@ -11504,26 +11444,6 @@
           }
         ],
         "message": "Prefer `async`/`await` to the callback pattern",
-        "severity": "error"
-      }
-    },
-    "581063d108a6e79d20f6fb3d9baf6dd3499559561e4d3f63a5d25d997dbe8785": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-module-mocking)",
-        "file": "packages/dota/src/dota/__tests__/gsi-server-connection.test.ts",
-        "labels": [
-          {
-            "context": [
-              "}))",
-              "vi.mock('../lib/twitch-utils', () => ({ deleteClipsBatch: vi.fn() }))",
-              "vi.mock('../setup-signals', () => ({ recordOverlaySocketActivity }))"
-            ],
-            "message": "",
-            "span": "vi.mock('../lib/twitch-utils', () => ({ deleteClipsBatch: vi.fn() }))"
-          }
-        ],
-        "message": "Replace module mocking with dependency injection through a real interface, service layer, or faithful test implementation.",
         "severity": "error"
       }
     },
@@ -19130,22 +19050,6 @@
         "severity": "error"
       }
     },
-    "9879c35c9aec61acc123fe61b51b6f39c301e356420c36f3527449ce02e4a0bd": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-member-access)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": ["this.dota2.exit()", "this.dota2.launch()", "}"],
-            "message": "",
-            "span": "launch"
-          }
-        ],
-        "message": "Unsafe member access .launch on an `error` typed value.",
-        "severity": "error"
-      }
-    },
     "98c89fb6d0a9ea31d97b3fae510b2f869ecea61161eaaf6aef9f0df22fdf6e72": {
       "count": 1,
       "diagnostic": {
@@ -19239,26 +19143,6 @@
           }
         ],
         "message": "Use null instead.",
-        "severity": "error"
-      }
-    },
-    "99497e1e59edca06ea8ff6fbb71a76f4f0d1091c5a81b44ee9ff75d084ecaa24": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-member-access)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "this.resetReconnectBackoff()",
-              "this.dota2.exit()",
-              "logger.info('[STEAM] Manually closed dota')"
-            ],
-            "message": "",
-            "span": "exit"
-          }
-        ],
-        "message": "Unsafe member access .exit on an `error` typed value.",
         "severity": "error"
       }
     },
@@ -19631,26 +19515,6 @@
         "severity": "error"
       }
     },
-    "9cccea4862c368cebfc5b06e904c949707b9f70542376bebd565b5ee79394814": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-call)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "// Stop dota2's internal timers (like _sendClientHello) before reconnecting.",
-              "this.dota2.exit()",
-              ""
-            ],
-            "message": "",
-            "span": "this.dota2.exit"
-          }
-        ],
-        "message": "Unsafe call of a(n) `error` type typed value.",
-        "severity": "error"
-      }
-    },
     "9d1b9500d5c42bc8c27ab951ac2d9827bcab205b74c2648fabe61b60233bd211": {
       "count": 1,
       "diagnostic": {
@@ -19836,26 +19700,6 @@
           }
         ],
         "message": "Remove the declaration of the unused '_response' variable.",
-        "severity": "error"
-      }
-    },
-    "9eddd721dd7c5bb57de83e003fa5d780af23c8e0b051a78273c712edfe9f6304": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(require-mock-type-parameters)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "it('should add tasks to the queue and return a unique usable id', () => {",
-              "const callback = vi.fn(() => {})",
-              "const taskId = queue.addTask(1000, callback, 'test payload')"
-            ],
-            "message": "",
-            "span": "fn"
-          }
-        ],
-        "message": "Missing type parameters on mock function call",
         "severity": "error"
       }
     },
@@ -20317,26 +20161,6 @@
           }
         ],
         "message": "Unexpected `await` of a non-Promise (non-\"Thenable\") value.",
-        "severity": "error"
-      }
-    },
-    "a1ee68678b64e9bc295126738aba0a5ffa6fa0c77d9b255e8ace512092c8ca6b": {
-      "count": 1,
-      "diagnostic": {
-        "code": "unicorn(no-thenable)",
-        "file": "packages/dota/src/db/__tests__/watcher-mocks.ts",
-        "labels": [
-          {
-            "context": [
-              "single: async () => await Promise.resolve({ data: null, error: null }),",
-              "then: async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) =>",
-              "await Promise.resolve({ data: null, error: null }).then(onFulfilled),"
-            ],
-            "message": "",
-            "span": "then"
-          }
-        ],
-        "message": "Do not add `then` to an object.",
         "severity": "error"
       }
     },
@@ -21215,26 +21039,6 @@
         "severity": "error"
       }
     },
-    "a6e4651b16c8c09b2456f9b17a890e8f7c7b66ba6289040894fd90c98d0b7b85": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-member-access)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "logger.info('[STEAM] Logged on.', { steamID: this.user.steamID?.toString() })",
-              "this.dota2.launch()",
-              "}"
-            ],
-            "message": "",
-            "span": "launch"
-          }
-        ],
-        "message": "Unsafe member access .launch on an `error` typed value.",
-        "severity": "error"
-      }
-    },
     "a7127f724f29588244176bbc216c6dda2c1f8331b057d12e5dfda59a051f7267": {
       "count": 1,
       "diagnostic": {
@@ -21272,26 +21076,6 @@
           }
         ],
         "message": "Unsafe assignment of an any value.",
-        "severity": "error"
-      }
-    },
-    "a745069f9fefb616394d202bb8cb813e1e9afb0e90ac07f1d30a65b134801b31": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-call)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "if (this.isProduction()) {",
-              "this.dota2.on('ready', this.checkAccounts.bind(this))",
-              "}"
-            ],
-            "message": "",
-            "span": "this.dota2.on"
-          }
-        ],
-        "message": "Unsafe call of a(n) `error` type typed value.",
         "severity": "error"
       }
     },
@@ -21375,26 +21159,6 @@
         "severity": "error"
       }
     },
-    "a7cb3076868ae55c266d22cecf376b4df11987becf1ec1bc210d75aab2eb2b04": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-member-access)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "this.dota2 = new Dota2.Dota2Client(this.user, false, false)",
-              "this.dota2.setMaxListeners(12)",
-              ""
-            ],
-            "message": "",
-            "span": "setMaxListeners"
-          }
-        ],
-        "message": "Unsafe member access .setMaxListeners on an `error` typed value.",
-        "severity": "error"
-      }
-    },
     "a7de7d2d119c11f03a58275c93294306fe10066451495f1eb87d1abec38c7a0f": {
       "count": 1,
       "diagnostic": {
@@ -21468,26 +21232,6 @@
           }
         ],
         "message": "Complete the task associated to this \"TODO\" comment.",
-        "severity": "error"
-      }
-    },
-    "a8382d1c40dd3c1f22d40f33c5b9cfa540d9bc92d784b8fc862320d8870e1664": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(require-mock-type-parameters)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "it('should remove tasks from queue', () => {",
-              "const callback = vi.fn(() => {})",
-              "const taskId = queue.addTask(1000, callback)"
-            ],
-            "message": "",
-            "span": "fn"
-          }
-        ],
-        "message": "Missing type parameters on mock function call",
         "severity": "error"
       }
     },
@@ -22008,26 +21752,6 @@
           }
         ],
         "message": "Mocked modules must be dynamic imported.",
-        "severity": "error"
-      }
-    },
-    "ace07ce1acd1f9b27058c44cc595f8f3e3eb2938f60389617a547ba0aa1fbb35": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-member-access)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "if (this.isProduction()) {",
-              "this.dota2.on('ready', this.checkAccounts.bind(this))",
-              "}"
-            ],
-            "message": "",
-            "span": "on"
-          }
-        ],
-        "message": "Unsafe member access .on on an `error` typed value.",
         "severity": "error"
       }
     },
@@ -22604,26 +22328,6 @@
           }
         ],
         "message": "Enforces a maximum number assertion calls in a test body.",
-        "severity": "error"
-      }
-    },
-    "b0cecae0ac7ba39c26411e752f942c491545b79ad9f70bc025364782994d43ca": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-member-access)",
-        "file": "packages/steam/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "})",
-              "dota.dota2.on('unready', () => {",
-              "logger.info('[SERVER] Disconnected from dota game server')"
-            ],
-            "message": "",
-            "span": "on"
-          }
-        ],
-        "message": "Unsafe member access .on on an `error` typed value.",
         "severity": "error"
       }
     },
@@ -23903,22 +23607,6 @@
         "severity": "error"
       }
     },
-    "bbfa719efc9379e940ef657ac8058a960b7123fda3f7d6449810f939d06f887d": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-member-access)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": ["", "this.dota2.on('sourceTVGamesData', callbackNotSpecificGames)", ""],
-            "message": "",
-            "span": "on"
-          }
-        ],
-        "message": "Unsafe member access .on on an `error` typed value.",
-        "severity": "error"
-      }
-    },
     "bc8dd4abdb1c985f677a0170f34e4526b7c76209b313d10aae2720b3d512d84e": {
       "count": 1,
       "diagnostic": {
@@ -24131,26 +23819,6 @@
         "severity": "error"
       }
     },
-    "bf5039e98601bde960fd1a27cd7171f35ae7af84c9e3ba8da06b2805bca7ed74": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-call)",
-        "file": "packages/steam/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "})",
-              "dota.dota2.on('unready', () => {",
-              "logger.info('[SERVER] Disconnected from dota game server')"
-            ],
-            "message": "",
-            "span": "dota.dota2.on"
-          }
-        ],
-        "message": "Unsafe call of a(n) `error` type typed value.",
-        "severity": "error"
-      }
-    },
     "bf51d6ccaf3fbb3e554cbd7911e4f843996087665521b9a58d1fb8a74370eade": {
       "count": 1,
       "diagnostic": {
@@ -24253,22 +23921,6 @@
           }
         ],
         "message": "Parameter `error` leaves input unparsed. Accept a named domain type; run the expected schema or parser at the I/O boundary before calling this function.",
-        "severity": "error"
-      }
-    },
-    "bff75ddd76207d1a11341ae23d3cb001bab43ef3a7e7793f641eb2c6eb9f586e": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-member-access)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": ["this.relaunchPending = true", "this.dota2.exit()", "this.dota2.launch()"],
-            "message": "",
-            "span": "exit"
-          }
-        ],
-        "message": "Unsafe member access .exit on an `error` typed value.",
         "severity": "error"
       }
     },
@@ -24547,26 +24199,6 @@
         "severity": "error"
       }
     },
-    "c17722adb8a274e66f092a0abad90216ce7fdadf60ff519e571561cbcb54a36b": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(require-mock-type-parameters)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "it('should clear tasks during shutdown without execution', async () => {",
-              "const callback = vi.fn(() => {})",
-              ""
-            ],
-            "message": "",
-            "span": "fn"
-          }
-        ],
-        "message": "Missing type parameters on mock function call",
-        "severity": "error"
-      }
-    },
     "c18b5f2e1fe31556e90479267ae7f48132cb401c5073b7f471d55be528a48605": {
       "count": 1,
       "diagnostic": {
@@ -24604,22 +24236,6 @@
           }
         ],
         "message": "This assertion chain discards type evidence. Keep the original precise type, or parse untrusted input at its boundary before narrowing it.",
-        "severity": "error"
-      }
-    },
-    "c1b71f61c3f5d532b1d3551845b7a0bd6d22264b44ba53f5bfc6f61b9dd6c8b6": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-member-access)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": ["})", "this.dota2.on('unready', () => {", "this.relaunchPending = false"],
-            "message": "",
-            "span": "on"
-          }
-        ],
-        "message": "Unsafe member access .on on an `error` typed value.",
         "severity": "error"
       }
     },

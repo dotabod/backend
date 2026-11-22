@@ -25,6 +25,24 @@ const isNonEmptyString = function isNonEmptyString(
   return value !== null && value !== undefined && value.length > 0
 }
 
+const clearUnbannedTokens = async function clearUnbannedTokens(userId: string): Promise<void> {
+  invalidTokens.delete(userId)
+  // Banning a user evicts the session and its Twitch ID index.
+  const { data: accounts, error } = await supabase
+    .from('accounts')
+    .select('providerAccountId')
+    .eq('userId', userId)
+    .eq('provider', 'twitch')
+
+  if (error) {
+    logger.warn('[WATCHER USER] Failed to look up unbanned Twitch accounts', { error, userId })
+  }
+  for (const { providerAccountId } of accounts ?? []) {
+    invalidTokens.delete(providerAccountId)
+  }
+  logger.info('[WATCHER USER] Unbanning user', { userId })
+}
+
 class SetupSupabase {
   channel: ReturnType<typeof supabase.channel>
   IS_DEV: boolean
@@ -326,24 +344,7 @@ class SetupSupabase {
           }
 
           if (isNonEmptyString(oldObj.banned_at) && !isNonEmptyString(newObj.banned_at)) {
-            invalidTokens.delete(newObj.id)
-            // Banning a user evicts the session and its Twitch ID index.
-            const { data: accounts, error } = await supabase
-              .from('accounts')
-              .select('providerAccountId')
-              .eq('userId', newObj.id)
-              .eq('provider', 'twitch')
-
-            if (error) {
-              logger.warn('[WATCHER USER] Failed to look up unbanned Twitch accounts', {
-                error,
-                userId: newObj.id,
-              })
-            }
-            for (const { providerAccountId } of accounts ?? []) {
-              invalidTokens.delete(providerAccountId)
-            }
-            logger.info('[WATCHER USER] Unbanning user', { userId: newObj.id })
+            await clearUnbannedTokens(newObj.id)
             return
           }
 

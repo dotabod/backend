@@ -2716,7 +2716,10 @@ def _read_rank_font_exact(frame, x1, y1, x2, y2):
 
         best = None
         for label in _RANK_LABELS:
-            _, anchor, ox, oy = m.find_anchor(band, {label: label})
+            match = m.find_anchor(band, {label: label})
+            if match is None:
+                continue
+            _, anchor, ox, oy = match
             if anchor < _RANK_MIN_ANCHOR:
                 continue
             pen = ox + m.advance(label + " ")

@@ -61,16 +61,9 @@ export const resetWatcherState = function resetWatcherState() {
   watcherState.twitchAccountsByUser.clear()
 }
 
-// Chainable supabase mock. Only the subscriptions table (queried via
-// `.single()` after various `.eq().neq().in().order().limit()` calls) returns
-// real data; other tables resolve to empty.
-const sbBuilder = function sbBuilder(table: string) {
-  const filters = new Map<string, string>()
+const sbBuilder = function sbBuilder() {
   const b: unknown = {
-    eq: (column: string, value: string) => {
-      filters.set(column, value)
-      return b
-    },
+    eq: () => b,
     in: () => b,
     insert: async () => await Promise.resolve({ data: null, error: null }),
     is: () => b,
@@ -81,18 +74,24 @@ const sbBuilder = function sbBuilder(table: string) {
     order: () => b,
     select: () => b,
     single: async () => await Promise.resolve({ data: null, error: null }),
-    then: async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => {
-      const userId = filters.get('userId')
-      const accounts =
-        table === 'accounts' && filters.get('provider') === 'twitch' && userId !== undefined
-          ? watcherState.twitchAccountsByUser.get(userId)
-          : null
-      return await Promise.resolve({ data: accounts ?? null, error: null }).then(onFulfilled)
-    },
     update: () => b,
     upsert: async () => await Promise.resolve({ data: null, error: null }),
   }
   return b
+}
+
+const twitchAccountsQuery = {
+  select: () => ({
+    eq: (column: string, userId: string) => ({
+      eq: async (providerColumn: string, provider: string) => {
+        const accounts =
+          column === 'userId' && providerColumn === 'provider' && provider === 'twitch'
+            ? watcherState.twitchAccountsByUser.get(userId)
+            : undefined
+        return await Promise.resolve({ data: accounts ?? [], error: null })
+      },
+    }),
+  }),
 }
 
 const realtimeChannel = function realtimeChannel() {
@@ -117,7 +116,7 @@ const supabaseMock = {
     watcherState.channelCreationCount += 1
     return realtimeChannel()
   },
-  from: (table: string) => sbBuilder(table),
+  from: (table: string) => (table === 'accounts' ? twitchAccountsQuery : sbBuilder()),
   removeChannel: () => 'ok' as const,
 }
 

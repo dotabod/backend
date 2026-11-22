@@ -59,6 +59,23 @@ def text_signal(img_bgr, box=None, blur_sigma=4.0):
     return s / (s.max() + 1e-6)
 
 
+def _strongest_match(band, patch):
+    scores = cv2.matchTemplate(band, patch, cv2.TM_CCOEFF_NORMED)
+    height, width = patch.shape
+    sums, squared_sums = cv2.integral2(band, sdepth=cv2.CV_64F)
+    total = sums[height:, width:] - sums[:-height, width:] - sums[height:, :-width] + sums[:-height, :-width]
+    total_squared = (squared_sums[height:, width:] - squared_sums[:-height, width:]
+                     - squared_sums[height:, :-width] + squared_sums[:-height, :-width])
+    area = height * width
+    variance = total_squared / area - (total / area) ** 2
+    # OpenCV can return a perfect normalized score for nearly flat windows.
+    valid = (variance >= (1 / 255) ** 2) & np.isfinite(scores)
+    if not valid.any():
+        return None
+    _, score, _, location = cv2.minMaxLoc(scores, mask=valid.astype(np.uint8))
+    return float(score), location
+
+
 class GlyphMatcher:
     """Renders glyphs from a known font and matches them against a UI region."""
 
@@ -119,10 +136,12 @@ class GlyphMatcher:
             patch, dx, dy = self.template(text)
             if patch.shape[0] > band.shape[0] or patch.shape[1] > band.shape[1]:
                 continue
-            _, score, _, loc = cv2.minMaxLoc(
-                cv2.matchTemplate(band, patch, cv2.TM_CCOEFF_NORMED))
+            match = _strongest_match(band, patch)
+            if match is None:
+                continue
+            score, loc = match
             if best is None or score > best[1]:
-                best = (label, float(score), loc[0] - dx, loc[1] - dy)
+                best = (label, score, loc[0] - dx, loc[1] - dy)
         return best
 
     def match_glyph(self, band, alphabet, penx, oy, jitter=2):
@@ -144,9 +163,10 @@ class GlyphMatcher:
             win = band[y0:y1, x0:x1]
             if win.shape[0] < patch.shape[0] or win.shape[1] < patch.shape[1]:
                 continue
-            _, score, _, loc = cv2.minMaxLoc(
-                cv2.matchTemplate(win, patch, cv2.TM_CCOEFF_NORMED))
-            out.append((float(score), ch, (loc[0] + x0) - ex))
+            match = _strongest_match(win, patch)
+            if match is not None:
+                score, loc = match
+                out.append((score, ch, (loc[0] + x0) - ex))
         if not out:
             return None
         out.sort(key=lambda t: -t[0])
