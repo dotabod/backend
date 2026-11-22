@@ -1,6 +1,6 @@
 import { checkBotStatus, checkSupabaseHealth, logger, startHeartbeat } from '@dotabod/shared-utils'
 
-import { fetchExistingSubscriptions, subsToCleanup } from './fetch-existing-subscriptions'
+import { fetchExistingSubscriptions } from './fetch-existing-subscriptions'
 import { subscribeToEvents } from './subscribe-to-events'
 import { deleteSubscription } from './twitch/lib/revoke-event'
 import { setupHealthServer } from './utils/health-server'
@@ -53,20 +53,22 @@ const logDeletionProgress = function logDeletionProgress(
 
 const deleteSubscriptionChunk = async function deleteSubscriptionChunk(
   subscriptionIds: readonly string[],
-  progress: CleanupProgress
+  progress: CleanupProgress,
+  total: number
 ): Promise<void> {
   await Promise.all(
     subscriptionIds.map(async (subscriptionId) => {
       await rateLimiter.schedule(async () => {
         await deleteSubscription(subscriptionId)
         progress.completed += 1
-        logDeletionProgress(progress, subsToCleanup.length)
+        logDeletionProgress(progress, total)
       })
     })
   )
 }
 
 const deleteSubscriptionChunks = async function deleteSubscriptionChunks(
+  subsToCleanup: readonly string[],
   startIndex: number,
   progress: CleanupProgress
 ): Promise<void> {
@@ -76,12 +78,15 @@ const deleteSubscriptionChunks = async function deleteSubscriptionChunks(
 
   await deleteSubscriptionChunk(
     subsToCleanup.slice(startIndex, startIndex + CLEANUP_CHUNK_SIZE),
-    progress
+    progress,
+    subsToCleanup.length
   )
-  await deleteSubscriptionChunks(startIndex + CLEANUP_CHUNK_SIZE, progress)
+  await deleteSubscriptionChunks(subsToCleanup, startIndex + CLEANUP_CHUNK_SIZE, progress)
 }
 
-const cleanUpSubscriptions = async function cleanUpSubscriptions(): Promise<void> {
+const cleanUpSubscriptions = async function cleanUpSubscriptions(
+  subsToCleanup: readonly string[]
+): Promise<void> {
   logger.info('[TWITCHEVENTS] Deleting old subscriptions', { count: subsToCleanup.length })
   if (subsToCleanup.length === 0) {
     logger.info('[TWITCHEVENTS] No subscriptions to clean up')
@@ -89,7 +94,7 @@ const cleanUpSubscriptions = async function cleanUpSubscriptions(): Promise<void
   }
 
   const startTime = Date.now()
-  await deleteSubscriptionChunks(0, {
+  await deleteSubscriptionChunks(subsToCleanup, 0, {
     completed: 0,
     lastLogTime: startTime,
     startTime,
@@ -107,12 +112,11 @@ const cleanUpSubscriptions = async function cleanUpSubscriptions(): Promise<void
 
 const reconcileSubscriptions = async function reconcileSubscriptions(): Promise<void> {
   try {
-    await fetchExistingSubscriptions()
+    const subsToCleanup = await fetchExistingSubscriptions()
     await subscribeToEvents()
-    await cleanUpSubscriptions()
+    await cleanUpSubscriptions(subsToCleanup)
   } catch (error) {
     logger.error('[TWITCHEVENTS] Background reconciliation failed', {
-      count: subsToCleanup.length,
       error: error instanceof Error ? error.message : String(error),
     })
   }
@@ -148,6 +152,7 @@ startHeartbeat({
 // Supabase Realtime listener — replaces the old HTTP webhook receiver.
 // Delivers INSERT/UPDATE/DELETE on accounts + UPDATE on users in seconds.
 setupAccountWatcher()
+const startupReconciliation = reconcileSubscriptions()
 
 // Safety net: every 5 minutes, scan all valid accounts and re-register any
 // missing critical EventSub subscriptions. Catches Realtime delivery gaps
@@ -156,6 +161,7 @@ setupAccountWatcher()
 // scan can't double-fire and race on `eventSubMap` / the shared rateLimiter.
 scheduleNonOverlapping(async () => {
   try {
+    await startupReconciliation
     await runSubscriptionHealthCheck()
   } catch (error) {
     logger.error('[HEALTHCHECK] subscription scan failed', {
@@ -163,5 +169,3 @@ scheduleNonOverlapping(async () => {
     })
   }
 }, HEALTH_CHECK_INTERVAL_MS)
-
-void reconcileSubscriptions()

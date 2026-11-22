@@ -1,27 +1,15 @@
 import { checkBotStatus, fetchConduitId, getTwitchHeaders, logger } from '@dotabod/shared-utils'
+import { TWITCH_EVENT_TYPE_NAMES } from '@dotabod/shared-utils/event-sub'
 import { z } from 'zod'
 
 import { eventSubMap } from '../chat-sub-ids'
 import { EVENT_SUB_STATUSES } from '../interfaces'
 import { genericSubscribe } from '../subscribe-chat-messages-for-user'
-import { TWITCH_EVENT_TYPE_NAMES } from '../twitch-event-types'
-import type { TwitchEventTypes } from '../twitch-event-types'
+import { CRITICAL_SUBSCRIPTION_TYPES, findMissingSubscriptions } from '../subscription-topics.js'
+import type { CriticalSubscriptionType } from '../subscription-topics.js'
 import { getAccountIds } from '../twitch/lib/get-account-ids'
 import { rateLimiter } from './rate-limiter-core'
 
-// The periodic sweep only scans these. Secondary types (predictions, polls)
-// are still registered up-front by initUserSubscriptions on signup and on every
-// requires_refresh flip; the 5-min reconciliation just doesn't re-check them.
-// Empirically the rescan was always a no-op and the user-visible failure
-// (predictions not appearing in a stream) self-heals on the next sign-in.
-const CRITICAL_SUBSCRIPTION_TYPES = [
-  'stream.online',
-  'stream.offline',
-  'user.update',
-  'channel.chat.message',
-] as const satisfies readonly (keyof TwitchEventTypes)[]
-type CriticalSubscriptionType = (typeof CRITICAL_SUBSCRIPTION_TYPES)[number]
-const CHAT_SUBSCRIPTION_TYPE = 'channel.chat.message'
 const subscriptionPageSchema = z.object({
   data: z.array(
     z.object({
@@ -102,10 +90,10 @@ const processHealthCheckUser = async function processHealthCheckUser(
 ): Promise<void> {
   try {
     const existingSubscriptions = eventSubMap.get(userId)
-    const missingCritical = CRITICAL_SUBSCRIPTION_TYPES.filter(
-      (type) =>
-        existingSubscriptions?.[type] === undefined &&
-        !(type === CHAT_SUBSCRIPTION_TYPE && context.isBanned)
+    const missingCritical = findMissingSubscriptions(
+      CRITICAL_SUBSCRIPTION_TYPES,
+      existingSubscriptions ?? {},
+      context.isBanned
     )
     if (missingCritical.length === 0) {
       return

@@ -57,6 +57,18 @@ describe(initUserSubscriptions, () => {
     expect(state.subscribeCalls.map((c) => c.type)).toStrictEqual(['channel.poll.end'])
   })
 
+  it('uses the current conduit for a subscriber added after a refresh', async () => {
+    await initUserSubscriptions('111')
+    state.conduitId = 'replacement-conduit'
+    state.subscribeCalls = []
+
+    await initUserSubscriptions('222')
+
+    expect(new Set(state.subscribeCalls.map((call) => call.conduitId))).toStrictEqual(
+      new Set(['replacement-conduit'])
+    )
+  })
+
   it('fixes both missing critical and secondary subscriptions for an existing user', async () => {
     // Existing user missing one critical (stream.online) and one secondary (channel.poll.end).
     seedSubscriptions(

@@ -110,15 +110,12 @@ export const fetchConduitId = async function fetchConduitId(
     return cachedConduitId
   }
 
-  // Reset fetch promise if forcing refresh
-  if (forceRefresh) {
-    fetchPromise = null
-    cachedConduitId = null
-  }
-
-  // Return existing promise if one is in progress
+  // Concurrent refreshers must share the lookup and any conduit creation.
   if (fetchPromise !== null) {
     return await fetchPromise
+  }
+  if (forceRefresh) {
+    cachedConduitId = null
   }
 
   // Start a new fetch operation

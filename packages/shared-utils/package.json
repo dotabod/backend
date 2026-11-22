@@ -10,11 +10,15 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./event-sub": {
+      "types": "./dist/event-sub.d.ts",
+      "import": "./dist/event-sub.js"
     }
   },
   "scripts": {
     "prebuild": "rm -rf dist",
-    "build": "tsdown --config ../../tsdown.config.ts src/index.ts -f esm -d dist --sourcemap",
+    "build": "tsdown --config ../../tsdown.config.ts src/index.ts src/event-sub.ts -f esm -d dist --sourcemap",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

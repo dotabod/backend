@@ -261,7 +261,7 @@ export const {
   isUserBeingDisabled,
   isBroadcasterBeingDisabled,
 } = await import('../disable-cache')
-export const { onlineEvents } = await import('../event-handlers/events')
+export const { onlineEvents } = await import('../event-handlers/stream-presence.js')
 export const { onlineEvent } = await import('../event-handlers/online-event')
 export const { offlineEvent } = await import('../event-handlers/offline-event')
 export const { updateUserEvent } = await import('../event-handlers/update-user-event')

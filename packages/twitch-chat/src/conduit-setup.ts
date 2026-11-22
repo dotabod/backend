@@ -4,8 +4,8 @@ import {
   logger,
   updateConduitShard as sharedUpdateConduitShard,
 } from '@dotabod/shared-utils'
+import type { TwitchEventType } from '@dotabod/shared-utils/event-sub'
 
-import type { TwitchEventTypes } from './event-handlers/events'
 import { offlineEvent } from './event-handlers/offline-event'
 import { onlineEvent } from './event-handlers/online-event'
 import { transformBetData } from './event-handlers/transform-bet-data'
@@ -163,7 +163,7 @@ const updateConduitShard = async function updateConduitShard(
   }
 }
 
-const legacyEventHandlerNames: Partial<Record<keyof TwitchEventTypes, string>> = {
+const legacyEventHandlerNames: Partial<Record<TwitchEventType, string>> = {
   'channel.poll.begin': 'subscribeToChannelPollBeginEvents',
   'channel.poll.end': 'subscribeToChannelPollEndEvents',
   'channel.poll.progress': 'subscribeToChannelPollProgressEvents',
@@ -173,7 +173,7 @@ const legacyEventHandlerNames: Partial<Record<keyof TwitchEventTypes, string>> =
   'channel.prediction.progress': 'subscribeToChannelPredictionProgressEvents',
 }
 
-const handleObsEvents = (type: keyof TwitchEventTypes, broadcasterId: string, data: unknown) => {
+const handleObsEvents = (type: TwitchEventType, broadcasterId: string, data: unknown) => {
   if (hasDotabodSocket()) {
     const name = legacyEventHandlerNames[type] ?? type
     emitEvent(name, broadcasterId, data)
@@ -182,7 +182,7 @@ const handleObsEvents = (type: keyof TwitchEventTypes, broadcasterId: string, da
 
 // Helper function to extract broadcaster ID and transform event data
 const createEventHandler =
-  <T, R>(type: keyof TwitchEventTypes, transform: (event: T) => R) =>
+  <T, R>(type: TwitchEventType, transform: (event: T) => R) =>
   ({
     payload: {
       subscription: {
@@ -280,8 +280,6 @@ const revokeEvent = function revokeEvent(data: {
   }
 }
 
-// EventSub payloads aren't modeled centrally (TwitchEventTypes only carries versions),
-// so preserve each handler's own payload type while checking the registry keys.
 const eventHandlers = {
   'channel.chat.message': handleChatMessage,
   'channel.poll.begin': createEventHandler('channel.poll.begin', transformPollData),
@@ -299,7 +297,7 @@ const eventHandlers = {
   'user.authorization.grant': grantEvent,
   'user.authorization.revoke': revokeEvent,
   'user.update': updateUserEvent,
-} satisfies Partial<Record<keyof TwitchEventTypes, (...args: never[]) => unknown>>
+} satisfies Partial<Record<TwitchEventType, (...args: never[]) => unknown>>
 
 // Initialize WebSocket and handle events
 const initializeSocket = async function initializeSocket() {

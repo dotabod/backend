@@ -1,4 +1,4 @@
-import type { TwitchEventTypes } from './twitch-event-types'
+import type { TwitchEventType } from '@dotabod/shared-utils/event-sub'
 
 export interface TwitchEventSubCondition {
   broadcaster_user_id?: string
@@ -14,7 +14,7 @@ export interface TwitchEventSubResponse {
     // The subscription's status. Only enabled subscriptions receive events
     status: EventSubStatus
     // The subscription's type
-    type: keyof TwitchEventTypes
+    type: TwitchEventType
     // Version number identifying this subscription definition
     version: string
     // Subscription parameter values as JSON object

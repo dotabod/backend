@@ -1,6 +1,6 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 
-import { onlineEvents } from './events'
+import { onlineEvents } from './stream-presence.js'
 
 export interface TwitchOnlineEvent {
   id: string

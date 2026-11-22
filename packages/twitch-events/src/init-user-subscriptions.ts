@@ -5,9 +5,12 @@ import { checkBotStatus, fetchConduitId, logger } from '@dotabod/shared-utils'
 import { eventSubMap } from './chat-sub-ids'
 import { ensureBotIsModerator } from './ensure-bot-is-moderator'
 import { genericSubscribe } from './subscribe-chat-messages-for-user'
-import type { TwitchEventTypes } from './twitch-event-types'
-
-type SubscriptionType = keyof TwitchEventTypes
+import {
+  CRITICAL_SUBSCRIPTION_TYPES,
+  findMissingSubscriptions,
+  SECONDARY_SUBSCRIPTION_TYPES,
+} from './subscription-topics.js'
+import type { UserSubscriptionType } from './subscription-topics.js'
 
 interface SubscriptionResults {
   criticalFailed: number
@@ -26,47 +29,23 @@ export interface InitUserSubscriptionDependencies {
   waitForRetry: (milliseconds: number) => Promise<void>
 }
 
-const CHAT_SUBSCRIPTION_TYPE = 'channel.chat.message'
-const REQUIRED_SUBSCRIPTION_TYPES = [
-  CHAT_SUBSCRIPTION_TYPE,
-  'stream.offline',
-  'stream.online',
-  'user.update',
-  'channel.prediction.begin',
-  'channel.prediction.progress',
-  'channel.prediction.lock',
-  'channel.prediction.end',
-  'channel.poll.begin',
-  'channel.poll.progress',
-  'channel.poll.end',
-] satisfies readonly SubscriptionType[]
-const CRITICAL_SUBSCRIPTION_TYPES = new Set<SubscriptionType>([
-  'stream.online',
-  'stream.offline',
-  'user.update',
-  CHAT_SUBSCRIPTION_TYPE,
-])
 const defaultDependencies: InitUserSubscriptionDependencies = {
   waitForRetry: async (milliseconds) => {
     await delay(milliseconds)
   },
 }
 
-const conduitId = await fetchConduitId()
-logger.info('Conduit ID', {
-  conduitId: conduitId !== null && conduitId.length > 0 ? `${conduitId.slice(0, 8)}...` : 'null',
-})
-
 const isRetryableSubscriptionError = function isRetryableSubscriptionError(error: Error): boolean {
   return error.message.includes('Rate limit') || error.message.includes('network')
 }
 
 const subscribeWithRetry = async function subscribeWithRetry(
-  type: SubscriptionType,
+  type: UserSubscriptionType,
   providerAccountId: string,
   isCritical: boolean,
   dependencies: InitUserSubscriptionDependencies
 ): Promise<boolean> {
+  const conduitId = await fetchConduitId()
   if (conduitId === null || conduitId.length === 0) {
     logger.error('[TWITCHEVENTS] Missing conduit ID for subscription', {
       providerAccountId,
@@ -165,7 +144,7 @@ const recordSubscriptionResult = function recordSubscriptionResult(
 }
 
 const subscribeToTypes = async function subscribeToTypes(
-  types: readonly SubscriptionType[],
+  types: readonly UserSubscriptionType[],
   providerAccountId: string,
   isCritical: boolean,
   results: SubscriptionResults,
@@ -203,16 +182,19 @@ export const initUserSubscriptions = async function initUserSubscriptions(
   try {
     const existingSubscriptions = eventSubMap.get(providerAccountId) ?? {}
     const hadExistingSubscriptions = Object.keys(existingSubscriptions).length > 0
-    const missingTypes = REQUIRED_SUBSCRIPTION_TYPES.filter(
-      (type) =>
-        existingSubscriptions[type] === undefined && !(type === CHAT_SUBSCRIPTION_TYPE && isBanned)
+    const criticalTypes = findMissingSubscriptions(
+      CRITICAL_SUBSCRIPTION_TYPES,
+      existingSubscriptions,
+      isBanned
     )
-    if (missingTypes.length === 0) {
+    const secondaryTypes = findMissingSubscriptions(
+      SECONDARY_SUBSCRIPTION_TYPES,
+      existingSubscriptions,
+      isBanned
+    )
+    if (criticalTypes.length === 0 && secondaryTypes.length === 0) {
       return true
     }
-
-    const criticalTypes = missingTypes.filter((type) => CRITICAL_SUBSCRIPTION_TYPES.has(type))
-    const secondaryTypes = missingTypes.filter((type) => !CRITICAL_SUBSCRIPTION_TYPES.has(type))
     const results: SubscriptionResults = {
       criticalFailed: 0,
       criticalSuccess: 0,

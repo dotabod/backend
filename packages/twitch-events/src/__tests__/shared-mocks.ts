@@ -1,3 +1,4 @@
+import type { TwitchEventType } from '@dotabod/shared-utils/event-sub'
 // Shared test harness for twitch-events. Filename is intentionally NOT
 // `.test.ts` so bun's runner ignores it.
 //
@@ -9,7 +10,6 @@
 import { vi } from 'vitest'
 
 import type { TwitchEventSubResponse } from '../interfaces.ts'
-import type { TwitchEventTypes } from '../twitch-event-types.ts'
 
 export type TestValue =
   | string
@@ -32,7 +32,7 @@ interface LogCall {
 interface SubscribeCall {
   conduitId: string
   userId: string
-  type: keyof TwitchEventTypes
+  type: TwitchEventType
 }
 
 interface TestState {
@@ -40,7 +40,7 @@ interface TestState {
   isBanned: boolean
   accountIds: string[]
   // Per-(userId,type) subscribe result; default true. Throw by setting an Error.
-  subscribeResult: (userId: string, type: keyof TwitchEventTypes) => boolean | Promise<boolean>
+  subscribeResult: (userId: string, type: TwitchEventType) => boolean | Promise<boolean>
   subscribeCalls: SubscribeCall[]
   logInfo: LogCall[]
   logWarn: LogCall[]
@@ -366,7 +366,7 @@ vi.doMock(import('../twitch/lib/get-account-ids'), () => ({
 }))
 
 vi.doMock('../subscribe-chat-messages-for-user', () => ({
-  genericSubscribe: async (conduitId: string, userId: string, type: keyof TwitchEventTypes) => {
+  genericSubscribe: async (conduitId: string, userId: string, type: TwitchEventType) => {
     state.subscribeCalls.push({ conduitId, type, userId })
     return await state.subscribeResult(userId, type)
   },
@@ -416,8 +416,7 @@ vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
 export const { eventSubMap } = await import('../chat-sub-ids')
 export const { runSubscriptionHealthCheck } = await import('../utils/subscription-health-check')
 export const { RateLimiter } = await import('../utils/rate-limiter-core')
-export const { fetchExistingSubscriptions, subsToCleanup } =
-  await import('../fetch-existing-subscriptions')
+export const { fetchExistingSubscriptions } = await import('../fetch-existing-subscriptions')
 export const { initUserSubscriptions } = await import('../init-user-subscriptions')
 export const { subscribeToEvents } = await import('../subscribe-to-events')
 export const { executeRevoke, revokeEvent, stopUserSubscriptions } =
@@ -442,10 +441,10 @@ export const setupAccountWatcher = function setupAccountWatcher(): void {
 
 export const seedSubscriptions = function seedSubscriptions(
   userId: string,
-  types: readonly (keyof TwitchEventTypes)[]
+  types: readonly TwitchEventType[]
 ) {
   const subscriptions: Partial<
-    Record<keyof TwitchEventTypes, Pick<TwitchEventSubResponse['data'][0], 'id' | 'status'>>
+    Record<TwitchEventType, Pick<TwitchEventSubResponse['data'][0], 'id' | 'status'>>
   > = {}
   for (const type of types) {
     subscriptions[type] = { id: `${userId}-${type}`, status: 'enabled' }

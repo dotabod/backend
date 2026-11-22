@@ -12,8 +12,7 @@ const subscribeAccount = async function subscribeAccount(
   errors: Map<string, number>
 ): Promise<boolean> {
   try {
-    await initUserSubscriptions(providerAccountId)
-    return true
+    return await initUserSubscriptions(providerAccountId)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     const errorKey = errorMessage.slice(0, 100)

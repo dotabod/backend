@@ -1,13 +1,12 @@
+import type { TwitchEventType } from '@dotabod/shared-utils/event-sub'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import type { EventSubStatus } from '../interfaces.ts'
-import type { TwitchEventTypes } from '../twitch-event-types.ts'
 import {
   clearSubscriptions,
   eventSubMap,
   fetchExistingSubscriptions,
   fetchState,
-  subsToCleanup,
 } from './shared-mocks.ts'
 
 interface SubscriptionFixture {
@@ -18,7 +17,7 @@ interface SubscriptionFixture {
   id: string
   status: EventSubStatus
   transport: { method: string }
-  type: keyof TwitchEventTypes
+  type: TwitchEventType
 }
 
 const sub = (overrides: Partial<SubscriptionFixture> = {}) =>
@@ -34,7 +33,6 @@ const sub = (overrides: Partial<SubscriptionFixture> = {}) =>
 describe(fetchExistingSubscriptions, () => {
   beforeEach(() => {
     clearSubscriptions()
-    subsToCleanup.length = 0
     fetchState.queue = []
     fetchState.calls = []
   })
@@ -93,9 +91,7 @@ describe(fetchExistingSubscriptions, () => {
         status: 200,
       },
     ]
-    await fetchExistingSubscriptions()
-    expect(subsToCleanup).toContain('webhook-1')
-    expect(subsToCleanup).toContain('orphan-1')
+    await expect(fetchExistingSubscriptions()).resolves.toStrictEqual(['webhook-1', 'orphan-1'])
   })
 
   it('does not queue app-level auth grant/revoke subscriptions for cleanup', async () => {
@@ -119,7 +115,6 @@ describe(fetchExistingSubscriptions, () => {
         status: 200,
       },
     ]
-    await fetchExistingSubscriptions()
-    expect(subsToCleanup).toHaveLength(0)
+    await expect(fetchExistingSubscriptions()).resolves.toStrictEqual([])
   })
 })

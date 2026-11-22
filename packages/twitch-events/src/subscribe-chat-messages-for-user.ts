@@ -3,7 +3,8 @@ import { z } from 'zod'
 
 import { eventSubMap } from './chat-sub-ids'
 import { EVENT_SUB_STATUSES } from './interfaces'
-import type { TwitchEventTypes } from './twitch-event-types'
+import { CHAT_SUBSCRIPTION_TYPE } from './subscription-topics.js'
+import type { UserSubscriptionType } from './subscription-topics.js'
 import { revokeEvent } from './twitch/lib/revoke-event'
 import { rateLimiter } from './utils/rate-limiter-core'
 
@@ -44,10 +45,10 @@ const getTwitchErrorMessage = function getTwitchErrorMessage(
 export const genericSubscribe = async function genericSubscribe(
   conduitId: string,
   broadcasterId: string,
-  type: keyof TwitchEventTypes,
+  type: UserSubscriptionType,
   forceRefreshToken = false
 ): Promise<boolean> {
-  if (type === 'channel.chat.message') {
+  if (type === CHAT_SUBSCRIPTION_TYPE) {
     const isBanned = await checkBotStatus()
     if (isBanned) {
       return true
@@ -65,6 +66,7 @@ export const genericSubscribe = async function genericSubscribe(
 
   return await rateLimiter.schedule(async (): Promise<boolean> => {
     const headers = await getTwitchHeaders(undefined, forceRefreshToken)
+    const userId = type === CHAT_SUBSCRIPTION_TYPE ? botUserId : undefined
 
     const baseBody = {
       transport: {
@@ -75,36 +77,13 @@ export const genericSubscribe = async function genericSubscribe(
     }
     const body = {
       ...baseBody,
-      condition: (() => {
-        if (type === 'user.update') {
-          return { user_id: broadcasterId }
-        }
-        if (type === 'channel.chat.message') {
-          return {
-            broadcaster_user_id: broadcasterId,
-            user_id: botUserId,
-          }
-        }
-        if (
-          [
-            'stream.offline',
-            'stream.online',
-            'channel.prediction.begin',
-            'channel.prediction.progress',
-            'channel.prediction.lock',
-            'channel.prediction.end',
-            'channel.poll.begin',
-            'channel.poll.progress',
-            'channel.poll.end',
-          ].includes(type)
-        ) {
-          return { broadcaster_user_id: broadcasterId }
-        }
-        return {
-          broadcaster_user_id: broadcasterId,
-          user_id: botUserId,
-        }
-      })(),
+      condition:
+        type === 'user.update'
+          ? { user_id: broadcasterId }
+          : {
+              broadcaster_user_id: broadcasterId,
+              user_id: userId,
+            },
       type,
     }
 
