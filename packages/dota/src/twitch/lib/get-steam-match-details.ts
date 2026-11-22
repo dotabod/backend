@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { requestSteam } from '../../steam/request'
+import { steamSocket } from '../../steam/ws'
 import { DotaGcTeam } from '../../types'
 import type { MatchClosingDetailsResponse } from '../../types'
 
@@ -32,11 +32,9 @@ const matchMinimalDetailsResponseSchema = z.object({
 export const getSteamMatchDetails = async function getSteamMatchDetails(
   matchId: string
 ): Promise<MatchClosingDetailsResponse> {
-  const { matches } = await requestSteam(
-    'getMatchMinimalDetails',
-    [{ match_id: Number(matchId) }],
-    matchMinimalDetailsResponseSchema,
-    15_000
-  )
-  return { matches }
+  const response: unknown = await steamSocket.emitWithAck('getMatchMinimalDetails', {
+    match_id: Number(matchId),
+  })
+  const parsed = matchMinimalDetailsResponseSchema.parse(response)
+  return { matches: parsed.matches }
 }
