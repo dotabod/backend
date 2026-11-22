@@ -86,7 +86,8 @@ export const startDota = async function startDota(): Promise<void> {
   logger.info('Starting on', { env: process.env.DOTABOD_ENV })
   const [redis, translations] = await Promise.allSettled([setupRedisClient(), setupTranslations()])
   if (redis.status === 'rejected') {
-    logger.error('Redis setup failed', { reason: redis.reason })
+    const reason: unknown = redis.reason
+    logger.error('Redis setup failed', { reason })
   }
   if (translations.status === 'rejected') {
     throw new Error('Translation setup failed', { cause: translations.reason })

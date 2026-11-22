@@ -1,3 +1,4 @@
+import type { EventEmitter } from 'node:events'
 import fs from 'node:fs'
 import { promisify } from 'node:util'
 
@@ -33,6 +34,31 @@ import { retryCustom } from './utils/retry'
 interface CacheEntry {
   timestamp: number
   card: Cards
+}
+
+interface DotaGcClient extends EventEmitter<{
+  hellotimeout: []
+  ready: []
+  sourceTVGamesData: [SourceTvGamesResponse | null]
+  unready: []
+}> {
+  _gcReady: boolean
+  exit(): void
+  launch(): void
+  requestMatchMinimalDetails(
+    ids: number[],
+    listener: (error: Error | number | null, response: MatchMinimalDetailsResponse) => void
+  ): void
+  requestProfileCard(
+    accountId: number,
+    listener: (error: Error | number | null, card: Cards) => void
+  ): void
+  requestSourceTVGames(request: { start_game: number }): void
+  spectateFriendGame(
+    request: { steam_id: Long },
+    listener: (response?: { server_steamid?: Long }, error?: Error) => void
+  ): void
+  ToSteamID(accountId: number): Long
 }
 
 const MAX_CACHE_SIZE = 5000
@@ -160,7 +186,7 @@ class Dota {
   private readonly cache = new Map<number, CacheEntry>()
   private readonly user: SteamUserClient
   private readonly playerSummaries: SteamPlayerSummaryService
-  public dota2
+  public readonly dota2: DotaGcClient
   // steam-user owns CM reconnection (autoRelogin). This backoff only paces
   // re-logon attempts after a *fatal* logon error (e.g. a rejected refresh
   // token) so we don't hammer Steam's auth servers and trip a login
@@ -364,7 +390,7 @@ class Dota {
       let callbackNotSpecificGames: ((data: SourceTvGamesResponse | null) => void) | null = null
 
       const removeListener = () => {
-        if (!listenerRemoved) {
+        if (!listenerRemoved && callbackNotSpecificGames !== null) {
           listenerRemoved = true
           this.dota2.removeListener('sourceTVGamesData', callbackNotSpecificGames)
         }

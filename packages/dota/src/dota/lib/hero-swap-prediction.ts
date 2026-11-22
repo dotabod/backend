@@ -127,34 +127,6 @@ const reopenPrediction = async function reopenPrediction(
   })
 }
 
-export const handleHeroSwap = async function handleHeroSwap(
-  handler: GSIHandlerType,
-  name: HeroNames
-): Promise<void> {
-  const { client } = handler
-  const matchId = client.gsi?.map?.matchid
-  if (matchId === undefined || matchId.length === 0) {
-    return
-  }
-
-  const previous = swaps.get(handler)
-  if (previous?.matchId === matchId && previous.hero === name) {
-    return
-  }
-
-  cancelHeroSwap(handler)
-  const swap: HeroSwap = { hero: name, matchId }
-  swaps.set(handler, swap)
-
-  try {
-    await scheduleReopen(handler, swap)
-  } finally {
-    if (swap.taskId === undefined && swaps.get(handler) === swap) {
-      swaps.delete(handler)
-    }
-  }
-}
-
 const scheduleReopen = async function scheduleReopen(
   handler: GSIHandlerType,
   swap: HeroSwap
@@ -210,4 +182,32 @@ const scheduleReopen = async function scheduleReopen(
     }
   )
   await redis.client.set(heroKey, name)
+}
+
+export const handleHeroSwap = async function handleHeroSwap(
+  handler: GSIHandlerType,
+  name: HeroNames
+): Promise<void> {
+  const { client } = handler
+  const matchId = client.gsi?.map?.matchid
+  if (matchId === undefined || matchId.length === 0) {
+    return
+  }
+
+  const previous = swaps.get(handler)
+  if (previous?.matchId === matchId && previous.hero === name) {
+    return
+  }
+
+  cancelHeroSwap(handler)
+  const swap: HeroSwap = { hero: name, matchId }
+  swaps.set(handler, swap)
+
+  try {
+    await scheduleReopen(handler, swap)
+  } finally {
+    if (swap.taskId === undefined && swaps.get(handler) === swap) {
+      swaps.delete(handler)
+    }
+  }
 }

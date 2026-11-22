@@ -7,19 +7,21 @@ import { steamSocket } from './steam/ws'
 process.on('SIGTERM', () => process.exit(0))
 process.on('SIGINT', () => process.exit(0))
 
-const logAndExit = (error: unknown): never => {
+const logAndExit = (error: Error): never => {
   logger.error('Unhandled error occurred. Exiting...', { error })
   process.exit(1)
 }
 
 process.on('uncaughtException', logAndExit)
-process.on('unhandledRejection', logAndExit)
+process.on('unhandledRejection', (reason) => {
+  logAndExit(new Error('Unhandled rejection', { cause: reason }))
+})
 
 try {
   await startDota()
   await import('./twitch/index.js')
 } catch (error) {
-  logAndExit(error)
+  logAndExit(new Error('Dota startup failed', { cause: error }))
 }
 
 // Report dota's dependency health to dedicated Uptime Kuma push monitors.

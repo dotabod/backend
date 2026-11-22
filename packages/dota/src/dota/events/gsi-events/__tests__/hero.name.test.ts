@@ -91,7 +91,7 @@ vi.doMock('@dotabod/shared-utils', () =>
               ],
             }),
         },
-        streams: { createStreamMarker: async () => await Promise.resolve() },
+        streams: { createStreamMarker: vi.fn().mockResolvedValue(undefined) },
       }),
     logger: loggerMock,
     supabase: supabaseMock,

@@ -4592,22 +4592,6 @@
         "severity": "error"
       }
     },
-    "219d0d0236868cde0eebf70ab3f9cf5657e1089c89cde2d941c9a0acff6837cf": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-then)",
-        "file": "packages/dota/src/index.ts",
-        "labels": [
-          {
-            "context": ["})", ".catch((error) => {", "console.error('Error during setup:', error)"],
-            "message": "",
-            "span": "catch"
-          }
-        ],
-        "message": "Prefer await to then()/catch()/finally()",
-        "severity": "error"
-      }
-    },
     "21a429e53b6c52260878e4873ac31442e026c7be0c265df9bfe3aa4841dd8231": {
       "count": 1,
       "diagnostic": {
@@ -6688,26 +6672,6 @@
         "severity": "error"
       }
     },
-    "319d61cc56c01a232876292c390b80cb92954c6b7fe40700cfa9eeac05ef8255": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-unknown-parameters)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "matchIds,",
-              "(err: unknown, data: MatchMinimalDetailsResponse) => {",
-              "if (err !== null && err !== undefined) {"
-            ],
-            "message": "",
-            "span": "unknown"
-          }
-        ],
-        "message": "Parameter `err` leaves input unparsed. Accept a named domain type; run the expected schema or parser at the I/O boundary before calling this function.",
-        "severity": "error"
-      }
-    },
     "31bbe618ccc1f7110463a27c55a4735e46adeecb9d87e76645e628549076040a": {
       "count": 1,
       "diagnostic": {
@@ -7622,26 +7586,6 @@
           }
         ],
         "message": "Property dotaClient should be declared as a class property.",
-        "severity": "error"
-      }
-    },
-    "38a63933bf1279cf8888bc9ae93ef730d264afa918962e3de19b8802b92a8895": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-assignment)",
-        "file": "packages/dota/src/dota/index.ts",
-        "labels": [
-          {
-            "context": [
-              "logger.error(`${setupFunctions[index]} setup failed`, {",
-              "reason: result.reason,",
-              "})"
-            ],
-            "message": "",
-            "span": "reason: result.reason"
-          }
-        ],
-        "message": "Unsafe assignment of an any value.",
         "severity": "error"
       }
     },
@@ -9526,26 +9470,6 @@
           }
         ],
         "message": "This dictionary's unknown value type gives callers no concrete value contract. Use an owner/schema-derived value type; parse external payloads before insertion.",
-        "severity": "error"
-      }
-    },
-    "4558719d0a0a2dc58e9b56b72027d5d9ea3efca3d056f9cddbf05cb49aca7278": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(prefer-import-in-mock)",
-        "file": "packages/dota/src/dota/events/gsi-events/__tests__/hero.name.test.ts",
-        "labels": [
-          {
-            "context": [
-              "",
-              "vi.doMock('../../../../twitch/lib/refund-twitch-bets', () => ({",
-              "refundTwitchBet: async (channelId: string, predictionId: string) => {"
-            ],
-            "message": "",
-            "span": "'../../../../twitch/lib/refund-twitch-bets', () => ({\n  refundTwitchBet: async (channelId: string, predictionId: string) => {\n    refundCalls.push({ channelId, predictionId })\n    return await Promise.resolve(predictionId)\n  },\n})"
-          }
-        ],
-        "message": "Mocked modules must be dynamic imported.",
         "severity": "error"
       }
     },
@@ -13025,26 +12949,6 @@
         "severity": "error"
       }
     },
-    "5e5562882dd4fef043f47a54577b14c4629144757e5ffa0643dd8bcb5ddc9af6": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-call)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "} else {",
-              "this.dota2.requestProfileCard(account, (err: unknown, card: Cards) => {",
-              "if (err !== null && err !== undefined) {"
-            ],
-            "message": "",
-            "span": "this.dota2.requestProfileCard"
-          }
-        ],
-        "message": "Unsafe call of a(n) `error` type typed value.",
-        "severity": "error"
-      }
-    },
     "5e5990707bc0d654ef3238a137d36e50511854b5cf4b30b5d4717e30f7249920": {
       "count": 1,
       "diagnostic": {
@@ -16507,26 +16411,6 @@
         "severity": "error"
       }
     },
-    "7ced5aa42031de8492beb2b522313c916a9caeaf7707949381e3262cb097c643": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-then)",
-        "file": "packages/dota/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "Promise.all([import('./dota/index'), import('./twitch/index')])",
-              ".then(() => {",
-              "// All imports are now loaded"
-            ],
-            "message": "",
-            "span": "then"
-          }
-        ],
-        "message": "Prefer await to then()/catch()/finally()",
-        "severity": "error"
-      }
-    },
     "7cf4d4718f418406cb719bfdbe392305d194c71ac5a80bffb78912c27beb228d": {
       "count": 1,
       "diagnostic": {
@@ -16985,26 +16869,6 @@
           }
         ],
         "message": "Suggest using `jest.spyOn()` or `vi.spyOn()`.",
-        "severity": "error"
-      }
-    },
-    "80ca45a20bd3bce69e1b5f7f7ee3a324c402b3aff3445c0506b5c408887015ec": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-module-mocking)",
-        "file": "packages/dota/src/dota/events/gsi-events/__tests__/hero.name.test.ts",
-        "labels": [
-          {
-            "context": [
-              "",
-              "vi.doMock('../../../../twitch/lib/refund-twitch-bets', () => ({",
-              "refundTwitchBet: async (channelId: string, predictionId: string) => {"
-            ],
-            "message": "",
-            "span": "vi.doMock('../../../../twitch/lib/refund-twitch-bets', () => ({\n  refundTwitchBet: async (channelId: string, predictionId: string) => {\n    refundCalls.push({ channelId, predictionId })\n    return await Promise.resolve(predictionId)\n  },\n}))"
-          }
-        ],
-        "message": "Replace module mocking with dependency injection through a real interface, service layer, or faithful test implementation.",
         "severity": "error"
       }
     },
@@ -19331,26 +19195,6 @@
         "severity": "error"
       }
     },
-    "9143db76a1d3f060566c767646121f8fc28eecbf322de801aaadb23ffad5cb21": {
-      "count": 1,
-      "diagnostic": {
-        "code": "unicorn(no-array-for-each)",
-        "file": "packages/dota/src/dota/index.ts",
-        "labels": [
-          {
-            "context": [
-              "// Check which promises failed",
-              "results.forEach((result, index) => {",
-              "if (result.status === 'rejected') {"
-            ],
-            "message": "",
-            "span": "forEach"
-          }
-        ],
-        "message": "Do not use `Array#forEach`",
-        "severity": "error"
-      }
-    },
     "9150b6b0546bf0e0fb8bb60e82e8851435f40ca2dbe3f00586e6a55521c6d004": {
       "count": 1,
       "diagnostic": {
@@ -19428,22 +19272,6 @@
           }
         ],
         "message": "Replace module mocking with dependency injection through a real interface, service layer, or faithful test implementation.",
-        "severity": "error"
-      }
-    },
-    "92179631d6797f7f479ccd9f86c953b50e5ae1ca336d8fdb0053a48db7b0c3ae": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-callbacks)",
-        "file": "packages/dota/src/index.ts",
-        "labels": [
-          {
-            "context": ["})", ".catch((error) => {", "console.error('Error during setup:', error)"],
-            "message": "",
-            "span": "(error) => {\n      console.error('Error during setup:', error)\n    }"
-          }
-        ],
-        "message": "Prefer `async`/`await` to the callback pattern",
         "severity": "error"
       }
     },
@@ -21887,26 +21715,6 @@
         "severity": "error"
       }
     },
-    "a42492fcb4e4c3f9a6c9a309a1d3ba85e67bff634c5296fc0a75a2d462ddd584": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-member-access)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "} else {",
-              "this.dota2.requestProfileCard(account, (err: unknown, card: Cards) => {",
-              "if (err !== null && err !== undefined) {"
-            ],
-            "message": "",
-            "span": "requestProfileCard"
-          }
-        ],
-        "message": "Unsafe member access .requestProfileCard on an `error` typed value.",
-        "severity": "error"
-      }
-    },
     "a4379b7764e9db530345b3e0461cce93daf669b306be732cc95483d4805cfa4b": {
       "count": 1,
       "diagnostic": {
@@ -24313,22 +24121,6 @@
         "severity": "error"
       }
     },
-    "b4d141335a6fc3a7b57b52e133e985c21f5ced854eed030a0c61f94fc0ce00a5": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-confusing-void-expression)",
-        "file": "packages/dota/src/dota/index.ts",
-        "labels": [
-          {
-            "context": ["setupTranslations(),", "Promise.resolve(setupSupabaseWatcher()),", "])"],
-            "message": "",
-            "span": "setupSupabaseWatcher()"
-          }
-        ],
-        "message": "Placing a void expression inside another expression is forbidden.",
-        "severity": "error"
-      }
-    },
     "b5277cd8a9ac26b46fb8d82b0dad9fa59f1bfe3f7ecffd77f1b7aa3e2ef7db54": {
       "count": 1,
       "diagnostic": {
@@ -25422,22 +25214,6 @@
           }
         ],
         "message": "Mocked modules must be dynamic imported.",
-        "severity": "error"
-      }
-    },
-    "bfe8fe585b024ccdfdc9872a55ea628801c34cd32617f883c9f73c95de7c71f9": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(use-unknown-in-catch-callback-variable)",
-        "file": "packages/dota/src/index.ts",
-        "labels": [
-          {
-            "context": ["})", ".catch((error) => {", "console.error('Error during setup:', error)"],
-            "message": "",
-            "span": "error"
-          }
-        ],
-        "message": "Prefer the safe `: unknown` for a `catch` callback variable.",
         "severity": "error"
       }
     },
@@ -27923,26 +27699,6 @@
         "severity": "error"
       }
     },
-    "d096f5390ba294ab8449fe2130b4407788154d70f069f50300fdf96c892eedf1": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-unknown-parameters)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "} else {",
-              "this.dota2.requestProfileCard(account, (err: unknown, card: Cards) => {",
-              "if (err !== null && err !== undefined) {"
-            ],
-            "message": "",
-            "span": "unknown"
-          }
-        ],
-        "message": "Parameter `err` leaves input unparsed. Accept a named domain type; run the expected schema or parser at the I/O boundary before calling this function.",
-        "severity": "error"
-      }
-    },
     "3ba8ded88eaaeae8e6707afd12a5be825363b248d41c221c8d5dc7f690179d2a": {
       "count": 1,
       "diagnostic": {
@@ -28467,22 +28223,6 @@
         "severity": "error"
       }
     },
-    "d42a3316fc612528bf0f453522dcbaa403c8f081aec8aac1ff3b2d4c2bd65f86": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-member-access)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": ["} else {", "this.dota2.requestMatchMinimalDetails(", "matchIds,"],
-            "message": "",
-            "span": "requestMatchMinimalDetails"
-          }
-        ],
-        "message": "Unsafe member access .requestMatchMinimalDetails on an `error` typed value.",
-        "severity": "error"
-      }
-    },
     "d440bd48b1b365e8f5de9a708cb83cdd3195db1f7d713c29f32ef4de68227d5c": {
       "count": 1,
       "diagnostic": {
@@ -28917,26 +28657,6 @@
           }
         ],
         "message": "Avoid creating new promises",
-        "severity": "error"
-      }
-    },
-    "d6781db7561059180daea00b77ef23f726079ab51f41e40335956843afabdf16": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-unknown-parameters)",
-        "file": "packages/dota/src/dota/index.ts",
-        "labels": [
-          {
-            "context": [
-              "",
-              "const logAndExit = (err: unknown) => {",
-              "logger.error('Unhandled error occurred. Exiting...', { error: err })"
-            ],
-            "message": "",
-            "span": "unknown"
-          }
-        ],
-        "message": "Parameter `err` leaves input unparsed. Accept a named domain type; run the expected schema or parser at the I/O boundary before calling this function.",
         "severity": "error"
       }
     },
@@ -31640,26 +31360,6 @@
         "severity": "error"
       }
     },
-    "ea22d1b1a65f0111954172846bb9c120d6dd1f4014dc7773d6e19f3b7529872e": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-then)",
-        "file": "packages/dota/src/dota/index.ts",
-        "labels": [
-          {
-            "context": [
-              "// Start the initialization but don't export the promise",
-              "main().catch(logAndExit)",
-              ""
-            ],
-            "message": "",
-            "span": "catch"
-          }
-        ],
-        "message": "Prefer await to then()/catch()/finally()",
-        "severity": "error"
-      }
-    },
     "ea276897a83676244274062b575e348e0dc84199172128bf78b6dc28a2c966b7": {
       "count": 1,
       "diagnostic": {
@@ -33308,22 +33008,6 @@
         "severity": "error"
       }
     },
-    "f62323827f8a7c78b4b752c3456606876f6948cb3e78b872f1f11cd462a94504": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(no-use-of-empty-return-value)",
-        "file": "packages/dota/src/dota/index.ts",
-        "labels": [
-          {
-            "context": ["setupTranslations(),", "Promise.resolve(setupSupabaseWatcher()),", "])"],
-            "message": "",
-            "span": "setupSupabaseWatcher"
-          }
-        ],
-        "message": "Remove this use of the output from \"setupSupabaseWatcher\"; \"setupSupabaseWatcher\" doesn't return anything.",
-        "severity": "error"
-      }
-    },
     "f63d84562d84b2b6021cc0309f975dc7d9259a769dab4b7fdb46e6ef6d7abd45": {
       "count": 1,
       "diagnostic": {
@@ -33822,22 +33506,6 @@
             ],
             "message": "",
             "span": "db.heroes.createIndex"
-          }
-        ],
-        "message": "Unsafe call of a(n) `error` type typed value.",
-        "severity": "error"
-      }
-    },
-    "fa7fccb213837843addadee7ae95b4d92914e0e2c244409c3745a13ee19431aa": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-call)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": ["} else {", "this.dota2.requestMatchMinimalDetails(", "matchIds,"],
-            "message": "",
-            "span": "this.dota2.requestMatchMinimalDetails"
           }
         ],
         "message": "Unsafe call of a(n) `error` type typed value.",
