@@ -1086,6 +1086,7 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
             win_team: 'none',
           },
         }),
+        mmr: 4209,
       })
     )
     redisStore['token-arteezy:matchId'] = '8825999999'
