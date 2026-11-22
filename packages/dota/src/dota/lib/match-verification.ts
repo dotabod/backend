@@ -1,9 +1,9 @@
 import { promisify } from 'node:util'
 
 import { logger } from '@dotabod/shared-utils'
-import type { Socket } from 'socket.io-client'
 import { z } from 'zod'
 
+import type { SteamSocket } from '../../steam/ws.js'
 import { heroes } from './hero-list'
 
 type Team = 'radiant' | 'dire'
@@ -99,9 +99,9 @@ type SteamAck = (
   response: z.input<typeof valveResponseSchema> | null
 ) => void
 
-// The steam service acks with (error, response). emitWithAck can't read that shape: it
-// resolves with the first argument, the null error, so the callback form is used instead.
-export const socketMatchRequester = function socketMatchRequester(socket: Socket): MatchRequester {
+export const socketMatchRequester = function socketMatchRequester(
+  socket: Pick<SteamSocket, 'timeout'>
+): MatchRequester {
   const ask = promisify(
     (
       matchId: number,
