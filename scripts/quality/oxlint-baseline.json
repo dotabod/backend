@@ -1821,26 +1821,6 @@
         "severity": "error"
       }
     },
-    "0cfd28cfb67bac6725b01b7d2ea1acb480ebd3a21c67355983dc5073e954edd6": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-callbacks)",
-        "file": "packages/steam/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "const result = await withTimeout(GetRealTimeStats(data))",
-              "callback(null, result)",
-              "} catch (error) {"
-            ],
-            "message": "",
-            "span": "callback(null, result)"
-          }
-        ],
-        "message": "Prefer `async`/`await` to the callback pattern",
-        "severity": "error"
-      }
-    },
     "0d0c7dd9962b6f157547cd8a72cf1c8b78597bfa6c5d408d2fdf0ba11cd2e331": {
       "count": 1,
       "diagnostic": {
@@ -2508,26 +2488,6 @@
           }
         ],
         "message": "Mocked modules must be dynamic imported.",
-        "severity": "error"
-      }
-    },
-    "100e7e49792e65c6b6c0689700f2bf7ac5a90a961eec38acbb67ac23d1f55fc6": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-unknown-returns)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "",
-              "public requestMatchDetails = async (matchIds: number): Promise<unknown> =>",
-              "await new Promise((resolve, reject) => {"
-            ],
-            "message": "",
-            "span": "Promise<unknown>"
-          }
-        ],
-        "message": "This function exposes `unknown` to its caller. Parse the value at its boundary and return a named domain type.",
         "severity": "error"
       }
     },
@@ -5821,26 +5781,6 @@
         "severity": "error"
       }
     },
-    "29f3948334071d7ec6e5430bdbc2f956a090ce2ee233effbe5efae6d1ee7897a": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-unknown-parameters)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "} else {",
-              "this.dota2.requestMatchDetails(matchIds, (err: unknown, data: unknown) => {",
-              "if (err !== null && err !== undefined) {"
-            ],
-            "message": "",
-            "span": "unknown"
-          }
-        ],
-        "message": "Parameter `data` leaves input unparsed. Accept a named domain type; run the expected schema or parser at the I/O boundary before calling this function.",
-        "severity": "error"
-      }
-    },
     "2a0fa6eadf3719e2e7563cd130cebaf15b6702a45075bd48b96b22714b227fc3": {
       "count": 1,
       "diagnostic": {
@@ -7212,26 +7152,6 @@
         "severity": "error"
       }
     },
-    "3433615aea2d6a785647a12f5b0db8de6cac654df1dcabada8da069f48b95480": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-call)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "} else {",
-              "this.dota2.requestMatchDetails(matchIds, (err: unknown, data: unknown) => {",
-              "if (err !== null && err !== undefined) {"
-            ],
-            "message": "",
-            "span": "this.dota2.requestMatchDetails"
-          }
-        ],
-        "message": "Unsafe call of a(n) `error` type typed value.",
-        "severity": "error"
-      }
-    },
     "343d63e71f1a50642d41d46a39494d358d18ca6fe8aa6a333e3eab97de5bb153": {
       "count": 1,
       "diagnostic": {
@@ -7413,26 +7333,6 @@
           }
         ],
         "message": "Prefer `async`/`await` to the callback pattern",
-        "severity": "error"
-      }
-    },
-    "351f6b5ac7543416b5559f6b3674aa575fb8114315e60492d1588880678b270d": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-module-mocking)",
-        "file": "packages/dota/src/dota/events/gsi-events/__tests__/hero.name.test.ts",
-        "labels": [
-          {
-            "context": [
-              "// returning undefined on error (the real fn does this on caught errors).",
-              "vi.doMock('../../../../twitch/lib/open-twitch-bet', () => ({",
-              "openTwitchBet: async () => {},"
-            ],
-            "message": "",
-            "span": "vi.doMock('../../../../twitch/lib/open-twitch-bet', () => ({\n      openTwitchBet: async () => {},\n    }))"
-          }
-        ],
-        "message": "Replace module mocking with dependency injection through a real interface, service layer, or faithful test implementation.",
         "severity": "error"
       }
     },
@@ -8187,26 +8087,6 @@
           }
         ],
         "message": "The explicit unknown type on return value of `normalizeNullDefault` discards known type evidence. Keep inference, validate with `satisfies`, or use a named owner contract.",
-        "severity": "error"
-      }
-    },
-    "3b558af2d69acf8bd77ece68a3941b80cec32742d523f60e83820865f7a8f647": {
-      "count": 1,
-      "diagnostic": {
-        "code": "node(callback-return)",
-        "file": "packages/steam/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "const result = await withTimeout(GetRealTimeStats(data))",
-              "callback(null, result)",
-              "} catch (error) {"
-            ],
-            "message": "",
-            "span": "callback(null, result)"
-          }
-        ],
-        "message": "Expected return with your callback function.",
         "severity": "error"
       }
     },
@@ -11760,26 +11640,6 @@
         "severity": "error"
       }
     },
-    "5447cfa9aa443aa33ffd9616f6c76d16f39ea974cccff7c692cce8196b4e9a18": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(require-safety-comment-for-type-assertion)",
-        "file": "packages/dota/src/dota/events/gsi-events/hero.name.ts",
-        "labels": [
-          {
-            "context": [
-              "",
-              "const playingHero = (await redisClient.client.get(",
-              "`${dotaClient.getToken()}:playingHero`"
-            ],
-            "message": "",
-            "span": "(await redisClient.client.get(\n      `${dotaClient.getToken()}:playingHero`\n    )) as HeroNames | null"
-          }
-        ],
-        "message": "This type assertion has no `SAFETY:` justification. State the checked invariant immediately before the assertion or its containing statement.",
-        "severity": "error"
-      }
-    },
     "54549503697d2a1e490456512966b5f11505c151de9a8a63b1369e4386b533ae": {
       "count": 1,
       "diagnostic": {
@@ -13013,26 +12873,6 @@
         "severity": "error"
       }
     },
-    "5cc8d39ae374ceb72549d3a8a2c4ba69336d5c7f67bbd070cfbcf28f6941d04a": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-type-assertion)",
-        "file": "packages/dota/src/dota/events/gsi-events/hero.name.ts",
-        "labels": [
-          {
-            "context": [
-              "",
-              "const playingHero = (await redisClient.client.get(",
-              "`${dotaClient.getToken()}:playingHero`"
-            ],
-            "message": "",
-            "span": "(await redisClient.client.get(\n      `${dotaClient.getToken()}:playingHero`\n    )) as HeroNames | null"
-          }
-        ],
-        "message": "Unsafe type assertion: type '`npc_dota_hero_${string}` | null' is more narrow than the original type.",
-        "severity": "error"
-      }
-    },
     "5ceb88aa5850b22febd8a5c939b997d10c70577d6b43c8cd60b8c4f229896529": {
       "count": 1,
       "diagnostic": {
@@ -14221,26 +14061,6 @@
           }
         ],
         "message": "Mocked modules must be dynamic imported.",
-        "severity": "error"
-      }
-    },
-    "65d5161fea449f79b5d29ab14030116a2001f13d37ec65507ebd36b9290f4d1d": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-module-mocking)",
-        "file": "packages/dota/src/dota/events/gsi-events/__tests__/hero.name.test.ts",
-        "labels": [
-          {
-            "context": [
-              "",
-              "vi.doMock('../../../../twitch/lib/open-twitch-bet', () => ({",
-              "openTwitchBet: async ({ heroName }: { heroName?: string }) => {"
-            ],
-            "message": "",
-            "span": "vi.doMock('../../../../twitch/lib/open-twitch-bet', () => ({\n  openTwitchBet: async ({ heroName }: { heroName?: string }) => {\n    openBetCalls.push({ heroName })\n    return await Promise.resolve({ id: 'new-prediction-id' })\n  },\n}))"
-          }
-        ],
-        "message": "Replace module mocking with dependency injection through a real interface, service layer, or faithful test implementation.",
         "severity": "error"
       }
     },
@@ -15582,7 +15402,7 @@
       }
     },
     "732329631b349d4692834a646312a837322f71094c6d3003160c2f83e0b2d864": {
-      "count": 4,
+      "count": 3,
       "diagnostic": {
         "code": "node(callback-return)",
         "file": "packages/steam/src/index.ts",
@@ -17912,26 +17732,6 @@
         "severity": "error"
       }
     },
-    "86ba88dbc664d1c53191fdfbf1e0b21a489d5652ad168f5430db33f28e5a9c18": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(prefer-import-in-mock)",
-        "file": "packages/dota/src/dota/events/gsi-events/__tests__/hero.name.test.ts",
-        "labels": [
-          {
-            "context": [
-              "// returning undefined on error (the real fn does this on caught errors).",
-              "vi.doMock('../../../../twitch/lib/open-twitch-bet', () => ({",
-              "openTwitchBet: async () => {},"
-            ],
-            "message": "",
-            "span": "'../../../../twitch/lib/open-twitch-bet', () => ({\n      openTwitchBet: async () => {},\n    })"
-          }
-        ],
-        "message": "Mocked modules must be dynamic imported.",
-        "severity": "error"
-      }
-    },
     "86fb436ec5cd9e3122a055d54a56b80ccfa2cba0c3dff2e37d462b404f0fb328": {
       "count": 1,
       "diagnostic": {
@@ -19972,26 +19772,6 @@
           }
         ],
         "message": "This dictionary's unknown value type gives callers no concrete value contract. Use an owner/schema-derived value type; parse external payloads before insertion.",
-        "severity": "error"
-      }
-    },
-    "954b46851cce60b9add7209ee422623d124fb3d218f43da8253a58f4d2cf74bd": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(complexity)",
-        "file": "packages/dota/src/dota/events/gsi-events/hero.name.ts",
-        "labels": [
-          {
-            "context": [
-              "eventHandler.registerEvent('hero:name', {",
-              "handler: async (dotaClient, name: HeroNames) => {",
-              "if (!isPlayingMatch(dotaClient.client.gsi)) {"
-            ],
-            "message": "",
-            "span": "async (dotaClient, name: HeroNames) => {\n    if (!isPlayingMatch(dotaClient.client.gsi)) {\n      return\n    }\n\n    const betsEnabled = getValueOrDefault(\n      DBSettings.bets,\n      dotaClient.client.settings,\n      dotaClient.client.subscription\n    )\n    if (!betsEnabled) {\n      return\n    }\n\n    const playingHero = (await redisClient.client.get(\n      `${dotaClient.getToken()}:playingHero`\n    )) as HeroNames | null\n\n    if (playingHero !== null && playingHero.length > 0 && playingHero !== name) {\n      const matchId = await redisClient.client.get(`${dotaClient.getToken()}:matchId`)\n\n      if (matchId === null || matchId.length === 0) {\n        logger.error('No matchId found for hero:name event', {\n          token: dotaClient.getToken(),\n        })\n        return\n      }\n\n      // Check if this is actually the same game - prevents refunding bets when a new game starts\n      const gsiMatchId = dotaClient.client.gsi?.map?.matchid\n      if (gsiMatchId !== undefined && gsiMatchId.length > 0 && matchId !== gsiMatchId) {\n        // This is a new game, not a hero swap within the same game\n        // Don't refund/reopen bets - let openBets() handle the new game\n        logger.info('[BETS] Ignoring hero change - different match detected', {\n          gsiMatchId,\n          redisMatchId: matchId,\n          token: dotaClient.getToken(),\n        })\n        return\n      }\n\n      const { data: betData } = await supabase\n        .from('matches')\n        .select('predictionId')\n        .eq('matchId', matchId)\n        .eq('userId', dotaClient.getToken())\n        .is('won', null)\n        .single()\n\n      // KEEP IMMEDIATE REFUND - prevents betting on wrong hero\n      if (betData?.predictionId !== null && betData?.predictionId !== undefined) {\n        await refundTwitchBet(dotaClient.getChannelId(), betData.predictionId)\n      }\n\n      const hero = getHero(name)\n      const oldHeroName = getHero(playingHero)?.localized_name ?? playingHero\n      const newHeroName = hero?.localized_name ?? name\n\n      // DELAY OPENING NEW BET by stream delay\n      delayedQueue.addTask(\n        getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription),\n        async () => {\n          // Open new bet after delay\n          const bet = await openTwitchBet({\n            client: dotaClient.client,\n            heroName: hero?.localized_name,\n          })\n\n          // Update database with new prediction ID + the swapped hero name.\n          // Without `hero_name` here, the matches row keeps the originally-\n          // captured hero (from openTheBet) and !unresolved / manual-resolve\n          // chat copy would refer to the wrong hero until closeBets/updateMmr\n          // overwrites it at match end.\n          if (\n            bet?.id !== undefined &&\n            bet.id.length > 0 &&\n            betData?.predictionId !== null &&\n            betData?.predictionId !== undefined &&\n            betData.predictionId.length > 0\n          ) {\n            await supabase\n              .from('matches')\n              .update({\n                hero_name: name,\n                predictionId: bet.id,\n                updated_at: new Date().toISOString(),\n              })\n              .eq('predictionId', betData.predictionId)\n          } else if (\n            betData?.predictionId !== null &&\n            betData?.predictionId !== undefined &&\n            betData.predictionId.length > 0\n          ) {\n            await supabase\n              .from('matches')\n              .update({\n                hero_name: name,\n                predictionId: null,\n                updated_at: new Date().toISOString(),\n              })\n              .eq('predictionId', betData.predictionId)\n          }\n\n          // Send chat message with delay (defaults to true)\n          const tellChatBets = getValueOrDefault(\n            DBSettings.tellChatBets,\n            dotaClient.client.settings,\n            dotaClient.client.subscription\n          )\n          if (tellChatBets) {\n            say(\n              dotaClient.client,\n              t('bets.remade', {\n                emote: 'Okayeg 👍',\n                emote2: 'peepoGamble',\n                lng: dotaClient.client.locale,\n                newHeroName,\n                oldHeroName,\n              })\n            )\n          }\n\n          logger.info('[BETS] remade bets', {\n            event: 'open_bets',\n            newHeroName,\n            oldHeroName,\n            player_team: dotaClient.client.gsi?.player?.team_name,\n            user: dotaClient.getToken(),\n          })\n        }\n      )\n    }\n\n    await redisClient.client.set(`${dotaClient.getToken()}:playingHero`, name)\n  }"
-          }
-        ],
-        "message": "async function `handler` has a complexity of 21. Maximum allowed is 20.",
         "severity": "error"
       }
     },
@@ -26288,26 +26068,6 @@
         "severity": "error"
       }
     },
-    "c392fda8ad4e75c7d88973c0bb986906a25427d223c48bbe9853e743618c58dc": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-member-access)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "} else {",
-              "this.dota2.requestMatchDetails(matchIds, (err: unknown, data: unknown) => {",
-              "if (err !== null && err !== undefined) {"
-            ],
-            "message": "",
-            "span": "requestMatchDetails"
-          }
-        ],
-        "message": "Unsafe member access .requestMatchDetails on an `error` typed value.",
-        "severity": "error"
-      }
-    },
     "c3cd9d6975806d6eb20a5df80b43d67ebf9ff202c5cd363af459daac5be30d82": {
       "count": 1,
       "diagnostic": {
@@ -28279,26 +28039,6 @@
         "severity": "error"
       }
     },
-    "d1acda67b115e603a2dae58ecf406e7152993b6e711af7fcbe04d4b0fcdac886": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(prefer-import-in-mock)",
-        "file": "packages/dota/src/dota/events/gsi-events/__tests__/hero.name.test.ts",
-        "labels": [
-          {
-            "context": [
-              "",
-              "vi.doMock('../../../../twitch/lib/open-twitch-bet', () => ({",
-              "openTwitchBet: async ({ heroName }: { heroName?: string }) => {"
-            ],
-            "message": "",
-            "span": "'../../../../twitch/lib/open-twitch-bet', () => ({\n  openTwitchBet: async ({ heroName }: { heroName?: string }) => {\n    openBetCalls.push({ heroName })\n    return await Promise.resolve({ id: 'new-prediction-id' })\n  },\n})"
-          }
-        ],
-        "message": "Mocked modules must be dynamic imported.",
-        "severity": "error"
-      }
-    },
     "d1c75771bb9fddebb8cde0fa7588eadd13b4b4a3e342c1e34362173e146402d4": {
       "count": 1,
       "diagnostic": {
@@ -28616,7 +28356,7 @@
       }
     },
     "d380ccc2276da90508fb993273b7144a76a5d4ed7d4fa3d41d95dc05c28185e2": {
-      "count": 4,
+      "count": 3,
       "diagnostic": {
         "code": "promise(prefer-await-to-callbacks)",
         "file": "packages/steam/src/index.ts",
@@ -30092,26 +29832,6 @@
           }
         ],
         "message": "Promise returned in function argument where a void return was expected.",
-        "severity": "error"
-      }
-    },
-    "dd09fe634d5342e101ccbb2b9382ebca164218ace71c1604df80bfcd5d5920de": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-unknown-parameters)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "} else {",
-              "this.dota2.requestMatchDetails(matchIds, (err: unknown, data: unknown) => {",
-              "if (err !== null && err !== undefined) {"
-            ],
-            "message": "",
-            "span": "unknown"
-          }
-        ],
-        "message": "Parameter `err` leaves input unparsed. Accept a named domain type; run the expected schema or parser at the I/O boundary before calling this function.",
         "severity": "error"
       }
     },
@@ -31608,26 +31328,6 @@
           }
         ],
         "message": "Expected method `resolveHeroNameForSlot` to have this.",
-        "severity": "error"
-      }
-    },
-    "e7ca4982f02fa59745aa617189da1a8e4f35b0a6424dcacb140fadb893548b8b": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(no-unused-collection)",
-        "file": "packages/dota/src/dota/events/gsi-events/__tests__/hero.name.test.ts",
-        "labels": [
-          {
-            "context": [
-              "const refundCalls: { channelId: string; predictionId: string }[] = []",
-              "const openBetCalls: { heroName?: string }[] = []",
-              "const heldTasks: HeldTask[] = []"
-            ],
-            "message": "",
-            "span": "openBetCalls: { heroName?: string }[]"
-          }
-        ],
-        "message": "Either use this collection's contents or remove the collection.",
         "severity": "error"
       }
     },
@@ -33941,7 +33641,7 @@
       }
     },
     "f900996e0a54c83be19c63242012cfea2ddd14f308c8ddaddfa162b654313e7e": {
-      "count": 4,
+      "count": 3,
       "diagnostic": {
         "code": "promise(prefer-await-to-callbacks)",
         "file": "packages/steam/src/index.ts",
@@ -34190,26 +33890,6 @@
           }
         ],
         "message": "Promise returned in function argument where a void return was expected.",
-        "severity": "error"
-      }
-    },
-    "faaf35283dbe4a5e9cfdedb58b718a530f3bd8dec37d827a9f471a6518f3bbaa": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(avoid-new)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "private async fetchProfileCard(account: number): Promise<Cards> {",
-              "return await new Promise<Cards>((resolve, reject) => {",
-              "if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {"
-            ],
-            "message": "",
-            "span": "new Promise<Cards>((resolve, reject) => {\n      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {\n        reject(new CustomError('Error getting medal'))\n      } else {\n        this.dota2.requestProfileCard(account, (err: unknown, card: Cards) => {\n          if (err !== null && err !== undefined) {\n            logger.error('[STEAM] Error getting medal', { account, err })\n            reject(err)\n          }\n          resolve(card)\n        })\n      }\n    })"
-          }
-        ],
-        "message": "Avoid creating new promises",
         "severity": "error"
       }
     },
@@ -34587,22 +34267,6 @@
           }
         ],
         "message": "Value-returning function used in a context where a void function is expected.",
-        "severity": "error"
-      }
-    },
-    "fcfee6c8f46aa1e274b3078cd9f4580b67262dd6da423d17f9953e1def271290": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(expression-complexity)",
-        "file": "packages/dota/src/dota/events/gsi-events/hero.name.ts",
-        "labels": [
-          {
-            "context": ["if (", "bet?.id !== undefined &&", "bet.id.length > 0 &&"],
-            "message": "",
-            "span": "bet?.id !== undefined &&\n            bet.id.length > 0 &&\n            betData?.predictionId !== null &&\n            betData?.predictionId !== undefined &&\n            betData.predictionId.length > 0"
-          }
-        ],
-        "message": "Reduce the number of conditional operators (4) used in the expression (maximum allowed 3).",
         "severity": "error"
       }
     },

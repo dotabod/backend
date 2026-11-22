@@ -46,14 +46,14 @@ logger.info("=== API Server logging initialized ===")
 try:
     from dota_hero_detection import process_clip_url, process_stream_username, load_heroes_data
     from dota_heroes import get_hero_data
-    from clip_utils import get_clip_details
+    from clip_utils import extract_clip_id, get_clip_details
     from src.postgresql_client import db_client
 except ImportError as e:
     # Try with relative import for different directory structures
     try:
         from .dota_hero_detection import process_clip_url, process_stream_username, load_heroes_data
         from .dota_heroes import get_hero_data
-        from .clip_utils import get_clip_details
+        from .clip_utils import extract_clip_id, get_clip_details
         from src.postgresql_client import db_client
     except ImportError as rel_e:
         logger.error(f"Error: Could not import required modules. First error: {e}, Second error: {rel_e}")
@@ -719,38 +719,6 @@ def serve_image(filename):
         logger.error(f"Error serving image {filename}: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-def extract_clip_id(clip_url):
-    """
-    Extract the clip ID from a Twitch clip URL.
-
-    Args:
-        clip_url: The Twitch clip URL
-
-    Returns:
-        The clip ID if found, None otherwise
-    """
-    # Try to extract using pattern matching
-    patterns = [
-        r'clips\.twitch\.tv/([a-zA-Z0-9]+)',  # clips.twitch.tv/ClipName
-        r'twitch\.tv/\w+/clip/([a-zA-Z0-9-]+)',  # twitch.tv/channel/clip/ClipName
-        r'clip=([a-zA-Z0-9-]+)'  # URL parameter style
-    ]
-
-    for pattern in patterns:
-        match = re.search(pattern, clip_url)
-        if match:
-            return match.group(1)
-
-    # If we can't extract, use the URL path
-    parsed = urlparse(clip_url)
-    if parsed.path:
-        # Get last part of path
-        path_parts = [p for p in parsed.path.strip('/').split('/') if p]
-        if path_parts:
-            return path_parts[-1]
-
-    return None
-
 def get_image_url(frame_path, clip_id):
     """
     Copy the frame image to the public image directory and return its URL.
@@ -1319,18 +1287,15 @@ def _parse_clip_request_args():
     if not clip_url and not clip_id:
         return None, (jsonify({'error': 'Missing required parameter: either url or clip_id must be provided'}), 400)
 
-    # Reconstruct whichever of clip_url / clip_id is missing
-    if clip_id and not clip_url:
+    if not clip_url:
         clip_url = f"https://clips.twitch.tv/{clip_id}"
-        logger.info(f"Constructed clip URL from ID: {clip_url}")
-    elif clip_url and not clip_id:
-        extracted_clip_id = extract_clip_id(clip_url)
-        if extracted_clip_id:
-            clip_id = extracted_clip_id
-            logger.info(f"Extracted clip ID from URL: {clip_id}")
-        else:
-            logger.warning(f"Could not extract clip ID from URL: {clip_url}")
-            clip_id = clip_url  # Use URL as ID fallback
+
+    extracted_clip_id = extract_clip_id(clip_url)
+    if extracted_clip_id is None:
+        return None, (jsonify({'error': 'Could not extract clip ID from URL'}), 400)
+    if clip_id and clip_id != extracted_clip_id:
+        return None, (jsonify({'error': 'clip_id does not match the URL'}), 400)
+    clip_id = extracted_clip_id
 
     return {
         'clip_url': clip_url, 'clip_id': clip_id, 'match_id': match_id,

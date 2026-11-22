@@ -5,6 +5,7 @@ import {
   createGsiHandlerStub,
   createPacketStub,
   createSocketClientStub,
+  createTwitchAccountStub,
   initTestI18n,
   PRO_SUB,
 } from '../../../../__tests__/shared-mocks'
@@ -20,7 +21,7 @@ interface HeldTask {
 
 const updateCalls: UpdateCall[] = []
 const refundCalls: { channelId: string; predictionId: string }[] = []
-const openBetCalls: { heroName?: string }[] = []
+const openedTitles: string[] = []
 const heldTasks: HeldTask[] = []
 const redisStore: Record<string, string> = {}
 
@@ -67,27 +68,40 @@ const loggerMock = {
 }
 
 vi.doMock('@dotabod/shared-utils', () =>
-  buildSharedUtilsMock({ logger: loggerMock, supabase: supabaseMock })
+  buildSharedUtilsMock({
+    getTwitchAPI: async () =>
+      await Promise.resolve({
+        predictions: {
+          cancelPrediction: async (channelId: string, predictionId: string) => {
+            refundCalls.push({ channelId, predictionId })
+            await Promise.resolve()
+          },
+          createPrediction: async (_channelId: string, { title }: { title: string }) => {
+            openedTitles.push(title)
+            if (newPredictionId === null) {
+              throw new Error('Twitch failed to create a prediction')
+            }
+            return await Promise.resolve({ id: newPredictionId })
+          },
+          getPredictions: async () =>
+            await Promise.resolve({
+              data: [
+                { id: 'old-prediction-id', status: 'ACTIVE' },
+                { id: 'new-prediction-id', status: 'ACTIVE' },
+              ],
+            }),
+        },
+        streams: { createStreamMarker: async () => await Promise.resolve() },
+      }),
+    logger: loggerMock,
+    supabase: supabaseMock,
+  })
 )
 
 vi.doMock('../../../../steam/ws', () => ({
   steamSocket: { emit: () => {}, on: () => {} },
   twitchChat: { emit: () => {}, on: () => {} },
   twitchEvents: { emit: () => {}, on: () => {} },
-}))
-
-vi.doMock('../../../../twitch/lib/open-twitch-bet', () => ({
-  openTwitchBet: async ({ heroName }: { heroName?: string }) => {
-    openBetCalls.push({ heroName })
-    return await Promise.resolve(newPredictionId === null ? undefined : { id: newPredictionId })
-  },
-}))
-
-vi.doMock('../../../../twitch/lib/refund-twitch-bets', () => ({
-  refundTwitchBet: async (channelId: string, predictionId: string) => {
-    refundCalls.push({ channelId, predictionId })
-    return await Promise.resolve(predictionId)
-  },
 }))
 
 vi.doMock('../../../lib/delayed-queue', () => ({
@@ -127,6 +141,7 @@ const TOKEN = 'token-arteezy'
 
 const registerFakeHandler = function registerFakeHandler() {
   const client = createSocketClientStub({
+    Account: createTwitchAccountStub({ providerAccountId: 'twitch-channel-1' }),
     gsi: createPacketStub({
       hero: { name: 'npc_dota_hero_pudge' },
       map: { matchid: '8825999999' },
@@ -139,14 +154,7 @@ const registerFakeHandler = function registerFakeHandler() {
     subscription: PRO_SUB,
     token: TOKEN,
   })
-  gsiHandlers.set(
-    TOKEN,
-    createGsiHandlerStub(client, {
-      disabled: false,
-      getChannelId: () => 'twitch-channel-1',
-      getToken: () => TOKEN,
-    })
-  )
+  gsiHandlers.set(TOKEN, createGsiHandlerStub(client))
 }
 
 const unregisterFakeHandler = function unregisterFakeHandler() {
@@ -163,7 +171,7 @@ describe('hero:name swap → matches.hero_name update', () => {
   beforeEach(() => {
     updateCalls.length = 0
     refundCalls.length = 0
-    openBetCalls.length = 0
+    openedTitles.length = 0
     heldTasks.length = 0
     for (const k of Object.keys(redisStore)) {
       delete redisStore[k]
@@ -225,7 +233,7 @@ describe('hero:name swap → matches.hero_name update', () => {
     cancelHeroSwap(handler)
     await heldTasks[0].invoke()
 
-    expect(openBetCalls).toHaveLength(0)
+    expect(openedTitles).toHaveLength(0)
     expect(updateCalls).toHaveLength(0)
   })
 
@@ -239,7 +247,7 @@ describe('hero:name swap → matches.hero_name update', () => {
     await heldTasks[0].invoke()
     await heldTasks[1].invoke()
 
-    expect(openBetCalls).toStrictEqual([{ heroName: 'Axe' }])
+    expect(openedTitles).toStrictEqual([expect.stringContaining('Axe')])
     expect(updateCalls).toHaveLength(1)
     expect(updateCalls[0].values).toMatchObject({ hero_name: 'npc_dota_hero_axe' })
   })

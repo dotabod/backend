@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { promisify } from 'node:util'
 
 // @ts-expect-error no types
 import Dota2 from 'dota2'
@@ -733,16 +734,13 @@ class Dota {
     if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {
       throw new CustomError('Error getting medal')
     }
-    const { promise, resolve, reject } = Promise.withResolvers<Cards>()
-    this.dota2.requestProfileCard(account, (err: unknown, card: Cards) => {
-      if (err !== null && err !== undefined) {
-        logger.error('[STEAM] Error getting medal', { account, err })
-        reject(err instanceof Error ? err : new Error(String(err)))
-        return
-      }
-      resolve(card)
-    })
-    return await promise
+    const request = promisify<number, Cards>(this.dota2.requestProfileCard.bind(this.dota2))
+    try {
+      return await request(account)
+    } catch (error) {
+      logger.error('[STEAM] Error getting medal', { account, err: error })
+      throw error
+    }
   }
 
   promiseTimeout = async <T>(promise: Promise<T>, ms: number, reason: string): Promise<T> =>
@@ -856,18 +854,10 @@ class Dota {
     if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {
       throw new CustomError('Not connected to Dota 2 GC')
     }
-    const { promise, resolve, reject } = Promise.withResolvers<MatchMinimalDetailsResponse>()
-    this.dota2.requestMatchMinimalDetails(
-      matchIds,
-      (err: unknown, data: MatchMinimalDetailsResponse) => {
-        if (err !== null && err !== undefined) {
-          reject(err instanceof Error ? err : new Error(String(err)))
-          return
-        }
-        resolve(data)
-      }
+    const request = promisify<number[], MatchMinimalDetailsResponse>(
+      this.dota2.requestMatchMinimalDetails.bind(this.dota2)
     )
-    return await promise
+    return await request(matchIds)
   }
 
   public static getInstance(): Dota {

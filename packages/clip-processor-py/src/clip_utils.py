@@ -7,7 +7,8 @@ from bs4 import BeautifulSoup
 import logging
 from tqdm import tqdm
 import json
-from urllib.parse import quote
+from typing import Optional
+from urllib.parse import parse_qs, quote, urlparse
 import cv2
 import numpy as np
 import time
@@ -24,19 +25,21 @@ TEMP_DIR = Path("temp")
 TEMP_DIR.mkdir(exist_ok=True)
 
 
-def extract_clip_id(url):
-    """Extract the clip ID from a Twitch clip URL."""
-    # Expected format: clips.twitch.tv/WonderfulEntertainingWasabiCopyThis-I2pCrWZFkn_EFiZi
-    regex = r"clips\.twitch\.tv\/([^\/\s\-]+)(?:\-([^\/\s]+))?"
-    match = re.search(regex, url)
+def extract_clip_id(url: str) -> Optional[str]:
+    """Resolve a Twitch clip slug from a short URL, channel URL, or embed link."""
+    if url.startswith("clips.twitch.tv/"):
+        url = f"//{url}"
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return None
 
-    if not match:
-        raise ValueError(f"Could not extract clip ID from URL: {url}")
-
-    # Return the slug (first part) or the full ID if the second part exists
-    if match.group(2):
-        return f"{match.group(1)}-{match.group(2)}"
-    return match.group(1)
+    path = parsed.path.strip("/").split("/")
+    if parsed.hostname == "clips.twitch.tv" and path[0] != "embed" and path[0]:
+        slug = path[0]
+    else:
+        slug = parse_qs(parsed.query).get("clip", [path[-1]])[0]
+    return slug if re.fullmatch(r"[A-Za-z0-9_-]+", slug) else None
 
 
 def _build_download_url(source_url, token):
@@ -119,6 +122,8 @@ def get_clip_details(url, max_retries=10, retry_delay=2, max_retry_delay=15):
     max_retry_delay keeps the schedule from running away at high retry counts.
     """
     clip_id = extract_clip_id(url)
+    if clip_id is None:
+        raise ValueError(f"Could not extract clip ID from URL: {url}")
 
     # Initialize retry counter
     retry_count = 0

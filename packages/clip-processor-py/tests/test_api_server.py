@@ -51,9 +51,8 @@ def test_parse_bool_param(value, default, expected):
         ("https://clips.twitch.tv/AbcDef123", "AbcDef123"),
         ("https://www.twitch.tv/streamer/clip/Funny-Clip-Name", "Funny-Clip-Name"),
         ("https://example.com/x?clip=My-Clip-99", "My-Clip-99"),
-        # pattern 1 stops at the first non-alnum (hyphen not allowed there)
-        ("https://clips.twitch.tv/Foo-Bar", "Foo"),
-        # no pattern matches -> last path segment fallback
+        ("https://clips.twitch.tv/Foo-Bar_Asdf?tt_medium=clips", "Foo-Bar_Asdf"),
+        ("https://clips.twitch.tv/embed?clip=Foo-Bar_Asdf&parent=example.com", "Foo-Bar_Asdf"),
         ("https://example.com/some/path/segment", "segment"),
     ],
 )
@@ -70,10 +69,6 @@ def test_extract_clip_id(url, expected):
     ],
 )
 def test_extract_clip_id_junk_urls_return_none(url):
-    # BUG TARGET #4: for URLs with no usable clip slug, extract_clip_id falls
-    # through to the last path segment and returns "" (empty string) instead of
-    # None. An empty clip_id then becomes a cache key / queue-dedup key downstream
-    # and can collide across unrelated requests. Correct behavior: return None.
     assert api_server.extract_clip_id(url) is None
 
 
