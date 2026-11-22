@@ -987,26 +987,6 @@
         "severity": "error"
       }
     },
-    "06efcf852be8202657ed8961f394f7064b1504c4e7810416a683e1d13c46c40f": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-module-mocking)",
-        "file": "packages/dota/src/dota/__tests__/gsi-server-connection.test.ts",
-        "labels": [
-          {
-            "context": [
-              "vi.mock('../../db/get-wl', () => ({ getWL }))",
-              "vi.mock('../../twitch/index', () => ({ twitchEvent: { emit: vi.fn() } }))",
-              "vi.mock('../dota-patch-checker', () => ({ initDotaPatchChecker: vi.fn() }))"
-            ],
-            "message": "",
-            "span": "vi.mock('../../twitch/index', () => ({ twitchEvent: { emit: vi.fn() } }))"
-          }
-        ],
-        "message": "Replace module mocking with dependency injection through a real interface, service layer, or faithful test implementation.",
-        "severity": "error"
-      }
-    },
     "06f03ede2770ac1e6a240a4356abc253a26ccd3f8ef5ae086426d8a3cb45816a": {
       "count": 1,
       "diagnostic": {
@@ -1509,26 +1489,6 @@
           }
         ],
         "message": "Prefer `async`/`await` to the callback pattern",
-        "severity": "error"
-      }
-    },
-    "09915ead0491a8bfad4fa0dcdaebc6f97d63567964ea29fb91f2853a859bc0da": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(require-mock-type-parameters)",
-        "file": "packages/dota/src/dota/__tests__/gsi-server-connection.test.ts",
-        "labels": [
-          {
-            "context": [
-              "vi.mock('../../db/get-wl', () => ({ getWL }))",
-              "vi.mock('../../twitch/index', () => ({ twitchEvent: { emit: vi.fn() } }))",
-              "vi.mock('../dota-patch-checker', () => ({ initDotaPatchChecker: vi.fn() }))"
-            ],
-            "message": "",
-            "span": "fn"
-          }
-        ],
-        "message": "Missing type parameters on mock function call",
         "severity": "error"
       }
     },
@@ -2704,26 +2664,6 @@
           }
         ],
         "message": "Type 'number' is not assignable to type 'string'.",
-        "severity": "error"
-      }
-    },
-    "10fa5cc0e8a3a51672218146469a68761a58efba184c5102faf0d5947b0a543d": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-module-mocking)",
-        "file": "packages/dota/src/twitch/lib/__tests__/suggest-command.test.ts",
-        "labels": [
-          {
-            "context": [
-              "])",
-              "vi.doMock('../command-handler.ts', () => ({",
-              "default: { commands: fakeCommands },"
-            ],
-            "message": "",
-            "span": "vi.doMock('../command-handler.ts', () => ({\n  default: { commands: fakeCommands },\n}))"
-          }
-        ],
-        "message": "Replace module mocking with dependency injection through a real interface, service layer, or faithful test implementation.",
         "severity": "error"
       }
     },
@@ -6061,26 +6001,6 @@
         "severity": "error"
       }
     },
-    "2a87e22e9f944fb7411a2346dc1280a622d58126875e52fae661039d9b81e27b": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(prefer-import-in-mock)",
-        "file": "packages/dota/src/twitch/lib/__tests__/suggest-command.test.ts",
-        "labels": [
-          {
-            "context": [
-              "])",
-              "vi.doMock('../command-handler.ts', () => ({",
-              "default: { commands: fakeCommands },"
-            ],
-            "message": "",
-            "span": "'../command-handler.ts', () => ({\n  default: { commands: fakeCommands },\n})"
-          }
-        ],
-        "message": "Mocked modules must be dynamic imported.",
-        "severity": "error"
-      }
-    },
     "2add7600dd39c37710193a2d2d94fd1263b100e586b74a7c29d6086b2d3ce375": {
       "count": 1,
       "diagnostic": {
@@ -9113,26 +9033,6 @@
         "severity": "error"
       }
     },
-    "3f91233bd961d9566bc574d99601aac5df107cc66d9970ca8ea1b1dec6a8548b": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(use-unknown-in-catch-callback-variable)",
-        "file": "packages/dota/src/dota/events/gsi-events/newdata.ts",
-        "labels": [
-          {
-            "context": [
-              "dotaClient.client.steam32Id !== null && dotaClient.client.steam32Id !== 0",
-              "? chatterMatchFound(dotaClient.client).catch((error) => {",
-              "logger.error('[AUTO_COMMANDS] Error triggering chatterMatchFound', { error })"
-            ],
-            "message": "",
-            "span": "error"
-          }
-        ],
-        "message": "Prefer the safe `: unknown` for a `catch` callback variable.",
-        "severity": "error"
-      }
-    },
     "3f9ed1120b66df72c7d8c027734956a6783ec5eeae665a148fe874fef9706f50": {
       "count": 2,
       "diagnostic": {
@@ -10259,22 +10159,6 @@
           }
         ],
         "message": "Unsafe type assertion: type 'MinimapEntityType' is more narrow than the original type.",
-        "severity": "error"
-      }
-    },
-    "46e5aba23f0e095973809e96d96354479cb95541de59ba315ac74b68b857b5ed": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(complexity)",
-        "file": "packages/dota/src/twitch/index.ts",
-        "labels": [
-          {
-            "context": ["'msg',", "async (", "channel: string,"],
-            "message": "",
-            "span": "async (\n    channel: string,\n    user: string,\n    text: string,\n    {\n      channelId,\n      userInfo,\n      messageId,\n    }: {\n      channelId: string\n      userInfo: {\n        isMod: boolean\n        isBroadcaster: boolean\n        isSubscriber: boolean\n        userId: string\n      }\n      messageId: string\n    }\n  ) => {\n    if (!channelId) {\n      logger.error('No channelId', { channel, text, user })\n      return\n    }\n\n    // Skip rank check for mods and broadcasters\n    const isStaff = userInfo.isMod || userInfo.isBroadcaster\n\n    // So we can get the users settings cuz some commands are disabled\n    // This runs every command, but its cached so no hit on db\n    const { result: client, reason } = await getDBUser({ twitchId: channelId })\n    if (!client) {\n      const now = Date.now()\n      const lastMessageTime = lastMissingUserMessageTimestamps[channel] || 0\n      const RATE_LIMIT_MS = 10_000\n      const shouldSendMessage = now - lastMessageTime > RATE_LIMIT_MS\n\n      if (shouldSendMessage && text.startsWith('!')) {\n        logger.info('[TWITCH] Missing user', { channel, channelId, reason, user })\n        chatClient.say(channel, t('missingUser', { lng: 'en' }))\n        lastMissingUserMessageTimestamps[channel] = now\n        return\n      }\n      // logger.error('No client', { channel, user, text, reason, channelId })\n      return\n    }\n\n    if (lastMissingUserMessageTimestamps[channel]) {\n      delete lastMissingUserMessageTimestamps[channel]\n    }\n\n    if (text === '!altcheck' && (userInfo.userId === '32474777' || isStaff)) {\n      disableAltAccountCheck = !disableAltAccountCheck\n      return\n    }\n\n    // Looks up the chatter's followage date, and their Twitch account creation date, and if its within 10 days of each other, sends a message replying to them\n    // Only check this for now\n    const shouldCheckAltAccount = !disableAltAccountCheck && channelId === '40754777'\n    if (shouldCheckAltAccount) {\n      await checkAltAccount(channel, user, channelId, userInfo, messageId, client)\n    }\n\n    // Check if rankOnly mode is enabled\n    const rankOnlySettings = getValueOrDefault(\n      DBSettings.rankOnly,\n      client.settings,\n      client.subscription\n    )\n\n    // If rankOnly is enabled and the user isn't staff, check their rank\n    if (rankOnlySettings.enabled && !isStaff) {\n      // Check the user's rank\n      const userRankTier = await getUserRankTier(user)\n\n      // If they don't meet the rank requirement, delete the message\n      if (userRankTier < rankOnlySettings.minimumRankTier) {\n        try {\n          const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID)\n\n          // Do this as the bot which should be a moderator in the channel\n          await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {\n            const requiredRank =\n              rankOnlySettings.minimumRank || getRankTitle(rankOnlySettings.minimumRankTier)\n            await ctx.moderation.banUser(channelId, {\n              duration: 30,\n              reason: t('rankOnlyMode', {\n                lng: client.locale || 'en',\n                name: user,\n                requiredRank,\n                url: 'dotabod.com/verify',\n              }),\n              user: userInfo.userId,\n            })\n          })\n        } catch (error) {\n          logger.error('[TWITCH] Failed to delete message or timeout user', {\n            channel,\n            error,\n            messageId,\n            user,\n          })\n        }\n\n        // Send a warning message, but with rate limiting PER CHANNEL\n        const now = Date.now()\n        const lastWarningTime = lastRankWarningTimestamps[channel] || 0\n\n        if (now - lastWarningTime > RANK_WARNING_COOLDOWN_MS) {\n          const requiredRank =\n            rankOnlySettings.minimumRank || getRankTitle(rankOnlySettings.minimumRankTier)\n          const userRank = getRankTitle(userRankTier)\n\n          chatClient.say(\n            channel,\n            t('rankOnlyMode', {\n              lng: client.locale || 'en',\n              name: user,\n              requiredRank,\n              url: 'dotabod.com/verify',\n              userRank: userRank || 'Uncalibrated',\n            })\n          )\n\n          lastRankWarningTimestamps[channel] = now\n        }\n\n        return\n      }\n    }\n\n    // Letting one pleb in\n    if (\n      plebMode.has(channelId) &&\n      !(userInfo.isMod || userInfo.isBroadcaster || userInfo.isSubscriber)\n    ) {\n      plebMode.delete(channelId)\n      const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID)\n      await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {\n        await ctx.chat.updateSettings(channelId, {\n          emoteOnlyModeEnabled: false,\n          subscriberOnlyModeEnabled: true,\n        })\n      })\n      chatClient.say(\n        channel,\n        t('pleb', { context: 'off', emote: 'EZ Clap', lng: 'en', name: user })\n      )\n      return\n    }\n\n    if (!text.startsWith('!')) {\n      return\n    }\n\n    const isBotDisabled = getValueOrDefault(\n      DBSettings.commandDisable,\n      client.settings,\n      client.subscription\n    )\n    const toggleCommand = commandHandler.commands.get('toggle')\n    if (\n      isBotDisabled &&\n      toggleCommand?.aliases?.includes(text.replace('!', '').split(' ')[0]) !== true &&\n      text.split(' ')[0] !== '!toggle'\n    ) {\n      logger.debug('Bot is disabled', { channel, text, user })\n      return\n    }\n\n    // Handle the incoming message using the command handler\n    // to address v7 twurple removing #, but my db having # for command stats\n    // add a hashtag to the beginning of the channel name if its not there already\n    const channelName = channel.startsWith('#') ? channel : `#${channel}`\n    await commandHandler.handleMessage({\n      channel: { client, id: channelId, name: channelName, settings: client.settings },\n      content: text,\n      user: {\n        messageId,\n        name: user,\n        permission: userInfo.isBroadcaster ? 3 : userInfo.isMod ? 2 : userInfo.isSubscriber ? 1 : 0,\n        userId: userInfo.userId,\n      },\n    })\n  }"
-          }
-        ],
-        "message": "async function has a complexity of 36. Maximum allowed is 20.",
         "severity": "error"
       }
     },
@@ -14445,26 +14329,6 @@
         "severity": "error"
       }
     },
-    "643cefa55612b8b42e941b354f63fb1fd06154f6dd0235fba5937774d99b67a7": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(prefer-import-in-mock)",
-        "file": "packages/dota/src/dota/__tests__/gsi-server-connection.test.ts",
-        "labels": [
-          {
-            "context": [
-              "vi.mock('../../db/get-wl', () => ({ getWL }))",
-              "vi.mock('../../twitch/index', () => ({ twitchEvent: { emit: vi.fn() } }))",
-              "vi.mock('../dota-patch-checker', () => ({ initDotaPatchChecker: vi.fn() }))"
-            ],
-            "message": "",
-            "span": "'../../twitch/index', () => ({ twitchEvent: { emit: vi.fn() } })"
-          }
-        ],
-        "message": "Mocked modules must be dynamic imported.",
-        "severity": "error"
-      }
-    },
     "6442a82c23cfe7a1297a5c63230052778c5c3584c9dc2f51ff97073b4b701b4f": {
       "count": 1,
       "diagnostic": {
@@ -15866,26 +15730,6 @@
           }
         ],
         "message": "Replace module mocking with dependency injection through a real interface, service layer, or faithful test implementation.",
-        "severity": "error"
-      }
-    },
-    "70c03042a39cec3940b187e7e5dd1228d0fc696b7555df31ad64350079e255eb": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-non-null-assertion)",
-        "file": "packages/dota/src/twitch/lib/__tests__/suggest-command.test.ts",
-        "labels": [
-          {
-            "context": [
-              "// Consumer (chatClient.say) is responsible for nulling after first use.",
-              "store!.suffix = null",
-              "})"
-            ],
-            "message": "",
-            "span": "store!"
-          }
-        ],
-        "message": "Forbidden non-null assertion.",
         "severity": "error"
       }
     },
@@ -18699,22 +18543,6 @@
           }
         ],
         "message": "Prefer await to then()/catch()/finally()",
-        "severity": "error"
-      }
-    },
-    "88c6c3720ed118648ddd00bcf63a0add28b78e867a2a4c0650ec5c05973e58bd": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(cognitive-complexity)",
-        "file": "packages/dota/src/twitch/index.ts",
-        "labels": [
-          {
-            "context": ["}", ") => {", "if (!channelId) {"],
-            "message": "",
-            "span": "=>"
-          }
-        ],
-        "message": "Refactor this function to reduce its Cognitive Complexity from 32 to the 20 allowed.",
         "severity": "error"
       }
     },
@@ -22400,26 +22228,6 @@
           }
         ],
         "message": "Prefer the safe `: unknown` for a `catch` callback variable.",
-        "severity": "error"
-      }
-    },
-    "a28ba434e7bec7000c0487ef8775200815299594abb305801869e17a77d8bc31": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(prefer-named-capture-group)",
-        "file": "packages/dota/src/twitch/lib/__tests__/suggest-command.test.ts",
-        "labels": [
-          {
-            "context": [
-              "}",
-              "const match = /registerCommand\\(\\s*['\"]([^'\"]+)['\"]/u.exec(source)",
-              "if (match) {"
-            ],
-            "message": "",
-            "span": "([^'\"]+)"
-          }
-        ],
-        "message": "Capture group should be named.",
         "severity": "error"
       }
     },
@@ -27579,26 +27387,6 @@
           }
         ],
         "message": "Enforces a maximum number assertion calls in a test body.",
-        "severity": "error"
-      }
-    },
-    "c8aac52208a5ef37d0703dc3c809b15031af82fd8a503da1e0578e25880df5f3": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(too-many-break-or-continue-in-loop)",
-        "file": "packages/dota/src/twitch/lib/__tests__/suggest-command.test.ts",
-        "labels": [
-          {
-            "context": [
-              "const modCommands = new Set<string>()",
-              "for (const file of readdirSync(commandsDir)) {",
-              "if (!file.endsWith('.ts') || file.endsWith('.test.ts')) {"
-            ],
-            "message": "",
-            "span": "for"
-          }
-        ],
-        "message": "Reduce the total number of \"break\" and \"continue\" statements in this loop to use one at most.",
         "severity": "error"
       }
     },
@@ -33638,26 +33426,6 @@
           }
         ],
         "message": "File has too many classes (2). Maximum allowed is 1",
-        "severity": "error"
-      }
-    },
-    "eff7f9752bb822ffc4035129361224e47aff23fbbadb061c46bd20a0c5ab2285": {
-      "count": 1,
-      "diagnostic": {
-        "code": "unicorn(import-style)",
-        "file": "packages/dota/src/twitch/lib/__tests__/suggest-command.test.ts",
-        "labels": [
-          {
-            "context": [
-              "import { readdirSync, readFileSync } from 'node:fs'",
-              "import { join } from 'node:path'",
-              ""
-            ],
-            "message": "",
-            "span": "import { join } from 'node:path'"
-          }
-        ],
-        "message": "Use default import for module `node:path`.",
         "severity": "error"
       }
     },

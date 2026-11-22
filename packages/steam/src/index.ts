@@ -1,21 +1,14 @@
 import { startHeartbeat } from '@dotabod/shared-utils'
-import type { Socket } from 'socket.io'
 
 import { initSpectatorProtobuff } from './init-spectator-protobuff'
-import { getSocketIoServer } from './socket-server'
+import { createSocketServer } from './socket-server.js'
 import Dota, { GetRealTimeStats } from './steam'
 import type { MatchMinimalDetailsResponse } from './types/match-minimal-details'
 import { logger } from './utils/logger'
 
-process.on('SIGTERM', () => process.exit(0))
-process.on('SIGINT', () => process.exit(0))
-
-let _hasDotabodSocket = false
 let isConnectedToSteam = false
 
 initSpectatorProtobuff()
-
-const socketIoServer = getSocketIoServer()
 
 // Report liveness to the Uptime Kuma push monitor
 startHeartbeat()
@@ -47,52 +40,34 @@ const getErrorMessage = function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-// Store active sockets with cleanup capability
-const activeSockets = new Set()
+const withTimeout = async <T>(operation: Promise<T>): Promise<T> => {
+  const { promise: timeout, reject } = Promise.withResolvers<never>()
+  const timer = setTimeout(() => reject(new Error('Operation timed out')), 30_000)
+  try {
+    return await Promise.race([operation, timeout])
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
-socketIoServer.on('connection', (socket) => {
-  console.log('Found a connection!')
-
-  activeSockets.add(socket)
-
-  // Cleanup function
-  const cleanupSocket = (sock: Socket) => {
-    activeSockets.delete(sock)
-    _hasDotabodSocket = activeSockets.size > 0
-    sock.removeAllListeners()
-    sock.disconnect(true)
+const socketIoServer = createSocketServer((socket, server) => {
+  const disconnect = () => {
+    socket.removeAllListeners()
+    socket.disconnect(true)
   }
 
   try {
     void socket.join('steam')
-    _hasDotabodSocket = true
-  } catch {
-    console.log('Could not join steam socket')
-    cleanupSocket(socket)
+  } catch (error) {
+    logger.error('[STEAM] Could not join steam socket room', { error })
+    disconnect()
     return
   }
 
-  socket.on('disconnect', () => {
-    console.log('disconnect')
-    console.log('We lost the server! Respond to all messages with "server offline"')
-    cleanupSocket(socket)
-  })
-
   socket.on('error', (error) => {
-    console.error('Socket error:', error)
-    cleanupSocket(socket)
+    logger.error('[STEAM] Socket error', { error })
+    disconnect()
   })
-
-  // Add timeout for long-running operations (e.g., 30 seconds)
-  const withTimeout = async <T>(fn: Promise<T>, timeoutMs = 30_000): Promise<T> =>
-    await Promise.race([
-      fn,
-      new Promise<never>((_, reject) =>
-        setTimeout(() => {
-          reject(new Error('Operation timed out'))
-        }, timeoutMs)
-      ),
-    ])
 
   socket.on('getVersion', (ack: (commitHash: string | null) => void) => {
     ack(process.env.COMMIT_HASH ?? null)
@@ -181,7 +156,11 @@ socketIoServer.on('connection', (socket) => {
         return
       }
       try {
-        const result = await withTimeout(GetRealTimeStats(data))
+        const result = await withTimeout(
+          GetRealTimeStats(data, (match) => {
+            server.to('steam').emit('saveHeroesForMatchId', match)
+          })
+        )
         callback(null, result)
       } catch (error) {
         callback(getErrorMessage(error), null)
@@ -205,4 +184,19 @@ socketIoServer.on('connection', (socket) => {
   })
 })
 
-export default socketIoServer
+const shutdown = (signal: NodeJS.Signals): void => {
+  logger.info('[STEAM] Shutting down', { signal })
+  try {
+    dota.exit()
+    socketIoServer.disconnectSockets(true)
+  } finally {
+    process.exit(0)
+  }
+}
+
+process
+  .once('SIGTERM', shutdown)
+  .once('SIGINT', shutdown)
+  .on('uncaughtException', (error) => {
+    logger.error('uncaughtException', error)
+  })

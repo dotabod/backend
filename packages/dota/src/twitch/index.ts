@@ -17,6 +17,7 @@ import { getDotabodRankProfile, getRankTitle } from '../dota/lib/ranks'
 import { server } from '../dota/server'
 import { DBSettings, getValueOrDefault } from '../settings'
 import { twitchChat } from '../steam/ws'
+import type { SocketClient } from '../types'
 import { chatClient } from './chat-client'
 import { checkAltAccount } from './check-alt-account'
 import { commandHandler } from './command-catalog.js'
@@ -38,14 +39,96 @@ twitchChat.on('disconnect', (reason, details) => {
   logger.warn('Disconnected from dotabod chat server', { details, reason })
 })
 
-// Function to check if a user meets the rank requirement
-const getUserRankTier = async function getUserRankTier(twitchUsername: string): Promise<number> {
+const getUserRankTier = async function getUserRankTier(
+  twitchUsername: string
+): Promise<number | null> {
   try {
     const profile = await getDotabodRankProfile(twitchUsername)
     return profile?.rank_tier ?? 0
-  } catch {
-    return 0
+  } catch (error) {
+    logger.warn('[TWITCH] Could not look up chatter rank', { error, twitchUsername })
+    return null
   }
+}
+
+const enforceRankRequirement = async function enforceRankRequirement({
+  channel,
+  channelId,
+  client,
+  messageId,
+  user,
+  userId,
+}: {
+  channel: string
+  channelId: string
+  client: SocketClient
+  messageId: string
+  user: string
+  userId: string
+}): Promise<boolean> {
+  const rankOnlySettings = getValueOrDefault(
+    DBSettings.rankOnly,
+    client.settings,
+    client.subscription
+  )
+  if (!rankOnlySettings.enabled) {
+    return false
+  }
+
+  const userRankTier = await getUserRankTier(user)
+  if (userRankTier === null || userRankTier >= rankOnlySettings.minimumRankTier) {
+    return false
+  }
+
+  const requiredRank =
+    rankOnlySettings.minimumRank || getRankTitle(rankOnlySettings.minimumRankTier)
+  try {
+    const botId = process.env.TWITCH_BOT_PROVIDERID
+    if (botId === undefined || botId.length === 0) {
+      throw new Error('TWITCH_BOT_PROVIDERID is required for rank-only moderation')
+    }
+    const api = await getTwitchAPI(botId)
+    await api.asUser(botId, async (ctx) => {
+      await ctx.moderation.banUser(channelId, {
+        duration: 30,
+        reason: t('rankOnlyMode', {
+          lng: client.locale || 'en',
+          name: user,
+          requiredRank,
+          url: 'dotabod.com/verify',
+        }),
+        user: userId,
+      })
+    })
+  } catch (error) {
+    logger.error('[TWITCH] Failed to delete message or timeout user', {
+      channel,
+      error,
+      messageId,
+      user,
+    })
+  }
+
+  const now = Date.now()
+  const lastWarningTime = lastRankWarningTimestamps[channel] || 0
+
+  if (now - lastWarningTime > RANK_WARNING_COOLDOWN_MS) {
+    const userRank = getRankTitle(userRankTier)
+
+    chatClient.say(
+      channel,
+      t('rankOnlyMode', {
+        lng: client.locale || 'en',
+        name: user,
+        requiredRank,
+        url: 'dotabod.com/verify',
+        userRank: userRank || 'Uncalibrated',
+      })
+    )
+
+    lastRankWarningTimestamps[channel] = now
+  }
+  return true
 }
 
 const lastMissingUserMessageTimestamps: Record<string, number> = {}
@@ -114,72 +197,18 @@ twitchChat.on(
       await checkAltAccount(channel, user, channelId, userInfo, messageId, client)
     }
 
-    // Check if rankOnly mode is enabled
-    const rankOnlySettings = getValueOrDefault(
-      DBSettings.rankOnly,
-      client.settings,
-      client.subscription
-    )
-
-    // If rankOnly is enabled and the user isn't staff, check their rank
-    if (rankOnlySettings.enabled && !isStaff) {
-      // Check the user's rank
-      const userRankTier = await getUserRankTier(user)
-
-      // If they don't meet the rank requirement, delete the message
-      if (userRankTier < rankOnlySettings.minimumRankTier) {
-        try {
-          const api = await getTwitchAPI(process.env.TWITCH_BOT_PROVIDERID)
-
-          // Do this as the bot which should be a moderator in the channel
-          await api.asUser(process.env.TWITCH_BOT_PROVIDERID!, async (ctx) => {
-            const requiredRank =
-              rankOnlySettings.minimumRank || getRankTitle(rankOnlySettings.minimumRankTier)
-            await ctx.moderation.banUser(channelId, {
-              duration: 30,
-              reason: t('rankOnlyMode', {
-                lng: client.locale || 'en',
-                name: user,
-                requiredRank,
-                url: 'dotabod.com/verify',
-              }),
-              user: userInfo.userId,
-            })
-          })
-        } catch (error) {
-          logger.error('[TWITCH] Failed to delete message or timeout user', {
-            channel,
-            error,
-            messageId,
-            user,
-          })
-        }
-
-        // Send a warning message, but with rate limiting PER CHANNEL
-        const now = Date.now()
-        const lastWarningTime = lastRankWarningTimestamps[channel] || 0
-
-        if (now - lastWarningTime > RANK_WARNING_COOLDOWN_MS) {
-          const requiredRank =
-            rankOnlySettings.minimumRank || getRankTitle(rankOnlySettings.minimumRankTier)
-          const userRank = getRankTitle(userRankTier)
-
-          chatClient.say(
-            channel,
-            t('rankOnlyMode', {
-              lng: client.locale || 'en',
-              name: user,
-              requiredRank,
-              url: 'dotabod.com/verify',
-              userRank: userRank || 'Uncalibrated',
-            })
-          )
-
-          lastRankWarningTimestamps[channel] = now
-        }
-
-        return
-      }
+    if (
+      !isStaff &&
+      (await enforceRankRequirement({
+        channel,
+        channelId,
+        client,
+        messageId,
+        user,
+        userId: userInfo.userId,
+      }))
+    ) {
+      return
     }
 
     // Letting one pleb in

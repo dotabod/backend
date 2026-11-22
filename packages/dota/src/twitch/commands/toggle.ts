@@ -4,8 +4,8 @@ import { DBSettings, getValueOrDefault } from '../../settings'
 import type { CommandDefinition } from '../lib/command-handler.ts'
 
 export const toggleCommand: CommandDefinition = {
-  allowWhenDisabled: true,
   aliases: ['disable', 'enable'],
+  allowWhenDisabled: true,
   cooldown: 0,
   handler: async (message) => {
     const {

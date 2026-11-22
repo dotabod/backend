@@ -108,7 +108,10 @@ export class CommandHandler {
     }
     // A rejected command would otherwise reach the service's fatal unhandledRejection handler.
     try {
-      await commandContext.run(context, () => this.dispatch(definition, message, args, command))
+      await commandContext.run(
+        context,
+        async () => await this.dispatch(definition, message, args, command)
+      )
     } catch (error) {
       logger.error('[COMMAND] Handler threw', {
         channel: message.channel.name,
@@ -143,25 +146,13 @@ export class CommandHandler {
     const cooldownKey = `${channel.id}.${name}`
     const onCooldown = !admin && (this.cooldowns.get(cooldownKey) ?? 0) > now
 
-    if (!admin && dbkey !== undefined && !getValueOrDefault(dbkey, settings, client.subscription)) {
-      if (
-        !onCooldown &&
-        (this.noticeCooldowns.get(cooldownKey) ?? 0) <= now &&
-        getRawSettingValue(dbkey, settings) &&
-        !canAccessFeature(dbkey, client.subscription).hasAccess
-      ) {
-        if (cooldown > 0) {
-          this.noticeCooldowns.set(cooldownKey, now + cooldown)
-        }
-        chatClient.say(
-          channel.name,
-          t('subscriptionRequired', {
-            channel: client.name,
-            command: `!${name}`,
-            lng: client.locale,
-          }),
-          user.messageId
-        )
+    if (
+      !admin &&
+      dbkey !== undefined &&
+      !Boolean(getValueOrDefault(dbkey, settings, client.subscription))
+    ) {
+      if (!onCooldown) {
+        this.notifySubscriptionRequired(definition, message, dbkey, cooldownKey, now)
       }
       return
     }
@@ -190,5 +181,36 @@ export class CommandHandler {
       context.suffix = prepareSuggestionSuffix(name, invocation, this.lookup)
     }
     await definition.handler(invocation, args, command)
+  }
+
+  private notifySubscriptionRequired(
+    definition: CommandDefinition,
+    { channel, user }: MessageType,
+    dbkey: SettingKeys,
+    cooldownKey: string,
+    now: number
+  ): void {
+    const { client, settings } = channel
+    if (
+      (this.noticeCooldowns.get(cooldownKey) ?? 0) > now ||
+      !Boolean(getRawSettingValue(dbkey, settings)) ||
+      canAccessFeature(dbkey, client.subscription).hasAccess
+    ) {
+      return
+    }
+
+    const cooldown = definition.cooldown ?? DEFAULT_COOLDOWN_MS
+    if (cooldown > 0) {
+      this.noticeCooldowns.set(cooldownKey, now + cooldown)
+    }
+    chatClient.say(
+      channel.name,
+      t('subscriptionRequired', {
+        channel: client.name,
+        command: `!${definition.name}`,
+        lng: client.locale,
+      }),
+      user.messageId
+    )
   }
 }

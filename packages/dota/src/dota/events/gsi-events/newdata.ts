@@ -722,7 +722,7 @@ const rememberPlayingHeroSlot = async function rememberPlayingHeroSlot(
       // disabled) ENABLE_SPECTATE_FRIEND_GAME flow. The .catch keeps a failure here from
       // rejecting this Promise.all and blocking the cache update below.
       client.steam32Id !== null && client.steam32Id !== 0
-        ? chatterMatchFound(client).catch((error) => {
+        ? chatterMatchFound(client).catch((error: unknown) => {
             logger.error('[AUTO_COMMANDS] Error triggering chatterMatchFound', { error })
           })
         : Promise.resolve(),
@@ -782,6 +782,17 @@ const runMatchUpdates = async function runMatchUpdates(
   await Promise.allSettled(promisesToExecute)
 }
 
+const scheduleDraftFromPacket = function scheduleDraftFromPacket(
+  client: SocketClient,
+  data: Packet
+): void {
+  // The first packet with match data can arrive without a game-state diff.
+  const currentMatchId = client.gsi?.map?.matchid ?? ''
+  if (data.map?.game_state === 'DOTA_GAMERULES_STATE_PLAYER_DRAFT' && currentMatchId.length > 0) {
+    void scheduleVisionClip(client, data.map.game_state)
+  }
+}
+
 eventHandler.registerEvent('newdata', {
   allowMultiAccount: true,
   handler: async (dotaClient, data: Packet) => {
@@ -805,11 +816,7 @@ eventHandler.registerEvent('newdata', {
     // In case they connect to a game in progress and we missed the start event
     const setupOBSBlockersPromise = dotaClient.setupOBSBlockers(data.map?.game_state ?? '')
 
-    // The first packet with match data can arrive without a game-state diff.
-    const currentMatchId = dotaClient.client.gsi?.map?.matchid ?? ''
-    if (data.map?.game_state === 'DOTA_GAMERULES_STATE_PLAYER_DRAFT' && currentMatchId.length > 0) {
-      void scheduleVisionClip(dotaClient.client, data.map.game_state)
-    }
+    scheduleDraftFromPacket(dotaClient.client, data)
 
     if (!isPlayingMatch(dotaClient.client.gsi)) {
       await Promise.all([updateSteam32IdPromise, setupOBSBlockersPromise])

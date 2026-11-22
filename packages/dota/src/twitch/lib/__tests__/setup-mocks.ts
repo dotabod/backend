@@ -653,7 +653,7 @@ const { gsiHandlers } = await import('../../../dota/lib/consts')
 const { steamSocket } = await import('../../../steam/ws')
 const { chatClient } = await import('../../chat-client')
 const { redisClient } = await import('../../../db/redis-instance')
-export const { commandHandler } = await import('../../command-catalog.ts')
+export const { commandHandler } = await import('../../command-catalog.js')
 
 // Monkey-patch the singletons we need behavior control over. Mocking these
 // modules wholesale would force us to enumerate every other transitive export.

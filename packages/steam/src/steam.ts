@@ -14,7 +14,6 @@ import { hasSteamData } from './has-steam-data'
 import MongoDBSingleton from './mongo-db-singleton'
 import { SteamPlayerSummaryService } from './player-summaries'
 import type { SteamPlayerSummary } from './player-summaries'
-import { getSocketIoServer } from './socket-server'
 import { isBadSourceTvGamesResponse } from './source-tv-games'
 import type { SourceTvGamesResponse } from './source-tv-games'
 import type { Cards, DelayedGames } from './types/index'
@@ -885,68 +884,41 @@ class Dota {
     return Dota.instance
   }
 
-  public async exit(): Promise<boolean> {
-    return await new Promise((resolve) => {
-      clearInterval(this.interval)
-      clearInterval(this.gcTick)
-      this.resetReconnectBackoff()
-      this.dota2.exit()
-      logger.info('[STEAM] Manually closed dota')
-      try {
-        this.user.logOff()
-      } catch {
-        // logOff throws if we're not currently logged on — safe to ignore.
-      }
-      logger.info('[STEAM] Manually closed steam')
-      this.user.removeAllListeners()
-      this.dota2.removeAllListeners()
-      logger.info('[STEAM] Removed all listeners from dota and steam')
-      resolve(true)
-    })
+  public exit(): void {
+    clearInterval(this.interval)
+    clearInterval(this.gcTick)
+    this.resetReconnectBackoff()
+    this.dota2.exit()
+    logger.info('[STEAM] Manually closed dota')
+    try {
+      this.user.logOff()
+    } catch {
+      // logOff throws when Steam is disconnected.
+    }
+    logger.info('[STEAM] Manually closed steam')
+    this.user.removeAllListeners()
+    this.dota2.removeAllListeners()
   }
 }
 
-process
-  .on('SIGTERM', () => {
-    logger.info('[STEAM] Received SIGTERM')
-
-    const dota = Dota.getInstance()
-    dota
-      .exit()
-      .then(() => process.exit(0))
-      .catch((error) => {
-        logger.info('[STEAM]', error)
-      })
-  })
-  .on('SIGINT', () => {
-    logger.info('[STEAM] Received SIGINT')
-
-    const dota = Dota.getInstance()
-    dota
-      .exit()
-      .then(() => process.exit(0))
-      .catch((error) => {
-        logger.info('[STEAM]', error)
-      })
-  })
-  .on('uncaughtException', (e) => logger.error('uncaughtException', e))
-
-// Add a debounce map to track in-flight requests by match_id
 const activeRequests = new Map<string, Promise<DelayedGames>>()
 
-export const GetRealTimeStats = async ({
-  match_id,
-  refetchCards = false,
-  steam_server_id,
-  token,
-  forceRefetchAll = false,
-}: {
-  forceRefetchAll?: boolean
-  match_id: string
-  refetchCards?: boolean
-  steam_server_id: string
-  token: string
-}): Promise<DelayedGames> => {
+export const GetRealTimeStats = async (
+  {
+    match_id,
+    refetchCards = false,
+    steam_server_id,
+    token,
+    forceRefetchAll = false,
+  }: {
+    forceRefetchAll?: boolean
+    match_id: string
+    refetchCards?: boolean
+    steam_server_id: string
+    token: string
+  },
+  publishHeroes: (match: { matchId: string; token: string }) => void
+): Promise<DelayedGames> => {
   // Debounce: If there's already an active request for this match_id, return that promise
   if (activeRequests.has(match_id)) {
     // logger.info(`[STEAM] Reusing in-flight request for match_id: ${match_id}`)
@@ -1044,8 +1016,7 @@ export const GetRealTimeStats = async ({
         }
 
         if (!forceRefetchAll) {
-          // forward the msg to dota node app
-          getSocketIoServer().to('steam').emit('saveHeroesForMatchId', { matchId: match_id, token })
+          publishHeroes({ matchId: match_id, token })
         }
 
         // Remove from active requests before resolving

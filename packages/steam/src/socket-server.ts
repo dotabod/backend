@@ -1,12 +1,11 @@
 import { Server } from 'socket.io'
+import type { Socket } from 'socket.io'
 
-export const createSocketServer = function createSocketServer(port = 5035): Server {
-  return new Server(port)
-}
-
-let _socketIoServer: Server | undefined
-
-export const getSocketIoServer = function getSocketIoServer(): Server {
-  _socketIoServer ??= createSocketServer()
-  return _socketIoServer
+export const createSocketServer = function createSocketServer(
+  onConnection: (socket: Socket, server: Server) => void,
+  port = 5035
+): Server {
+  const server = new Server()
+  server.on('connection', (socket) => onConnection(socket, server))
+  return server.listen(port)
 }

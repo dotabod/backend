@@ -91,7 +91,7 @@ describe('clipSchedule', () => {
   })
 
   it('runs an in-process task after a failed write when Redis recovers before it fires', async () => {
-    h.deps.zAdd = () => Promise.reject(new Error('Redis unavailable'))
+    h.deps.zAdd = async () => await Promise.reject(new Error('Redis unavailable'))
 
     await h.scheduler.schedule(5000, PAYLOAD)
     await h.armed[0].cb()

@@ -14,7 +14,12 @@ interface ServerToClientEvents {
   serverReady: () => void
 }
 
-const server: Server<ClientToServerEvents, ServerToClientEvents> = createSocketServer(0)
+const server: Server<ClientToServerEvents, ServerToClientEvents> = createSocketServer((socket) => {
+  socket.emit('serverReady')
+  socket.on('ping', (payload: string, acknowledge: (reply: string) => void) => {
+    acknowledge(`pong:${payload}`)
+  })
+}, 0)
 const addressResult = z.object({ port: z.number() }).safeParse(server.httpServer.address())
 if (!addressResult.success) {
   throw new Error('Socket test server did not bind to a TCP port')
@@ -28,12 +33,6 @@ describe('createSocketServer round-trip', () => {
   }, 10_000)
 
   it('accepts a client connection and echoes an event', async () => {
-    server.on('connection', (socket) => {
-      socket.on('ping', (payload, acknowledge) => {
-        acknowledge(`pong:${payload}`)
-      })
-    })
-
     const client: Socket<ServerToClientEvents, ClientToServerEvents> = ioClient(
       `http://127.0.0.1:${port}`,
       {
@@ -42,6 +41,9 @@ describe('createSocketServer round-trip', () => {
       }
     )
     try {
+      const { promise: ready, resolve } = Promise.withResolvers<void>()
+      client.once('serverReady', resolve)
+      await ready
       const reply = await client.emitWithAck('ping', 'hello')
       expect(reply).toBe('pong:hello')
     } finally {
