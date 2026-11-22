@@ -1,4 +1,4 @@
-import { EventEmitter, once } from 'node:events'
+import { once } from 'node:events'
 import { createServer } from 'node:http'
 
 import { Server } from 'socket.io'
@@ -12,7 +12,7 @@ describe(createEventSubInitializer, () => {
   it('initializes after a reconnect arrives while the original conduit request is still pending', async () => {
     const httpServer = createServer()
     const server = new Server(httpServer)
-    const originalRequest = new EventEmitter()
+    const signals = new EventTarget()
     let requests = 0
 
     server.on('connection', (socket) => {
@@ -42,28 +42,29 @@ describe(createEventSubInitializer, () => {
         attempts += 1
         client.emit('getConduitData')
         if (attempts === 1) {
-          await once(originalRequest, 'timeout')
+          await once(signals, 'timeout')
           return
         }
-        activeConduitId = await new Promise<string>((resolve) => {
-          client.once('conduitData', ({ conduitId }: { conduitId: string }) => {
-            resolve(conduitId)
-          })
-        })
+        await once(signals, 'conduitData')
       }
     )
 
-    const reconnected = new Promise<void>((resolve) => {
-      client.once('disconnect', () => {
-        client.once('connect', resolve)
+    client.on('conduitData', ({ conduitId }: { conduitId: string }) => {
+      activeConduitId = conduitId
+      signals.dispatchEvent(new Event('conduitData'))
+    })
+    client.once('disconnect', () => {
+      client.once('connect', () => {
+        signals.dispatchEvent(new Event('reconnect'))
       })
     })
+    const reconnected = once(signals, 'reconnect')
 
     try {
       client.connect()
       await reconnected
       expect(attempts).toBe(1)
-      originalRequest.emit('timeout')
+      signals.dispatchEvent(new Event('timeout'))
 
       await vi.waitFor(() => {
         expect(activeConduitId).toBe('replacement-conduit')
@@ -71,7 +72,7 @@ describe(createEventSubInitializer, () => {
       expect(requests).toBe(2)
     } finally {
       client.close()
-      originalRequest.emit('timeout')
+      signals.dispatchEvent(new Event('timeout'))
       await server.close()
     }
   })
