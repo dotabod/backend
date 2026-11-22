@@ -1080,7 +1080,11 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
       makeClient({
         gsi: liveGsi({
           hero: { name: 'npc_dota_hero_pudge' },
-          map: { game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS' },
+          map: {
+            game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS',
+            matchid: '8825999999',
+            win_team: 'none',
+          },
         }),
       })
     )

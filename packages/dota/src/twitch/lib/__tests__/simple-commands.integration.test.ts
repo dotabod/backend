@@ -273,7 +273,7 @@ describe('!song', () => {
   it('blocks when the stream is offline (onlyOnline gate)', async () => {
     await commandHandler.handleMessage(
       makeMessage({
-        clientOverrides: { stream_online: false },
+        clientOverrides: { settings: lastFmSettings, stream_online: false },
         content: '!song',
       })
     )
