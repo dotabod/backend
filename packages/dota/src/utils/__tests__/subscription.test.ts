@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { SubscriptionRow } from '../../types/subscription.ts'
-import {
-  canAccessFeature,
-  getRequiredTier,
-  isChatterKey,
-  isInGracePeriod,
-} from '../subscription.ts'
+import { canAccessFeature, getRequiredTier, isChatterKey } from '../subscription.ts'
 
 const sub = (overrides: Partial<SubscriptionRow>): SubscriptionRow => ({
   id: 's1',
@@ -45,12 +40,6 @@ describe(isChatterKey, () => {
 
   it('is false for non-chatter keys', () => {
     expect(isChatterKey('mmr')).toBeFalsy()
-  })
-})
-
-describe(isInGracePeriod, () => {
-  it('is over (grace period ended 2025-04-30)', () => {
-    expect(isInGracePeriod()).toBeFalsy()
   })
 })
 

@@ -6,163 +6,101 @@ describe(DelayedQueue, () => {
   let queue: DelayedQueue
 
   beforeEach(() => {
+    vi.useFakeTimers()
     queue = new DelayedQueue()
   })
 
   afterEach(async () => {
     await queue.shutdown()
+    vi.useRealTimers()
   })
 
-  it('should add tasks to the queue and return a unique usable id', () => {
-    const callback = vi.fn(() => {})
-    const taskId = queue.addTask(1000, callback, 'test payload')
-    const secondId = queue.addTask(1000, callback, 'test payload')
+  it('uses the returned ID to cancel only the selected task', async () => {
+    const callback = vi.fn<(payload: string) => void>()
+    const canceled = queue.addTask(100, callback, 'canceled')
+    queue.addTask(100, callback, 'kept')
 
-    expect(taskId).toBeTypeOf('string')
-    expect(taskId.length).toBeGreaterThan(0)
-    expect(secondId).not.toBe(taskId)
-    expect(queue.getQueueSize()).toBe(2)
-    // The returned id identifies the task it created.
-    expect(queue.removeTask(taskId)).toBeTruthy()
-    expect(queue.getQueueSize()).toBe(1)
+    expect(queue.removeTask(canceled)).toBe(true)
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(callback).toHaveBeenCalledExactlyOnceWith('kept')
   })
 
-  // Note: DelayedQueue uses 1-second check interval, so tests need to wait > 1s
-  it('should execute tasks after delay', async () => {
-    const callback = vi.fn(() => {})
-    const payload = { test: 'data' }
+  it('does not execute a task before its delay expires', async () => {
+    const callback = vi.fn<(payload: string) => void>()
+    queue.addTask(1500, callback, 'ready')
 
-    queue.addTask(100, callback, payload)
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(callback).not.toHaveBeenCalled()
 
-    // Wait for queue's 1-second check interval to process the task
-    await new Promise((resolve) => setTimeout(resolve, 1200))
-
-    expect(callback).toHaveBeenCalledWith(payload)
-    expect(queue.getQueueSize()).toBe(0)
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(callback).toHaveBeenCalledExactlyOnceWith('ready')
   })
 
-  it('should execute tasks in order of execution time', async () => {
-    const results: number[] = []
+  it('starts due tasks by execution time, then by ascending priority, then by arrival', async () => {
+    const order: string[] = []
+    const record = (name: string): void => {
+      order.push(name)
+    }
+    queue.addTask(200, record, 'later', 0)
+    queue.addTask(100, record, 'lower priority', 3)
+    queue.addTask(100, record, 'first high priority', 1)
+    queue.addTask(100, record, 'second high priority', 1)
+    queue.addTask(50, record, 'earliest', 5)
 
-    queue.addTask(200, () => {
-      results.push(2)
-    })
-    queue.addTask(100, () => {
-      results.push(1)
-    })
-    queue.addTask(300, () => {
-      results.push(3)
-    })
+    await vi.advanceTimersByTimeAsync(1000)
 
-    // Wait for queue's 1-second check interval to process all tasks
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    expect(results).toStrictEqual([1, 2, 3])
+    expect(order).toStrictEqual([
+      'earliest',
+      'first high priority',
+      'second high priority',
+      'lower priority',
+      'later',
+    ])
   })
 
-  // Flaky under CI load: relies on wall-clock ordering of same-delay tasks, so a
-  // scheduling hiccup can yield [1, 3, 2] instead of [1, 2, 3]. Skipped to unblock CI.
-  it.skip('should respect priority when execution times are equal', async () => {
-    const results: number[] = []
-    const delay = 100
-
-    // Add tasks with same delay but different priorities
-    // Note: Lower priority number = higher priority (standard convention)
-    queue.addTask(
-      delay,
-      () => {
-        results.push(1)
-      },
-      null,
-      1
-      // Highest priority
-    )
-    queue.addTask(
-      delay,
-      () => {
-        results.push(3)
-      },
-      null,
-      3
-      // Lowest priority
-    )
-    queue.addTask(
-      delay,
-      () => {
-        results.push(2)
-      },
-      null,
-      2
-      // Medium priority
-    )
-
-    // Wait for queue's 1-second check interval to process all tasks
-    await new Promise((resolve) => setTimeout(resolve, 1200))
-
-    // Lower priority number executes first
-    expect(results).toStrictEqual([1, 2, 3])
-  })
-
-  it('should remove tasks from queue', () => {
-    const callback = vi.fn(() => {})
-    const taskId = queue.addTask(1000, callback)
-
-    expect(queue.getQueueSize()).toBe(1)
-
-    const removed = queue.removeTask(taskId)
-    expect(removed).toBeTruthy()
-    expect(queue.getQueueSize()).toBe(0)
-  })
-
-  it('should handle errors in task callbacks gracefully', async () => {
-    const goodCallback = vi.fn(() => {})
+  it('continues processing after a callback fails', async () => {
+    const goodCallback = vi.fn<() => void>()
     const badCallback = vi.fn(() => {
       throw new Error('Test error')
     })
-
     queue.addTask(50, badCallback)
-    queue.addTask(100, goodCallback)
+    queue.addTask(1100, goodCallback)
 
-    // Wait for queue's 1-second check interval to process all tasks
-    await new Promise((resolve) => setTimeout(resolve, 1200))
+    await vi.advanceTimersByTimeAsync(2000)
 
     expect(badCallback).toHaveBeenCalledOnce()
     expect(goodCallback).toHaveBeenCalledOnce()
   })
 
-  it('should clamp delays to maximum allowed', () => {
-    const callback = vi.fn(() => {})
-    // 50 minutes
+  it('clamps delays to fifty minutes', () => {
+    const callback = vi.fn<() => void>()
     const maxDelay = 50 * 60 * 1000
-    // 60 minutes
-    const excessiveDelay = 60 * 60 * 1000
+    queue.addTask(60 * 60 * 1000, callback)
 
-    queue.addTask(excessiveDelay, callback)
+    vi.advanceTimersByTime(maxDelay - 1)
+    expect(callback).not.toHaveBeenCalled()
 
-    const nextTaskTime = queue.getNextTaskTime()
-    expect(nextTaskTime).toBeLessThanOrEqual(Date.now() + maxDelay)
+    vi.advanceTimersByTime(1)
+    expect(callback).toHaveBeenCalledOnce()
   })
 
-  it('should execute remaining tasks during shutdown', async () => {
-    const callback = vi.fn(() => {})
-
-    // Long delay
-    queue.addTask(1000, callback, 'test')
+  it('executes pending tasks on shutdown when requested', async () => {
+    const callback = vi.fn<(payload: string) => void>()
+    queue.addTask(1000, callback, 'pending')
 
     await queue.shutdown(true)
 
-    expect(callback).toHaveBeenCalledWith('test')
+    expect(callback).toHaveBeenCalledExactlyOnceWith('pending')
   })
 
-  it('should clear tasks during shutdown without execution', async () => {
-    const callback = vi.fn(() => {})
-
+  it('cancels pending tasks on shutdown by default', async () => {
+    const callback = vi.fn<() => void>()
     queue.addTask(1000, callback)
-    expect(queue.getQueueSize()).toBe(1)
 
-    await queue.shutdown(false)
+    await queue.shutdown()
+    await vi.advanceTimersByTimeAsync(1000)
 
     expect(callback).not.toHaveBeenCalled()
-    expect(queue.getQueueSize()).toBe(0)
   })
 })

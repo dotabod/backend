@@ -149,7 +149,6 @@ const FEATURE_TIERS: Record<
 
 export type FeatureTier = keyof typeof FEATURE_TIERS
 
-// Add new mapping for generic features
 const GENERIC_FEATURE_TIERS = {
   auto7TV: SUBSCRIPTION_TIERS.PRO,
   autoInstaller: SUBSCRIPTION_TIERS.PRO,
@@ -174,59 +173,29 @@ export const getRequiredTier = function getRequiredTier(
   )
 }
 
-// Add helper to check if a key is a chatter key
 export const isChatterKey = function isChatterKey(key: string): boolean {
   return key.startsWith('chatters.')
 }
 
-const GRACE_PERIOD_END = new Date('2025-04-30T23:59:59.999Z')
-
-// Add a function to check if we're in the grace period
-export const isInGracePeriod = function isInGracePeriod(): boolean {
-  return new Date() < GRACE_PERIOD_END
-}
-
-// Update canAccessFeature to handle chatter keys
 export const canAccessFeature = function canAccessFeature(
   feature: FeatureTier | GenericFeature,
   subscription: SubscriptionRow | null | undefined
 ): { hasAccess: boolean; requiredTier: Database['public']['Enums']['SubscriptionTier'] } {
   const requiredTier = getRequiredTier(feature)
-  const isFreeFeature = requiredTier === SUBSCRIPTION_TIERS.FREE
-
-  // Check if we're in the grace period (before April 30, 2025)
-  // Grant Pro access to all users during this period
-  if (isInGracePeriod()) {
-    return {
-      // All features are accessible during grace period
-      hasAccess: true,
-      requiredTier,
-    }
-  }
-
-  if (isFreeFeature) {
+  if (requiredTier === SUBSCRIPTION_TIERS.FREE) {
     return {
       hasAccess: true,
       requiredTier,
     }
   }
 
-  if (!subscription?.tier) {
+  if (!subscription?.tier || !isSubscriptionActive(subscription)) {
     return {
       hasAccess: false,
       requiredTier,
     }
   }
 
-  // Return early if feature is free or subscription is invalid
-  if (!isSubscriptionActive(subscription)) {
-    return {
-      hasAccess: isFreeFeature,
-      requiredTier,
-    }
-  }
-
-  // Check if subscription tier level meets required tier level
   return {
     hasAccess: TIER_LEVELS[subscription.tier] >= TIER_LEVELS[requiredTier],
     requiredTier,

@@ -91,7 +91,7 @@ vi.doMock('@dotabod/shared-utils', () =>
               ],
             }),
         },
-        streams: { createStreamMarker: vi.fn().mockResolvedValue(undefined) },
+        streams: { createStreamMarker: async () => await Promise.resolve() },
       }),
     logger: loggerMock,
     supabase: supabaseMock,
@@ -130,7 +130,6 @@ vi.doMock('../../../../db/redis-client', () => ({
 
 await initTestI18n()
 
-// Import the handler module to register it on the global event emitter.
 await import('../hero.name')
 
 const { cancelHeroSwap } = await import('../../../lib/hero-swap-prediction.js')
@@ -199,7 +198,6 @@ describe('hero:name swap → matches.hero_name update', () => {
 
     await heldTasks[0].invoke()
 
-    // The success branch should rewrite predictionId AND hero_name on the row.
     const successUpdate = updateCalls.find((u) => u.values.predictionId === 'new-prediction-id')
     expect(successUpdate).toBeDefined()
     expect(successUpdate?.values.hero_name).toBe('npc_dota_hero_pudge')

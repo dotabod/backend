@@ -1,6 +1,5 @@
 import {
   botStatus,
-  getTwitchHeaders,
   logger,
   updateConduitShard as sharedUpdateConduitShard,
 } from '@dotabod/shared-utils'
@@ -16,9 +15,6 @@ import { twitchEvent } from './events'
 import { handleChatMessage } from './handle-chat'
 import { emitEvent, hasDotabodSocket } from './utils/socket-manager'
 
-const _headers = await getTwitchHeaders()
-
-// Create a socket client to connect to the twitch-events service
 const eventsSocket = twitchEvent
 
 // Self-heal guard. initializeSocket() fetches the conduit over the eventsSocket
@@ -57,7 +53,6 @@ export const ensureEventSubInitialized = async function ensureEventSubInitialize
   }
 }
 
-// Set up event handlers for the socket
 eventsSocket.on('connect', () => {
   logger.info('[TWITCHCHAT] Connected to twitch-events service')
   // Recover EventSub whenever we (re)gain the link to twitch-events.
@@ -90,7 +85,6 @@ setInterval(() => {
   }
 }, EVENTSUB_WATCHDOG_MS)
 
-// Function to fetch conduit ID via socket.io
 const getConduitId = async function getConduitId(forceRefresh = false): Promise<string> {
   return await new Promise((resolve, reject) => {
     // Remove both listeners on any settle so repeated watchdog-driven retries
@@ -127,7 +121,6 @@ const getConduitId = async function getConduitId(forceRefresh = false): Promise<
     eventsSocket.on('conduitData', onData)
     eventsSocket.on('conduitError', onError)
 
-    // Request the conduit data
     logger.info('[TWITCHCHAT] Requesting conduit data', { forceRefresh })
     eventsSocket.emit('getConduitData', { forceRefresh })
   })
@@ -173,16 +166,10 @@ const legacyEventHandlerNames: Partial<Record<TwitchEventType, string>> = {
   'channel.prediction.progress': 'subscribeToChannelPredictionProgressEvents',
 }
 
-const handleObsEvents = (type: TwitchEventType, broadcasterId: string, data: unknown) => {
-  if (hasDotabodSocket()) {
-    const name = legacyEventHandlerNames[type] ?? type
-    emitEvent(name, broadcasterId, data)
-  }
-}
+type OverlayEvent = ReturnType<typeof transformPollData> | ReturnType<typeof transformBetData>
 
-// Helper function to extract broadcaster ID and transform event data
 const createEventHandler =
-  <T, R>(type: TwitchEventType, transform: (event: T) => R) =>
+  <T>(type: TwitchEventType, transform: (event: T) => OverlayEvent) =>
   ({
     payload: {
       subscription: {
@@ -198,8 +185,10 @@ const createEventHandler =
       event: T
     }
   }) => {
-    const transformed = transform(event)
-    handleObsEvents(type, broadcaster_user_id, transformed)
+    const data = transform(event)
+    if (hasDotabodSocket()) {
+      emitEvent(legacyEventHandlerNames[type] ?? type, broadcaster_user_id, data)
+    }
   }
 
 const grantEvent = function grantEvent(data: {
@@ -297,12 +286,10 @@ const eventHandlers = {
   'user.authorization.grant': grantEvent,
   'user.authorization.revoke': revokeEvent,
   'user.update': updateUserEvent,
-} satisfies Partial<Record<TwitchEventType, (...args: never[]) => unknown>>
+} satisfies Partial<Record<TwitchEventType, (...args: never[]) => void>>
 
-// Initialize WebSocket and handle events
 const initializeSocket = async function initializeSocket() {
   try {
-    // Get the conduit ID from the twitch-events service
     const conduitId = await getConduitId()
     logger.info('[TWITCHCHAT] Using conduit ID from twitch-events service', {
       conduitId: `${conduitId.slice(0, 8)}...`,
@@ -319,7 +306,6 @@ const initializeSocket = async function initializeSocket() {
     currentSocket?.dispose()
 
     const mySocket = new EventsubSocket({
-      // Ensure auto reconnect is enabled
       disableAutoReconnect: false,
     })
     currentSocket = mySocket

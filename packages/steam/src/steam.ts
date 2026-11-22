@@ -43,22 +43,22 @@ interface DotaGcClient extends EventEmitter<{
   unready: []
 }> {
   _gcReady: boolean
-  exit(): void
-  launch(): void
-  requestMatchMinimalDetails(
+  exit: () => void
+  launch: () => void
+  requestMatchMinimalDetails: (
     ids: number[],
     listener: (error: Error | number | null, response: MatchMinimalDetailsResponse) => void
-  ): void
-  requestProfileCard(
+  ) => void
+  requestProfileCard: (
     accountId: number,
     listener: (error: Error | number | null, card: Cards) => void
-  ): void
-  requestSourceTVGames(request: { start_game: number }): void
-  spectateFriendGame(
+  ) => void
+  requestSourceTVGames: (request: { start_game: number }) => void
+  spectateFriendGame: (
     request: { steam_id: Long },
     listener: (response?: { server_steamid?: Long }, error?: Error) => void
-  ): void
-  ToSteamID(accountId: number): Long
+  ) => void
+  ToSteamID: (accountId: number) => Long
 }
 
 const MAX_CACHE_SIZE = 5000
@@ -103,7 +103,6 @@ const isRefreshTokenExpired = function isRefreshTokenExpired(token: string): boo
   }
 }
 
-// Fetches data from MongoDB
 const fetchDataFromMongo = async (match_id: string) => {
   const mongo = MongoDBSingleton
   const db = await mongo.connect()
@@ -114,7 +113,6 @@ const fetchDataFromMongo = async (match_id: string) => {
     await mongo.close()
   }
 }
-// Constructs the API URL
 const getApiUrl = (steam_server_id: string) => {
   const apiKey = process.env.STEAM_WEB_API
   if (apiKey === undefined || apiKey.length === 0) {
@@ -127,7 +125,6 @@ const getApiUrl = (steam_server_id: string) => {
 // Writer #1 of the `delayedGames` collection: the `teams[]` shape, from the on-demand
 // GetRealTimeStats fetch. SourceTV-backed commands can call this with the public feed's
 // server_steam_id; ordinary pubs still depend on the disabled spectate-friend lookup.
-// Saves the match to MongoDB and fetches new medals if needed
 const saveMatch = async ({
   match_id,
   game,
