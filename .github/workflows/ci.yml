@@ -58,6 +58,8 @@ jobs:
         run: pnpm exec vitest run
       - name: Test constants update detection
         run: python -m unittest discover -s .github/scripts -p 'test_*.py' -v
+      - name: Model-check Twitch chat conduit initialization
+        run: bash verification/eventsub-conduit/check.sh
       - name: Test deployment orchestration
         run: python -m unittest discover -s scripts/deploy -p 'test_*.py' -v
       - name: Build all packages

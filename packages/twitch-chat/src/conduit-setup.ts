@@ -11,6 +11,7 @@ import { onlineEvent } from './event-handlers/online-event'
 import { transformBetData } from './event-handlers/transform-bet-data'
 import { transformPollData } from './event-handlers/transform-poll-data'
 import { updateUserEvent } from './event-handlers/update-user-event'
+import { createEventSubInitializer } from './event-sub-initializer'
 import { EventsubSocket, isEventsubConnected } from './event-sub-socket'
 import { twitchEvent } from './events'
 import { handleChatMessage } from './handle-chat'
@@ -18,50 +19,30 @@ import { emitEvent, hasDotabodSocket } from './utils/socket-manager'
 
 const _headers = await getTwitchHeaders()
 
-// Create a socket client to connect to the twitch-events service
 const eventsSocket = twitchEvent
-
-// Self-heal guard. initializeSocket() fetches the conduit over the eventsSocket
-// connection to twitch-events, so it can only succeed once that link is up.
-// Historically init ran only at startup + one 30s retry, so if twitch-events
-// was down/crash-looping during both attempts, EventSub stayed dead until a
-// manual restart (2026-05-29). Driving (re)init off the 'connect' event means
-// EventSub re-establishes on its own the moment twitch-events comes back.
-let eventSubInitInFlight = false
-
-// The one live EventsubSocket. initializeSocket() disposes this before creating
-// its replacement so re-init paths can never accumulate sockets.
 let currentSocket: EventsubSocket | null = null
 
-export const ensureEventSubInitialized = async function ensureEventSubInitialized(
-  reason: string
-): Promise<void> {
-  if (eventSubInitInFlight) {
-    return
-  }
-  // A plain socket.io reconnect while EventSub is already live needs no re-init.
-  if (isEventsubConnected()) {
-    return
-  }
-  eventSubInitInFlight = true
-  try {
+export const ensureEventSubInitialized = createEventSubInitializer(
+  eventsSocket,
+  isEventsubConnected,
+  async (reason) => {
+    if (reason === 'watchdog') {
+      logger.warn('[TWITCHCHAT] Watchdog: twitch-events link up but EventSub down, re-initializing')
+    }
     logger.info('[TWITCHCHAT] Ensuring EventSub is initialized', { reason })
-    await initializeSocket()
-  } catch (error) {
-    logger.error('[TWITCHCHAT] EventSub initialization failed', {
-      error: error instanceof Error ? error.message : String(error),
-      reason,
-    })
-  } finally {
-    eventSubInitInFlight = false
+    try {
+      await initializeSocket()
+    } catch (error) {
+      logger.error('[TWITCHCHAT] EventSub initialization failed', {
+        error: error instanceof Error ? error.message : String(error),
+        reason,
+      })
+    }
   }
-}
+)
 
-// Set up event handlers for the socket
 eventsSocket.on('connect', () => {
   logger.info('[TWITCHCHAT] Connected to twitch-events service')
-  // Recover EventSub whenever we (re)gain the link to twitch-events.
-  void ensureEventSubInitialized('eventsSocket connect')
 })
 
 eventsSocket.on('connect_error', (error) => {
@@ -74,23 +55,11 @@ eventsSocket.on('disconnect', (reason) => {
   logger.info('[TWITCHCHAT] Disconnected from twitch-events service', { reason })
 })
 
-// Watchdog: the connect-driven self-heal above can miss a recovery when the link
-// to twitch-events flaps mid-init. If the socket drops while getConduitId() is
-// waiting, eventSubInitInFlight stays true; the reconnect's
-// ensureEventSubInitialized() then bails on that guard, and by the time the
-// stale attempt times out and clears the guard there's no 'connect' event left
-// to retrigger init — EventSub stays dead until a manual restart (seen
-// 2026-06-09). This interval reconciles that state unconditionally: link up but
-// EventSub down with no init in flight means we wedged, so re-init.
 const EVENTSUB_WATCHDOG_MS = 30_000
 setInterval(() => {
-  if (eventsSocket.connected && !isEventsubConnected() && !eventSubInitInFlight) {
-    logger.warn('[TWITCHCHAT] Watchdog: twitch-events link up but EventSub down, re-initializing')
-    void ensureEventSubInitialized('watchdog')
-  }
+  void ensureEventSubInitialized('watchdog')
 }, EVENTSUB_WATCHDOG_MS)
 
-// Function to fetch conduit ID via socket.io
 const getConduitId = async function getConduitId(forceRefresh = false): Promise<string> {
   return await new Promise((resolve, reject) => {
     // Remove both listeners on any settle so repeated watchdog-driven retries
@@ -127,7 +96,6 @@ const getConduitId = async function getConduitId(forceRefresh = false): Promise<
     eventsSocket.on('conduitData', onData)
     eventsSocket.on('conduitError', onError)
 
-    // Request the conduit data
     logger.info('[TWITCHCHAT] Requesting conduit data', { forceRefresh })
     eventsSocket.emit('getConduitData', { forceRefresh })
   })
@@ -301,29 +269,16 @@ const eventHandlers = {
   'user.update': updateUserEvent,
 } satisfies Partial<Record<keyof TwitchEventTypes, (...args: never[]) => unknown>>
 
-// Initialize WebSocket and handle events
 const initializeSocket = async function initializeSocket() {
   try {
-    // Get the conduit ID from the twitch-events service
     const conduitId = await getConduitId()
     logger.info('[TWITCHCHAT] Using conduit ID from twitch-events service', {
       conduitId: `${conduitId.slice(0, 8)}...`,
     })
 
-    // Exactly one live EventsubSocket at a time. Every re-init path (startup,
-    // eventsSocket reconnect, watchdog, session_silenced) used to leak the
-    // previous socket; thousands accumulated over ~10 days of uptime, each
-    // reconnect-looping, and their combined connection rate got the bot 429'd by
-    // Twitch (connection storm, 2026-06-19). Disposing the prior socket here —
-    // only once we have a fresh conduit and are about to replace it — makes
-    // every re-init idempotent. (If getConduitId() throws above we keep the
-    // existing socket rather than tearing down a working connection.)
     currentSocket?.dispose()
 
-    const mySocket = new EventsubSocket({
-      // Ensure auto reconnect is enabled
-      disableAutoReconnect: false,
-    })
+    const mySocket = new EventsubSocket({ disableAutoReconnect: false })
     currentSocket = mySocket
 
     mySocket.on('connected', async (session_id: string) => {
@@ -349,11 +304,6 @@ const initializeSocket = async function initializeSocket() {
       })
     })
 
-    // Safety net: when Twitch goes silent the socket disables its own reconnect
-    // (so it can't fight its replacement over the single conduit shard) and we
-    // do one guarded re-init here. ensureEventSubInitialized's in-flight guard,
-    // plus the dispose-on-reinit above, mean repeated silences can't pile up
-    // sockets the way the old direct initializeSocket() call did.
     mySocket.on('session_silenced', () => {
       logger.warn('[TWITCHCHAT] session_silenced — re-initializing in 5s')
       setTimeout(() => {
