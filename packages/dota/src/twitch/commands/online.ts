@@ -24,7 +24,7 @@ const notifyStreamStatus = function notifyStreamStatus(
   )
 }
 
-export const refreshSettings = function refreshSettings(token: string): void {
+const refreshSettings = function refreshSettings(token: string): void {
   server.io.to(token).emit('refresh-settings', 'mutate')
 }
 
