@@ -4,7 +4,7 @@ import { z } from 'zod'
 
 import { MULTIPLIER_SOLO } from '../../db/get-wl'
 import RedisClient from '../../db/redis-client'
-import { requestSteam } from '../../steam/request'
+import { steamSocket } from '../../steam/ws'
 import { leaderRanks, ranks } from './consts'
 
 const leaderboardCardSchema = z.object({ leaderboard_rank: z.number().nullable() })
@@ -133,12 +133,8 @@ const lookupLeaderRank = async function lookupLeaderRank(
     result = medalCache
   } else {
     try {
-      const { leaderboard_rank: standing } = await requestSteam(
-        'getCard',
-        [steam32Id],
-        leaderboardCardSchema,
-        10_000
-      )
+      const response: unknown = await steamSocket.timeout(10_000).emitWithAck('getCard', steam32Id)
+      const { leaderboard_rank: standing } = leaderboardCardSchema.parse(response)
 
       // If the rank is not available, return default values
       if (standing === null || standing === 0) {
