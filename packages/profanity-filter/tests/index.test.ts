@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { AxiosError, AxiosHeaders } from 'axios'
 import { describe, expect, test, vi } from 'vitest'
 
 import { getProfanityDetails, moderateText } from '../src/utils/moderation'
@@ -349,6 +349,32 @@ describe('Profanity Filter', () => {
         { headers: { Authorization: 'Bearer test-key', 'Content-Type': 'application/json' } }
       )
     } finally {
+      post.mockRestore()
+      vi.unstubAllEnvs()
+    }
+  })
+
+  test('returns the original text after an OpenAI failure and keeps request data out of logs', async () => {
+    const apiKey = 'private-test-key'
+    const text = 'Hello world'
+    vi.stubEnv('OPENAI_API_KEY', apiKey)
+    const post = vi.spyOn(axios, 'post').mockRejectedValue(
+      new AxiosError('Moderation request failed', 'ERR_BAD_RESPONSE', {
+        data: { input: text },
+        headers: new AxiosHeaders({ Authorization: `Bearer ${apiKey}` }),
+      })
+    )
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    try {
+      await expect(moderateText(text)).resolves.toBe(text)
+      expect(post).toHaveBeenCalledOnce()
+      expect(logged).toHaveBeenCalledOnce()
+      const logs = JSON.stringify(logged.mock.calls)
+      expect(logs).not.toContain(apiKey)
+      expect(logs).not.toContain(text)
+    } finally {
+      logged.mockRestore()
       post.mockRestore()
       vi.unstubAllEnvs()
     }

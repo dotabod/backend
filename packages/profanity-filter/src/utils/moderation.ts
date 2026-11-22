@@ -466,7 +466,11 @@ const isFlaggedByOpenAi = async function isFlaggedByOpenAi(
     )
     return response.data.results[0]?.flagged ?? false
   } catch (error) {
-    console.error('Error using OpenAI moderation API:', error)
+    const requestError = axios.isAxiosError(error) ? error : undefined
+    console.error('Error using OpenAI moderation API', {
+      code: requestError?.code,
+      status: requestError?.response?.status,
+    })
     return false
   }
 }
