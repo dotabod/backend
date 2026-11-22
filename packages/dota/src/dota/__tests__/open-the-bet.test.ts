@@ -1009,7 +1009,7 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     const gcRequests: unknown[][] = []
     const emit = vi.spyOn(steamSocket, 'emit').mockImplementation((...args: unknown[]) => {
       gcRequests.push(args.slice(0, 2))
-      })
+    })
 
     await handler.closeBets(null)
 
