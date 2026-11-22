@@ -7695,26 +7695,6 @@
         "severity": "error"
       }
     },
-    "3ce09207f70e327015a6f3bb534deb863cfd149a25622990cc9f07ba50c0a118": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(complexity)",
-        "file": "packages/dota/src/db/watcher.ts",
-        "labels": [
-          {
-            "context": [
-              "{ event: 'UPDATE', schema: 'public', table: 'users' },",
-              "async (payload: { new: Tables<'users'>; old: Partial<Tables<'users'>> }) => {",
-              "const newObj: Tables<'users'> = payload.new"
-            ],
-            "message": "",
-            "span": "async (payload: { new: Tables<'users'>; old: Partial<Tables<'users'>> }) => {\n          const newObj: Tables<'users'> = payload.new\n          const oldObj = payload.old\n\n          // Live ban: banned_at transitioned null → set. Invalidate cached\n          // tokens for both keyspaces (user.id and providerAccountId) and\n          // drop the in-memory GSIHandler so the next GSI POST hits\n          // getDBUser's banned-check and is rejected.\n          if (!isNonEmptyString(oldObj.banned_at) && isNonEmptyString(newObj.banned_at)) {\n            const client = findUser(newObj.id)\n            const accountId = client?.Account?.providerAccountId\n            if (client) {\n              logger.info('[WATCHER USER] Banning user', { name: client.name })\n              await clearCacheForUser(client)\n            }\n            // Add AFTER clearCacheForUser so the token stays in the negative\n            // cache. (Until clearCacheForUser stopped touching invalidTokens\n            // these adds were silently undone.)\n            invalidTokens.add(newObj.id)\n            if (isNonEmptyString(accountId)) {\n              invalidTokens.add(accountId)\n            }\n            return\n          }\n\n          // Unban: banned_at transitioned set → null. Drop the negative-cache\n          // entries so the next GSI POST / chat message can resolve normally.\n          // clearCacheForUser already ran on ban; the user just needs to be\n          // allowed through again.\n          if (isNonEmptyString(oldObj.banned_at) && !isNonEmptyString(newObj.banned_at)) {\n            invalidTokens.delete(newObj.id)\n            // We may not have a live client (it was cleared on ban). Look up\n            // the providerAccountId so both keyspaces are cleared.\n            const client = findUser(newObj.id)\n            const accountId = client?.Account?.providerAccountId\n            if (isNonEmptyString(accountId)) {\n              invalidTokens.delete(accountId)\n            }\n            logger.info('[WATCHER USER] Unbanning user', { userId: newObj.id })\n            return\n          }\n\n          const client = findUser(newObj.id)\n          if (!client) {\n            return\n          }\n\n          client.name = newObj.name\n          client.locale = newObj.locale\n          client.beta_tester = newObj.beta_tester\n          client.stream_online = newObj.stream_online\n          if (typeof newObj.stream_start_date === 'string') {\n            client.stream_start_date = new Date(newObj.stream_start_date)\n          } else {\n            client.stream_start_date = newObj.stream_start_date\n          }\n\n          const connectedUser = gsiHandlers.get(client.token)\n\n          const streamStatusTransition = handleStreamStatusTransition({\n            client,\n            connectedUser,\n            io: server.io,\n            logger,\n            oldStreamOnline: oldObj.stream_online ?? false,\n          })\n\n          if (streamStatusTransition.wentOffline) {\n            return\n          }\n\n          if (streamStatusTransition.cameOnline) {\n            // Handle any pending scheduled messages for this user\n            await handleUserOnlineMessages(client.token, client.name)\n            connectedUser?.emitWLUpdate()\n          }\n\n          // dont overwrite with 0 because we use this variable to track currently logged in mmr\n          if (newObj.mmr !== 0 && client.mmr !== newObj.mmr && oldObj.mmr !== newObj.mmr) {\n            client.mmr = newObj.mmr\n\n            if (!client.stream_online) {\n              return\n            }\n            logger.info('[WATCHER MMR] Sending mmr to socket', {\n              mmr: newObj.mmr,\n              name: client.name,\n            })\n            try {\n              const deets = await getRankDetail(newObj.mmr, client.steam32Id)\n              server.io.to(client.token).emit('update-medal', deets)\n            } catch (error) {\n              logger.error('Error in watcher postgres update', { error })\n            }\n          }\n        }"
-          }
-        ],
-        "message": "async function has a complexity of 23. Maximum allowed is 20.",
-        "severity": "error"
-      }
-    },
     "3cfedb41acdf8590496d8ac0e446368417bbc4fb6ea9f03ae4d5e668ca650d74": {
       "count": 1,
       "diagnostic": {
@@ -24635,26 +24615,6 @@
         "severity": "error"
       }
     },
-    "c503929674754a4cae8e5f9b845e0f3d12b0c0d5f07f360a1c49e2ff3e73e9a8": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-member-access)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "logger.info('[STEAM] Disconnected from Steam.', { eresult, msg })",
-              "this.dota2.exit()",
-              "this.feedWatchdog({ type: 'disconnected' })"
-            ],
-            "message": "",
-            "span": "exit"
-          }
-        ],
-        "message": "Unsafe member access .exit on an `error` typed value.",
-        "severity": "error"
-      }
-    },
     "c550ab42d6b8de45088ca00ce511c2f038f95f3f51e3e58ac7d0d075569dbe49": {
       "count": 1,
       "diagnostic": {
@@ -24732,46 +24692,6 @@
           }
         ],
         "message": "Prefer `async`/`await` to the callback pattern",
-        "severity": "error"
-      }
-    },
-    "c62f8ee4008f453caab7a3fa1c515782d624edc4da0d71a09017391fc22bd3e5": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(require-mock-type-parameters)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "it('should execute remaining tasks during shutdown', async () => {",
-              "const callback = vi.fn(() => {})",
-              ""
-            ],
-            "message": "",
-            "span": "fn"
-          }
-        ],
-        "message": "Missing type parameters on mock function call",
-        "severity": "error"
-      }
-    },
-    "c66b88a794cd7576afe679489387a34e12e2647a49d65df21655ab3667cb9daf": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(cognitive-complexity)",
-        "file": "packages/dota/src/db/watcher.ts",
-        "labels": [
-          {
-            "context": [
-              "{ event: 'UPDATE', schema: 'public', table: 'users' },",
-              "async (payload: { new: Tables<'users'>; old: Partial<Tables<'users'>> }) => {",
-              "const newObj: Tables<'users'> = payload.new"
-            ],
-            "message": "",
-            "span": "=>"
-          }
-        ],
-        "message": "Refactor this function to reduce its Cognitive Complexity from 21 to the 20 allowed.",
         "severity": "error"
       }
     },
@@ -25603,26 +25523,6 @@
           }
         ],
         "message": "Returning a void expression from an arrow function shorthand is forbidden.",
-        "severity": "error"
-      }
-    },
-    "cbbfebf8276e208e08470bcfe1a95a580c067f84132fce8b164595718f95ee48": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-member-access)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "this.user.removeAllListeners()",
-              "this.dota2.removeAllListeners()",
-              "logger.info('[STEAM] Removed all listeners from dota and steam')"
-            ],
-            "message": "",
-            "span": "removeAllListeners"
-          }
-        ],
-        "message": "Unsafe member access .removeAllListeners on an `error` typed value.",
         "severity": "error"
       }
     },
@@ -27034,26 +26934,6 @@
         "severity": "error"
       }
     },
-    "d5ddce8513c363d37fc078ab3df51b10fbae3d4b9520ec6deb921f91f0422393": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-unknown-returns)",
-        "file": "packages/dota/src/db/__tests__/watcher-mocks.ts",
-        "labels": [
-          {
-            "context": [
-              "single: async () => await Promise.resolve({ data: null, error: null }),",
-              "then: async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) =>",
-              "await Promise.resolve({ data: null, error: null }).then(onFulfilled),"
-            ],
-            "message": "",
-            "span": "unknown"
-          }
-        ],
-        "message": "This function exposes `unknown` to its caller. Parse the value at its boundary and return a named domain type.",
-        "severity": "error"
-      }
-    },
     "d5e1a220c36838079608c70a095671b5a358fe5d343f517f58e37511fb1fd6cd": {
       "count": 1,
       "diagnostic": {
@@ -27272,26 +27152,6 @@
           }
         ],
         "message": "async function `remindUnresolvedMatches` has a complexity of 22. Maximum allowed is 20.",
-        "severity": "error"
-      }
-    },
-    "d6ddd3d9917fa27366df6be782c1d9ce2011f1bfbf4cc6dac48532368f0acceb": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-call)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "this.user.removeAllListeners()",
-              "this.dota2.removeAllListeners()",
-              "logger.info('[STEAM] Removed all listeners from dota and steam')"
-            ],
-            "message": "",
-            "span": "this.dota2.removeAllListeners"
-          }
-        ],
-        "message": "Unsafe call of a(n) `error` type typed value.",
         "severity": "error"
       }
     },
@@ -28010,26 +27870,6 @@
         "severity": "error"
       }
     },
-    "dc63c2e09e3ec6d405d17544f837848c14647729ce3731e0697e7e4587d17a65": {
-      "count": 2,
-      "diagnostic": {
-        "code": "promise(avoid-new)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "// Wait for queue's 1-second check interval to process all tasks",
-              "await new Promise((resolve) => setTimeout(resolve, 1200))",
-              ""
-            ],
-            "message": "",
-            "span": "new Promise((resolve) => setTimeout(resolve, 1200))"
-          }
-        ],
-        "message": "Avoid creating new promises",
-        "severity": "error"
-      }
-    },
     "dc652f40c67c327f006fad18a4dde40f9ec84be1ab8bb0e81019721b3b4cc25a": {
       "count": 1,
       "diagnostic": {
@@ -28127,26 +27967,6 @@
           }
         ],
         "message": "The explicit unknown type on binding `mongoDoc` discards known type evidence. Keep inference, validate with `satisfies`, or use a named owner contract.",
-        "severity": "error"
-      }
-    },
-    "dd812b77558d78a4dac0632b72942fb1c8f44a0450e9b5dca6140d4c9bfb6711": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-call)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "this.dota2 = new Dota2.Dota2Client(this.user, false, false)",
-              "this.dota2.setMaxListeners(12)",
-              ""
-            ],
-            "message": "",
-            "span": "this.dota2.setMaxListeners"
-          }
-        ],
-        "message": "Unsafe call of a(n) `error` type typed value.",
         "severity": "error"
       }
     },
@@ -28324,26 +28144,6 @@
           }
         ],
         "message": "Unsafe type assertion: type '{ count: number; }' is more narrow than the original type.",
-        "severity": "error"
-      }
-    },
-    "dfa7e96671da28b50f83eeb32756fc0571c113fbe22b1957ff9cc7a30e55b98c": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-promise-executor-return)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "// Wait for queue's 1-second check interval to process all tasks",
-              "await new Promise((resolve) => setTimeout(resolve, 1500))",
-              ""
-            ],
-            "message": "",
-            "span": "setTimeout(resolve, 1500)"
-          }
-        ],
-        "message": "Return statement should not be used in Promise executor.",
         "severity": "error"
       }
     },
@@ -28775,22 +28575,6 @@
         "severity": "error"
       }
     },
-    "e2433ba20df9d576b4700bde912fb43e259d7bfc95de889e917c72b6ee68d273": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-call)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": ["this.dota2.exit()", "this.dota2.launch()", "}"],
-            "message": "",
-            "span": "this.dota2.launch"
-          }
-        ],
-        "message": "Unsafe call of a(n) `error` type typed value.",
-        "severity": "error"
-      }
-    },
     "e2625b88cd4420f8a7bd34cc1e3ab8c8ecd03a8a7cab043687686bfe05b99fb6": {
       "count": 1,
       "diagnostic": {
@@ -28924,26 +28708,6 @@
           }
         ],
         "message": "Parameter `value` leaves input unparsed. Accept a named domain type; run the expected schema or parser at the I/O boundary before calling this function.",
-        "severity": "error"
-      }
-    },
-    "e353591cfafef872caad979ce78bd8f757f3eb1647240e3bcf6319da1a63f747": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(max-expects)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "expect(queue.removeTask(taskId)).toBeTruthy()",
-              "expect(queue.getQueueSize()).toBe(1)",
-              "})"
-            ],
-            "message": "",
-            "span": "expect"
-          }
-        ],
-        "message": "Enforces a maximum number assertion calls in a test body.",
         "severity": "error"
       }
     },
@@ -29816,26 +29580,6 @@
           }
         ],
         "message": "Reduce the number of conditional operators (6) used in the expression (maximum allowed 3).",
-        "severity": "error"
-      }
-    },
-    "e8ff9075b298511526c7bd9c9423f39051de634a351cfd6d2bc2cb3a40a14f0d": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-member-access)",
-        "file": "packages/steam/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "const dota = Dota.getInstance()",
-              "dota.dota2.on('ready', () => {",
-              "logger.info('[SERVER] Connected to dota game server')"
-            ],
-            "message": "",
-            "span": "on"
-          }
-        ],
-        "message": "Unsafe member access .on on an `error` typed value.",
         "severity": "error"
       }
     },
@@ -31523,22 +31267,6 @@
         "severity": "error"
       }
     },
-    "f63d84562d84b2b6021cc0309f975dc7d9259a769dab4b7fdb46e6ef6d7abd45": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-call)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": ["})", "this.dota2.on('unready', () => {", "this.relaunchPending = false"],
-            "message": "",
-            "span": "this.dota2.on"
-          }
-        ],
-        "message": "Unsafe call of a(n) `error` type typed value.",
-        "severity": "error"
-      }
-    },
     "f6bccdf3cdcb6354031698a5c088734a159ca29f269f90ae4f839b59298b4208": {
       "count": 1,
       "diagnostic": {
@@ -31632,26 +31360,6 @@
           }
         ],
         "message": "Mocked modules must be dynamic imported.",
-        "severity": "error"
-      }
-    },
-    "f70e385856e4296e84da755a33b6436f20328b87a0b66ec12883f32b6cb271c9": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-call)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "setupDotaEventHandlers() {",
-              "this.dota2.on('hellotimeout', this.handleHelloTimeout.bind(this))",
-              "this.dota2.on('ready', () => {"
-            ],
-            "message": "",
-            "span": "this.dota2.on"
-          }
-        ],
-        "message": "Unsafe call of a(n) `error` type typed value.",
         "severity": "error"
       }
     },
@@ -32661,22 +32369,6 @@
         "severity": "error"
       }
     },
-    "fe0e79eeabf6bafc9bd708fb5ea22dbc3686b2fa6e84ac738a4435194a611e66": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-known-value-widening)",
-        "file": "packages/dota/src/utils/subscription.ts",
-        "labels": [
-          {
-            "context": ["if (isFreeFeature) {", "return {", "hasAccess: true,"],
-            "message": "",
-            "span": "{\n      hasAccess: true,\n      requiredTier,\n    }"
-          }
-        ],
-        "message": "The explicit anonymous object type on return value of `canAccessFeature` discards known type evidence. Keep inference, validate with `satisfies`, or use a named owner contract.",
-        "severity": "error"
-      }
-    },
     "fe428a5e1f4d203676ebbcfcef72d4542e30060df66ff7ab37ec244721fd6b49": {
       "count": 1,
       "diagnostic": {
@@ -32750,26 +32442,6 @@
           }
         ],
         "message": "Remove this redundant jump.",
-        "severity": "error"
-      }
-    },
-    "fe5ed10e9f2b160414158ee4223bed419b385f24cbf75f0d8a17a9cec32ffecd": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-known-value-widening)",
-        "file": "packages/dota/src/utils/subscription.ts",
-        "labels": [
-          {
-            "context": [
-              "if (isInGracePeriod()) {",
-              "return {",
-              "// All features are accessible during grace period"
-            ],
-            "message": "",
-            "span": "{\n      // All features are accessible during grace period\n      hasAccess: true,\n      requiredTier,\n    }"
-          }
-        ],
-        "message": "The explicit anonymous object type on return value of `canAccessFeature` discards known type evidence. Keep inference, validate with `satisfies`, or use a named owner contract.",
         "severity": "error"
       }
     },

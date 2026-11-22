@@ -10,6 +10,7 @@ import { onlineEvent } from './event-handlers/online-event'
 import { transformBetData } from './event-handlers/transform-bet-data'
 import { transformPollData } from './event-handlers/transform-poll-data'
 import { updateUserEvent } from './event-handlers/update-user-event'
+import { createEventSubInitializer } from './event-sub-initializer.js'
 import { EventsubSocket, isEventsubConnected } from './event-sub-socket'
 import { twitchEvent } from './events'
 import { handleChatMessage } from './handle-chat'
@@ -17,46 +18,28 @@ import { emitEvent, hasDotabodSocket } from './utils/socket-manager'
 
 const eventsSocket = twitchEvent
 
-// Self-heal guard. initializeSocket() fetches the conduit over the eventsSocket
-// connection to twitch-events, so it can only succeed once that link is up.
-// Historically init ran only at startup + one 30s retry, so if twitch-events
-// was down/crash-looping during both attempts, EventSub stayed dead until a
-// manual restart (2026-05-29). Driving (re)init off the 'connect' event means
-// EventSub re-establishes on its own the moment twitch-events comes back.
-let eventSubInitInFlight = false
-
-// The one live EventsubSocket. initializeSocket() disposes this before creating
-// its replacement so re-init paths can never accumulate sockets.
 let currentSocket: EventsubSocket | null = null
 
-export const ensureEventSubInitialized = async function ensureEventSubInitialized(
-  reason: string
-): Promise<void> {
-  if (eventSubInitInFlight) {
-    return
-  }
-  // A plain socket.io reconnect while EventSub is already live needs no re-init.
-  if (isEventsubConnected()) {
-    return
-  }
-  eventSubInitInFlight = true
-  try {
+// Startup-only retries left EventSub down until a manual restart when twitch-events
+// was unavailable (2026-05-29). Retry on connect, including connects during a pending request.
+export const ensureEventSubInitialized = createEventSubInitializer(
+  eventsSocket,
+  isEventsubConnected,
+  async (reason) => {
     logger.info('[TWITCHCHAT] Ensuring EventSub is initialized', { reason })
-    await initializeSocket()
-  } catch (error) {
-    logger.error('[TWITCHCHAT] EventSub initialization failed', {
-      error: error instanceof Error ? error.message : String(error),
-      reason,
-    })
-  } finally {
-    eventSubInitInFlight = false
+    try {
+      await initializeSocket()
+    } catch (error) {
+      logger.error('[TWITCHCHAT] EventSub initialization failed', {
+        error: error instanceof Error ? error.message : String(error),
+        reason,
+      })
+    }
   }
-}
+)
 
 eventsSocket.on('connect', () => {
   logger.info('[TWITCHCHAT] Connected to twitch-events service')
-  // Recover EventSub whenever we (re)gain the link to twitch-events.
-  void ensureEventSubInitialized('eventsSocket connect')
 })
 
 eventsSocket.on('connect_error', (error) => {
@@ -69,20 +52,10 @@ eventsSocket.on('disconnect', (reason) => {
   logger.info('[TWITCHCHAT] Disconnected from twitch-events service', { reason })
 })
 
-// Watchdog: the connect-driven self-heal above can miss a recovery when the link
-// to twitch-events flaps mid-init. If the socket drops while getConduitId() is
-// waiting, eventSubInitInFlight stays true; the reconnect's
-// ensureEventSubInitialized() then bails on that guard, and by the time the
-// stale attempt times out and clears the guard there's no 'connect' event left
-// to retrigger init — EventSub stays dead until a manual restart (seen
-// 2026-06-09). This interval reconciles that state unconditionally: link up but
-// EventSub down with no init in flight means we wedged, so re-init.
+// Twitch can disconnect EventSub independently of the link to twitch-events.
 const EVENTSUB_WATCHDOG_MS = 30_000
 setInterval(() => {
-  if (eventsSocket.connected && !isEventsubConnected() && !eventSubInitInFlight) {
-    logger.warn('[TWITCHCHAT] Watchdog: twitch-events link up but EventSub down, re-initializing')
-    void ensureEventSubInitialized('watchdog')
-  }
+  void ensureEventSubInitialized('watchdog')
 }, EVENTSUB_WATCHDOG_MS)
 
 const getConduitId = async function getConduitId(forceRefresh = false): Promise<string> {

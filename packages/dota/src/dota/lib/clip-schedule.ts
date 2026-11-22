@@ -257,6 +257,7 @@ export class ClipScheduler {
   }
 
   private readonly deps: ClipScheduleDeps
+  private readonly armedMembers = new Set<string>()
 
   constructor(deps: ClipScheduleDeps) {
     this.deps = deps
@@ -329,8 +330,12 @@ export class ClipScheduler {
     member: string,
     now: number
   ): Promise<'dropped' | 'rearmed' | 'skipped'> {
+    if (this.armedMembers.has(member)) {
+      return 'skipped'
+    }
+
     const payload = parseClipScheduleMember(member)
-    if (payload === null || now - payload.executeAt > MAX_LATE_MS) {
+    if (payload === null || now - payload.executeAt > MAX_LATE_MS || !this.claim(payload)) {
       try {
         await this.deps.zRem(member)
       } catch (error) {
@@ -342,9 +347,6 @@ export class ClipScheduler {
       return 'dropped'
     }
 
-    if (!this.claim(payload)) {
-      return 'skipped'
-    }
     this.arm(member, payload.executeAt, payload, true)
     return 'rearmed'
   }
@@ -355,6 +357,7 @@ export class ClipScheduler {
     payload: ClipTaskPayload,
     persisted: boolean
   ): void {
+    this.armedMembers.add(member)
     this.deps.arm(Math.max(0, executeAt - this.deps.now()), async () => {
       let removed = 1
       try {
@@ -366,6 +369,7 @@ export class ClipScheduler {
           error: error instanceof Error ? error.message : String(error),
         })
       }
+      this.armedMembers.delete(member)
       // A failed write may leave no member to claim. The in-process timer still owns the task.
       if (removed > 0 || !persisted) {
         await this.deps.run(payload)

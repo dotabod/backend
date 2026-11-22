@@ -531,7 +531,8 @@ class PostgresClient:
             SELECT clip_id FROM {self.results_table}
             WHERE match_id = %s
               AND COALESCE((results->>'is_draft')::boolean, FALSE) = FALSE
-              AND jsonb_array_length(COALESCE(results->'heroes', '[]'::jsonb)) > 0
+              AND CASE WHEN jsonb_typeof(results->'heroes') = 'array'
+                  THEN jsonb_array_length(results->'heroes') > 0 ELSE FALSE END
             ORDER BY processed_at DESC
             LIMIT 1
             """
@@ -1203,8 +1204,7 @@ class PostgresClient:
             the worker's "non-transient errors fail immediately" contract
           - retry budget not yet exhausted
           - request_type is a clip variant (not stream)
-          - the match has no successful row in clip_results yet (so we don't
-            re-fetch a clip whose match was already covered by a sibling phase)
+          - the same clip has no successful row in clip_results yet
 
         The sliding window bounds the work — once a row ages out we stop trying.
         Order by created_at so the oldest failures get the next retry slot first.
@@ -1239,7 +1239,7 @@ class PostgresClient:
               AND q.match_id IS NOT NULL
               AND NOT EXISTS (
                 SELECT 1 FROM {self.results_table} r
-                WHERE r.match_id = q.match_id
+                WHERE r.clip_id = q.clip_id AND r.match_id = q.match_id
               )
             ORDER BY q.created_at ASC
             LIMIT %s

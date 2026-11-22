@@ -174,4 +174,20 @@ describe('clipSchedule', () => {
     expect(h.getRunCalls()).toBe(1)
     expect(h.zset.size).toBe(0)
   })
+
+  it('does not resurrect duplicate captures on a second restart', async () => {
+    const firstTime = 1_005_000
+    const duplicateTime = 1_006_000
+    h.zset.set(makeMember(firstTime), firstTime)
+    h.zset.set(makeMember(duplicateTime), duplicateTime)
+
+    await h.scheduler.rearm()
+    await h.scheduler.rearm()
+    expect(h.armed.map(({ delayMs }) => delayMs)).toStrictEqual([5000])
+    await h.armed[0].cb()
+
+    h.armed.length = 0
+    await new ClipScheduler(h.deps).rearm()
+    expect(h.armed).toHaveLength(0)
+  })
 })

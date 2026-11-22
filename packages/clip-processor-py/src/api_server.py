@@ -653,7 +653,7 @@ def check_queue_status(request_id):
 
         # For completed requests, add the result
         if queue_info['status'] == 'completed' and queue_info.get('result_id'):
-            if queue_info['request_type'] == 'clip':
+            if queue_info['request_type'] in ('clip', 'clip_in_game'):
                 cached_result = db_client.get_clip_result(queue_info['result_id'])
                 if cached_result:
                     # Replace placeholder with real host URL
