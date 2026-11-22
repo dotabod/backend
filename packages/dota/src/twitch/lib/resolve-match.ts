@@ -214,7 +214,8 @@ export const closeTwitchBetById = async function closeTwitchBetById(
         twitchId,
         wonOutcomeUsers: wonOutcome.users,
       })
-      return (await refundTwitchBet(twitchId, predictionId)).status === 'refunded'
+      const refund = await refundTwitchBet(twitchId, predictionId)
+      return refund.status === 'refunded'
     }
 
     await retryTransient(

@@ -1,6 +1,7 @@
 import { logger, supabase } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 import { Long } from 'mongodb'
+import { z } from 'zod'
 
 import { getWL, LOBBY_TYPE_RANKED, MULTIPLIER_PARTY, MULTIPLIER_SOLO } from '../db/get-wl'
 import { redisClient } from '../db/redis-instance'
@@ -48,6 +49,7 @@ import {
   REMINDER_FLAG_TTL_S,
   reminderSentFlagKey,
 } from './lib/unresolved-matches'
+import type { UnresolvedMatch } from './lib/unresolved-matches'
 import { updateMmr } from './lib/update-mmr'
 import { NeutralItemTimer } from './neutral-item-timer'
 import { say } from './say'
@@ -59,8 +61,16 @@ import { getWinLossRoom } from './win-loss-socket'
 const STREAMERS_ANNOUNCE_DELAY_MS = 90_000
 const MULTI_ACCOUNT_REVALIDATION_COOLDOWN_MS = 30_000
 type Team = 'radiant' | 'dire'
+type ClosingMatch = MatchClosingDetailsResponse['matches'][number]
 
-function parseTeam(team: string | null): Team | null {
+const pendingResolutionSchema = z.object({ matchId: z.string() })
+
+interface PendingPrediction {
+  matchId: string
+  heroName: string
+}
+
+const parseTeam = function parseTeam(team: string | null | undefined): Team | null {
   return team === 'radiant' || team === 'dire' ? team : null
 }
 
@@ -152,7 +162,7 @@ class GSIHandler implements GSIHandlerType {
   bountyTaskId?: string
   killstreakTaskId?: string
   openTheBetTaskId?: string
-  private pendingPrediction?: { matchId: string; heroName: string }
+  private pendingPrediction: PendingPrediction | null = null
 
   endingBets = false
   openingBets = false
@@ -304,7 +314,7 @@ class GSIHandler implements GSIHandlerType {
 
   public async resetClientState() {
     cancelHeroSwap(this)
-    this.pendingPrediction = undefined
+    this.pendingPrediction = null
     await deleteRedisData(this.client)
     this.blockCache = undefined
     this.mapBlocker.resetData()
@@ -711,11 +721,6 @@ class GSIHandler implements GSIHandlerType {
     }
   }
 
-  // TODO: CRON Job
-  // 1 Find bets that are open and don't equal this match id and close them
-  // 2 Next, check if the prediction is still open
-  // 3 If it is, steam dota2 api result of match
-  // 4 Then, tell twitch to close bets based on win result
   public updatePendingPredictionHero(matchId: string, heroName: string): boolean {
     if (this.pendingPrediction?.matchId !== matchId) {
       return false
@@ -724,138 +729,122 @@ class GSIHandler implements GSIHandlerType {
     return true
   }
 
+  private async expireManualResolution(client: SocketClient, matchId: string, newMatchId: string) {
+    const pendingResolution = await redisClient.client.get(
+      `${client.token}:pendingManualResolution`
+    )
+    if (!pendingResolution) {
+      return
+    }
+
+    try {
+      const { matchId: pendingMatchId } = pendingResolutionSchema.parse(
+        JSON.parse(pendingResolution)
+      )
+      if (pendingMatchId !== matchId) {
+        return
+      }
+
+      logger.info('[BETS] Expiring pending manual resolution - new match joined', {
+        name: client.name,
+        newMatchId,
+        oldMatchId: matchId,
+      })
+
+      if (!getValueOrDefault(DBSettings.bets, client.settings, client.subscription)) {
+        return
+      }
+
+      const { data } = await supabase
+        .from('matches')
+        .select('predictionId')
+        .eq('matchId', matchId)
+        .eq('userId', client.token)
+        .is('won', null)
+        .single()
+      if (!data?.predictionId) {
+        return
+      }
+      await refundTwitchBet(this.getChannelId(), data.predictionId)
+
+      if (
+        client.stream_online &&
+        getValueOrDefault(DBSettings.tellChatBets, client.settings, client.subscription)
+      ) {
+        say(
+          client,
+          t('bets.manualResolutionExpired', {
+            emote: 'FeelsBadMan',
+            lng: client.locale,
+          })
+        )
+      }
+    } catch (error) {
+      logger.error('[BETS] Error handling pending manual resolution expiration', { error })
+    }
+  }
+
   async openBets(client: SocketClient) {
+    const { gsi } = client
+    const map = gsi?.map
+    const player = gsi?.player
+    if (this.openingBets || player?.activity !== 'playing' || map?.win_team !== 'none') {
+      return
+    }
+
+    // GSI can clear or move to another match before the stream delay expires.
+    const heroName = gsi?.hero?.name
+    const matchId = map.matchid
+    if (!heroName || !matchId || matchId === '0') {
+      return
+    }
+    const myTeam = player.team_name ?? ''
+    const playingMatchId = await redisClient.client.get(`${client.token}:matchId`)
     if (this.openingBets) {
       return
     }
 
-    // Why open if not playing?
-    if (client.gsi?.player?.activity !== 'playing') {
-      return
-    }
-
-    // Why open if won?
-    if (client.gsi.map?.win_team !== 'none') {
-      return
-    }
-
-    // We at least want the hero name so it can go in the twitch bet title
-    const heroName = client.gsi.hero?.name
-    if (heroName === null || heroName === undefined || heroName.length === 0) {
-      return
-    }
-
-    // It's not a live game, so we don't want to open bets nor save it to DB
-    if (!client.gsi.map?.matchid || client.gsi.map?.matchid === '0') {
-      return
-    }
-
-    // Snapshot validated matchid + hero name now; openTheBet runs after the
-    // stream delay and `client.gsi` can be cleared by then (e.g. draft abandon
-    // + requeue triggers resetClientState). Without the snapshot, openTheBet
-    // would insert a `matches` row with an empty matchId and open a Twitch
-    // prediction titled "Will we win with ".
-    const validatedMatchId = client.gsi.map.matchid
-    const validatedHeroName = heroName
-    // team_name is set on player at this point because activity === 'playing'
-    // (checked above). Capture it for the same reason as matchId/heroName so
-    // the matches row records the team the streamer was actually on.
-    const validatedMyTeam = client.gsi.player?.team_name ?? ''
-
-    const matchId = (await redisClient.client.get(`${client.token}:matchId`)) ?? undefined
-
-    if (matchId !== undefined && matchId.length > 0 && matchId !== validatedMatchId) {
-      // Check if there's a pending manual resolution for the old match
-      const pendingResolution = await redisClient.client.get(
-        `${client.token}:pendingManualResolution`
-      )
-      if (pendingResolution !== null && pendingResolution.length > 0) {
-        try {
-          const { matchId: pendingMatchId } = JSON.parse(pendingResolution)
-
-          // If the pending match is the old one, refund it and notify
-          if (pendingMatchId === matchId) {
-            logger.info('[BETS] Expiring pending manual resolution - new match joined', {
-              name: client.name,
-              newMatchId: client.gsi.map.matchid,
-              oldMatchId: matchId,
-            })
-
-            const betsEnabled = getValueOrDefault(
-              DBSettings.bets,
-              client.settings,
-              client.subscription
-            )
-            if (betsEnabled) {
-              const predictionResponse = await supabase
-                .from('matches')
-                .select('predictionId')
-                .eq('matchId', matchId.toString())
-                .eq('userId', client.token)
-                .is('won', null)
-                .single()
-              if (
-                predictionResponse.data?.predictionId !== null &&
-                predictionResponse.data?.predictionId !== undefined &&
-                predictionResponse.data.predictionId.length > 0
-              ) {
-                await refundTwitchBet(this.getChannelId(), predictionResponse.data.predictionId)
-
-                const tellChatBets = getValueOrDefault(
-                  DBSettings.tellChatBets,
-                  client.settings,
-                  client.subscription
-                )
-                if (tellChatBets && client.stream_online) {
-                  say(
-                    client,
-                    t('bets.manualResolutionExpired', {
-                      emote: 'FeelsBadMan',
-                      lng: client.locale,
-                    })
-                  )
-                }
-              }
-            }
-          }
-        } catch (error) {
-          logger.error('[BETS] Error handling pending manual resolution expiration', { error })
-        }
-      }
-
-      // We have the wrong matchid, reset vars and start over
+    if (playingMatchId && playingMatchId !== matchId) {
+      await this.expireManualResolution(client, playingMatchId, matchId)
       logger.info('[BETS] openBets resetClientState because stuck on old match id', {
-        gsiMatchId: client.gsi.map.matchid,
+        gsiMatchId: matchId,
         name: client.name,
-        playingMatchId: matchId,
+        playingMatchId,
         steam32Id: client.steam32Id,
-        steamFromGSI: client.gsi.player?.steamid,
+        steamFromGSI: player.steamid,
         token: client.token,
       })
       await this.resetClientState()
       return
     }
 
-    // The bet was already made
-    if (Number(matchId) >= 0 || this.openingBets) {
+    if (playingMatchId !== null && playingMatchId !== undefined && Number(playingMatchId) >= 0) {
       return
     }
 
     logger.info('[BETS] Begin opening bets', {
       hero: heroName,
-      matchId: client.gsi.map.matchid,
+      matchId,
       name: client.name,
-      playingMatchId: matchId,
+      playingMatchId,
     })
 
     this.openingBets = true
-    const pending = { heroName: validatedHeroName, matchId: validatedMatchId }
+    const pending = { heroName, matchId }
     this.pendingPrediction = pending
+    await this.preparePrediction(client, pending, myTeam)
+  }
 
-    const { data: bet } = await supabase
+  private async preparePrediction(
+    client: SocketClient,
+    pending: PendingPrediction,
+    myTeam: string
+  ): Promise<void> {
+    const { heroName, matchId } = pending
+    const { data: rows } = await supabase
       .from('matches')
       .select('matchId, myTeam, id')
-      .eq('matchId', validatedMatchId)
+      .eq('matchId', matchId)
       .eq('userId', client.token)
       .is('won', null)
 
@@ -863,18 +852,16 @@ class GSIHandler implements GSIHandlerType {
       return
     }
 
+    const existing = rows?.[0]
     try {
-      // Saving to redis so we don't have to query the db again
-      await redisClient.client.set(`${client.token}:matchId`, validatedMatchId)
-
-      const playingTeam = bet?.[0]?.myTeam ?? validatedMyTeam
-      await redisClient.client.set(`${client.token}:playingTeam`, playingTeam)
+      await redisClient.client.set(`${client.token}:matchId`, matchId)
+      await redisClient.client.set(`${client.token}:playingTeam`, existing?.myTeam ?? myTeam)
       await redisClient.client.set(`${client.token}:playingHero`, pending.heroName)
     } catch (error) {
       logger.error('Error while saving data to Redis:', {
         client: client.name,
         error,
-        matchId: validatedMatchId,
+        matchId,
         token: client.token,
       })
     }
@@ -883,48 +870,44 @@ class GSIHandler implements GSIHandlerType {
       return
     }
 
-    if (bet?.[0]?.id !== null && bet?.[0]?.id !== undefined && bet[0].id.length > 0) {
-      logger.info('[BETS] Found a bet in the database', { id: bet?.[0]?.id })
-      this.pendingPrediction = undefined
-      this.openingBets = false
+    if (existing?.id) {
+      logger.info('[BETS] Found a bet in the database', { id: existing.id })
+    } else if (!client.stream_online) {
+      logger.info('[BETS] Not opening bets bc stream is offline for', { name: client.name })
+    } else if (client.token) {
+      this.openTheBetTaskId = delayedQueue.addTask(
+        getStreamDelay(client.settings, client.subscription),
+        async () => {
+          await this.openPendingPrediction(pending, heroName, myTeam)
+        }
+      )
       return
     }
 
-    if (!client.stream_online) {
-      logger.info('[BETS] Not opening bets bc stream is offline for', {
-        name: client.name,
-      })
-      this.pendingPrediction = undefined
-      this.openingBets = false
+    this.pendingPrediction = null
+    this.openingBets = false
+  }
+
+  private async openPendingPrediction(
+    pending: PendingPrediction,
+    originalHero: string,
+    myTeam: string
+  ): Promise<void> {
+    if (this.pendingPrediction !== pending) {
       return
     }
-
-    if (!client.token) {
-      this.pendingPrediction = undefined
-      this.openingBets = false
-      return
-    }
-
-    this.openTheBetTaskId = delayedQueue.addTask(
-      getStreamDelay(client.settings, client.subscription),
-      async () => {
-        if (this.pendingPrediction !== pending) {
-          return
-        }
-        if (pending.heroName !== validatedHeroName) {
-          try {
-            await redisClient.client.set(`${client.token}:playingHero`, pending.heroName)
-          } catch (error) {
-            logger.error('[BETS] Could not save swapped hero', { error, matchId: pending.matchId })
-          }
-        }
-        if (this.pendingPrediction !== pending) {
-          return
-        }
-        this.pendingPrediction = undefined
-        await this.openTheBet(pending.matchId, pending.heroName, validatedMyTeam)
+    if (pending.heroName !== originalHero) {
+      try {
+        await redisClient.client.set(`${this.client.token}:playingHero`, pending.heroName)
+      } catch (error) {
+        logger.error('[BETS] Could not save swapped hero', { error, matchId: pending.matchId })
       }
-    )
+    }
+    if (this.pendingPrediction !== pending) {
+      return
+    }
+    this.pendingPrediction = null
+    await this.openTheBet(pending.matchId, pending.heroName, myTeam)
   }
 
   // An aborted open leaves no match row for settlement or a later hero swap.
@@ -1051,303 +1034,232 @@ class GSIHandler implements GSIHandlerType {
 
     try {
       const match = gcData?.matches?.[0]
-      const longMatchId = match?.match_id
-        ? (() => {
-            const id = new Long(match.match_id.low, match.match_id.high).toString()
-            const numId = Number(id)
-            return !Number.isNaN(numId) && numId > 1 ? id : undefined
-          })()
-        : undefined
-      const matchId = (await redisClient.client.get(`${this.client.token}:matchId`)) ?? longMatchId
-      const player = match?.players?.find(
-        (player) => player.account_id === Number(this.client.gsi?.player?.accountid)
-      )
-      const gcTeam =
-        player?.team_number === DotaGcTeam.DOTA_GC_TEAM_GOOD_GUYS
-          ? 'radiant'
-          : player?.team_number === DotaGcTeam.DOTA_GC_TEAM_BAD_GUYS
-            ? 'dire'
-            : null
-      const myTeam: Team | null =
-        typeof player?.team_number === 'number'
-          ? (gcTeam ?? null)
-          : (parseTeam(await redisClient.client.get(`${this.client.token}:playingTeam`)) ??
-            (this.client.gsi?.player?.team_name === 'radiant' ||
-            this.client.gsi?.player?.team_name === 'dire'
-              ? this.client.gsi?.player?.team_name
-              : null))
-
-      if (this.openingBets || matchId === null || matchId === undefined || matchId.length === 0) {
+      const matchId = await this.getClosingMatchId(match)
+      if (this.openingBets || !matchId) {
         logger.debug('[BETS] Not closing bets', {
           endingBets: this.endingBets,
           name: this.client.name,
           openingBets: this.openingBets,
           playingMatchId: matchId,
         })
-
-        if (matchId === null || matchId === undefined || matchId.length === 0) {
+        if (!matchId) {
           await this.resetClientState()
         }
         return
       }
 
-      const betsEnabled = getValueOrDefault(
-        DBSettings.bets,
-        this.client.settings,
-        this.client.subscription
-      )
-      const heroSlot =
-        player?.player_slot ?? (await getRedisNumberValue(`${this.client.token}:playingHeroSlot`))
-      const heroName =
-        getHeroById(player?.hero_id)?.key ??
-        (await redisClient.client.get(`${this.client.token}:playingHero`))
-
       const localWinner = this.resolveWinner(winningTeam, matchId)
-
-      // An early without waiting for ancient to blow up
-      // We have to check every few seconds with an api to see if the match is over
       if (!localWinner) {
         void this.checkEarlyDCWinner(matchId)
         return
       }
       cancelHeroSwap(this, matchId)
-
-      const scores = buildClosingScores({
-        gcMatch: match,
-        gcPlayer: player,
-        gsi: this.client.gsi,
-      })
-      const won = myTeam === localWinner
-      logger.info('[BETS] end bets won data', {
-        channel: this.client.name,
-        localWinner,
-        myTeam,
-        playingMatchId: matchId,
-        won,
-      })
-
-      // Both or one undefined
-      if (!myTeam) {
-        // Very rare case, but it can happen. Once every 7 days
-        logger.error('[BETS] trying to end bets but did not find localWinner or myTeam', {
-          channel: this.client.name,
-          matchId,
-        })
-        return
-      }
-
-      logger.debug('[BETS] Running end bets to award mmr and close predictions', {
-        matchId,
-        name: this.client.name,
-      })
-
-      const channel = this.client.name
-
-      // Pretty rare case, 26 times in 7 days. Usually when they test Dotabod in a custom lobby
-      // Custom lobbies create a match ID but don't report any stats
-      if (
-        (this.client.gsi?.map?.dire_score === null ||
-          this.client.gsi?.map?.dire_score === undefined ||
-          this.client.gsi.map.dire_score === 0) &&
-        (this.client.gsi?.map?.radiant_score === null ||
-          this.client.gsi?.map?.radiant_score === undefined ||
-          this.client.gsi.map.radiant_score === 0) &&
-        // After an early DC the live GSI can already be the next match, still at 0-0
-        this.client.gsi?.map?.matchid === matchId
-      ) {
-        logger.info('This is likely a no stats recorded match', {
-          matchId,
-          name: this.client.name,
-        })
-
-        if (this.client.stream_online) {
-          say(
-            this.client,
-            t('bets.notScored', {
-              emote: 'D:',
-              key: DBSettings.tellChatBets,
-              lng: this.client.locale,
-              matchId,
-            })
-          )
-          const predictionResponse = await supabase
-            .from('matches')
-            .select('predictionId')
-            .eq('matchId', matchId)
-            .eq('userId', this.client.token)
-            .is('won', null)
-            .single()
-          if (
-            predictionResponse.data?.predictionId !== null &&
-            predictionResponse.data?.predictionId !== undefined &&
-            predictionResponse.data.predictionId.length > 0
-          ) {
-            const refund = await refundTwitchBet(
-              this.getChannelId(),
-              predictionResponse.data.predictionId
-            )
-            if (refund.status === 'refunded') {
-              await supabase
-                .from('matches')
-                .update({ predictionId: null, updated_at: new Date().toISOString() })
-                .eq('predictionId', refund.predictionId)
-            }
-          }
-        }
-        // No-stats match can never be resolved with !won/!lost; don't nag for it.
-        await this.suppressUnresolvedReminder(matchId)
-        await this.resetClientState()
-        return
-      }
-
-      // 0 is a correct lobby type meaning unranked
-      // https://github.com/dotabod/backend/issues/373#issuecomment-2366822786
-      // Default to ranked if we don't have valid data
-      const playingLobbyType = await getRedisNumberValue(
-        `${matchId}:${this.client.token}:lobbyType`
-      )
-      const playingGameMode = await getRedisNumberValue(`${matchId}:${this.client.token}:gameMode`)
-
-      // Use the lobby type from Redis if it exists (including 0)
-      // Otherwise default to ranked
-      const localLobbyType = playingLobbyType ?? LOBBY_TYPE_RANKED
-
-      const isParty = getValueOrDefault(DBSettings.onlyParty, this.client.settings)
-
-      await this.updateMMR({
-        // 22 is game mode for normal game non turbo
-        gameMode: playingGameMode ?? 22,
-        heroName,
-        heroSlot,
-        increase: won,
-        isParty,
-        lobbyType: localLobbyType,
-        matchId,
-        myTeam,
-        scores,
-      })
-
-      await this.storeLeaderboardStanding()
-
-      const TreadToggleData = this.treadsData
-      const toggleHandler = async () => {
-        const treadToggleData = await redisClient.getJson<typeof TreadToggleData>(
-          `${this.client.token}:treadtoggle`
-        )
-
-        if (
-          treadToggleData?.treadToggles !== null &&
-          treadToggleData?.treadToggles !== undefined &&
-          treadToggleData.treadToggles > 0 &&
-          this.client.stream_online
-        ) {
-          say(
-            this.client,
-            t('treadToggle', {
-              count: treadToggleData.treadToggles,
-              lng: this.client.locale,
-              manaCount: treadToggleData.manaSaved,
-              matchId,
-            })
-          )
-        }
-      }
-
-      try {
-        void toggleHandler()
-      } catch (error) {
-        logger.error('err toggleHandler', { error })
-      }
-
-      let predictionId: string | null = null
-      if (betsEnabled) {
-        try {
-          const predictionResponse = await supabase
-            .from('matches')
-            .select('predictionId')
-            .eq('matchId', matchId.toString())
-            .eq('userId', this.client.token)
-            .single()
-
-          if (
-            !predictionResponse.error &&
-            typeof predictionResponse.data?.predictionId === 'string' &&
-            predictionResponse.data.predictionId.length > 0
-          ) {
-            predictionId = predictionResponse.data.predictionId
-          } else {
-            logger.info('[BETS] Skipping Twitch closure because predictionId is unavailable', {
-              channel,
-              error: predictionResponse.error?.message,
-              matchId,
-            })
-          }
-        } catch (error) {
-          logger.info('[BETS] Skipping Twitch closure because predictionId is unreadable', {
-            channel,
-            error: error instanceof Error ? error.message : error,
-            matchId,
-          })
-        }
-      }
-
-      delayedQueue.addTask(getStreamDelay(this.client.settings, this.client.subscription), () => {
-        const message = won
-          ? t('bets.won', { emote: 'Happi', lng: this.client.locale })
-          : t('bets.lost', { emote: 'Happi', lng: this.client.locale })
-
-        say(this.client, message, { chattersKey: 'matchOutcome', delay: false })
-
-        if (
-          !betsEnabled ||
-          predictionId === null ||
-          predictionId === undefined ||
-          predictionId.length === 0
-        ) {
-          logger.debug('Bets are not enabled or no prediction was opened, stopping here', {
-            name: this.client.name,
-          })
-          this.resetClientState().catch(() => {
-            //
-          })
-          return
-        }
-
-        closeTwitchBet(
-          won,
-          this.getChannelId(),
-          matchId,
-          this.client.settings,
-          this.client.subscription
-        )
-          .then(() => {
-            logger.info('[BETS] end bets', {
-              didWin: won,
-              event: 'end_bets',
-              matchId,
-              name: this.client.name,
-              player_team: myTeam,
-              winning_team: localWinner,
-            })
-          })
-          .catch((error: unknown) => {
-            logger.error('[BETS] Error closing twitch bet', {
-              channel,
-              e: error instanceof Error ? error.message : error,
-              matchId,
-            })
-          })
-          .finally(() => {
-            this.resetClientState().catch((error) => {
-              logger.error('Error resetting client state', { error })
-            })
-          })
-      })
+      await this.settleMatch(matchId, localWinner, match)
     } catch (error) {
       logger.error('Error closing bets', { error, name: this.client.name })
     } finally {
       this.endingBets = false
     }
+  }
+
+  private async getClosingMatchId(match?: ClosingMatch): Promise<string | null> {
+    const storedId = await redisClient.client.get(`${this.client.token}:matchId`)
+    if (storedId !== null && storedId !== undefined) {
+      return storedId
+    }
+
+    const gcMatchId = match?.match_id
+    if (!gcMatchId) {
+      return null
+    }
+    const id = new Long(gcMatchId.low, gcMatchId.high).toString()
+    return Number(id) > 1 ? id : null
+  }
+
+  private async getClosingTeam(gcTeam?: DotaGcTeam): Promise<Team | null> {
+    if (gcTeam !== undefined) {
+      if (gcTeam === DotaGcTeam.DOTA_GC_TEAM_GOOD_GUYS) {
+        return 'radiant'
+      }
+      return gcTeam === DotaGcTeam.DOTA_GC_TEAM_BAD_GUYS ? 'dire' : null
+    }
+    const { token } = this.client
+    const storedTeam = await redisClient.client.get(`${token}:playingTeam`)
+    return parseTeam(storedTeam) ?? parseTeam(this.client.gsi?.player?.team_name)
+  }
+
+  private async finishUnscoredMatch(matchId: string): Promise<void> {
+    logger.info('This is likely a no stats recorded match', {
+      matchId,
+      name: this.client.name,
+    })
+    if (this.client.stream_online) {
+      say(
+        this.client,
+        t('bets.notScored', {
+          emote: 'D:',
+          key: DBSettings.tellChatBets,
+          lng: this.client.locale,
+          matchId,
+        })
+      )
+      const { data } = await supabase
+        .from('matches')
+        .select('predictionId')
+        .eq('matchId', matchId)
+        .eq('userId', this.client.token)
+        .is('won', null)
+        .single()
+      if (data?.predictionId) {
+        const refund = await refundTwitchBet(this.getChannelId(), data.predictionId)
+        if (refund.status === 'refunded') {
+          await supabase
+            .from('matches')
+            .update({ predictionId: null, updated_at: new Date().toISOString() })
+            .eq('predictionId', refund.predictionId)
+        }
+      }
+    }
+    // An unscored match has no result for !won or !lost to resolve.
+    await this.suppressUnresolvedReminder(matchId)
+    await this.resetClientState()
+  }
+
+  private async settleMatch(matchId: string, winner: Team, match?: ClosingMatch): Promise<void> {
+    const { token, name: channel, settings, subscription } = this.client
+    const accountId = Number(this.client.gsi?.player?.accountid)
+    const player = match?.players?.find(({ account_id }) => account_id === accountId)
+    const myTeam = await this.getClosingTeam(player?.team_number)
+    const scores = buildClosingScores({ gcMatch: match, gcPlayer: player, gsi: this.client.gsi })
+    const won = myTeam === winner
+    logger.info('[BETS] end bets won data', {
+      channel,
+      localWinner: winner,
+      myTeam,
+      playingMatchId: matchId,
+      won,
+    })
+    if (myTeam === null) {
+      logger.error('[BETS] trying to end bets but did not find localWinner or myTeam', {
+        channel,
+        matchId,
+      })
+      return
+    }
+
+    // After an early DC, GSI may already be reporting the next match at 0-0.
+    const map = this.client.gsi?.map
+    if (map?.matchid === matchId && (map.dire_score ?? 0) === 0 && (map.radiant_score ?? 0) === 0) {
+      await this.finishUnscoredMatch(matchId)
+      return
+    }
+
+    const heroSlot = player?.player_slot ?? (await getRedisNumberValue(`${token}:playingHeroSlot`))
+    const heroName =
+      getHeroById(player?.hero_id)?.key ?? (await redisClient.client.get(`${token}:playingHero`))
+    const lobbyType = await getRedisNumberValue(`${matchId}:${token}:lobbyType`)
+    const gameMode = await getRedisNumberValue(`${matchId}:${token}:gameMode`)
+    await this.updateMMR({
+      gameMode: gameMode ?? 22,
+      heroName,
+      heroSlot,
+      increase: won,
+      isParty: getValueOrDefault(DBSettings.onlyParty, settings),
+      // Lobby type 0 means unranked and must survive this default.
+      lobbyType: lobbyType ?? LOBBY_TYPE_RANKED,
+      matchId,
+      myTeam,
+      scores,
+    })
+    await this.storeLeaderboardStanding()
+
+    void this.announceTreadToggles(matchId)
+    const betsEnabled = getValueOrDefault(DBSettings.bets, settings, subscription)
+    const hasPrediction = betsEnabled && (await this.hasMatchPrediction(matchId))
+    delayedQueue.addTask(getStreamDelay(settings, subscription), async () => {
+      const message = won
+        ? t('bets.won', { emote: 'Happi', lng: this.client.locale })
+        : t('bets.lost', { emote: 'Happi', lng: this.client.locale })
+      say(this.client, message, { chattersKey: 'matchOutcome', delay: false })
+      try {
+        if (hasPrediction) {
+          await closeTwitchBet(
+            won,
+            this.getChannelId(),
+            matchId,
+            this.client.settings,
+            this.client.subscription
+          )
+          logger.info('[BETS] end bets', {
+            didWin: won,
+            event: 'end_bets',
+            matchId,
+            name: this.client.name,
+            player_team: myTeam,
+            winning_team: winner,
+          })
+        }
+      } catch (error) {
+        logger.error('[BETS] Error closing twitch bet', {
+          channel,
+          e: error instanceof Error ? error.message : error,
+          matchId,
+        })
+      } finally {
+        try {
+          await this.resetClientState()
+        } catch (error) {
+          logger.error('Error resetting client state', { error })
+        }
+      }
+    })
+  }
+
+  private async announceTreadToggles(matchId: string): Promise<void> {
+    try {
+      const { token } = this.client
+      const treads = await redisClient.getJson<typeof this.treadsData>(`${token}:treadtoggle`)
+      if (treads && (treads.treadToggles ?? 0) > 0 && this.client.stream_online) {
+        say(
+          this.client,
+          t('treadToggle', {
+            count: treads.treadToggles,
+            lng: this.client.locale,
+            manaCount: treads.manaSaved,
+            matchId,
+          })
+        )
+      }
+    } catch (error) {
+      logger.error('[BETS] Could not announce tread toggles', { error, matchId })
+    }
+  }
+
+  private async hasMatchPrediction(matchId: string): Promise<boolean> {
+    const { name: channel, token } = this.client
+    try {
+      const { data, error } = await supabase
+        .from('matches')
+        .select('predictionId')
+        .eq('matchId', matchId)
+        .eq('userId', token)
+        .single()
+      if (!error && data?.predictionId) {
+        return true
+      }
+      logger.info('[BETS] Skipping Twitch closure because predictionId is unavailable', {
+        channel,
+        error: error?.message,
+        matchId,
+      })
+    } catch (error) {
+      logger.info('[BETS] Skipping Twitch closure because predictionId is unreadable', {
+        channel,
+        error: error instanceof Error ? error.message : error,
+        matchId,
+      })
+    }
+    return false
   }
 
   // map:win_team comes from the `previously` diff, and Dota drops that diff from the packet
@@ -1441,125 +1353,61 @@ class GSIHandler implements GSIHandlerType {
       .is('won', null)
       .is('kda', null)
 
-    // Check if player is high MMR (8500+)
-    const isHighMmr = is8500Plus(this.client)
-
-    if (isHighMmr) {
-      // For high MMR players, skip automatic retries and prompt for manual resolution
+    if (is8500Plus(this.client)) {
       logger.info('[BETS] High MMR player detected, prompting for manual resolution', {
         matchId,
         mmr: this.getMmr(),
         name: this.client.name,
       })
-
-      // Set pending manual resolution flag in Redis
-      await redisClient.client.set(
-        `${this.client.token}:pendingManualResolution`,
-        JSON.stringify({ matchId, timestamp: Date.now() })
-      )
-
-      // Send chat message to notify mods
-      const tellChatBets = getValueOrDefault(
-        DBSettings.tellChatBets,
-        this.client.settings,
-        this.client.subscription
-      )
-      if (tellChatBets && this.client.stream_online) {
-        say(
-          this.client,
-          t('bets.manualResolution', {
-            details: formatUnresolvedMatch(snapshotMatch),
-            emote: 'PauseChamp',
-            lng: this.client.locale,
-            matchId,
-          })
-        )
-      }
-
+      await this.requestManualResolution(matchId, snapshotMatch)
       this.checkingEarlyDCWinner = false
       return
     }
 
-    // Set up retry parameters for lower MMR players
-    // Try up to 5 times
     const MAX_RETRIES = 5
-    // 30 seconds between retries (total 2.5 minutes)
     const RETRY_DELAY = 30_000
     let retryCount = 0
 
     const attemptFetchMatchData = async (): Promise<void> => {
-      // Check if they rejoined the match they disconnected from
       if (this.isBackInMatch(matchId)) {
         logger.info('[BETS] Streamer rejoined the match, skipping early DC winner check', {
           matchId,
           name: this.client.name,
         })
-        // Let the next exit from this match start a fresh check
         this.checkingEarlyDCWinner = false
         return
       }
 
-      // Check if the bet for this match is already closed in the database
-      const { data: matchNotEnded, error } = await supabase
+      const { data: matchNotEnded, error: lookupError } = await supabase
         .from('matches')
         .select('won')
-        // Null means there is a winner of this match
         .is('won', null)
         .eq('matchId', matchId.toString())
         .eq('userId', this.client.token)
         .single()
 
-      if (matchNotEnded === null || matchNotEnded === undefined || error !== null) {
+      if (!matchNotEnded || lookupError !== null) {
         logger.info('[BETS] Match already ended, skipping early DC winner check', {
           matchId,
           name: this.client.name,
         })
+        this.checkingEarlyDCWinner = false
         return
       }
 
       if (retryCount >= MAX_RETRIES) {
-        // Handle exhausting all retries - prompt for manual resolution instead of refunding
         if (this.client.stream_online) {
           logger.info(
             'Exceeded maximum retries for early DC match check, prompting for manual resolution',
-            {
-              matchId,
-              name: this.client.name,
-            }
+            { matchId, name: this.client.name }
           )
-
-          // Set pending manual resolution flag in Redis
-          await redisClient.client.set(
-            `${this.client.token}:pendingManualResolution`,
-            JSON.stringify({ matchId, timestamp: Date.now() })
-          )
-
-          // Send chat message to notify mods
-          const tellChatBets = getValueOrDefault(
-            DBSettings.tellChatBets,
-            this.client.settings,
-            this.client.subscription
-          )
-          if (tellChatBets) {
-            say(
-              this.client,
-              t('bets.manualResolution', {
-                details: formatUnresolvedMatch(snapshotMatch),
-                emote: 'PauseChamp',
-                lng: this.client.locale,
-                matchId,
-              })
-            )
-          }
+          await this.requestManualResolution(matchId, snapshotMatch)
         }
-
-        // Reset the flag since we've exhausted retries
         this.checkingEarlyDCWinner = false
         return
       }
 
       try {
-        // Request match data from Steam socket
         const getMatchDetailsPromise = new Promise<MatchMinimalDetailsResponse>(
           (resolve, reject) => {
             steamSocket.emit(
@@ -1577,129 +1425,95 @@ class GSIHandler implements GSIHandlerType {
         )
 
         const response = await getMatchDetailsPromise
-        const matchData = response?.matches?.[0]
-
-        // Check if we got a valid response with match outcome
+        const outcome = response?.matches?.[0]?.match_outcome
         if (
-          matchData !== undefined &&
-          typeof matchData.match_outcome === 'number' &&
-          [
-            EMatchOutcome.k_EMatchOutcome_RadVictory,
-            EMatchOutcome.k_EMatchOutcome_DireVictory,
-          ].includes(matchData.match_outcome)
+          outcome === EMatchOutcome.k_EMatchOutcome_RadVictory ||
+          outcome === EMatchOutcome.k_EMatchOutcome_DireVictory
         ) {
           logger.info('Successfully retrieved match result for early DC', {
             matchId,
-            matchOutcome: matchData.match_outcome,
+            matchOutcome: outcome,
             name: this.client.name,
           })
-
-          // Determine winner based on match outcome
-          // k_EMatchOutcome_RadVictory = 2, k_EMatchOutcome_DireVictory = 3
-          const winningTeam =
-            matchData.match_outcome === EMatchOutcome.k_EMatchOutcome_RadVictory
-              ? 'radiant'
-              : 'dire'
-
-          // Reset flag before calling closeBets to prevent duplicate calls from closeBets
           this.checkingEarlyDCWinner = false
+          const winningTeam =
+            outcome === EMatchOutcome.k_EMatchOutcome_RadVictory ? 'radiant' : 'dire'
           await this.closeBets(winningTeam, response)
-        } else if (
-          matchData !== undefined &&
-          typeof matchData.match_outcome === 'number' &&
-          matchData.match_outcome > EMatchOutcome.k_EMatchOutcome_DireVictory
+          return
+        }
+        if (
+          outcome !== undefined &&
+          Number.isFinite(outcome) &&
+          outcome > EMatchOutcome.k_EMatchOutcome_DireVictory
         ) {
-          // Not scored
           logger.info('Match not scored, skipping early DC winner check', {
             matchId,
-            matchOutcome: matchData.match_outcome,
+            matchOutcome: outcome,
             name: this.client.name,
           })
-
-          // Reset flag before calling closeBets to prevent duplicate calls from closeBets
           this.checkingEarlyDCWinner = false
-          logger.info('This is likely a no stats recorded match', {
-            matchId,
-            name: this.client.name,
-          })
-
-          if (this.client.stream_online) {
-            say(
-              this.client,
-              t('bets.notScored', {
-                emote: 'D:',
-                key: DBSettings.tellChatBets,
-                lng: this.client.locale,
-                matchId,
-              })
-            )
-            const predictionResponse = await supabase
-              .from('matches')
-              .select('predictionId')
-              .eq('matchId', matchId.toString())
-              .eq('userId', this.client.token)
-              .is('won', null)
-              .single()
-            if (
-              predictionResponse.data?.predictionId !== null &&
-              predictionResponse.data?.predictionId !== undefined &&
-              predictionResponse.data.predictionId.length > 0
-            ) {
-              const refund = await refundTwitchBet(
-                this.getChannelId(),
-                predictionResponse.data.predictionId
-              )
-              if (refund.status === 'refunded') {
-                await supabase
-                  .from('matches')
-                  .update({ predictionId: null, updated_at: new Date().toISOString() })
-                  .eq('predictionId', refund.predictionId)
-              }
-            }
-          }
-          // No-stats match can never be resolved with !won/!lost; don't nag for it.
-          await this.suppressUnresolvedReminder(matchId)
-          await this.resetClientState()
+          cancelHeroSwap(this, matchId.toString())
+          await this.finishUnscoredMatch(matchId.toString())
           return
-        } else {
-          // Invalid response, retry after delay
-          retryCount += 1
-          logger.info('Invalid match data response, scheduling retry', {
-            matchId,
-            maxRetries: MAX_RETRIES,
-            name: this.client.name,
-            response,
-            retryCount,
-          })
-
-          setTimeout(attemptFetchMatchData, RETRY_DELAY)
         }
-      } catch (error) {
-        // Error occurred, retry after delay
+
+        retryCount += 1
+        logger.info('Invalid match data response, scheduling retry', {
+          matchId,
+          maxRetries: MAX_RETRIES,
+          name: this.client.name,
+          response,
+          retryCount,
+        })
+      } catch (fetchError) {
         retryCount += 1
         logger.error('Error in early DC match check, scheduling retry', {
-          error,
+          error: fetchError,
           matchId,
           maxRetries: MAX_RETRIES,
           name: this.client.name,
           retryCount,
         })
-
-        setTimeout(attemptFetchMatchData, RETRY_DELAY)
       }
+      setTimeout(() => {
+        void attemptFetchMatchData()
+      }, RETRY_DELAY)
     }
 
     try {
-      // Start the first attempt
       await attemptFetchMatchData()
     } catch (error) {
-      // If any uncaught error occurs, reset the flag
       logger.error('Uncaught error in checkEarlyDCWinner', {
         error,
         matchId,
         name: this.client.name,
       })
       this.checkingEarlyDCWinner = false
+    }
+  }
+
+  private async requestManualResolution(
+    matchId: string | number,
+    snapshot: UnresolvedMatch
+  ): Promise<void> {
+    const { token, locale, settings, subscription } = this.client
+    await redisClient.client.set(
+      `${token}:pendingManualResolution`,
+      JSON.stringify({ matchId, timestamp: Date.now() })
+    )
+    if (
+      this.client.stream_online &&
+      getValueOrDefault(DBSettings.tellChatBets, settings, subscription)
+    ) {
+      say(
+        this.client,
+        t('bets.manualResolution', {
+          details: formatUnresolvedMatch(snapshot),
+          emote: 'PauseChamp',
+          lng: locale,
+          matchId,
+        })
+      )
     }
   }
 

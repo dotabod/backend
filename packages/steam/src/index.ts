@@ -193,7 +193,7 @@ const disconnectAndExit = (exitCode: number): never => {
   }
 }
 
-const shutdown = (reason: NodeJS.Signals | 'uncaughtException', exitCode: number): never => {
+const shutdown = (reason: NodeJS.Signals | 'uncaughtException', exitCode: number): void => {
   logger.info('[STEAM] Shutting down', { reason })
   try {
     dota.exit()
@@ -203,8 +203,12 @@ const shutdown = (reason: NodeJS.Signals | 'uncaughtException', exitCode: number
 }
 
 process
-  .once('SIGTERM', () => shutdown('SIGTERM', 0))
-  .once('SIGINT', () => shutdown('SIGINT', 0))
+  .once('SIGTERM', () => {
+    shutdown('SIGTERM', 0)
+  })
+  .once('SIGINT', () => {
+    shutdown('SIGINT', 0)
+  })
   .once('uncaughtException', (error) => {
     logger.error('uncaughtException', error)
     shutdown('uncaughtException', 1)
