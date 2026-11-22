@@ -1,24 +1,26 @@
-import { checkSupabaseHealth, startHeartbeat } from '@dotabod/shared-utils'
+import { checkSupabaseHealth, logger, startHeartbeat } from '@dotabod/shared-utils'
 
 import { redisClient } from './db/redis-instance'
+import { startDota } from './dota/index.js'
 import { steamSocket } from './steam/ws'
 
 process.on('SIGTERM', () => process.exit(0))
 process.on('SIGINT', () => process.exit(0))
 
-const initServer = function initServer() {
-  Promise.all([import('./dota/index'), import('./twitch/index')])
-    .then(() => {
-      // All imports are now loaded
-      console.log('Modules loaded')
-    })
-    .catch((error) => {
-      console.error('Error during setup:', error)
-    })
-  // ... any other setup you might need
+const logAndExit = (error: unknown): never => {
+  logger.error('Unhandled error occurred. Exiting...', { error })
+  process.exit(1)
 }
 
-initServer()
+process.on('uncaughtException', logAndExit)
+process.on('unhandledRejection', logAndExit)
+
+try {
+  await startDota()
+  await import('./twitch/index.js')
+} catch (error) {
+  logAndExit(error)
+}
 
 // Report dota's dependency health to dedicated Uptime Kuma push monitors.
 // dota process liveness is already covered by the gsi.dotabod.com HTTP monitor.

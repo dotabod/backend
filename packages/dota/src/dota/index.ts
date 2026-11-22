@@ -82,51 +82,23 @@ const setupRedisClient = async () => {
   await hydrateInvalidTokens()
 }
 
-const initServer = () => {
-  const gsiServer = new GSIServer()
-  gsiServer.init()
-  logger.info('GSIServer started')
-  server.setServer(gsiServer)
-  return gsiServer
-}
-
-const main = async () => {
+export const startDota = async function startDota(): Promise<void> {
   logger.info('Starting on', { env: process.env.DOTABOD_ENV })
-  try {
-    // Run all setup functions in parallel
-    const results = await Promise.allSettled([
-      setupRedisClient(),
-      setupTranslations(),
-      Promise.resolve(setupSupabaseWatcher()),
-    ])
-
-    // Check which promises failed
-    results.forEach((result, index) => {
-      if (result.status === 'rejected') {
-        const setupFunctions = ['Redis', 'Translations', 'Supabase']
-        logger.error(`${setupFunctions[index]} setup failed`, {
-          reason: result.reason,
-        })
-      }
-    })
-  } catch (error) {
-    logger.error('Error in setup', { error })
+  const [redis, translations] = await Promise.allSettled([setupRedisClient(), setupTranslations()])
+  if (redis.status === 'rejected') {
+    logger.error('Redis setup failed', { reason: redis.reason })
+  }
+  if (translations.status === 'rejected') {
+    throw new Error('Translation setup failed', { cause: translations.reason })
   }
 
-  const gsiServer = initServer()
+  const gsiServer = new GSIServer()
+  server.setServer(gsiServer)
+  gsiServer.listen()
+  try {
+    setupSupabaseWatcher()
+  } catch (error) {
+    logger.error('Supabase watcher setup failed', { error })
+  }
   startDotaRetentionTelemetry()
-  return gsiServer
 }
-
-const logAndExit = (err: unknown) => {
-  logger.error('Unhandled error occurred. Exiting...', { error: err })
-  console.log(err)
-  process.exit(1)
-}
-
-// Add event listeners to catch uncaught exceptions and unhandled rejections
-process.on('uncaughtException', logAndExit)
-process.on('unhandledRejection', logAndExit)
-
-// Start the initialization but don't export the promise
-main().catch(logAndExit)

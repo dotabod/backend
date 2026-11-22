@@ -24,7 +24,6 @@ import {
   recoverMultiAccount,
 } from './global-event-emitter'
 import { emitMinimapBlockerStatus } from './gsi-handler'
-import type { GSIServerInterface } from './gsi-server-types'
 import { gsiHandlers } from './lib/consts'
 import { isGsiFresh } from './lib/get-current-match-id'
 import { gsiIngressHealth } from './lib/gsi-ingress-health'
@@ -521,8 +520,9 @@ const allowedOrigins = [
   'https://tooltips.dotabod.com',
 ]
 
-class GSIServer implements GSIServerInterface {
-  io: GsiSocketServer
+class GSIServer {
+  readonly io: GsiSocketServer
+  private readonly httpServer: http.Server
 
   constructor() {
     logger.info('Starting GSI Server!')
@@ -532,6 +532,7 @@ class GSIServer implements GSIServerInterface {
     const httpServer = http.createServer((request, response) => {
       app(request, response)
     })
+    this.httpServer = httpServer
     this.io = new Server<ClientToServerEvents, DefaultEventsMap, InterServerEvents, GsiSocketData>(
       httpServer,
       {
@@ -676,10 +677,6 @@ class GSIServer implements GSIServerInterface {
       res.type('text/plain').status(200).send(getDiagnosticPayload())
     })
 
-    httpServer.listen(5120, () => {
-      logger.info(`[GSI] Dota 2 GSI listening on *:5120`)
-    })
-
     this.io.use(handleSocketAuth)
     this.io.on('connection', (socket) => {
       void handleSocketConnection(socket)
@@ -756,8 +753,10 @@ class GSIServer implements GSIServerInterface {
     // logger.info(`[GSI] Clip deletion interval started (${CLIP_DELETE_INTERVAL_MS}ms)`)
   }
 
-  init(): GSIServerInterface {
-    return this
+  listen(port = 5120): void {
+    this.httpServer.listen(port, () => {
+      logger.info(`[GSI] Dota 2 GSI listening on *:${port}`)
+    })
   }
 
   /**
