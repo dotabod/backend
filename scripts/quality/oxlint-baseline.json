@@ -3414,26 +3414,6 @@
         "severity": "error"
       }
     },
-    "1ad46cad7e12a6fe0a03361195e59a5ae01b3c3e34b47d5a444a3f00e73fc183": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(func-style)",
-        "file": "packages/dota/src/dota/gsi-handler.ts",
-        "labels": [
-          {
-            "context": [
-              "",
-              "function parseTeam(team: string | null): Team | null {",
-              "return team === 'radiant' || team === 'dire' ? team : null"
-            ],
-            "message": "",
-            "span": "function parseTeam(team: string | null): Team | null {\n  return team === 'radiant' || team === 'dire' ? team : null\n}"
-          }
-        ],
-        "message": "Expected a function expression.",
-        "severity": "error"
-      }
-    },
     "1aea24f186db278956a31f2e0bc5bd826d6642b1d754c12046cc64883cdca0e3": {
       "count": 1,
       "diagnostic": {

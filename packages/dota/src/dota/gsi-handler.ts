@@ -798,28 +798,29 @@ class GSIHandler implements GSIHandlerType {
     if (heroName.length === 0 || matchId.length === 0 || matchId === '0') {
       return
     }
-    const myTeam = player.team_name ?? ''
+    const myTeam = player.team_name
     const playingMatchId = await redisClient.client.get(`${client.token}:matchId`)
     if (this.openingBets) {
       return
     }
 
-    if (playingMatchId !== null && playingMatchId.length > 0 && playingMatchId !== matchId) {
-      await this.expireManualResolution(client, playingMatchId, matchId)
-      logger.info('[BETS] openBets resetClientState because stuck on old match id', {
-        gsiMatchId: matchId,
-        name: client.name,
-        playingMatchId,
-        steam32Id: client.steam32Id,
-        steamFromGSI: player.steamid,
-        token: client.token,
-      })
-      await this.resetClientState()
-      return
-    }
-
-    if (playingMatchId !== null && Number(playingMatchId) >= 0) {
-      return
+    if (playingMatchId !== null) {
+      if (playingMatchId.length > 0 && playingMatchId !== matchId) {
+        await this.expireManualResolution(client, playingMatchId, matchId)
+        logger.info('[BETS] openBets resetClientState because stuck on old match id', {
+          gsiMatchId: matchId,
+          name: client.name,
+          playingMatchId,
+          steam32Id: client.steam32Id,
+          steamFromGSI: player.steamid,
+          token: client.token,
+        })
+        await this.resetClientState()
+        return
+      }
+      if (Number(playingMatchId) >= 0) {
+        return
+      }
     }
 
     logger.info('[BETS] Begin opening bets', {
@@ -838,7 +839,7 @@ class GSIHandler implements GSIHandlerType {
   private async preparePrediction(
     client: SocketClient,
     pending: PendingPrediction,
-    myTeam: string
+    myTeam: string | null | undefined
   ): Promise<void> {
     const { heroName, matchId } = pending
     const { data: rows } = await supabase
@@ -855,7 +856,7 @@ class GSIHandler implements GSIHandlerType {
     const existing = rows?.[0]
     try {
       await redisClient.client.set(`${client.token}:matchId`, matchId)
-      await redisClient.client.set(`${client.token}:playingTeam`, existing?.myTeam ?? myTeam)
+      await redisClient.client.set(`${client.token}:playingTeam`, existing?.myTeam ?? myTeam ?? '')
       await redisClient.client.set(`${client.token}:playingHero`, pending.heroName)
     } catch (error) {
       logger.error('Error while saving data to Redis:', {
@@ -879,7 +880,7 @@ class GSIHandler implements GSIHandlerType {
       this.openTheBetTaskId = delayedQueue.addTask(
         getStreamDelay(client.settings, client.subscription),
         async () => {
-          await this.openPendingPrediction(pending, heroName, myTeam)
+          await this.openPendingPrediction(pending, heroName, myTeam ?? '')
         }
       )
       return
@@ -1456,9 +1457,9 @@ class GSIHandler implements GSIHandlerType {
 
     try {
       await attemptFetchMatchData()
-    } catch (error) {
+    } catch (matchCheckError) {
       logger.error('Uncaught error in checkEarlyDCWinner', {
-        error,
+        error: matchCheckError,
         matchId,
         name: this.client.name,
       })
