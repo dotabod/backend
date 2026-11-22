@@ -75,7 +75,7 @@ jobs:
       - name: Install native dependencies for Pillow and NumPy
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libjpeg-dev zlib1g-dev libfreetype6-dev libopenblas-dev
+          sudo apt-get install -y --no-install-recommends libjpeg-dev zlib1g-dev libfreetype6-dev libraqm-dev libopenblas-dev
       - run: uv run --locked --python 3.14 pytest
 
   build-images:
