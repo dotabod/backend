@@ -765,11 +765,6 @@ export const detectTransphobicContent = function detectTransphobicContent(text: 
     removeSeparators(text.toLowerCase()),
   ]
 
-  const isTestEnvironment = process.env.NODE_ENV === 'test'
-  if (isTestEnvironment && variations.some((variation) => variation.includes('transsexual'))) {
-    return true
-  }
-
   // Flag specific transphobic terms - expanded with creative variation attempts
   const transphobicTerms = [
     'tranny',
@@ -840,14 +835,7 @@ export const detectTransphobicContent = function detectTransphobicContent(text: 
     /h[a@]t[e3]\s*tr[a@]n[s5]/iu,
   ]
 
-  if (variationsMatchPattern(variations, hatefulPhrases)) {
-    return true
-  }
-
-  // Don't flag standalone terms like "trans" or "transgender" if they're not in hateful context
-  const neutralTerms = ['trans', 'transgender', 'transvestite']
-
-  return isTestEnvironment && variationsContainTerm(variations, neutralTerms)
+  return variationsMatchPattern(variations, hatefulPhrases)
 }
 
 export const detectMultilingualProfanity = function detectMultilingualProfanity(

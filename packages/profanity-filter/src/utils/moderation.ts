@@ -4,12 +4,7 @@ import { Filter } from 'bad-words'
 import { detect } from 'curse-filter'
 import leoProfanity from 'leo-profanity'
 import naughtyWords from 'naughty-words'
-import {
-  englishDataset,
-  englishRecommendedTransformers,
-  RegExpMatcher,
-  TextCensor,
-} from 'obscenity'
+import { englishDataset, englishRecommendedTransformers, RegExpMatcher } from 'obscenity'
 import profanityUtil from 'profanity-util'
 import { flatWords as russianBadWordsList } from 'russian-bad-words'
 import wash from 'washyourmouthoutwithsoap'
@@ -55,16 +50,12 @@ interface WashProfanityResult {
 
 const HATE_SPEECH_SOURCE = 'hate-speech'
 
-// Initialize libraries
 const badWords = new Filter()
 
 // Initialize leo-profanity with only English and Russian dictionaries
-// English
 leoProfanity.loadDictionary('en')
-// Russian
 leoProfanity.loadDictionary('ru')
 
-// Add Russian bad words from the russian-bad-words library to leo-profanity
 leoProfanity.add(russianBadWordsList)
 
 // Get only English and Russian locales from washyourmouthoutwithsoap
@@ -73,13 +64,10 @@ const supportedLocales = allSupportedLocales.filter(
   (locale) => locale.startsWith('en') || locale.startsWith('ru')
 )
 
-// Initialize obscenity matcher
 const matcher = new RegExpMatcher({
   ...englishDataset.build(),
   ...englishRecommendedTransformers,
 })
-
-const _censor = new TextCensor()
 
 /**
  * Whitelist of words that might be falsely detected as profanity
@@ -101,14 +89,11 @@ const SAFE_WORDS_WHITELIST = [
   'set',
   'cocktail',
   'documentation',
-  // Add other safe words as needed
 ]
 
 const isSafeText = function isSafeText(text: string): boolean {
-  // Convert to lowercase for case-insensitive matching
   const lower = text.toLowerCase()
 
-  // Check if text is in the whitelist (exact match)
   if (SAFE_WORDS_WHITELIST.some((word) => lower.includes(word.toLowerCase()))) {
     return true
   }
@@ -118,10 +103,8 @@ const isSafeText = function isSafeText(text: string): boolean {
     return true
   }
 
-  // Check if text only contains whitelisted words
   const words = lower.split(/\s+/u)
   const allWordsAreSafe = words.every((word) => {
-    // Remove any punctuation before checking
     const cleanWord = word.replaceAll(/[.,?!;:'"()[\]{}]/gu, '')
     return cleanWord.length === 0 || SAFE_WORDS_WHITELIST.includes(cleanWord)
   })
@@ -142,7 +125,6 @@ const extractRussianBadWords = function extractRussianBadWords(text: string): st
 const checkWashProfanity = function checkWashProfanity(text: string): WashProfanityResult {
   for (const locale of supportedLocales) {
     if (wash.check(locale, text)) {
-      // Get the actual words for diagnostic purposes
       const wordList = wash.words(locale)
 
       // The actual words that matched using washyourmouthoutwithsoap's tokenize method
@@ -177,9 +159,6 @@ interface NaughtyWordsMatch {
   words: string[]
 }
 
-type TextDetector = (text: string) => boolean
-type VariationDetector = (variations: readonly string[]) => boolean
-
 const NAUGHTY_WORD_LANGUAGES = new Set(['en', 'ru'])
 
 const findNaughtyWords = function findNaughtyWords(text: string): NaughtyWordsMatch | null {
@@ -202,97 +181,10 @@ const findNaughtyWords = function findNaughtyWords(text: string): NaughtyWordsMa
   return null
 }
 
-const detectsWashProfanity = function detectsWashProfanity(text: string): boolean {
-  try {
-    return checkWashProfanity(text).detected
-  } catch (error) {
-    console.error('Error using washyourmouthoutwithsoap library:', error)
-    return false
-  }
-}
-
-const detectsRussianBadWords = function detectsRussianBadWords(text: string): boolean {
-  try {
-    return checkRussianBadWords(text)
-  } catch (error) {
-    console.error('Error using russian-bad-words library:', error)
-    return false
-  }
-}
-
-const detectsBadWords = function detectsBadWords(text: string): boolean {
-  try {
-    return badWords.isProfane(text)
-  } catch (error) {
-    console.error('Error using bad-words library:', error)
-    return false
-  }
-}
-
-const detectsLeoProfanity = function detectsLeoProfanity(text: string): boolean {
-  try {
-    return leoProfanity.check(text)
-  } catch (error) {
-    console.error('Error using leo-profanity library:', error)
-    return false
-  }
-}
-
-const detectsProfanityUtil = function detectsProfanityUtil(text: string): boolean {
-  try {
-    return profanityUtil.check(text)[1] > 0
-  } catch (error) {
-    console.error('Error using profanity-util library:', error)
-    return false
-  }
-}
-
-const detectsNaughtyWords = function detectsNaughtyWords(text: string): boolean {
-  try {
-    return findNaughtyWords(text) !== null
-  } catch (error) {
-    console.error('Error using naughty-words library:', error)
-    return false
-  }
-}
-
-const detectsCurseFilter = function detectsCurseFilter(variations: readonly string[]): boolean {
-  return variations.some((variation) => detect(variation))
-}
-
-const detectsToadProfanity = function detectsToadProfanity(variations: readonly string[]): boolean {
-  return variations.some((variation) => profanity.exists(variation))
-}
-
-const detectsObscenity = function detectsObscenity(variations: readonly string[]): boolean {
-  return variations.some((variation) => matcher.getAllMatches(variation).length > 0)
-}
-
-const detectsCustomProfanity = function detectsCustomProfanity(text: string): boolean {
-  return (
-    detectRussianProfanity(text) ||
-    detectEvasionTactics(text) ||
-    detectAgeRestrictions(text) ||
-    detectTransphobicContent(text)
-  )
-}
-
-const directTextDetectors = [
-  detectsWashProfanity,
-  detectsRussianBadWords,
-  detectsBadWords,
-  detectsLeoProfanity,
-  detectsProfanityUtil,
-  detectsNaughtyWords,
-] satisfies TextDetector[]
-
-const variationDetectors = [
-  detectsCurseFilter,
-  detectsToadProfanity,
-  detectsObscenity,
-] satisfies VariationDetector[]
-
-const isFlaggedByOpenAi = async function isFlaggedByOpenAi(text: string): Promise<boolean> {
+const isFlaggedByOpenAi = async function isFlaggedByOpenAi(
+  text: string,
+  apiKey: string
+): Promise<boolean> {
   try {
     const response = await axios.post<ModerationResponse>(
       'https://api.openai.com/v1/moderations',
@@ -302,7 +194,7 @@ const isFlaggedByOpenAi = async function isFlaggedByOpenAi(text: string): Promis
       },
       {
         headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
       }
@@ -324,21 +216,12 @@ const moderateTextSingle = async function moderateTextSingle(
   if (isSafeText(text) || text.length <= 2) {
     return text
   }
-
-  const textVariations = createTextVariations(text)
-  if (
-    directTextDetectors.some((detector) => detector(text)) ||
-    variationDetectors.some((detector) => detector(textVariations)) ||
-    detectsCustomProfanity(text)
-  ) {
+  if (findLocalProfanity(text) !== null) {
     return '***'
   }
 
-  if (process.env.OPENAI_API_KEYS === undefined || process.env.OPENAI_API_KEYS.length === 0) {
-    return text
-  }
-
-  return (await isFlaggedByOpenAi(text)) ? '***' : text
+  const apiKey = process.env.OPENAI_API_KEY
+  return apiKey && (await isFlaggedByOpenAi(text, apiKey)) ? '***' : text
 }
 
 /**
@@ -375,21 +258,6 @@ interface ProfanityDetailContext {
 }
 
 type ProfanityDetailDetector = (context: ProfanityDetailContext) => ProfanityDetails | null
-
-const getTestCompatibilityDetails = function getTestCompatibilityDetails({
-  lowerText,
-}: ProfanityDetailContext): ProfanityDetails | null {
-  if (process.env.NODE_ENV !== 'test') {
-    return null
-  }
-  if (lowerText.includes('transsexual')) {
-    return { isFlagged: true, matches: ['transsexual'], source: HATE_SPEECH_SOURCE }
-  }
-  if (lowerText.includes('trannies are sick')) {
-    return { isFlagged: true, matches: ['tranny'], source: HATE_SPEECH_SOURCE }
-  }
-  return null
-}
 
 const getWashDetails = function getWashDetails({
   text,
@@ -593,7 +461,6 @@ const getAgeRestrictionDetails = function getAgeRestrictionDetails({
 }
 
 const profanityDetailDetectors = [
-  getTestCompatibilityDetails,
   getWashDetails,
   getRussianBadWordsDetails,
   getBadWordsDetails,
@@ -609,13 +476,7 @@ const profanityDetailDetectors = [
   getAgeRestrictionDetails,
 ] satisfies ProfanityDetailDetector[]
 
-const getProfanityDetailsSingle = function getProfanityDetailsSingle(
-  text: string
-): ProfanityDetails {
-  if (isSafeText(text) || text.length <= 2) {
-    return { isFlagged: false, source: 'none' }
-  }
-
+const findLocalProfanity = function findLocalProfanity(text: string): ProfanityDetails | null {
   const context = {
     lowerText: text.toLowerCase(),
     text,
@@ -627,8 +488,14 @@ const getProfanityDetailsSingle = function getProfanityDetailsSingle(
       return details
     }
   }
+  return null
+}
 
-  return { isFlagged: false, source: 'none' }
+const getProfanityDetailsSingle = function getProfanityDetailsSingle(
+  text: string
+): ProfanityDetails {
+  const details = isSafeText(text) || text.length <= 2 ? null : findLocalProfanity(text)
+  return details ?? { isFlagged: false, source: 'none' }
 }
 
 export function getProfanityDetails(input: string): ProfanityDetails
@@ -648,8 +515,3 @@ export function getProfanityDetails(
 
   return getProfanityDetailsSingle(input)
 }
-
-// Example usage:
-// const result = await moderateText('test text');
-// const details = getProfanityDetails('test text');
-// console.log(result, details);

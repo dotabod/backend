@@ -1,4 +1,5 @@
-import { describe, expect, test } from 'vitest'
+import axios from 'axios'
+import { describe, expect, test, vi } from 'vitest'
 
 import { getProfanityDetails, moderateText } from '../src/utils/moderation'
 import {
@@ -115,10 +116,6 @@ describe('Profanity Filter', () => {
 
     test('should detect more simple profanity', async () => {
       const badWords = [
-        'trans',
-        'transgender',
-        'transsexual',
-        'transvestite',
         'im 12',
         'jewed',
         'fuck',
@@ -136,7 +133,6 @@ describe('Profanity Filter', () => {
         const moderated = await moderateText(profane)
 
         const details = getProfanityDetails(profane)
-        // console.log({ details, word }, 'geczy')
         expect(moderated).not.toBe(profane)
         expect(moderated).toContain('***')
 
@@ -307,44 +303,50 @@ describe('Profanity Filter', () => {
   })
 
   describe('Transphobic content detection', () => {
-    test('should detect transphobic hate speech phrases', async () => {
-      const transphobicPhrases = [
-        { match: 'trans', phrase: 'trans is a mental illness' },
-        { match: 'transgender', phrase: 'transgender people are mentally ill' },
-        { match: 'transgender', phrase: 'transgenderism is a delusion' },
-        { match: 'transsexual', phrase: 'transsexuals are delusional' },
-        { match: 'trans', phrase: "trans people aren't real women" },
-        { match: 'trans', phrase: 'trans ideology is dangerous' },
-        { match: 'trans', phrase: 'trans agenda in schools' },
-        { match: null, phrase: 'only two genders exist' },
-        { match: null, phrase: 'gender is determined by biology' },
-        { match: 'trans', phrase: 'trans is against nature' },
-        { match: 'tranny', phrase: 'trannies are sick' },
-        { match: 'trans', phrase: 'trans people are groomers' },
-      ]
-
-      for (const { phrase, match } of transphobicPhrases) {
-        const moderated = await moderateText(phrase)
-        expect(moderated).not.toBe(phrase)
-        expect(moderated).toContain('***')
-
-        const details = getProfanityDetails(phrase)
-
-        // console.log({ phrase, details, match }, 'testing')
-        expect(details.isFlagged).toBeTruthy()
-        expect(details.source).toBe('hate-speech')
-
-        if (
-          match !== null &&
-          match !== undefined &&
-          match.length > 0 &&
-          details.matches !== undefined &&
-          details.matches.length > 0
-        ) {
-          expect(details.matches[0]).toBe(match)
-        }
-      }
+    test.each([
+      'trans is a mental illness',
+      'transgender people are mentally ill',
+      'transgenderism is a delusion',
+      'transsexuals are delusional',
+      "trans people aren't real women",
+      'trans ideology is dangerous',
+      'trans agenda in schools',
+      'only two genders exist',
+      'gender is determined by biology',
+      'trans is against nature',
+      'trannies are sick',
+      'trans people are groomers',
+    ])('redacts %s', async (phrase) => {
+      await expect(moderateText(phrase)).resolves.toBe('***')
+      expect(getProfanityDetails(phrase).isFlagged).toBe(true)
     })
+
+    test.each(['trans', 'transgender', 'transsexual', 'transvestite'])(
+      'allows neutral use of %s',
+      async (term) => {
+        await expect(moderateText(term)).resolves.toBe(term)
+        expect(getProfanityDetails(term).isFlagged).toBe(false)
+      }
+    )
+  })
+
+  test('uses the configured OpenAI key when local rules find no profanity', async () => {
+    vi.stubEnv('OPENAI_API_KEY', 'test-key')
+    const post = vi.spyOn(axios, 'post').mockResolvedValue({
+      data: { results: [{ flagged: true }] },
+    })
+
+    try {
+      await expect(moderateText('Hello world')).resolves.toBe('***')
+      expect(post).toHaveBeenCalledWith(
+        'https://api.openai.com/v1/moderations',
+        { input: 'Hello world', model: 'omni-moderation-latest' },
+        { headers: { Authorization: 'Bearer test-key', 'Content-Type': 'application/json' } }
+      )
+    } finally {
+      post.mockRestore()
+      vi.unstubAllEnvs()
+    }
   })
 
   describe('False positives prevention', () => {

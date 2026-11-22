@@ -21,6 +21,7 @@ import CustomError from '../../../utils/custom-error'
 import { getRedisNumberValue, is8500Plus } from '../../../utils/index'
 import { consumeMultiAccountRecovery, events } from '../../global-event-emitter'
 import type { GSIHandlerType } from '../../gsi-handler-types'
+import { recordActiveSteamAccount } from '../../lib/account-sharing.js'
 import { checkPassiveMidas } from '../../lib/check-midas'
 import { checkPassiveTp } from '../../lib/check-passive-tp'
 import { calculateManaSaved } from '../../lib/check-tread-toggle'
@@ -467,30 +468,8 @@ export const checkAccountSharing = async function checkAccountSharing(
   const currentToken = client.token
   const currentTime = Date.now()
 
-  // Redis key to track active Steam accounts for this token
-  const redisKey = `token:${currentToken}:activeSteam32Ids`
-
   try {
-    // Get existing active Steam accounts for this token
-    const existingSteamIds = await redisClient.client.get(redisKey)
-    let activeSteamIds: string[] = []
-
-    if (existingSteamIds !== null && existingSteamIds.length > 0) {
-      activeSteamIds = JSON.parse(existingSteamIds)
-    }
-
-    // Add current Steam ID if not already present
-    if (!activeSteamIds.includes(steam32Id.toString())) {
-      activeSteamIds.push(steam32Id.toString())
-
-      // Update Redis with new list
-      await redisClient.client.setEx(
-        redisKey,
-        // Expire after 1 minute of inactivity
-        60,
-        JSON.stringify(activeSteamIds)
-      )
-    }
+    const activeSteamIds = await recordActiveSteamAccount(currentToken, steam32Id)
 
     // Check if multiple Steam accounts are active for this token
     if (activeSteamIds.length > 1) {

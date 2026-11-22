@@ -1,7 +1,6 @@
-import { commandDisable } from '@dotabod/shared-utils'
 import { t } from 'i18next'
 
-import { redisClient } from '../../db/redis-instance'
+import { clearAccountSharing } from '../../dota/lib/account-sharing.js'
 import { chatClient } from '../chat-client'
 import type { CommandDefinition } from '../lib/command-handler.ts'
 
@@ -13,18 +12,9 @@ export const clearsharingCommand: CommandDefinition = {
       channel: { client },
     } = message
 
-    const userId = message.channel.client.token
-
     try {
-      // Clear Redis tracking of active Steam accounts for this token
-      const redisKey = `token:${userId}:activeSteam32Ids`
-      await redisClient.client.del(redisKey)
+      await clearAccountSharing(client.token)
 
-      // Only resolve ACCOUNT_SHARING audit rows — leaves unrelated
-      // CHAT_PERMISSION_DENIED / TOKEN_REVOKED notifications intact.
-      await commandDisable.enable(userId, { reason: 'ACCOUNT_SHARING' })
-
-      // Send success message with updated warning
       const channel = message.channel.client.name
       chatClient.say(
         channel,
