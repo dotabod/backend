@@ -1,12 +1,17 @@
-import { Server } from 'socket.io'
+import { startSocketListener } from '@dotabod/shared-utils/start-socket-listener'
+import type { SocketListener } from '@dotabod/shared-utils/start-socket-listener'
+import type { Socket } from 'socket.io'
 
-export const createSocketServer = function createSocketServer(port = 5035): Server {
-  return new Server(port)
+let listener: SocketListener | undefined
+
+export function setupSteamSocket(
+  onConnection: (socket: Socket) => void,
+  port = 5035
+): SocketListener {
+  listener = startSocketListener({ onConnection, port })
+  return listener
 }
 
-let _socketIoServer: Server | undefined
-
-export const getSocketIoServer = function getSocketIoServer(): Server {
-  _socketIoServer ??= createSocketServer()
-  return _socketIoServer
+export function emitHeroesForMatch(payload: { matchId: string; token: string }): void {
+  listener?.to('steam').emit('saveHeroesForMatchId', payload)
 }

@@ -1,6 +1,6 @@
 import { botStatus, fetchConduitId, logger } from '@dotabod/shared-utils'
 import type { Json } from '@dotabod/shared-utils'
-import { Server } from 'socket.io'
+import { startSocketListener } from '@dotabod/shared-utils/start-socket-listener'
 import type { Socket } from 'socket.io'
 import { z } from 'zod'
 
@@ -26,16 +26,6 @@ type EventSocket = Socket<ClientToServerEvents, ServerToClientEvents>
 
 const conduitOptionsSchema = z.object({ forceRefresh: z.boolean().optional() })
 
-// The port opens in setupSocketIO, once the connection handler is attached.
-export const socketIo = new Server<ClientToServerEvents, ServerToClientEvents>({
-  cors: {
-    methods: ['GET', 'POST'],
-    // This allows any origin - adjust for production,
-    origin: '*',
-  },
-})
-
-// the socketio hooks onto the listener http server that it creates
 const DOTABOD_EVENTS_ROOM = 'twitch-channel-events'
 const connectedClients = new Set<string>()
 
@@ -81,8 +71,6 @@ const registerSocket = async function registerSocket(socket: EventSocket): Promi
     logger.info('[TWITCHEVENTS] Joining socket to room')
     await socket.join(DOTABOD_EVENTS_ROOM)
 
-    // Track liveness by connected-client count so a reconnecting client's old
-    // socket disconnecting can't strand the flag false while a new one is live.
     connectedClients.add(socket.id)
     logger.info('[TWITCHEVENTS] client connected', { clients: connectedClients.size })
 
@@ -95,7 +83,6 @@ const registerSocket = async function registerSocket(socket: EventSocket): Promi
       ack(process.env.COMMIT_HASH ?? null)
     })
 
-    // Handle conduit data requests from twitch-chat
     socket.on('getConduitData', (options) => {
       const parsedOptions = conduitOptionsSchema.safeParse(options)
       const forceRefresh = parsedOptions.success
@@ -128,14 +115,14 @@ const registerSocket = async function registerSocket(socket: EventSocket): Promi
   }
 }
 
-// Attach the connection handler, then open the port. twitch-chat reconnects the moment
-// twitch-events is reachable; a socket accepted before the handler exists never gets a
-// getConduitData listener, so twitch-chat's EventSub stays down until it reconnects (prod
-// 2026-09-27: a Docker restart left the bot's EventSub down until twitch-chat was restarted).
-export const setupSocketIO = function setupSocketIO(port = 5015): void {
-  socketIo.on('connection', (socket) => {
-    void registerSocket(socket)
+export function setupSocketIO(port = 5015): { close: () => Promise<void>; port: number } {
+  return startSocketListener<ClientToServerEvents, ServerToClientEvents>({
+    onConnection: (socket) => {
+      void registerSocket(socket)
+    },
+    options: {
+      cors: { methods: ['GET', 'POST'], origin: '*' },
+    },
+    port,
   })
-
-  socketIo.listen(port)
 }
