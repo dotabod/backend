@@ -1,5 +1,5 @@
 import { io as connect } from 'socket.io-client'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { emitHeroesForMatch, setupSteamSocket } from '../socket-server.ts'
 
@@ -18,11 +18,13 @@ describe(setupSteamSocket, () => {
 
     try {
       await expect(client.timeout(1000).emitWithAck('ping', 'hello')).resolves.toBe('pong:hello')
-      const heroes = Promise.withResolvers<{ matchId: string; token: string }>()
-      client.once('saveHeroesForMatchId', heroes.resolve)
+      const onHeroes = vi.fn<(payload: { matchId: string; token: string }) => void>()
+      client.once('saveHeroesForMatchId', onHeroes)
       const match = { matchId: '42', token: 'token' }
       emitHeroesForMatch(match)
-      await expect(heroes.promise).resolves.toStrictEqual(match)
+      await vi.waitFor(() => {
+        expect(onHeroes).toHaveBeenCalledWith(match)
+      })
     } finally {
       client.close()
       await listener.close()
