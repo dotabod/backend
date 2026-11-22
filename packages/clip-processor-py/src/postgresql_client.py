@@ -33,9 +33,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Twitch has taken about 25 minutes to make a clip available (969a2e10).
-CLIP_RETRY_LIMIT = 6
-
 
 class PostgresClient:
     """Client for interacting with PostgreSQL database."""
@@ -523,20 +520,18 @@ class PostgresClient:
                 return None
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
+            # First check for a completed non-draft result
             query = f"""
             SELECT clip_id FROM {self.results_table}
             WHERE match_id = %s
               AND COALESCE((results->>'is_draft')::boolean, FALSE) = FALSE
-              AND CASE jsonb_typeof(results->'heroes')
-                  WHEN 'array' THEN jsonb_array_length(results->'heroes') > 0
-                  ELSE FALSE
-              END
             ORDER BY processed_at DESC
             LIMIT 1
             """
             cursor.execute(query, (match_id,))
             result_row = cursor.fetchone()
 
+            # If we found a non-draft result, return it as completed
             if result_row:
                 return {
                     'found': True,
@@ -1134,11 +1129,12 @@ class PostgresClient:
         self,
         request_id: str,
         delay_seconds: int = 60,
+        max_retries: int = 3,
     ) -> bool:
         """Re-queue a transiently failed request so a future worker pass can retry it.
 
         Returns True if the row was flipped back to 'pending' (caller should NOT then
-        mark it failed); returns False if the retry budget is exhausted (caller
+        mark it failed); returns False if max_retries is already exceeded (caller
         should fall through to update_queue_status(..., 'failed')).
 
         The conditional UPDATE makes the bump atomic — concurrent workers can't
@@ -1155,6 +1151,9 @@ class PostgresClient:
                 logger.error("Failed to get database connection for requeueing")
                 return False
             cursor = conn.cursor()
+            # Bump retry_count and flip back to pending only if we haven't blown
+            # the budget. The WHERE clause's retry_count < max_retries check is
+            # what enforces the cap atomically.
             query = f"""
             UPDATE {self.queue_table}
             SET status = 'pending',
@@ -1164,7 +1163,7 @@ class PostgresClient:
             WHERE request_id = %s
               AND COALESCE(retry_count, 0) < %s
             """
-            cursor.execute(query, (delay_seconds, request_id, CLIP_RETRY_LIMIT))
+            cursor.execute(query, (delay_seconds, request_id, max_retries))
             requeued = cursor.rowcount > 0
             conn.commit()
             cursor.close()
@@ -1185,7 +1184,8 @@ class PostgresClient:
 
     def fetch_recent_failed_clips(
         self,
-        window: str = '2 hours',
+        window: str = '1 hour',
+        max_retry_count: int = 3,
         limit: int = 50,
     ) -> list:
         """Return failed clip queue rows that should be auto-replayed.
@@ -1202,7 +1202,6 @@ class PostgresClient:
 
         The sliding window bounds the work — once a row ages out we stop trying.
         Order by created_at so the oldest failures get the next retry slot first.
-
         """
         if not self._initialized and not self.initialize():
             logger.warning("PostgreSQL not initialized, can't fetch failed clips")
@@ -1232,7 +1231,7 @@ class PostgresClient:
             ORDER BY q.created_at ASC
             LIMIT %s
             """
-            cursor.execute(query, (window, CLIP_RETRY_LIMIT, limit))
+            cursor.execute(query, (window, max_retry_count, limit))
             rows = [dict(r) for r in cursor.fetchall()]
             cursor.close()
             return rows
@@ -1321,7 +1320,6 @@ class PostgresClient:
             query = f"""
             SELECT * FROM {self.queue_table}
             WHERE status = 'pending'
-              AND (not_before IS NULL OR not_before <= CURRENT_TIMESTAMP)
             ORDER BY position ASC
             LIMIT 1
             """
