@@ -27,8 +27,10 @@ export const startSocketListener = function startSocketListener<
   port: number
 }): SocketListener<Outgoing> {
   const server = new Server<Incoming, Outgoing>(options)
-  server.on('connection', onConnection)
   server.listen(port)
+  server.once('connection', () => {
+    server.on('connection', onConnection)
+  })
   if (onConnectionError !== undefined) {
     server.engine.on('connection_error', onConnectionError)
   }
