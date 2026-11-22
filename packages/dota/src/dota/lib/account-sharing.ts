@@ -1,8 +1,10 @@
 import { commandDisable } from '@dotabod/shared-utils'
+import { z } from 'zod'
 
 import { redisClient } from '../../db/redis-instance.js'
 
 const ACTIVE_ACCOUNT_TTL_SECONDS = 60
+const activeSteamAccountsSchema = z.array(z.string())
 
 const activeSteamAccountsKey = (token: string): string => `token:${token}:activeSteam32Ids`
 
@@ -12,13 +14,10 @@ export const recordActiveSteamAccount = async function recordActiveSteamAccount(
 ): Promise<string[]> {
   const key = activeSteamAccountsKey(token)
   const stored = await redisClient.client.get(key)
-  const activeSteamIds: unknown = stored === null || stored.length === 0 ? [] : JSON.parse(stored)
-  if (
-    !Array.isArray(activeSteamIds) ||
-    !activeSteamIds.every((accountId: unknown) => typeof accountId === 'string')
-  ) {
-    throw new TypeError('Invalid list of active Steam accounts')
-  }
+  const activeSteamIds =
+    stored === null || stored.length === 0
+      ? []
+      : activeSteamAccountsSchema.parse(JSON.parse(stored))
   const accountId = steam32Id.toString()
 
   if (!activeSteamIds.includes(accountId)) {
