@@ -185,20 +185,20 @@ const socketIoServer = createSocketServer((socket, server) => {
   })
 })
 
-const shutdown = (reason: NodeJS.Signals | 'uncaughtException', exitCode: number): void => {
-  logger.info('[STEAM] Shutting down', { reason })
-  try {
-    dota.exit()
-  } finally {
-    disconnectAndExit(exitCode)
-  }
-}
-
 const disconnectAndExit = (exitCode: number): never => {
   try {
     socketIoServer.disconnectSockets(true)
   } finally {
     process.exit(exitCode)
+  }
+}
+
+const shutdown = (reason: NodeJS.Signals | 'uncaughtException', exitCode: number): never => {
+  logger.info('[STEAM] Shutting down', { reason })
+  try {
+    dota.exit()
+  } finally {
+    disconnectAndExit(exitCode)
   }
 }
 

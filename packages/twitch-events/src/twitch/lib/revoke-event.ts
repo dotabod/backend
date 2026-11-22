@@ -6,7 +6,7 @@ import {
   supabase,
 } from '@dotabod/shared-utils'
 
-import { eventSubMap } from '../../chat-sub-ids'
+import { takeBroadcasterSubscriptions } from '../../chat-sub-ids.js'
 
 // Constants
 const headers = await getTwitchHeaders()
@@ -20,7 +20,7 @@ export const deleteSubscription = async (id: string) => {
 
 // Function to stop subscriptions for a user
 export const stopUserSubscriptions = async (providerAccountId: string) => {
-  const subscriptions = eventSubMap.get(providerAccountId)
+  const subscriptions = takeBroadcasterSubscriptions(providerAccountId)
   if (subscriptions === undefined) {
     return
   }
@@ -38,8 +38,6 @@ export const stopUserSubscriptions = async (providerAccountId: string) => {
       }
     })
   )
-
-  eventSubMap.delete(providerAccountId)
 }
 
 const disableChannel = async function disableChannel(broadcasterId: string) {

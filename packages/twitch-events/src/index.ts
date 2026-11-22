@@ -1,120 +1,31 @@
-import { checkBotStatus, checkSupabaseHealth, logger, startHeartbeat } from '@dotabod/shared-utils'
+import {
+  checkBotStatus,
+  checkSupabaseHealth,
+  fetchConduitId,
+  logger,
+  startHeartbeat,
+} from '@dotabod/shared-utils'
 
-import { fetchExistingSubscriptions } from './fetch-existing-subscriptions'
+import { cleanUpSubscriptions, fetchExistingSubscriptions } from './fetch-existing-subscriptions.js'
 import { subscribeToEvents } from './subscribe-to-events'
-import { deleteSubscription } from './twitch/lib/revoke-event'
 import { setupHealthServer } from './utils/health-server'
-import { rateLimiter } from './utils/rate-limiter-core'
 import { scheduleNonOverlapping } from './utils/scheduler'
 import { setupSocketIO } from './utils/socket-utils'
 import { runSubscriptionHealthCheck } from './utils/subscription-health-check'
 import { setupAccountWatcher } from './watcher'
 
 const HEALTH_CHECK_INTERVAL_MS = 5 * 60 * 1000
-const CLEANUP_CHUNK_SIZE = 30
-
-interface CleanupProgress {
-  completed: number
-  lastLogTime: number
-  startTime: number
-}
-
-const logDeletionProgress = function logDeletionProgress(
-  progress: CleanupProgress,
-  total: number
-): void {
-  const now = Date.now()
-  const shouldLog =
-    progress.completed % 500 === 0 ||
-    now - progress.lastLogTime > 10_000 ||
-    progress.completed === total
-  if (!shouldLog) {
-    return
-  }
-
-  progress.lastLogTime = now
-  const percentComplete = Math.round((progress.completed / total) * 100)
-  const elapsedSec = (now - progress.startTime) / 1000
-  const estimatedTotalSec = elapsedSec / (progress.completed / total)
-  const remainingSec = Math.max(0, estimatedTotalSec - elapsedSec)
-
-  logger.info('[TWITCHEVENTS] Deletion progress', {
-    completed: progress.completed,
-    percent: `${percentComplete}%`,
-    rateLimit: {
-      queueLength: rateLimiter.queueLength,
-      remaining: rateLimiter.rateLimitStatus.remaining,
-    },
-    timeElapsed: `${Math.round(elapsedSec / 60)}m ${Math.round(elapsedSec % 60)}s`,
-    timeRemaining: `~${Math.round(remainingSec / 60)} minutes`,
-    total,
-  })
-}
-
-const deleteSubscriptionChunk = async function deleteSubscriptionChunk(
-  subscriptionIds: readonly string[],
-  progress: CleanupProgress,
-  total: number
-): Promise<void> {
-  await Promise.all(
-    subscriptionIds.map(async (subscriptionId) => {
-      await rateLimiter.schedule(async () => {
-        await deleteSubscription(subscriptionId)
-        progress.completed += 1
-        logDeletionProgress(progress, total)
-      })
-    })
-  )
-}
-
-const deleteSubscriptionChunks = async function deleteSubscriptionChunks(
-  subsToCleanup: readonly string[],
-  startIndex: number,
-  progress: CleanupProgress
-): Promise<void> {
-  if (startIndex >= subsToCleanup.length) {
-    return
-  }
-
-  await deleteSubscriptionChunk(
-    subsToCleanup.slice(startIndex, startIndex + CLEANUP_CHUNK_SIZE),
-    progress,
-    subsToCleanup.length
-  )
-  await deleteSubscriptionChunks(subsToCleanup, startIndex + CLEANUP_CHUNK_SIZE, progress)
-}
-
-const cleanUpSubscriptions = async function cleanUpSubscriptions(
-  subsToCleanup: readonly string[]
-): Promise<void> {
-  logger.info('[TWITCHEVENTS] Deleting old subscriptions', { count: subsToCleanup.length })
-  if (subsToCleanup.length === 0) {
-    logger.info('[TWITCHEVENTS] No subscriptions to clean up')
-    return
-  }
-
-  const startTime = Date.now()
-  await deleteSubscriptionChunks(subsToCleanup, 0, {
-    completed: 0,
-    lastLogTime: startTime,
-    startTime,
-  })
-
-  const totalTime = (Date.now() - startTime) / 1000
-  logger.info('[TWITCHEVENTS] Deletion completed', {
-    timing: {
-      averageRate: `${Math.round(subsToCleanup.length / totalTime)} deletions/sec`,
-      totalTime: `${Math.floor(totalTime / 60)}m ${Math.round(totalTime % 60)}s`,
-    },
-    total: subsToCleanup.length,
-  })
-}
 
 const reconcileSubscriptions = async function reconcileSubscriptions(): Promise<void> {
   try {
-    const subsToCleanup = await fetchExistingSubscriptions()
-    await subscribeToEvents()
+    const conduitId = await fetchConduitId()
+    if (conduitId === null || conduitId.length === 0) {
+      logger.error('[TWITCHEVENTS] Missing conduit ID for inventory refresh')
+      return
+    }
+    const subsToCleanup = await fetchExistingSubscriptions(conduitId)
     await cleanUpSubscriptions(subsToCleanup)
+    await subscribeToEvents()
   } catch (error) {
     logger.error('[TWITCHEVENTS] Background reconciliation failed', {
       error: error instanceof Error ? error.message : String(error),

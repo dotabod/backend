@@ -9,7 +9,7 @@ import type { TwitchEventType } from '@dotabod/shared-utils/event-sub'
 // fails together). Import the SUTs from here, not from their real paths.
 import { vi } from 'vitest'
 
-import type { TwitchEventSubResponse } from '../interfaces.ts'
+import type { EventSubscriptions } from '../chat-sub-ids.ts'
 
 export type TestValue =
   | string
@@ -443,11 +443,9 @@ export const seedSubscriptions = function seedSubscriptions(
   userId: string,
   types: readonly TwitchEventType[]
 ) {
-  const subscriptions: Partial<
-    Record<TwitchEventType, Pick<TwitchEventSubResponse['data'][0], 'id' | 'status'>>
-  > = {}
+  const subscriptions: EventSubscriptions = {}
   for (const type of types) {
-    subscriptions[type] = { id: `${userId}-${type}`, status: 'enabled' }
+    subscriptions[type] = { conduitId: state.conduitId, id: `${userId}-${type}`, status: 'enabled' }
   }
   eventSubMap.set(userId, subscriptions)
 }

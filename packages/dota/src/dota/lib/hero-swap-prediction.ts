@@ -22,11 +22,17 @@ interface HeroSwap {
 const swaps = new WeakMap<GSIHandlerType, HeroSwap>()
 const redis = RedisClient.getInstance()
 
-export const cancelHeroSwap = function cancelHeroSwap(handler: GSIHandlerType): void {
-  const taskId = swaps.get(handler)?.taskId
+export const cancelHeroSwap = function cancelHeroSwap(
+  handler: GSIHandlerType,
+  matchId?: string
+): void {
+  const swap = swaps.get(handler)
+  if (swap === undefined || (matchId !== undefined && swap.matchId !== matchId)) {
+    return
+  }
   swaps.delete(handler)
-  if (taskId !== undefined) {
-    delayedQueue.removeTask(taskId)
+  if (swap.taskId !== undefined) {
+    delayedQueue.removeTask(swap.taskId)
   }
 }
 
@@ -34,7 +40,7 @@ const isSwapCurrent = function isSwapCurrent(handler: GSIHandlerType, swap: Hero
   const { client } = handler
   const map = client.gsi?.map
   const activeSession = map?.matchid === swap.matchId && swaps.get(handler) === swap
-  if (!activeSession || handler.endingBets || handler.disabled) {
+  if (!activeSession || handler.disabled) {
     return false
   }
 
@@ -137,6 +143,9 @@ const scheduleReopen = async function scheduleReopen(
 
   const { client } = handler
   const { matchId, hero: name } = swap
+  if (handler.updatePendingPredictionHero(matchId, name)) {
+    return
+  }
   const heroKey = `${client.token}:playingHero`
   const [previousHero, storedMatchId] = await Promise.all([
     redis.client.get(heroKey),
@@ -163,7 +172,10 @@ const scheduleReopen = async function scheduleReopen(
   }
 
   if (match.predictionId !== null && match.predictionId.length > 0) {
-    await refundTwitchBet(handler.getChannelId(), match.predictionId)
+    const refund = await refundTwitchBet(handler.getChannelId(), match.predictionId)
+    if (refund.status === 'unconfirmed') {
+      return
+    }
   }
   if (!isSwapCurrent(handler, swap)) {
     return

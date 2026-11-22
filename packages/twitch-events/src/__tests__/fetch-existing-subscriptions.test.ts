@@ -7,6 +7,7 @@ import {
   eventSubMap,
   fetchExistingSubscriptions,
   fetchState,
+  stopUserSubscriptions,
 } from './shared-mocks.ts'
 
 interface SubscriptionFixture {
@@ -16,7 +17,7 @@ interface SubscriptionFixture {
   }
   id: string
   status: EventSubStatus
-  transport: { method: string }
+  transport: { conduit_id?: string; method: string }
   type: TwitchEventType
 }
 
@@ -25,7 +26,7 @@ const sub = (overrides: Partial<SubscriptionFixture> = {}) =>
     condition: { broadcaster_user_id: '111' },
     id: 's1',
     status: 'enabled',
-    transport: { method: 'conduit' },
+    transport: { conduit_id: 'conduit-1', method: 'conduit' },
     type: 'stream.online',
     ...overrides,
   }) satisfies SubscriptionFixture
@@ -44,7 +45,7 @@ describe(fetchExistingSubscriptions, () => {
         status: 200,
       },
     ]
-    await fetchExistingSubscriptions()
+    await fetchExistingSubscriptions('conduit-1')
     expect(eventSubMap.get('111')).toBeDefined()
     expect(eventSubMap.get('111')?.['stream.online']).toMatchObject({
       id: 's1',
@@ -71,7 +72,7 @@ describe(fetchExistingSubscriptions, () => {
         status: 200,
       },
     ]
-    await fetchExistingSubscriptions()
+    await fetchExistingSubscriptions('conduit-1')
     expect(fetchState.calls).toHaveLength(2)
     expect(fetchState.calls[1]).toContain('after=next')
     expect(eventSubMap.get('111')).toBeDefined()
@@ -91,7 +92,39 @@ describe(fetchExistingSubscriptions, () => {
         status: 200,
       },
     ]
-    await expect(fetchExistingSubscriptions()).resolves.toStrictEqual(['webhook-1', 'orphan-1'])
+    await expect(fetchExistingSubscriptions('conduit-1')).resolves.toStrictEqual([
+      'webhook-1',
+      'orphan-1',
+    ])
+  })
+
+  it('ignores a paginated subscription revoked while the inventory is loading', async () => {
+    fetchState.queue = [{ json: { data: [sub()] }, status: 200 }]
+
+    const refresh = fetchExistingSubscriptions('conduit-1')
+    await stopUserSubscriptions('111')
+    await refresh
+
+    expect(eventSubMap.has('111')).toBeFalsy()
+  })
+
+  it('replaces stale inventory and excludes disabled and previous-conduit subscriptions', async () => {
+    fetchState.queue = [
+      { json: { data: [sub()] }, status: 200 },
+      {
+        json: {
+          data: [
+            sub({ id: 'old', transport: { conduit_id: 'obsolete', method: 'conduit' } }),
+            sub({ id: 'revoked', status: 'authorization_revoked' }),
+          ],
+        },
+        status: 200,
+      },
+    ]
+
+    await fetchExistingSubscriptions('conduit-1')
+    await expect(fetchExistingSubscriptions('conduit-1')).resolves.toStrictEqual(['old', 'revoked'])
+    expect(eventSubMap.has('111')).toBeFalsy()
   })
 
   it('does not queue app-level auth grant/revoke subscriptions for cleanup', async () => {
@@ -115,6 +148,6 @@ describe(fetchExistingSubscriptions, () => {
         status: 200,
       },
     ]
-    await expect(fetchExistingSubscriptions()).resolves.toStrictEqual([])
+    await expect(fetchExistingSubscriptions('conduit-1')).resolves.toStrictEqual([])
   })
 })

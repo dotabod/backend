@@ -14,6 +14,7 @@ export interface GSIHandlerType {
   ) => Promise<void>
   openBets: (client: SocketClient) => Promise<void>
   openTheBet: (matchId: string, heroName: string, myTeam?: string) => Promise<void>
+  updatePendingPredictionHero: (matchId: string, heroName: string) => boolean
   emitNotablePlayers: () => Promise<void>
   emitStreamersInMatch: () => Promise<void>
   emitBadgeUpdate: () => void

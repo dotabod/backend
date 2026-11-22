@@ -27,6 +27,7 @@ const redisStore: Record<string, string> = {}
 
 let newPredictionId: string | null = 'new-prediction-id'
 let matchCanBeUpdated = true
+let refundFails = false
 
 const supabaseMock = {
   from: () => {
@@ -74,6 +75,9 @@ vi.doMock('@dotabod/shared-utils', () =>
         predictions: {
           cancelPrediction: async (channelId: string, predictionId: string) => {
             refundCalls.push({ channelId, predictionId })
+            if (refundFails) {
+              throw new Error('Twitch failed to cancel the prediction')
+            }
             await Promise.resolve()
           },
           createPrediction: async (_channelId: string, { title }: { title: string }) => {
@@ -181,6 +185,7 @@ describe('hero:name swap → matches.hero_name update', () => {
     }
     newPredictionId = 'new-prediction-id'
     matchCanBeUpdated = true
+    refundFails = false
     registerFakeHandler()
     // Pre-state: openBets has already set the Redis keys for the original hero.
     redisStore[`${TOKEN}:playingHero`] = 'npc_dota_hero_lina'
@@ -236,6 +241,16 @@ describe('hero:name swap → matches.hero_name update', () => {
     await heldTasks[0].invoke()
 
     expect(openedTitles).toHaveLength(0)
+    expect(updateCalls).toHaveLength(0)
+  })
+
+  it('keeps the original prediction available for closure when cancellation fails', async () => {
+    refundFails = true
+    events.emit('hero:name', 'npc_dota_hero_pudge', TOKEN)
+    await flush()
+
+    expect(refundCalls.map(({ predictionId }) => predictionId)).toStrictEqual(['old-prediction-id'])
+    expect(heldTasks).toHaveLength(0)
     expect(updateCalls).toHaveLength(0)
   })
 

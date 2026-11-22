@@ -180,17 +180,26 @@ export const initUserSubscriptions = async function initUserSubscriptions(
   const isBanned = await checkBotStatus()
 
   try {
+    const conduitId = await fetchConduitId()
+    if (conduitId === null || conduitId.length === 0) {
+      logger.error('[TWITCHEVENTS] Missing conduit ID for subscription setup', {
+        providerAccountId,
+      })
+      return false
+    }
     const existingSubscriptions = eventSubMap.get(providerAccountId) ?? {}
     const hadExistingSubscriptions = Object.keys(existingSubscriptions).length > 0
     const criticalTypes = findMissingSubscriptions(
       CRITICAL_SUBSCRIPTION_TYPES,
       existingSubscriptions,
-      isBanned
+      isBanned,
+      conduitId
     )
     const secondaryTypes = findMissingSubscriptions(
       SECONDARY_SUBSCRIPTION_TYPES,
       existingSubscriptions,
-      isBanned
+      isBanned,
+      conduitId
     )
     if (criticalTypes.length === 0 && secondaryTypes.length === 0) {
       return true

@@ -2,14 +2,16 @@ import { getTwitchHeaders, logger } from '@dotabod/shared-utils'
 import { TWITCH_EVENT_TYPE_NAMES } from '@dotabod/shared-utils/event-sub'
 import { z } from 'zod'
 
-import { eventSubMap } from './chat-sub-ids'
 import type { EventSubscriptions } from './chat-sub-ids'
+import { beginSubscriptionRefresh } from './chat-sub-ids.js'
 import { EVENT_SUB_STATUSES } from './interfaces'
 import type { EventSubStatus } from './interfaces'
+import { deleteSubscription } from './twitch/lib/revoke-event.js'
 import { rateLimiter } from './utils/rate-limiter-core'
 
 interface FetchProgress {
   cleanupIds: string[]
+  conduitId: string
   fetchedCount: number
   inventory: Map<string, EventSubscriptions>
   lastLogTime: number
@@ -44,7 +46,7 @@ const subscriptionPageSchema = z.object({
       }),
       id: z.string(),
       status: z.enum(EVENT_SUB_STATUSES),
-      transport: z.object({ method: z.string() }),
+      transport: z.object({ conduit_id: z.string().optional(), method: z.string() }),
       type: z.enum(TWITCH_EVENT_TYPE_NAMES),
     })
   ),
@@ -74,6 +76,9 @@ const fetchPage = async function fetchPage(
       logger.warn('Rate limit hit, will retry automatically')
       throw new Error('Rate limit hit')
     }
+    if (!response.ok) {
+      throw new Error(`EventSub inventory request failed with status ${response.status}`)
+    }
     return subscriptionPageSchema.parse(await response.json())
   })
 }
@@ -98,8 +103,19 @@ const storeSubscription = function storeSubscription(
 
   const { inventory, statusCounts } = progress
   statusCounts.set(subscription.status, (statusCounts.get(subscription.status) ?? 0) + 1)
+  if (subscription.transport.method !== 'conduit') {
+    return
+  }
+  if (
+    subscription.transport.conduit_id !== progress.conduitId ||
+    subscription.status !== 'enabled'
+  ) {
+    progress.cleanupIds.push(subscription.id)
+    return
+  }
   const subscriptions = inventory.get(broadcasterId) ?? {}
   subscriptions[subscription.type] = {
+    conduitId: progress.conduitId,
     id: subscription.id,
     status: subscription.status,
   }
@@ -186,12 +202,13 @@ const logSummary = function logSummary(progress: FetchProgress): void {
   })
 }
 
-export const fetchExistingSubscriptions = async function fetchExistingSubscriptions(): Promise<
-  string[]
-> {
+export const fetchExistingSubscriptions = async function fetchExistingSubscriptions(
+  conduitId: string
+): Promise<string[]> {
   const startTime = Date.now()
   const progress: FetchProgress = {
     cleanupIds: [],
+    conduitId,
     fetchedCount: 0,
     inventory: new Map(),
     lastLogTime: startTime,
@@ -201,11 +218,113 @@ export const fetchExistingSubscriptions = async function fetchExistingSubscripti
     totalSubscriptions: 0,
   }
   logger.info('[TWITCHEVENTS] Fetching existing subscriptions')
-  await fetchPages(await getTwitchHeaders(), progress)
-  for (const [broadcasterId, discovered] of progress.inventory) {
-    // A realtime update can finish while Twitch is still returning pages.
-    eventSubMap.set(broadcasterId, { ...discovered, ...eventSubMap.get(broadcasterId) })
+  const finishRefresh = beginSubscriptionRefresh()
+  try {
+    await fetchPages(await getTwitchHeaders(), progress)
+  } catch (error) {
+    finishRefresh()
+    throw error
   }
+  finishRefresh(progress.inventory)
   logSummary(progress)
   return progress.cleanupIds
+}
+
+const CLEANUP_CHUNK_SIZE = 30
+
+interface CleanupProgress {
+  completed: number
+  lastLogTime: number
+  startTime: number
+}
+
+const logDeletionProgress = function logDeletionProgress(
+  progress: CleanupProgress,
+  total: number
+): void {
+  const now = Date.now()
+  const shouldLog =
+    progress.completed % 500 === 0 ||
+    now - progress.lastLogTime > 10_000 ||
+    progress.completed === total
+  if (!shouldLog) {
+    return
+  }
+
+  progress.lastLogTime = now
+  const percentComplete = Math.round((progress.completed / total) * 100)
+  const elapsedSec = (now - progress.startTime) / 1000
+  const estimatedTotalSec = elapsedSec / (progress.completed / total)
+  const remainingSec = Math.max(0, estimatedTotalSec - elapsedSec)
+
+  logger.info('[TWITCHEVENTS] Deletion progress', {
+    completed: progress.completed,
+    percent: `${percentComplete}%`,
+    rateLimit: {
+      queueLength: rateLimiter.queueLength,
+      remaining: rateLimiter.rateLimitStatus.remaining,
+    },
+    timeElapsed: `${Math.round(elapsedSec / 60)}m ${Math.round(elapsedSec % 60)}s`,
+    timeRemaining: `~${Math.round(remainingSec / 60)} minutes`,
+    total,
+  })
+}
+
+const deleteSubscriptionChunk = async function deleteSubscriptionChunk(
+  subscriptionIds: readonly string[],
+  progress: CleanupProgress,
+  total: number
+): Promise<void> {
+  await Promise.all(
+    subscriptionIds.map(async (subscriptionId) => {
+      await rateLimiter.schedule(async () => {
+        await deleteSubscription(subscriptionId)
+        progress.completed += 1
+        logDeletionProgress(progress, total)
+      })
+    })
+  )
+}
+
+const deleteSubscriptionChunks = async function deleteSubscriptionChunks(
+  subsToCleanup: readonly string[],
+  startIndex: number,
+  progress: CleanupProgress
+): Promise<void> {
+  if (startIndex >= subsToCleanup.length) {
+    return
+  }
+
+  await deleteSubscriptionChunk(
+    subsToCleanup.slice(startIndex, startIndex + CLEANUP_CHUNK_SIZE),
+    progress,
+    subsToCleanup.length
+  )
+  await deleteSubscriptionChunks(subsToCleanup, startIndex + CLEANUP_CHUNK_SIZE, progress)
+}
+
+export const cleanUpSubscriptions = async function cleanUpSubscriptions(
+  subsToCleanup: readonly string[]
+): Promise<void> {
+  logger.info('[TWITCHEVENTS] Deleting old subscriptions', { count: subsToCleanup.length })
+  if (subsToCleanup.length === 0) {
+    logger.info('[TWITCHEVENTS] No subscriptions to clean up')
+    return
+  }
+
+  const startTime = Date.now()
+  await deleteSubscriptionChunks(subsToCleanup, 0, {
+    completed: 0,
+    lastLogTime: startTime,
+    startTime,
+  })
+
+  const totalTime = (Date.now() - startTime) / 1000
+  logger.info('[TWITCHEVENTS] Deletion completed', {
+    timing: {
+      averageRate: `${Math.round(subsToCleanup.length / totalTime)} deletions/sec`,
+      totalTime: `${Math.floor(totalTime / 60)}m ${Math.round(totalTime % 60)}s`,
+    },
+    total: subsToCleanup.length,
+  })
 }

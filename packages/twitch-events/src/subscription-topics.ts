@@ -30,8 +30,17 @@ export type UserSubscriptionType =
 
 export const findMissingSubscriptions = function findMissingSubscriptions<
   Topic extends UserSubscriptionType,
->(topics: readonly Topic[], existing: EventSubscriptions, isBanned: boolean): Topic[] {
-  return topics.filter(
-    (type) => existing[type] === undefined && !(type === CHAT_SUBSCRIPTION_TYPE && isBanned)
-  )
+>(
+  topics: readonly Topic[],
+  existing: EventSubscriptions,
+  isBanned: boolean,
+  conduitId: string
+): Topic[] {
+  return topics.filter((type) => {
+    const subscription = existing[type]
+    return (
+      !(type === CHAT_SUBSCRIPTION_TYPE && isBanned) &&
+      (subscription?.status !== 'enabled' || subscription.conduitId !== conduitId)
+    )
+  })
 }

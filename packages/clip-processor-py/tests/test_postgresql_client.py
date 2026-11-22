@@ -78,7 +78,8 @@ def test_completed_query_requires_heroes(db_client, mock_cursor):
     mock_cursor.fetchone.side_effect = [None, None, None, None]
     db_client.check_for_match_processing("m1")
     completed_sql = " ".join(mock_cursor.execute.call_args_list[0][0][0].split())
-    assert "jsonb_array_length(COALESCE(results->'heroes', '[]'::jsonb)) > 0" in completed_sql
+    assert "CASE WHEN jsonb_typeof(results->'heroes') = 'array'" in completed_sql
+    assert "jsonb_array_length(results->'heroes') > 0 ELSE FALSE END" in completed_sql
 
 
 # --------------------------------------------------------------------------- #
@@ -169,8 +170,7 @@ def test_fetch_recent_failed_clips_filters_correctly(db_client, mock_cursor):
     # sweep — matches the worker's "non-transient errors fail immediately" policy.
     assert "failure_reason = 'transient'" in query
     assert "request_type IN ('clip', 'clip_in_game')" in query
-    # Must skip matches that already have a successful clip_results row.
-    assert "NOT EXISTS" in query
+    assert "WHERE r.clip_id = q.clip_id AND r.match_id = q.match_id" in query
     assert "match_id IS NOT NULL" in query
     # Bound per-pass fan-in so a long outage doesn't hand us hundreds of rows at once.
     assert "LIMIT" in query

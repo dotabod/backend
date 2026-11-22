@@ -58,7 +58,7 @@ interface TwitchApiError extends Error {
 const twitchApiErrorBodySchema = z.object({ message: z.string().optional() })
 
 interface MatchPredictionLookup {
-  data: { predictionId: string | null } | null
+  data: { id?: string; predictionId: string | null } | null
   error: SupabaseError | null
 }
 
@@ -142,7 +142,7 @@ interface SupabaseBuilder {
   is: () => SupabaseBuilder
   limit: () => Promise<BetRowsResult>
   match: () => SupabaseBuilder
-  maybeSingle: () => Promise<typeof steamAccountLookup>
+  maybeSingle: () => Promise<SteamAccountLookup | MatchPredictionLookup>
   neq: () => SupabaseBuilder
   not: () => SupabaseBuilder
   order: () => SupabaseBuilder
@@ -191,6 +191,9 @@ const supabaseMock = {
         return await Promise.resolve({ data: null, error: { message: 'not found' } })
       },
       maybeSingle: async () => {
+        if (table === 'matches') {
+          return await Promise.resolve({ ...matchPredictionLookup })
+        }
         if (table === 'steam_accounts') {
           steamAccountSelectCalls.push(Date.now())
         }
@@ -394,6 +397,7 @@ server.setServer({
 // Side-effect import: registers the GSIHandler constructor with the factory.
 await import('../gsi-handler')
 const { createGSIHandler } = await import('../gsi-handler-factory')
+const { handleHeroSwap } = await import('../lib/hero-swap-prediction.js')
 const { steamSocket } = await import('../../steam/ws')
 
 type Client = SocketClient
@@ -567,6 +571,19 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     expect(supabaseInserts).toHaveLength(0)
     expect(openBetCalls).toHaveLength(0)
     expect(handler.openingBets).toBeFalsy()
+  })
+
+  it('uses the swapped hero when the first prediction is still waiting for the stream', async () => {
+    const handler = makeHandler(makeClient({ gsi: liveGsi() }))
+    await handler.openBets(handler.client)
+    handler.client.gsi = liveGsi({ hero: { name: 'npc_dota_hero_pudge' } })
+
+    await handleHeroSwap(handler, 'npc_dota_hero_pudge')
+    await heldTasks[0].invoke()
+
+    expect(openBetCalls.map(({ heroName }) => heroName)).toStrictEqual(['Pudge'])
+    expect(supabaseInserts[0].values.hero_name).toBe('npc_dota_hero_pudge')
+    expect(redisStore['token-arteezy:playingHero']).toBe('npc_dota_hero_pudge')
   })
 
   it('inserts with the valid matchId, hero, and predictionId on the happy path', async () => {
@@ -1056,6 +1073,32 @@ describe('openTheBet — Arteezy stale-GSI regression', () => {
     expect(messages()).not.toContain(
       '[BETS] Already checking early DC winner, skipping duplicate call'
     )
+  })
+
+  it('still opens the swap prediction when the streamer rejoins the same unfinished match', async () => {
+    const handler = makeHandler(
+      makeClient({
+        gsi: liveGsi({
+          hero: { name: 'npc_dota_hero_pudge' },
+          map: { game_state: 'DOTA_GAMERULES_STATE_GAME_IN_PROGRESS' },
+        }),
+      })
+    )
+    redisStore['token-arteezy:matchId'] = '8825999999'
+    redisStore['token-arteezy:playingHero'] = 'npc_dota_hero_nevermore'
+    matchPredictionLookup.data = { id: 'match-row', predictionId: null }
+
+    await handleHeroSwap(handler, 'npc_dota_hero_pudge')
+    await handler.closeBets(null)
+    await vi.waitFor(() => {
+      expect(loggerInfoCalls.map(({ message }) => message)).toContain(
+        '[BETS] Streamer rejoined the match, skipping early DC winner check'
+      )
+    })
+    expect(heldTasks[0].cancelled).toBeFalsy()
+    await heldTasks[0].invoke()
+
+    expect(openBetCalls.map(({ heroName }) => heroName)).toStrictEqual(['Pudge'])
   })
 
   it('does not call a match unscored because live GSI has moved on to the next 0-0 match', async () => {

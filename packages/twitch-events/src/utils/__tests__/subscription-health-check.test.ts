@@ -6,7 +6,6 @@ import {
   fetchState,
   resetState,
   runSubscriptionHealthCheck,
-  seedSubscriptions,
   state,
 } from '../../__tests__/shared-mocks.ts'
 
@@ -24,12 +23,29 @@ const SECONDARY = [
   'channel.poll.end',
 ] as const
 
+const setRemoteSubscriptions = function setRemoteSubscriptions(types: readonly string[]): void {
+  fetchState.queue = [
+    {
+      json: {
+        data: types.map((type) => ({
+          condition: { broadcaster_user_id: '111' },
+          id: `111-${type}`,
+          status: 'enabled',
+          transport: { conduit_id: state.conduitId, method: 'conduit' },
+          type,
+        })),
+      },
+      status: 200,
+    },
+  ]
+}
+
 describe(runSubscriptionHealthCheck, () => {
   beforeEach(() => {
     resetState()
     clearSubscriptions()
     // fetchState is process-wide; reset so a prior file's queued response can't leak in.
-    fetchState.queue = []
+    setRemoteSubscriptions([])
     fetchState.calls = []
   })
 
@@ -46,7 +62,7 @@ describe(runSubscriptionHealthCheck, () => {
 
   it('reports no issues when every critical subscription already exists', async () => {
     state.accountIds = ['111']
-    seedSubscriptions('111', CRITICAL)
+    setRemoteSubscriptions(CRITICAL)
 
     const result = await runSubscriptionHealthCheck()
 
@@ -58,7 +74,7 @@ describe(runSubscriptionHealthCheck, () => {
   it('ignores missing secondary subscriptions (predictions/polls)', async () => {
     state.accountIds = ['111']
     // Critical present, all secondary missing -> sweep should do nothing.
-    seedSubscriptions('111', CRITICAL)
+    setRemoteSubscriptions(CRITICAL)
 
     const result = await runSubscriptionHealthCheck()
 
@@ -70,8 +86,6 @@ describe(runSubscriptionHealthCheck, () => {
 
   it('fixes all missing critical subscriptions', async () => {
     state.accountIds = ['111']
-    // entry exists but has no types -> all critical missing
-    seedSubscriptions('111', [])
 
     const result = await runSubscriptionHealthCheck()
 
@@ -84,7 +98,6 @@ describe(runSubscriptionHealthCheck, () => {
   it('skips channel.chat.message subscriptions when the bot is banned', async () => {
     state.isBanned = true
     state.accountIds = ['111']
-    seedSubscriptions('111', [])
 
     const result = await runSubscriptionHealthCheck()
 
@@ -95,7 +108,6 @@ describe(runSubscriptionHealthCheck, () => {
 
   it('counts errors when a subscription reports failure without throwing', async () => {
     state.accountIds = ['111']
-    seedSubscriptions('111', [])
     state.subscribeResult = (_userId, type) => type !== 'stream.online'
 
     const result = await runSubscriptionHealthCheck()
@@ -106,7 +118,6 @@ describe(runSubscriptionHealthCheck, () => {
 
   it('aggregates thrown errors into userErrors', async () => {
     state.accountIds = ['111']
-    seedSubscriptions('111', [])
     state.subscribeResult = () => {
       throw new Error('twitch 500')
     }
@@ -118,9 +129,8 @@ describe(runSubscriptionHealthCheck, () => {
     expect(result.fixedSubscriptions).toBe(0)
   })
 
-  it('fetches existing subscriptions from the API when the cache is empty', async () => {
+  it('uses the refreshed inventory to repair only missing critical subscriptions', async () => {
     state.accountIds = ['111']
-    // eventSubMap empty (cleared in beforeEach) -> triggers the API fetch path.
     fetchState.queue = [
       {
         json: {
@@ -129,6 +139,7 @@ describe(runSubscriptionHealthCheck, () => {
               condition: { broadcaster_user_id: '111' },
               id: 's1',
               status: 'enabled',
+              transport: { conduit_id: state.conduitId, method: 'conduit' },
               type: 'stream.online',
             },
           ],
@@ -141,7 +152,7 @@ describe(runSubscriptionHealthCheck, () => {
     await runSubscriptionHealthCheck()
 
     expect(fetchState.calls.some((u) => u.includes('eventsub/subscriptions'))).toBeTruthy()
-    // The fetched stream.online sub was loaded into the cache for that broadcaster.
+    expect(state.subscribeCalls.map(({ type }) => type)).not.toContain('stream.online')
     expect(eventSubMap.get('111')?.['stream.online']).toMatchObject({ id: 's1' })
   })
 })

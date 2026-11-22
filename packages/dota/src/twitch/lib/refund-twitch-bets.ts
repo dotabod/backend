@@ -2,10 +2,17 @@ import { getTwitchAPI, logger } from '@dotabod/shared-utils'
 
 import { retryTransient } from './retry-transient'
 
-export const refundTwitchBet = async (twitchId: string, specificPredictionId?: string) => {
-  const api = await getTwitchAPI(twitchId)
+type PredictionRefund =
+  | { status: 'refunded'; predictionId: string }
+  | { status: 'inactive' }
+  | { status: 'unconfirmed' }
 
+export const refundTwitchBet = async (
+  twitchId: string,
+  specificPredictionId?: string
+): Promise<PredictionRefund> => {
   try {
+    const api = await getTwitchAPI(twitchId)
     // Always fetch predictions to verify status before canceling
     // Fetch more if we have a specific ID to find it in history
     const { data: predictions } = await retryTransient(
@@ -21,7 +28,7 @@ export const refundTwitchBet = async (twitchId: string, specificPredictionId?: s
         specificPredictionId,
         twitchId,
       })
-      return null
+      return { status: 'unconfirmed' }
     }
 
     // Find the target prediction
@@ -36,7 +43,7 @@ export const refundTwitchBet = async (twitchId: string, specificPredictionId?: s
         specificPredictionId,
         twitchId,
       })
-      return null
+      return { status: 'unconfirmed' }
     }
 
     // Check if prediction is in a state that can be canceled
@@ -47,7 +54,7 @@ export const refundTwitchBet = async (twitchId: string, specificPredictionId?: s
         status: prediction.status,
         twitchId,
       })
-      return null
+      return { status: 'inactive' }
     }
 
     logger.info('[PREDICT] Refunding prediction', {
@@ -62,10 +69,10 @@ export const refundTwitchBet = async (twitchId: string, specificPredictionId?: s
         label: 'refundTwitchBet:cancelPrediction',
       }
     )
-    return prediction.id
+    return { predictionId: prediction.id, status: 'refunded' }
   } catch (error) {
     logger.error('[PREDICT] Error refunding twitch bet', { error, twitchId })
   }
 
-  return null
+  return { status: 'unconfirmed' }
 }

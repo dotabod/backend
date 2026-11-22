@@ -1,7 +1,7 @@
 import { checkBotStatus, getTwitchHeaders, logger } from '@dotabod/shared-utils'
 import { z } from 'zod'
 
-import { eventSubMap } from './chat-sub-ids'
+import { storeBroadcasterSubscription } from './chat-sub-ids.js'
 import { EVENT_SUB_STATUSES } from './interfaces'
 import { CHAT_SUBSCRIPTION_TYPE } from './subscription-topics.js'
 import type { UserSubscriptionType } from './subscription-topics.js'
@@ -183,12 +183,11 @@ export const genericSubscribe = async function genericSubscribe(
         return false
       }
 
-      const subscriptions = eventSubMap.get(broadcasterId) ?? {}
-      subscriptions[type] = {
+      storeBroadcasterSubscription(broadcasterId, type, {
+        conduitId,
         id: subscription.id,
         status: subscription.status,
-      }
-      eventSubMap.set(broadcasterId, subscriptions)
+      })
       return true
     } catch (error) {
       if (error instanceof Error) {

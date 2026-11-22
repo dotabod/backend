@@ -152,6 +152,7 @@ class GSIHandler implements GSIHandlerType {
   bountyTaskId?: string
   killstreakTaskId?: string
   openTheBetTaskId?: string
+  private pendingPrediction?: { matchId: string; heroName: string }
 
   endingBets = false
   openingBets = false
@@ -303,6 +304,7 @@ class GSIHandler implements GSIHandlerType {
 
   public async resetClientState() {
     cancelHeroSwap(this)
+    this.pendingPrediction = undefined
     await deleteRedisData(this.client)
     this.blockCache = undefined
     this.mapBlocker.resetData()
@@ -714,34 +716,37 @@ class GSIHandler implements GSIHandlerType {
   // 2 Next, check if the prediction is still open
   // 3 If it is, steam dota2 api result of match
   // 4 Then, tell twitch to close bets based on win result
+  public updatePendingPredictionHero(matchId: string, heroName: string): boolean {
+    if (this.pendingPrediction?.matchId !== matchId) {
+      return false
+    }
+    this.pendingPrediction.heroName = heroName
+    return true
+  }
+
   async openBets(client: SocketClient) {
     if (this.openingBets) {
-      // console.log('still opening')
       return
     }
 
     // Why open if not playing?
     if (client.gsi?.player?.activity !== 'playing') {
-      // console.log(`if (client.gsi?.player?.activity !== 'playing') {`)
       return
     }
 
     // Why open if won?
     if (client.gsi.map?.win_team !== 'none') {
-      // console.log(`if (client.gsi.map?.win_team !== 'none') {`)
       return
     }
 
     // We at least want the hero name so it can go in the twitch bet title
     const heroName = client.gsi.hero?.name
     if (heroName === null || heroName === undefined || heroName.length === 0) {
-      // console.log(`if (!client.gsi.hero?.name || !client.gsi.hero.name.length) {`)
       return
     }
 
     // It's not a live game, so we don't want to open bets nor save it to DB
     if (!client.gsi.map?.matchid || client.gsi.map?.matchid === '0') {
-      // console.log(`if (!client.gsi.map.matchid || client.gsi.map.matchid === '0') {`)
       return
     }
 
@@ -832,7 +837,7 @@ class GSIHandler implements GSIHandlerType {
     }
 
     // The bet was already made
-    if (Number(matchId) >= 0) {
+    if (Number(matchId) >= 0 || this.openingBets) {
       return
     }
 
@@ -844,33 +849,43 @@ class GSIHandler implements GSIHandlerType {
     })
 
     this.openingBets = true
+    const pending = { heroName: validatedHeroName, matchId: validatedMatchId }
+    this.pendingPrediction = pending
 
     const { data: bet } = await supabase
       .from('matches')
       .select('matchId, myTeam, id')
-      .eq('matchId', client.gsi.map.matchid)
+      .eq('matchId', validatedMatchId)
       .eq('userId', client.token)
       .is('won', null)
 
+    if (this.pendingPrediction !== pending) {
+      return
+    }
+
     try {
       // Saving to redis so we don't have to query the db again
-      await redisClient.client.set(`${client.token}:matchId`, client.gsi.map.matchid)
+      await redisClient.client.set(`${client.token}:matchId`, validatedMatchId)
 
-      const playingTeam = bet?.[0]?.myTeam ?? client.gsi?.player?.team_name ?? ''
+      const playingTeam = bet?.[0]?.myTeam ?? validatedMyTeam
       await redisClient.client.set(`${client.token}:playingTeam`, playingTeam)
-      await redisClient.client.set(`${client.token}:playingHero`, client.gsi.hero?.name ?? '')
+      await redisClient.client.set(`${client.token}:playingHero`, pending.heroName)
     } catch (error) {
       logger.error('Error while saving data to Redis:', {
         client: client.name,
         error,
-        matchId: client.gsi.map.matchid,
+        matchId: validatedMatchId,
         token: client.token,
       })
     }
 
-    // Check if this bet for this match id already exists, dont continue if it does
+    if (this.pendingPrediction !== pending) {
+      return
+    }
+
     if (bet?.[0]?.id !== null && bet?.[0]?.id !== undefined && bet[0].id.length > 0) {
       logger.info('[BETS] Found a bet in the database', { id: bet?.[0]?.id })
+      this.pendingPrediction = undefined
       this.openingBets = false
       return
     }
@@ -879,11 +894,13 @@ class GSIHandler implements GSIHandlerType {
       logger.info('[BETS] Not opening bets bc stream is offline for', {
         name: client.name,
       })
+      this.pendingPrediction = undefined
       this.openingBets = false
       return
     }
 
     if (!client.token) {
+      this.pendingPrediction = undefined
       this.openingBets = false
       return
     }
@@ -891,34 +908,26 @@ class GSIHandler implements GSIHandlerType {
     this.openTheBetTaskId = delayedQueue.addTask(
       getStreamDelay(client.settings, client.subscription),
       async () => {
-        await this.openTheBet(validatedMatchId, validatedHeroName, validatedMyTeam)
+        if (this.pendingPrediction !== pending) {
+          return
+        }
+        if (pending.heroName !== validatedHeroName) {
+          try {
+            await redisClient.client.set(`${client.token}:playingHero`, pending.heroName)
+          } catch (error) {
+            logger.error('[BETS] Could not save swapped hero', { error, matchId: pending.matchId })
+          }
+        }
+        if (this.pendingPrediction !== pending) {
+          return
+        }
+        this.pendingPrediction = undefined
+        await this.openTheBet(pending.matchId, pending.heroName, validatedMyTeam)
       }
     )
-
-    // .catch((e: any) => {
-    //   logger.error(`[BETS] Could not add bet to channel`, {
-    //     channel: client.name,
-    //     e: e?.message || e,
-    //   })
-    //   this.openingBets = false
-    // })
-
-    // .catch((e: any) => {
-    //   logger.error('[BETS] Error opening bet', {
-    //     matchId: client?.gsi?.map?.matchid || '',
-    //     channel,
-    //     e: e?.message || e,
-    //   })
-    //   if ((e?.message || e).includes('error')) {
-    //     this.openingBets = false
-    //   }
-    // })
   }
 
-  // Rollback the per-match Redis state openBets wrote at lines 721-725 before
-  // queueing this task. Called on every openTheBet bail path so closeBets /
-  // checkEarlyDCWinner / hero.name.ts don't read a `${token}:matchId` that
-  // points at a non-existent matches row.
+  // An aborted open leaves no match row for settlement or a later hero swap.
   private async abortOpenBets() {
     this.openingBets = false
     try {
@@ -1039,7 +1048,6 @@ class GSIHandler implements GSIHandlerType {
       return
     }
     this.endingBets = true
-    cancelHeroSwap(this)
 
     try {
       const match = gcData?.matches?.[0]
@@ -1102,6 +1110,7 @@ class GSIHandler implements GSIHandlerType {
         void this.checkEarlyDCWinner(matchId)
         return
       }
+      cancelHeroSwap(this, matchId)
 
       const scores = buildClosingScores({
         gcMatch: match,
@@ -1173,15 +1182,15 @@ class GSIHandler implements GSIHandlerType {
             predictionResponse.data?.predictionId !== undefined &&
             predictionResponse.data.predictionId.length > 0
           ) {
-            const oldBetId = await refundTwitchBet(
+            const refund = await refundTwitchBet(
               this.getChannelId(),
               predictionResponse.data.predictionId
             )
-            if (oldBetId !== null && oldBetId !== undefined && oldBetId.length > 0) {
+            if (refund.status === 'refunded') {
               await supabase
                 .from('matches')
                 .update({ predictionId: null, updated_at: new Date().toISOString() })
-                .eq('predictionId', oldBetId)
+                .eq('predictionId', refund.predictionId)
             }
           }
         }
@@ -1636,15 +1645,15 @@ class GSIHandler implements GSIHandlerType {
               predictionResponse.data?.predictionId !== undefined &&
               predictionResponse.data.predictionId.length > 0
             ) {
-              const oldBetId = await refundTwitchBet(
+              const refund = await refundTwitchBet(
                 this.getChannelId(),
                 predictionResponse.data.predictionId
               )
-              if (oldBetId !== null && oldBetId !== undefined && oldBetId.length > 0) {
+              if (refund.status === 'refunded') {
                 await supabase
                   .from('matches')
                   .update({ predictionId: null, updated_at: new Date().toISOString() })
-                  .eq('predictionId', oldBetId)
+                  .eq('predictionId', refund.predictionId)
               }
             }
           }

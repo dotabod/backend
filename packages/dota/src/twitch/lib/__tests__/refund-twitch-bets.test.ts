@@ -25,7 +25,7 @@ describe(refundTwitchBet, () => {
 
       const result = await refundTwitchBet(mockTwitchId, mockPredictionId)
 
-      expect(result).toBe(mockPredictionId)
+      expect(result).toStrictEqual({ predictionId: mockPredictionId, status: 'refunded' })
       expect(state.cancelPredictionCalls).toStrictEqual([
         { predictionId: mockPredictionId, twitchId: mockTwitchId },
       ])
@@ -45,7 +45,7 @@ describe(refundTwitchBet, () => {
 
       const result = await refundTwitchBet(mockTwitchId, mockPredictionId)
 
-      expect(result).toBe(mockPredictionId)
+      expect(result).toStrictEqual({ predictionId: mockPredictionId, status: 'refunded' })
       expect(state.cancelPredictionCalls).toStrictEqual([
         { predictionId: mockPredictionId, twitchId: mockTwitchId },
       ])
@@ -65,7 +65,7 @@ describe(refundTwitchBet, () => {
 
       const result = await refundTwitchBet(mockTwitchId, mockPredictionId)
 
-      expect(result).toBeNull()
+      expect(result).toStrictEqual({ status: 'inactive' })
       expect(state.cancelPredictionCalls).toHaveLength(0)
       expect(state.loggerInfoCalls).toContainEqual({
         message: '[PREDICT] Cannot refund prediction - already resolved or canceled',
@@ -91,7 +91,7 @@ describe(refundTwitchBet, () => {
 
       const result = await refundTwitchBet(mockTwitchId, mockPredictionId)
 
-      expect(result).toBeNull()
+      expect(result).toStrictEqual({ status: 'inactive' })
       expect(state.cancelPredictionCalls).toHaveLength(0)
       expect(state.loggerInfoCalls).toContainEqual({
         message: '[PREDICT] Cannot refund prediction - already resolved or canceled',
@@ -103,7 +103,7 @@ describe(refundTwitchBet, () => {
       })
     })
 
-    it('should return null when specific prediction is not found', async () => {
+    it('should return unconfirmed when specific prediction is not found', async () => {
       state.predictions = [
         {
           id: 'other-pred-id',
@@ -114,7 +114,7 @@ describe(refundTwitchBet, () => {
 
       const result = await refundTwitchBet(mockTwitchId, mockPredictionId)
 
-      expect(result).toBeNull()
+      expect(result).toStrictEqual({ status: 'unconfirmed' })
       expect(state.cancelPredictionCalls).toHaveLength(0)
       expect(state.loggerInfoCalls).toContainEqual({
         message: '[PREDICT] Specific prediction not found in recent list',
@@ -148,7 +148,7 @@ describe(refundTwitchBet, () => {
 
       const result = await refundTwitchBet(mockTwitchId)
 
-      expect(result).toBe(mockPredictionId)
+      expect(result).toStrictEqual({ predictionId: mockPredictionId, status: 'refunded' })
       expect(state.cancelPredictionCalls).toStrictEqual([
         { predictionId: mockPredictionId, twitchId: mockTwitchId },
       ])
@@ -165,7 +165,7 @@ describe(refundTwitchBet, () => {
 
       const result = await refundTwitchBet(mockTwitchId)
 
-      expect(result).toBeNull()
+      expect(result).toStrictEqual({ status: 'inactive' })
       expect(state.cancelPredictionCalls).toHaveLength(0)
     })
 
@@ -179,23 +179,23 @@ describe(refundTwitchBet, () => {
       ])
     })
 
-    it('should return null when no predictions found', async () => {
+    it('should return unconfirmed when no predictions found', async () => {
       state.predictions = []
 
       const result = await refundTwitchBet(mockTwitchId)
 
-      expect(result).toBeNull()
+      expect(result).toStrictEqual({ status: 'unconfirmed' })
       expect(state.cancelPredictionCalls).toHaveLength(0)
     })
   })
 
   describe('error handling', () => {
-    it('should catch and log errors, returning null', async () => {
+    it('should catch and log errors, returning unconfirmed', async () => {
       state.getPredictionsError = new Error('API Error')
 
       const result = await refundTwitchBet(mockTwitchId, mockPredictionId)
 
-      expect(result).toBeNull()
+      expect(result).toStrictEqual({ status: 'unconfirmed' })
       expect(state.loggerErrorCalls).toContainEqual({
         message: '[PREDICT] Error refunding twitch bet',
         meta: expect.objectContaining({ twitchId: mockTwitchId }),

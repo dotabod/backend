@@ -1,31 +1,14 @@
-import { checkBotStatus, fetchConduitId, getTwitchHeaders, logger } from '@dotabod/shared-utils'
-import { TWITCH_EVENT_TYPE_NAMES } from '@dotabod/shared-utils/event-sub'
-import { z } from 'zod'
+import { checkBotStatus, fetchConduitId, logger } from '@dotabod/shared-utils'
 
 import { eventSubMap } from '../chat-sub-ids'
-import { EVENT_SUB_STATUSES } from '../interfaces'
+import {
+  cleanUpSubscriptions,
+  fetchExistingSubscriptions,
+} from '../fetch-existing-subscriptions.js'
 import { genericSubscribe } from '../subscribe-chat-messages-for-user'
 import { CRITICAL_SUBSCRIPTION_TYPES, findMissingSubscriptions } from '../subscription-topics.js'
 import type { CriticalSubscriptionType } from '../subscription-topics.js'
 import { getAccountIds } from '../twitch/lib/get-account-ids'
-import { rateLimiter } from './rate-limiter-core'
-
-const subscriptionPageSchema = z.object({
-  data: z.array(
-    z.object({
-      condition: z
-        .object({
-          broadcaster_user_id: z.string().optional(),
-          user_id: z.string().optional(),
-        })
-        .optional(),
-      id: z.string(),
-      status: z.enum(EVENT_SUB_STATUSES),
-      type: z.enum(TWITCH_EVENT_TYPE_NAMES),
-    })
-  ),
-  pagination: z.object({ cursor: z.string().optional() }).optional(),
-})
 
 interface HealthCheckContext {
   accountIds: string[]
@@ -36,11 +19,6 @@ interface HealthCheckContext {
   result: HealthCheckResult
   startTime: number
   usersWithMissingCritical: Map<string, CriticalSubscriptionType[]>
-}
-
-interface SubscriptionPageResult {
-  cursor?: string
-  fetchedCount: number
 }
 
 interface HealthCheckResult {
@@ -93,7 +71,8 @@ const processHealthCheckUser = async function processHealthCheckUser(
     const missingCritical = findMissingSubscriptions(
       CRITICAL_SUBSCRIPTION_TYPES,
       existingSubscriptions ?? {},
-      context.isBanned
+      context.isBanned,
+      context.conduitId
     )
     if (missingCritical.length === 0) {
       return
@@ -155,77 +134,6 @@ const processAccountChunks = async function processAccountChunks(
   await processAccountChunks(context, startIndex + chunk.length)
 }
 
-const storeSubscriptionPage = function storeSubscriptionPage(
-  page: z.infer<typeof subscriptionPageSchema>
-): number {
-  let fetchedCount = 0
-  for (const subscription of page.data) {
-    const broadcasterId =
-      subscription.condition?.broadcaster_user_id ?? subscription.condition?.user_id
-    if (broadcasterId === undefined || broadcasterId.length === 0) {
-      continue
-    }
-
-    const subscriptions = eventSubMap.get(broadcasterId) ?? {}
-    subscriptions[subscription.type] = {
-      id: subscription.id,
-      status: subscription.status,
-    }
-    eventSubMap.set(broadcasterId, subscriptions)
-    fetchedCount += 1
-  }
-  return fetchedCount
-}
-
-const fetchSubscriptionPage = async function fetchSubscriptionPage(
-  headers: Awaited<ReturnType<typeof getTwitchHeaders>>,
-  cursor?: string
-): Promise<SubscriptionPageResult> {
-  return await rateLimiter.schedule(async () => {
-    const url = new URL('https://api.twitch.tv/helix/eventsub/subscriptions')
-    if (cursor !== undefined && cursor.length > 0) {
-      url.searchParams.append('after', cursor)
-    }
-
-    const response = await fetch(url.toString(), { headers, method: 'GET' })
-    if (response.status !== 200) {
-      logger.error('[TWITCHEVENTS] Failed to fetch subscriptions', { status: response.status })
-      return { fetchedCount: 0 }
-    }
-
-    const responseBody: unknown = await response.json()
-    const parsedPage = subscriptionPageSchema.safeParse(responseBody)
-    if (!parsedPage.success) {
-      throw new Error('Twitch returned an invalid EventSub subscriptions response')
-    }
-    return {
-      cursor: parsedPage.data.pagination?.cursor,
-      fetchedCount: storeSubscriptionPage(parsedPage.data),
-    }
-  })
-}
-
-const fetchSubscriptionPages = async function fetchSubscriptionPages(
-  headers: Awaited<ReturnType<typeof getTwitchHeaders>>,
-  cursor?: string,
-  fetchedCount = 0
-): Promise<number> {
-  const page = await fetchSubscriptionPage(headers, cursor)
-  const totalFetched = fetchedCount + page.fetchedCount
-  if (page.cursor === undefined || page.cursor.length === 0) {
-    return totalFetched
-  }
-  return await fetchSubscriptionPages(headers, page.cursor, totalFetched)
-}
-
-const fetchSubscriptionsForHealthCheck =
-  async function fetchSubscriptionsForHealthCheck(): Promise<void> {
-    logger.info('[TWITCHEVENTS] Fetching current subscriptions from Twitch API')
-    const headers = await getTwitchHeaders()
-    const fetchedCount = await fetchSubscriptionPages(headers)
-    logger.info('[TWITCHEVENTS] Fetched current subscriptions', { count: fetchedCount })
-  }
-
 export const runSubscriptionHealthCheck =
   async function runSubscriptionHealthCheck(): Promise<HealthCheckResult> {
     logger.info('[TWITCHEVENTS] Starting subscription health check')
@@ -260,11 +168,8 @@ export const runSubscriptionHealthCheck =
 
     logger.info(`[TWITCHEVENTS] joining ${accountIds.length} channels`)
 
-    // Fetch existing subscriptions if eventSubMap is empty
-    if (eventSubMap.size === 0) {
-      logger.info('[TWITCHEVENTS] EventSubMap is empty, fetching existing subscriptions')
-      await fetchSubscriptionsForHealthCheck()
-    }
+    const subsToCleanup = await fetchExistingSubscriptions(conduitId)
+    await cleanUpSubscriptions(subsToCleanup)
 
     // Track results
     const result: HealthCheckResult = {

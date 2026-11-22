@@ -131,10 +131,11 @@ def test_queue_status_pending(client):
     assert body["position"] == 3
 
 
-def test_queue_status_completed_attaches_clip_result(client):
+@pytest.mark.parametrize("request_type", ["clip", "clip_in_game"])
+def test_queue_status_completed_attaches_clip_result(client, request_type):
     db = MagicMock()
     db.get_queue_status.return_value = {
-        "status": "completed", "request_type": "clip", "result_id": "c1",
+        "status": "completed", "request_type": request_type, "result_id": "c1",
     }
     db.get_clip_result.return_value = {"players": [{"player_name": "x"}]}
     with patch.object(api_server, "db_client", db):

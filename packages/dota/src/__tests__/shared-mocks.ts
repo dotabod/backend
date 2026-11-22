@@ -165,6 +165,7 @@ export const createGsiHandlerStub = function createGsiHandlerStub(
       await completed
     },
     treadsData: { manaAtLastToggle: 0, manaSaved: 0, treadToggles: 0 },
+    updatePendingPredictionHero: () => false,
     updateSteam32Id: async () => {
       await completed
     },
