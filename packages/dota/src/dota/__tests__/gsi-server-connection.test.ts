@@ -102,7 +102,6 @@ vi.mock('../lib/matchData', () => ({ MatchDataService: class {} }))
 vi.mock('../lib/remind-unresolved-matches', () => ({
   remindUnresolvedMatches: vi.fn().mockResolvedValue(undefined),
 }))
-vi.mock('../lib/twitch-utils', () => ({ deleteClipsBatch: vi.fn() }))
 vi.mock('../setup-signals', () => ({ recordOverlaySocketActivity }))
 vi.mock('../validate-token', () => ({ validateToken: vi.fn() }))
 

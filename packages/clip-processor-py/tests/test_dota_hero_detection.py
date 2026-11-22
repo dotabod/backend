@@ -275,7 +275,34 @@ def test_read_rank_font_exact_reads_both_languages(label, value):
     """
     frame = _render_rank_badge(label, value)
     h, w = frame.shape[:2]
-    assert dhd._read_rank_font_exact(frame, 10, 8, w - 10, h - 8) == value
+    actual = dhd._read_rank_font_exact(frame, 10, 8, w - 10, h - 8)
+    if actual != value:
+        from glyph_matcher import text_signal
+        from PIL import features
+
+        matcher = dhd._get_rank_matcher()
+        band = text_signal(frame)
+        reads = {}
+        if matcher is not None:
+            for candidate in dhd._RANK_LABELS:
+                match = matcher.find_anchor(band, {candidate: candidate})
+                if match is None:
+                    continue
+                _, score, x, y = match
+                pen = x + matcher.advance(candidate + " ")
+                reads[candidate] = (
+                    score, x, y, pen,
+                    matcher.read_glyphs(band, pen, y, "0123456789", 3, min_score=dhd._RANK_MIN_GLYPH),
+                    matcher.read_glyphs(
+                        band, pen, y, "0123456789", 4, min_score=dhd._RANK_MIN_GLYPH,
+                        pre_advance={1: matcher.advance(" ")},
+                    ),
+                )
+        pytest.fail(
+            f"Read {actual!r} for {label} {value}. "
+            f"FreeType={features.version('freetype2')}, RAQM={features.version('raqm')}, "
+            f"readings={reads!r}"
+        )
 
 
 def test_read_rank_font_exact_joins_the_thousands_separator():

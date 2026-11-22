@@ -20,7 +20,7 @@ describe(DelayedQueue, () => {
     const canceled = queue.addTask(100, callback, 'canceled')
     queue.addTask(100, callback, 'kept')
 
-    expect(queue.removeTask(canceled)).toBe(true)
+    expect(queue.removeTask(canceled)).toBeTruthy()
     await vi.advanceTimersByTimeAsync(1000)
 
     expect(callback).toHaveBeenCalledExactlyOnceWith('kept')

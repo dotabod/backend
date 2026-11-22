@@ -286,7 +286,7 @@ const eventHandlers = {
   'user.authorization.grant': grantEvent,
   'user.authorization.revoke': revokeEvent,
   'user.update': updateUserEvent,
-} satisfies Partial<Record<TwitchEventType, (...args: never[]) => void>>
+} satisfies Partial<Record<TwitchEventType, (...args: never[]) => void | Promise<void>>>
 
 const initializeSocket = async function initializeSocket() {
   try {

@@ -10,15 +10,15 @@ export interface DelayedTask<T = unknown> {
 
 export class DelayedQueue {
   private tasks: DelayedTask[] = []
-  private intervalId: NodeJS.Timeout | null = null
-  private isRunning = false
-  // Check every second
+  private readonly intervalId: NodeJS.Timeout
   private readonly checkInterval = 1000
-  // 50 minutes max
   private readonly maxDelayMs = 50 * 60 * 1000
 
   constructor() {
-    this.start()
+    this.intervalId = setInterval(() => {
+      void this.processTasks()
+    }, this.checkInterval)
+    logger.info('DelayedQueue: Started processing')
   }
 
   addTask<T = unknown>(
@@ -27,7 +27,6 @@ export class DelayedQueue {
     payload: T = null as T,
     priority = 0
   ): string {
-    // Clamp delay to maximum allowed
     const clampedDelay = Math.min(delayMs, this.maxDelayMs)
     const taskId = this.generateTaskId()
     const executeAt = Date.now() + clampedDelay
@@ -40,7 +39,6 @@ export class DelayedQueue {
       priority,
     }
 
-    // Insert task in sorted order (by executeAt, then by priority)
     this.insertTaskSorted(task as DelayedTask)
 
     return taskId
@@ -52,16 +50,7 @@ export class DelayedQueue {
     return this.tasks.length < initialLength
   }
 
-  getQueueSize(): number {
-    return this.tasks.length
-  }
-
-  getNextTaskTime(): number | null {
-    return this.tasks.length > 0 ? this.tasks[0].executeAt : null
-  }
-
   private insertTaskSorted(newTask: DelayedTask): void {
-    // Binary search insertion to maintain sorted order
     let left = 0
     let right = this.tasks.length
 
@@ -82,29 +71,14 @@ export class DelayedQueue {
     this.tasks.splice(left, 0, newTask)
   }
 
-  private start(): void {
-    if (this.isRunning) {
-      return
-    }
-
-    this.isRunning = true
-    this.intervalId = setInterval(() => {
-      void this.processTasks()
-    }, this.checkInterval)
-
-    logger.info('DelayedQueue: Started processing')
-  }
-
   private async processTasks(): Promise<void> {
     const now = Date.now()
     const tasksToExecute: DelayedTask[] = []
 
-    // Collect all tasks that are ready to execute
     while (this.tasks.length > 0 && this.tasks[0].executeAt <= now) {
       tasksToExecute.push(this.tasks.shift()!)
     }
 
-    // Execute tasks concurrently
     if (tasksToExecute.length > 0) {
       await Promise.allSettled(
         tasksToExecute.map(async (task) => {
@@ -123,18 +97,8 @@ export class DelayedQueue {
     return `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   }
 
-  stop(): void {
-    if (this.intervalId) {
-      clearInterval(this.intervalId)
-      this.intervalId = null
-    }
-    this.isRunning = false
-    logger.info('DelayedQueue: Stopped processing')
-  }
-
-  // Graceful shutdown - execute remaining tasks or clear them
   async shutdown(executeRemaining = false): Promise<void> {
-    this.stop()
+    clearInterval(this.intervalId)
 
     if (executeRemaining && this.tasks.length > 0) {
       logger.info(`DelayedQueue: Executing ${this.tasks.length} remaining tasks during shutdown`)
@@ -157,5 +121,4 @@ export class DelayedQueue {
   }
 }
 
-// Singleton instance
 export const delayedQueue = new DelayedQueue()

@@ -173,10 +173,15 @@ export const getRequiredTier = function getRequiredTier(
   )
 }
 
+interface FeatureAccess {
+  hasAccess: boolean
+  requiredTier: Database['public']['Enums']['SubscriptionTier']
+}
+
 export const canAccessFeature = function canAccessFeature(
   feature: FeatureTier | GenericFeature,
   subscription: SubscriptionRow | null | undefined
-): { hasAccess: boolean; requiredTier: Database['public']['Enums']['SubscriptionTier'] } {
+): FeatureAccess {
   const requiredTier = getRequiredTier(feature)
   if (requiredTier === SUBSCRIPTION_TIERS.FREE) {
     return {

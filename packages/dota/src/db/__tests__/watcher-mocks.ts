@@ -36,6 +36,7 @@ export const watcherState: {
   loggerInfoCalls: { message: string; meta: Record<string, unknown> }[]
   loggerErrorCalls: { message: string; meta: Record<string, unknown> }[]
   socketEmits: { event: string; payload: string; room: string }[]
+  twitchAccountsByUser: Map<string, { providerAccountId: string }[]>
 } = {
   channelCreationCount: 0,
   channelHandlers: new Map(),
@@ -45,6 +46,7 @@ export const watcherState: {
   loggerInfoCalls: [],
   socketEmits: [],
   toggleDotabodCalls: [],
+  twitchAccountsByUser: new Map(),
 }
 
 export const resetWatcherState = function resetWatcherState() {
@@ -56,14 +58,19 @@ export const resetWatcherState = function resetWatcherState() {
   watcherState.loggerInfoCalls = []
   watcherState.loggerErrorCalls = []
   watcherState.socketEmits = []
+  watcherState.twitchAccountsByUser.clear()
 }
 
 // Chainable supabase mock. Only the subscriptions table (queried via
 // `.single()` after various `.eq().neq().in().order().limit()` calls) returns
 // real data; other tables resolve to empty.
-const sbBuilder = function sbBuilder(_table: string) {
+const sbBuilder = function sbBuilder(table: string) {
+  const filters = new Map<string, string>()
   const b: unknown = {
-    eq: () => b,
+    eq: (column: string, value: string) => {
+      filters.set(column, value)
+      return b
+    },
     in: () => b,
     insert: async () => await Promise.resolve({ data: null, error: null }),
     is: () => b,
@@ -74,8 +81,14 @@ const sbBuilder = function sbBuilder(_table: string) {
     order: () => b,
     select: () => b,
     single: async () => await Promise.resolve({ data: null, error: null }),
-    then: async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) =>
-      await Promise.resolve({ data: null, error: null }).then(onFulfilled),
+    then: async (onFulfilled: (v: { data: unknown; error: unknown }) => unknown) => {
+      const userId = filters.get('userId')
+      const accounts =
+        table === 'accounts' && filters.get('provider') === 'twitch' && userId !== undefined
+          ? watcherState.twitchAccountsByUser.get(userId)
+          : null
+      return await Promise.resolve({ data: accounts ?? null, error: null }).then(onFulfilled)
+    },
     update: () => b,
     upsert: async () => await Promise.resolve({ data: null, error: null }),
   }

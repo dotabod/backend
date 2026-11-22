@@ -92,13 +92,18 @@ describe('dota watcher: UPDATE:users banned_at null→set (ban)', () => {
 })
 
 describe('dota watcher: UPDATE:users banned_at set→null (unban)', () => {
-  it('removes BOTH userId and providerAccountId from invalidTokens', async () => {
-    // Simulate the post-ban state: tokens in the negative cache, no live
-    // client (it was cleared on ban).
-    invalidTokens.add('u-banned')
-    invalidTokens.add('tw-banned')
-    // Re-seed a client so the unban handler can look up providerAccountId.
+  it('restores both GSI and Twitch lookup after banning evicts the session', async () => {
     seedClient({ name: 'returning', providerAccountId: 'tw-banned', userId: 'u-banned' })
+    watcherState.twitchAccountsByUser.set('u-banned', [{ providerAccountId: 'tw-banned' }])
+
+    await fire('UPDATE', 'users', {
+      new: { banned_at: '2026-05-24T00:00:00.000Z', id: 'u-banned' },
+      old: { banned_at: null, id: 'u-banned' },
+    })
+
+    expect(gsiHandlers.has('u-banned')).toBeFalsy()
+    expect(invalidTokens.has('u-banned')).toBeTruthy()
+    expect(invalidTokens.has('tw-banned')).toBeTruthy()
 
     await fire('UPDATE', 'users', {
       new: { banned_at: null, id: 'u-banned' },

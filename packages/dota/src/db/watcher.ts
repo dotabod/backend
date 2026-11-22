@@ -325,18 +325,23 @@ class SetupSupabase {
             return
           }
 
-          // Unban: banned_at transitioned set → null. Drop the negative-cache
-          // entries so the next GSI POST / chat message can resolve normally.
-          // clearCacheForUser already ran on ban; the user just needs to be
-          // allowed through again.
           if (isNonEmptyString(oldObj.banned_at) && !isNonEmptyString(newObj.banned_at)) {
             invalidTokens.delete(newObj.id)
-            // We may not have a live client (it was cleared on ban). Look up
-            // the providerAccountId so both keyspaces are cleared.
-            const client = findUser(newObj.id)
-            const accountId = client?.Account?.providerAccountId
-            if (isNonEmptyString(accountId)) {
-              invalidTokens.delete(accountId)
+            // Banning a user evicts the session and its Twitch ID index.
+            const { data: accounts, error } = await supabase
+              .from('accounts')
+              .select('providerAccountId')
+              .eq('userId', newObj.id)
+              .eq('provider', 'twitch')
+
+            if (error) {
+              logger.warn('[WATCHER USER] Failed to look up unbanned Twitch accounts', {
+                error,
+                userId: newObj.id,
+              })
+            }
+            for (const { providerAccountId } of accounts ?? []) {
+              invalidTokens.delete(providerAccountId)
             }
             logger.info('[WATCHER USER] Unbanning user', { userId: newObj.id })
             return

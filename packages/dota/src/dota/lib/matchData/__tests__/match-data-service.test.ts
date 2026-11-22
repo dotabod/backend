@@ -325,6 +325,21 @@ describe('MatchDataService — sync getters', () => {
 })
 
 describe('MatchDataService — resolveRoster source/stage/completeness', () => {
+  it('keeps the roster on the packet captured for the query', async () => {
+    noVisionHost()
+    const client = makeClient({ ownAccountId: '111', ownHeroId: 21 })
+    const matchData = new MatchDataService(client)
+    client.gsi = createPacketStub({
+      hero: { id: 42 },
+      map: { matchid: '8800000002' },
+      player: { accountid: '222', team_name: 'radiant' },
+    })
+
+    const roster = await matchData.resolveRoster()
+
+    expect(roster.players[0]).toMatchObject({ accountId: 111, heroId: 21 })
+  })
+
   it('returns empty/none when there is no matchId AND no streamer GSI data', async () => {
     const client = makeClient({ matchid: '0', ownAccountId: undefined })
     client.gsi = undefined
@@ -889,19 +904,4 @@ describe('MatchDataService — getStreamersInMatchCount', () => {
     })
     expect(count).toBe(0)
   })
-})
-
-it('keeps the roster on the packet captured for the query', async () => {
-  noVisionHost()
-  const client = makeClient({ ownAccountId: '111', ownHeroId: 21 })
-  const matchData = new MatchDataService(client)
-  client.gsi = createPacketStub({
-    hero: { id: 42 },
-    map: { matchid: '8800000002' },
-    player: { accountid: '222', team_name: 'radiant' },
-  })
-
-  const roster = await matchData.resolveRoster()
-
-  expect(roster.players[0]).toMatchObject({ accountId: 111, heroId: 21 })
 })

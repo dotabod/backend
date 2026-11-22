@@ -145,46 +145,6 @@
         "severity": "error"
       }
     },
-    "019b9e734783d555ca10111a6e8fca50f6b8638a7f194e2afef55cea7d51a5c0": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-promise-executor-return)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "// Wait for queue's 1-second check interval to process the task",
-              "await new Promise((resolve) => setTimeout(resolve, 1200))",
-              ""
-            ],
-            "message": "",
-            "span": "setTimeout(resolve, 1200)"
-          }
-        ],
-        "message": "Return statement should not be used in Promise executor.",
-        "severity": "error"
-      }
-    },
-    "01a0d4cce1ab0b494c9bd63028cface19f15bcdfc2efaca0b272e4e5bfd003ff": {
-      "count": 2,
-      "diagnostic": {
-        "code": "eslint(no-promise-executor-return)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "// Wait for queue's 1-second check interval to process all tasks",
-              "await new Promise((resolve) => setTimeout(resolve, 1200))",
-              ""
-            ],
-            "message": "",
-            "span": "setTimeout(resolve, 1200)"
-          }
-        ],
-        "message": "Return statement should not be used in Promise executor.",
-        "severity": "error"
-      }
-    },
     "01a41637be96bfa84ddcbcdb3b5f1dca69aad55f0e9eff258aea1ef4c8cd977b": {
       "count": 1,
       "diagnostic": {
@@ -580,26 +540,6 @@
           }
         ],
         "message": "Replace module mocking with dependency injection through a real interface, service layer, or faithful test implementation.",
-        "severity": "error"
-      }
-    },
-    "04d2c2d5cab356d8a240e72b6d2d3c5d80995993ac93aeebdf74e194ee3274e5": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(strict-void-return)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "// Wait for queue's 1-second check interval to process the task",
-              "await new Promise((resolve) => setTimeout(resolve, 1200))",
-              ""
-            ],
-            "message": "",
-            "span": "setTimeout(resolve, 1200)"
-          }
-        ],
-        "message": "Value returned in a context where a void return is expected.",
         "severity": "error"
       }
     },
@@ -1109,22 +1049,6 @@
           }
         ],
         "message": "Define a constant instead of duplicating this literal 3 times.",
-        "severity": "error"
-      }
-    },
-    "07ab462bbdd1e6c7c4085e39aef1a705d8435b1be64972f3db75ff3cb9500c75": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-object-parameters)",
-        "file": "packages/dota/src/dota/lib/twitch-utils.ts",
-        "labels": [
-          {
-            "context": ["authToken: string,", "logContext: object", "): Promise<void> {"],
-            "message": "",
-            "span": "object"
-          }
-        ],
-        "message": "Parameter `logContext` uses the broad `object` type. Accept a named owner type; parse external input at its boundary before calling this function.",
         "severity": "error"
       }
     },
@@ -1646,26 +1570,6 @@
           }
         ],
         "message": "Rename this '__resetAccountSharingLogCacheForTests' function to match the regular expression '^[_a-z][a-zA-Z0-9]*$'.",
-        "severity": "error"
-      }
-    },
-    "0beeb0ef70d91a76e3220429ac6cea8d6c0c5d2fe97e1a386eb9bdd2309138ac": {
-      "count": 2,
-      "diagnostic": {
-        "code": "typescript(strict-void-return)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "// Wait for queue's 1-second check interval to process all tasks",
-              "await new Promise((resolve) => setTimeout(resolve, 1200))",
-              ""
-            ],
-            "message": "",
-            "span": "setTimeout(resolve, 1200)"
-          }
-        ],
-        "message": "Value returned in a context where a void return is expected.",
         "severity": "error"
       }
     },
@@ -5284,26 +5188,6 @@
         "severity": "error"
       }
     },
-    "28cf688606e2f295b92572ca3f59549d59647de3951e1163e9bf56b302a1eda0": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(require-safety-comment-for-type-assertion)",
-        "file": "packages/dota/src/dota/lib/twitch-utils.ts",
-        "labels": [
-          {
-            "context": [
-              "...logContext,",
-              "error: (error as Error).message,",
-              "slugsCount: clipSlugs.length,"
-            ],
-            "message": "",
-            "span": "error as Error"
-          }
-        ],
-        "message": "This type assertion has no `SAFETY:` justification. State the checked invariant immediately before the assertion or its containing statement.",
-        "severity": "error"
-      }
-    },
     "28dcbf5ea2e8e8cc1019bdd022effd785fa9ca34dbaa53362e85089ac8fd0fc3": {
       "count": 1,
       "diagnostic": {
@@ -6396,26 +6280,6 @@
         "severity": "error"
       }
     },
-    "3212c1eedc4c2e32db09edae90e2b3c24e385b865993fb66e8a22a9134c09646": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-known-value-widening)",
-        "file": "packages/dota/src/utils/subscription.ts",
-        "labels": [
-          {
-            "context": [
-              "if (!isSubscriptionActive(subscription)) {",
-              "return {",
-              "hasAccess: isFreeFeature,"
-            ],
-            "message": "",
-            "span": "{\n      hasAccess: isFreeFeature,\n      requiredTier,\n    }"
-          }
-        ],
-        "message": "The explicit anonymous object type on return value of `canAccessFeature` discards known type evidence. Keep inference, validate with `satisfies`, or use a named owner contract.",
-        "severity": "error"
-      }
-    },
     "3233f4834c36be56f20f881893f01fbd9daac27c75e3cfb24885ef770834dad0": {
       "count": 1,
       "diagnostic": {
@@ -6697,46 +6561,6 @@
           }
         ],
         "message": "Use null instead.",
-        "severity": "error"
-      }
-    },
-    "33cdf94268ce7b1cdf17c9d948aacd18ee9c0341a0db4218d290129bf0c0eff3": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-type-assertion)",
-        "file": "packages/dota/src/dota/lib/twitch-utils.ts",
-        "labels": [
-          {
-            "context": [
-              "// Assert type",
-              "const result = (await response.json()) as GqlDeleteResponse",
-              ""
-            ],
-            "message": "",
-            "span": "(await response.json()) as GqlDeleteResponse"
-          }
-        ],
-        "message": "Unsafe type assertion: type 'GqlDeleteResponse' is more narrow than the original type.",
-        "severity": "error"
-      }
-    },
-    "33f618267e9e923df6c3363e7da34a8a77c78757aa29c4f71faffbaf7242c6eb": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(require-mock-type-parameters)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "it('should execute tasks after delay', async () => {",
-              "const callback = vi.fn(() => {})",
-              "const payload = { test: 'data' }"
-            ],
-            "message": "",
-            "span": "fn"
-          }
-        ],
-        "message": "Missing type parameters on mock function call",
         "severity": "error"
       }
     },
@@ -11703,26 +11527,6 @@
         "severity": "error"
       }
     },
-    "585f5fbc6b8be3bab3ea1ad395cd10c1c410d1daf3731543c55bcc5f8936356f": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-known-value-widening)",
-        "file": "packages/dota/src/utils/subscription.ts",
-        "labels": [
-          {
-            "context": [
-              "// Check if subscription tier level meets required tier level",
-              "return {",
-              "hasAccess: TIER_LEVELS[subscription.tier] >= TIER_LEVELS[requiredTier],"
-            ],
-            "message": "",
-            "span": "{\n    hasAccess: TIER_LEVELS[subscription.tier] >= TIER_LEVELS[requiredTier],\n    requiredTier,\n  }"
-          }
-        ],
-        "message": "The explicit anonymous object type on return value of `canAccessFeature` discards known type evidence. Keep inference, validate with `satisfies`, or use a named owner contract.",
-        "severity": "error"
-      }
-    },
     "588e46f218768a339e490da49cb9a8c333b9df97c543a58fe94ee316a594e8dc": {
       "count": 1,
       "diagnostic": {
@@ -12121,22 +11925,6 @@
           }
         ],
         "message": "A `typeof` check narrows a representation without establishing its contract. Parse input at its I/O boundary, then branch on the domain value.",
-        "severity": "error"
-      }
-    },
-    "5b476786a553701ac5523098719680eec476905bab20339b1f88250113ba4a48": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(no-known-value-widening)",
-        "file": "packages/dota/src/utils/subscription.ts",
-        "labels": [
-          {
-            "context": ["if (!subscription?.tier) {", "return {", "hasAccess: false,"],
-            "message": "",
-            "span": "{\n      hasAccess: false,\n      requiredTier,\n    }"
-          }
-        ],
-        "message": "The explicit anonymous object type on return value of `canAccessFeature` discards known type evidence. Keep inference, validate with `satisfies`, or use a named owner contract.",
         "severity": "error"
       }
     },
@@ -13042,26 +12830,6 @@
         "severity": "error"
       }
     },
-    "624c54d7ee4ed0090648fd54695d0959a2409cd0771eb8d3ed04f54511ce4ef2": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-member-access)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "try {",
-              "this.dota2.requestSourceTVGames({ start_game: start })",
-              "} catch (error) {"
-            ],
-            "message": "",
-            "span": "requestSourceTVGames"
-          }
-        ],
-        "message": "Unsafe member access .requestSourceTVGames on an `error` typed value.",
-        "severity": "error"
-      }
-    },
     "626e34b5b778f004b99a4f2f11b6c163c4e4c56f0fadd09e6c35ca8e887b50fc": {
       "count": 1,
       "diagnostic": {
@@ -13576,26 +13344,6 @@
         "severity": "error"
       }
     },
-    "66302279ca88a9cb8ec2955ede01c4cd7dcdb609a8a7f75548fecd886e976d05": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-call)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "this.dota2.on('hellotimeout', this.handleHelloTimeout.bind(this))",
-              "this.dota2.on('ready', () => {",
-              "this.relaunchPending = false"
-            ],
-            "message": "",
-            "span": "this.dota2.on"
-          }
-        ],
-        "message": "Unsafe call of a(n) `error` type typed value.",
-        "severity": "error"
-      }
-    },
     "6670914a435115aac2eee3c4b04843c7e93b92eab7bec3175e782dfb319c9286": {
       "count": 1,
       "diagnostic": {
@@ -14040,26 +13788,6 @@
         "severity": "error"
       }
     },
-    "6b950f8ad52dc4534cdf0b1f1ef6dfd115723428739015d7572a081f7525c6a1": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(no-disabled-tests)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "// scheduling hiccup can yield [1, 3, 2] instead of [1, 2, 3]. Skipped to unblock CI.",
-              "it.skip('should respect priority when execution times are equal', async () => {",
-              "const results: number[] = []"
-            ],
-            "message": "",
-            "span": "it.skip"
-          }
-        ],
-        "message": "Disabled test",
-        "severity": "error"
-      }
-    },
     "6b9c9b7222684576942b2fbaa24e611bea8f06410f92d8b9aecb454123e9afce": {
       "count": 1,
       "diagnostic": {
@@ -14327,26 +14055,6 @@
           }
         ],
         "message": "This assertion is unnecessary since it does not change the type of the expression.",
-        "severity": "error"
-      }
-    },
-    "6ea258f27b113600f22e7c47bbc1ba38b234449718ea48282ed742a23c240d86": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(avoid-new)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "// Wait for queue's 1-second check interval to process all tasks",
-              "await new Promise((resolve) => setTimeout(resolve, 1500))",
-              ""
-            ],
-            "message": "",
-            "span": "new Promise((resolve) => setTimeout(resolve, 1500))"
-          }
-        ],
-        "message": "Avoid creating new promises",
         "severity": "error"
       }
     },
@@ -14735,26 +14443,6 @@
         "severity": "error"
       }
     },
-    "72e59a6c3497728466ac5e5f4a4098a1b4a96a21e03bdc763079f400df936fce": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(avoid-new)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "// Wait for queue's 1-second check interval to process the task",
-              "await new Promise((resolve) => setTimeout(resolve, 1200))",
-              ""
-            ],
-            "message": "",
-            "span": "new Promise((resolve) => setTimeout(resolve, 1200))"
-          }
-        ],
-        "message": "Avoid creating new promises",
-        "severity": "error"
-      }
-    },
     "72e70a2ef4db0efbaa6c7c2a5c306d197d83f71970f90d720540a94f4f0fc8b3": {
       "count": 1,
       "diagnostic": {
@@ -15089,22 +14777,6 @@
         "severity": "error"
       }
     },
-    "76338764ded111229b99e9b1c37e3225a35d56c22d599f8479c4586da235ea3d": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-assignment)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": ["this.dota2.spectateFriendGame(", "{ steam_id },", "("],
-            "message": "",
-            "span": "steam_id"
-          }
-        ],
-        "message": "Unsafe assignment of an error typed value.",
-        "severity": "error"
-      }
-    },
     "764454008599cc7b31c65aad3500908b758c29ceb95413e1877609610eee11d6": {
       "count": 1,
       "diagnostic": {
@@ -15195,26 +14867,6 @@
           }
         ],
         "message": "Require test cases and hooks to be inside a `describe` block",
-        "severity": "error"
-      }
-    },
-    "77282f13e06eb81a9e953200c6eb9f983f36cd6cd0239a58dab40accebd7e5b9": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(strict-void-return)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "// Wait for queue's 1-second check interval to process all tasks",
-              "await new Promise((resolve) => setTimeout(resolve, 1500))",
-              ""
-            ],
-            "message": "",
-            "span": "setTimeout(resolve, 1500)"
-          }
-        ],
-        "message": "Value returned in a context where a void return is expected.",
         "severity": "error"
       }
     },
@@ -15331,26 +14983,6 @@
           }
         ],
         "message": "Remove the declaration of the unused '_response' variable.",
-        "severity": "error"
-      }
-    },
-    "786e8d881f996c139c2260c612edadfe83732f1cdebd9981e445f1b565d10c9f": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(require-mock-type-parameters)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "it('should handle errors in task callbacks gracefully', async () => {",
-              "const goodCallback = vi.fn(() => {})",
-              "const badCallback = vi.fn(() => {"
-            ],
-            "message": "",
-            "span": "fn"
-          }
-        ],
-        "message": "Missing type parameters on mock function call",
         "severity": "error"
       }
     },
@@ -15910,22 +15542,6 @@
         "severity": "error"
       }
     },
-    "7cf4d4718f418406cb719bfdbe392305d194c71ac5a80bffb78912c27beb228d": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-call)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": ["", "this.dota2.on('sourceTVGamesData', callbackNotSpecificGames)", ""],
-            "message": "",
-            "span": "this.dota2.on"
-          }
-        ],
-        "message": "Unsafe call of a(n) `error` type typed value.",
-        "severity": "error"
-      }
-    },
     "7d04db1ff0ea8d1e293004a085638de9bca2807aa3b21c002c2c7826fd7746e3": {
       "count": 1,
       "diagnostic": {
@@ -15943,26 +15559,6 @@
           }
         ],
         "message": "Refactor this union type to have less than 3 elements.",
-        "severity": "error"
-      }
-    },
-    "7d21f308653e5bd46de9cfd3fbba65c83be73c0a4173cdd445dee961cea20c21": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-call)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "this.resetReconnectBackoff()",
-              "this.dota2.exit()",
-              "logger.info('[STEAM] Manually closed dota')"
-            ],
-            "message": "",
-            "span": "this.dota2.exit"
-          }
-        ],
-        "message": "Unsafe call of a(n) `error` type typed value.",
         "severity": "error"
       }
     },
@@ -16332,22 +15928,6 @@
           }
         ],
         "message": "Prefer await to then()/catch()/finally()",
-        "severity": "error"
-      }
-    },
-    "80007a1c602c2b15f73a05ba397b5a2134c5a435197c5e002b64dc6782e469bd": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-return)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": ["private isDota2Ready(): boolean {", "return this.dota2._gcReady", "}"],
-            "message": "",
-            "span": "return this.dota2._gcReady"
-          }
-        ],
-        "message": "Unsafe return of a value of type error.",
         "severity": "error"
       }
     },
@@ -17469,26 +17049,6 @@
           }
         ],
         "message": "Unsafe assertion from `any` detected: consider using type guards or a safer assertion.",
-        "severity": "error"
-      }
-    },
-    "8a411ecd9ea03cfcbccc6b2eb057d8170fec92ef84080cc9d4b2c9edf70540dd": {
-      "count": 1,
-      "diagnostic": {
-        "code": "vitest(require-mock-type-parameters)",
-        "file": "packages/dota/src/dota/lib/__tests__/delayed-queue.test.ts",
-        "labels": [
-          {
-            "context": [
-              "it('should clamp delays to maximum allowed', () => {",
-              "const callback = vi.fn(() => {})",
-              "// 50 minutes"
-            ],
-            "message": "",
-            "span": "fn"
-          }
-        ],
-        "message": "Missing type parameters on mock function call",
         "severity": "error"
       }
     },
@@ -20220,26 +19780,6 @@
           }
         ],
         "message": "Complete the task associated to this \"TODO\" comment.",
-        "severity": "error"
-      }
-    },
-    "9e2b4453f965969a1bfe686478d34c4ebcb3074e5f091693331a6156431ae30c": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-type-assertion)",
-        "file": "packages/dota/src/dota/lib/twitch-utils.ts",
-        "labels": [
-          {
-            "context": [
-              "...logContext,",
-              "error: (error as Error).message,",
-              "slugsCount: clipSlugs.length,"
-            ],
-            "message": "",
-            "span": "error as Error"
-          }
-        ],
-        "message": "Unsafe type assertion: type 'Error' is more narrow than the original type.",
         "severity": "error"
       }
     },
@@ -26051,26 +25591,6 @@
             ],
             "message": "",
             "span": "(await redisClient.client.get(\n      `${dotaClient.getToken()}:playingHero`\n    )) as HeroNames | null"
-          }
-        ],
-        "message": "This type assertion has no `SAFETY:` justification. State the checked invariant immediately before the assertion or its containing statement.",
-        "severity": "error"
-      }
-    },
-    "ca0aa0347aa48a03424cafe8fe8653ab92a6e8e7b3ac63ceddbce5bd72bdeb83": {
-      "count": 1,
-      "diagnostic": {
-        "code": "anti-slop(require-safety-comment-for-type-assertion)",
-        "file": "packages/dota/src/dota/lib/twitch-utils.ts",
-        "labels": [
-          {
-            "context": [
-              "// Assert type",
-              "const result = (await response.json()) as GqlDeleteResponse",
-              ""
-            ],
-            "message": "",
-            "span": "(await response.json()) as GqlDeleteResponse"
           }
         ],
         "message": "This type assertion has no `SAFETY:` justification. State the checked invariant immediately before the assertion or its containing statement.",

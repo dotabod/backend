@@ -1,6 +1,6 @@
 import http from 'node:http'
 
-import { getTwitchAPI, logger, supabase } from '@dotabod/shared-utils'
+import { logger, supabase } from '@dotabod/shared-utils'
 import cors from 'cors'
 import express, { json, urlencoded } from 'express'
 import type { NextFunction, Request, RequestHandler, Response } from 'express'
@@ -31,7 +31,6 @@ import { supabaseMatchStore } from './lib/match-store'
 import { socketMatchRequester } from './lib/match-verification'
 import { MatchDataService } from './lib/matchData'
 import { remindUnresolvedMatches } from './lib/remind-unresolved-matches'
-import { deleteClipsBatch } from './lib/twitch-utils'
 import { updateMmr } from './lib/update-mmr'
 import { createMatchVerifier } from './lib/verify-recent-matches'
 import { recordOverlaySocketActivity } from './setup-signals'
@@ -42,15 +41,7 @@ import {
   WIN_LOSS_PROFILE_CLIENT_TYPE,
 } from './win-loss-socket'
 
-// --- Clip Deletion Queue ---
-// Map<accountId: string, Set<clipSlug: string>>
-const clipsToDeleteQueue = new Map<string, Set<string>>()
-// Simple lock
-let isProcessingDeleteQueue = false
-// 5 minutes
-const _CLIP_DELETE_INTERVAL_MS = 5 * 60 * 1000
 const STALE_OVERLAY_CHECK_INTERVAL_MS = 15_000
-// --- End Clip Deletion Queue ---
 
 interface SocketAuth {
   client?: string
@@ -470,48 +461,6 @@ const handleSocketConnection = async function handleSocketConnection(socket: Gsi
   await handleOverlaySocketConnection(socket, token)
 }
 
-const removeDeletedClips = function removeDeletedClips(accountId: string, slugs: string[]) {
-  const currentSet = clipsToDeleteQueue.get(accountId)
-  if (currentSet === undefined) {
-    return
-  }
-  for (const slug of slugs) {
-    currentSet.delete(slug)
-  }
-  if (currentSet.size === 0) {
-    clipsToDeleteQueue.delete(accountId)
-  }
-}
-
-const processClipDeletionForAccount = async function processClipDeletionForAccount(
-  accountId: string
-): Promise<void> {
-  const slugsToDelete = clipsToDeleteQueue.get(accountId)
-  if (slugsToDelete === undefined || slugsToDelete.size === 0) {
-    clipsToDeleteQueue.delete(accountId)
-    return
-  }
-
-  const slugs = [...slugsToDelete]
-  const logContext = { accountId, clipCount: slugs.length }
-  try {
-    const apiClient = await getTwitchAPI(accountId)
-    const tokenInfo = await apiClient._authProvider.getAccessTokenForUser(accountId)
-    if (tokenInfo?.accessToken === undefined || tokenInfo.accessToken.length === 0) {
-      logger.error('[GSI_ClipDelete] Could not get auth token for user', logContext)
-      return
-    }
-
-    await deleteClipsBatch(slugs, tokenInfo.accessToken, logContext)
-    removeDeletedClips(accountId, slugs)
-  } catch (error) {
-    logger.error('[GSI_ClipDelete] Error processing deletion batch for user', {
-      ...logContext,
-      error: error instanceof Error ? error.message : String(error),
-    })
-  }
-}
-
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
@@ -747,43 +696,12 @@ class GSIServer {
 
     // Initialize the Dota patch checker with a 5-minute check interval
     initDotaPatchChecker(5)
-
-    // Set up repeating timer for batch clip deletion
-    // setInterval(this.processClipDeletionQueue, CLIP_DELETE_INTERVAL_MS)
-    // logger.info(`[GSI] Clip deletion interval started (${CLIP_DELETE_INTERVAL_MS}ms)`)
   }
 
   listen(port = 5120): void {
     this.httpServer.listen(port, () => {
       logger.info(`[GSI] Dota 2 GSI listening on *:${port}`)
     })
-  }
-
-  /**
-   * Processes the clip deletion queue, deleting clips in batches per user.
-   */
-  static async processClipDeletionQueue(): Promise<void> {
-    if (isProcessingDeleteQueue) {
-      logger.warn('[GSI_ClipDelete] Deletion processing already in progress, skipping interval.')
-      return
-    }
-    if (clipsToDeleteQueue.size === 0) {
-      // logger.debug('[GSI_ClipDelete] Queue is empty, skipping processing.'); // Optional: debug logging
-      return
-    }
-
-    logger.info(
-      `[GSI_ClipDelete] Starting clip deletion queue processing (${clipsToDeleteQueue.size} users)`
-    )
-    isProcessingDeleteQueue = true
-
-    const accountIds = [...clipsToDeleteQueue.keys()]
-    try {
-      await Promise.all(accountIds.map(processClipDeletionForAccount))
-    } finally {
-      isProcessingDeleteQueue = false
-      logger.info('[GSI_ClipDelete] Finished clip deletion queue processing.')
-    }
   }
 }
 

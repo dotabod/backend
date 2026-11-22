@@ -209,7 +209,6 @@ const installDelayedQueueMock = function installDelayedQueueMock() {
         return id
       },
     },
-    getQueueSize: { configurable: true, value: () => 0 },
     removeTask: {
       configurable: true,
       value: (id: string) => {
