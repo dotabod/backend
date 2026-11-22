@@ -33,7 +33,7 @@ identifies shared state that should belong to the original attempt. If a fixed r
 finds either trace, compare the retirement and callback ordering in the implementation
 with the model before changing either one.
 
-Coverage was synchronized at `c5e119f6ccdca0fbeb44660066825cbe88815cd5`. Move this
+Coverage was synchronized at `a145dc41e5a0f82b995a26f4370a44db9b453b81`. Move this
 commit forward after comparing the model transitions with the updated watcher and
 rerunning the fixed and historical configurations. Use /maintain-formal-verification-skill
 when the watcher changes.
