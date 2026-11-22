@@ -353,7 +353,7 @@ describe(setupAccountWatcher, () => {
 
     it('keeps the new subscription when a retired channel reports CLOSED again', async () => {
       vi.useFakeTimers()
-      const closedChannel = state.channelSubscribeCallbacks[0]
+      const [closedChannel] = state.channelSubscribeCallbacks
       closedChannel('CHANNEL_ERROR')
       await vi.advanceTimersByTimeAsync(5100)
 

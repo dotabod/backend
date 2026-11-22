@@ -237,11 +237,11 @@ export const setupAccountWatcher = function setupAccountWatcher(
   dependencies: WatcherDependencies = defaultDependencies
 ): void {
   const channelName = `${IS_DEV ? 'dev-' : ''}twitch-events`
-  function subscribe(): void {
+  const subscribe = function subscribe(): void {
     let channel: ReturnType<typeof supabase.channel> | undefined
     let retired = false
 
-    function scheduleReconnect(status: string, error?: Error): void {
+    const scheduleReconnect = function scheduleReconnect(status: string, error?: Error): void {
       if (retired) {
         return
       }
