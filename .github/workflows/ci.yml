@@ -73,10 +73,7 @@ jobs:
           POSTGRES_DB: clip_queue_test
           POSTGRES_PASSWORD: clip_queue_test
         options: >-
-          --health-cmd "pg_isready -U postgres -d clip_queue_test"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 6
+          --health-cmd "pg_isready -U postgres -d clip_queue_test" --health-interval 5s --health-timeout 5s --health-retries 6
         ports:
           - 5432/tcp
     steps:
