@@ -2,7 +2,7 @@ import { startHeartbeat } from '@dotabod/shared-utils'
 import type { Socket } from 'socket.io'
 
 import { initSpectatorProtobuff } from './init-spectator-protobuff'
-import { setupSteamSocket } from './socket-server.ts'
+import { setupSteamSocket } from './socket-server.js'
 import Dota, { GetRealTimeStats } from './steam'
 import type { MatchMinimalDetailsResponse } from './types/match-minimal-details'
 import { logger } from './utils/logger'

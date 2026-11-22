@@ -1,15 +1,20 @@
 import { Server } from 'socket.io'
 import type { DefaultEventsMap, ServerOptions, Socket } from 'socket.io'
+import { z } from 'zod'
 
-export interface SocketListener<Events extends DefaultEventsMap = DefaultEventsMap> {
+type SocketEvents<Events> = Record<keyof Events, (...args: never[]) => void>
+
+const tcpAddress = z.object({ port: z.number() })
+
+export interface SocketListener<Events extends SocketEvents<Events> = DefaultEventsMap> {
   close: () => Promise<void>
   port: number
   to: Server<DefaultEventsMap, Events>['to']
 }
 
-export function startSocketListener<
-  Incoming extends DefaultEventsMap = DefaultEventsMap,
-  Outgoing extends DefaultEventsMap = DefaultEventsMap,
+export const startSocketListener = function startSocketListener<
+  Incoming extends SocketEvents<Incoming> = DefaultEventsMap,
+  Outgoing extends SocketEvents<Outgoing> = DefaultEventsMap,
 >({
   onConnection,
   onConnectionError,
@@ -28,12 +33,12 @@ export function startSocketListener<
     server.engine.on('connection_error', onConnectionError)
   }
 
-  const address = server.httpServer.address()
+  const address = tcpAddress.parse(server.httpServer.address())
   return {
     close: async () => {
       await server.close()
     },
-    port: typeof address === 'object' && address !== null ? address.port : port,
+    port: address.port,
     to: (room) => server.to(room),
   }
 }

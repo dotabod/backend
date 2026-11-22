@@ -18,12 +18,11 @@ describe(setupSteamSocket, () => {
 
     try {
       await expect(client.timeout(1000).emitWithAck('ping', 'hello')).resolves.toBe('pong:hello')
-      const heroes = new Promise<unknown>((resolve) => {
-        client.once('saveHeroesForMatchId', resolve)
-      })
+      const heroes = Promise.withResolvers<{ matchId: string; token: string }>()
+      client.once('saveHeroesForMatchId', heroes.resolve)
       const match = { matchId: '42', token: 'token' }
       emitHeroesForMatch(match)
-      await expect(heroes).resolves.toStrictEqual(match)
+      await expect(heroes.promise).resolves.toStrictEqual(match)
     } finally {
       client.close()
       await listener.close()

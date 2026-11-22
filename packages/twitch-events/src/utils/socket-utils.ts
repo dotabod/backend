@@ -115,7 +115,10 @@ const registerSocket = async function registerSocket(socket: EventSocket): Promi
   }
 }
 
-export function setupSocketIO(port = 5015): { close: () => Promise<void>; port: number } {
+export const setupSocketIO = function setupSocketIO(port = 5015): {
+  close: () => Promise<void>
+  port: number
+} {
   return startSocketListener<ClientToServerEvents, ServerToClientEvents>({
     onConnection: (socket) => {
       void registerSocket(socket)

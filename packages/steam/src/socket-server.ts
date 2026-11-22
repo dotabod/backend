@@ -4,7 +4,7 @@ import type { Socket } from 'socket.io'
 
 let listener: SocketListener | undefined
 
-export function setupSteamSocket(
+export const setupSteamSocket = function setupSteamSocket(
   onConnection: (socket: Socket) => void,
   port = 5035
 ): SocketListener {
@@ -12,6 +12,9 @@ export function setupSteamSocket(
   return listener
 }
 
-export function emitHeroesForMatch(payload: { matchId: string; token: string }): void {
+export const emitHeroesForMatch = function emitHeroesForMatch(payload: {
+  matchId: string
+  token: string
+}): void {
   listener?.to('steam').emit('saveHeroesForMatchId', payload)
 }
