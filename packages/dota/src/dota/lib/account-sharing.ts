@@ -12,7 +12,13 @@ export const recordActiveSteamAccount = async function recordActiveSteamAccount(
 ): Promise<string[]> {
   const key = activeSteamAccountsKey(token)
   const stored = await redisClient.client.get(key)
-  const activeSteamIds: string[] = stored ? JSON.parse(stored) : []
+  const activeSteamIds: unknown = stored === null || stored.length === 0 ? [] : JSON.parse(stored)
+  if (
+    !Array.isArray(activeSteamIds) ||
+    !activeSteamIds.every((accountId: unknown) => typeof accountId === 'string')
+  ) {
+    throw new TypeError('Invalid list of active Steam accounts')
+  }
   const accountId = steam32Id.toString()
 
   if (!activeSteamIds.includes(accountId)) {

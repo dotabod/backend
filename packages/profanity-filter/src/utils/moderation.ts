@@ -181,76 +181,6 @@ const findNaughtyWords = function findNaughtyWords(text: string): NaughtyWordsMa
   return null
 }
 
-const isFlaggedByOpenAi = async function isFlaggedByOpenAi(
-  text: string,
-  apiKey: string
-): Promise<boolean> {
-  try {
-    const response = await axios.post<ModerationResponse>(
-      'https://api.openai.com/v1/moderations',
-      {
-        input: text,
-        model: 'omni-moderation-latest',
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
-    return response.data.results[0]?.flagged ?? false
-  } catch (error) {
-    console.error('Error using OpenAI moderation API:', error)
-    return false
-  }
-}
-
-const moderateTextSingle = async function moderateTextSingle(
-  text?: string
-): Promise<string | undefined> {
-  if (text === undefined || text.trim().length === 0) {
-    return text
-  }
-
-  if (isSafeText(text) || text.length <= 2) {
-    return text
-  }
-  if (findLocalProfanity(text) !== null) {
-    return '***'
-  }
-
-  const apiKey = process.env.OPENAI_API_KEY
-  return apiKey && (await isFlaggedByOpenAi(text, apiKey)) ? '***' : text
-}
-
-/**
- * Uses multiple profanity filters and OpenAI's moderation API to filter text
- * @param input Text to moderate
- * @returns Filtered text (original text if no issues, redacted if flagged)
- */
-export async function moderateText(input: string | undefined): Promise<string | undefined>
-/**
- * Uses multiple profanity filters and OpenAI's moderation API to filter text
- * @param input Array of texts to moderate
- * @returns Array of filtered texts (original text if no issues, redacted if flagged)
- */
-export async function moderateText(input: string[] | undefined): Promise<string[] | undefined>
-/**
- * Uses multiple profanity filters and OpenAI's moderation API to filter text
- * @param input Text or array of texts to moderate
- * @returns Filtered text (original text if no issues, redacted if flagged)
- */
-export async function moderateText(
-  input?: string | string[]
-): Promise<string | (undefined | string)[] | undefined> {
-  if (Array.isArray(input)) {
-    return await Promise.all(input.map(async (text) => await moderateTextSingle(text)))
-  }
-
-  return await moderateTextSingle(input)
-}
-
 interface ProfanityDetailContext {
   lowerText: string
   text: string
@@ -514,4 +444,77 @@ export function getProfanityDetails(
   }
 
   return getProfanityDetailsSingle(input)
+}
+
+const isFlaggedByOpenAi = async function isFlaggedByOpenAi(
+  text: string,
+  apiKey: string
+): Promise<boolean> {
+  try {
+    const response = await axios.post<ModerationResponse>(
+      'https://api.openai.com/v1/moderations',
+      {
+        input: text,
+        model: 'omni-moderation-latest',
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+    return response.data.results[0]?.flagged ?? false
+  } catch (error) {
+    console.error('Error using OpenAI moderation API:', error)
+    return false
+  }
+}
+
+const moderateTextSingle = async function moderateTextSingle(
+  text?: string
+): Promise<string | undefined> {
+  if (text === undefined || text.trim().length === 0) {
+    return text
+  }
+
+  if (isSafeText(text) || text.length <= 2) {
+    return text
+  }
+  if (findLocalProfanity(text) !== null) {
+    return '***'
+  }
+
+  const apiKey = process.env.OPENAI_API_KEY
+  if (apiKey === undefined || apiKey.length === 0) {
+    return text
+  }
+  return (await isFlaggedByOpenAi(text, apiKey)) ? '***' : text
+}
+
+/**
+ * Uses multiple profanity filters and OpenAI's moderation API to filter text
+ * @param input Text to moderate
+ * @returns Filtered text (original text if no issues, redacted if flagged)
+ */
+export async function moderateText(input: string | undefined): Promise<string | undefined>
+/**
+ * Uses multiple profanity filters and OpenAI's moderation API to filter text
+ * @param input Array of texts to moderate
+ * @returns Array of filtered texts (original text if no issues, redacted if flagged)
+ */
+export async function moderateText(input: string[] | undefined): Promise<string[] | undefined>
+/**
+ * Uses multiple profanity filters and OpenAI's moderation API to filter text
+ * @param input Text or array of texts to moderate
+ * @returns Filtered text (original text if no issues, redacted if flagged)
+ */
+export async function moderateText(
+  input?: string | string[]
+): Promise<string | (undefined | string)[] | undefined> {
+  if (Array.isArray(input)) {
+    return await Promise.all(input.map(async (text) => await moderateTextSingle(text)))
+  }
+
+  return await moderateTextSingle(input)
 }

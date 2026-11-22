@@ -318,14 +318,14 @@ describe('Profanity Filter', () => {
       'trans people are groomers',
     ])('redacts %s', async (phrase) => {
       await expect(moderateText(phrase)).resolves.toBe('***')
-      expect(getProfanityDetails(phrase).isFlagged).toBe(true)
+      expect(getProfanityDetails(phrase).isFlagged).toBeTruthy()
     })
 
     test.each(['trans', 'transgender', 'transsexual', 'transvestite'])(
       'allows neutral use of %s',
       async (term) => {
         await expect(moderateText(term)).resolves.toBe(term)
-        expect(getProfanityDetails(term).isFlagged).toBe(false)
+        expect(getProfanityDetails(term).isFlagged).toBeFalsy()
       }
     )
   })
