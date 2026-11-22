@@ -11,7 +11,7 @@ import type { FsBackendOptions } from 'i18next-fs-backend'
 import RedisClient from '../db/redis-client'
 import SetupSupabase from '../db/watcher'
 import GSIServer from './gsi-server'
-import { rearmPersistedClips } from './lib/clip-schedule'
+import { clipScheduler } from './lib/clip-schedule.ts'
 import { hydrateInvalidTokens } from './lib/invalid-tokens'
 import { startDotaRetentionTelemetry } from './retention-telemetry'
 import { server } from './server'
@@ -75,7 +75,7 @@ const setupRedisClient = async () => {
   logger.info('Redis subscriber connected')
 
   // Re-arm clip tasks that a restart dropped from the in-memory DelayedQueue.
-  await rearmPersistedClips()
+  await clipScheduler.rearm()
 
   // Seed the in-memory invalidTokens cache from Redis so deploys don't re-spam
   // logs for the same population of stale GSI / Twitch tokens.

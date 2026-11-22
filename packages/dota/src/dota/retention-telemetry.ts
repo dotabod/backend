@@ -1,9 +1,8 @@
 import { logger } from '@dotabod/shared-utils'
 
 import type { SocketClient } from '../types'
+import { clipScheduler } from './lib/clip-schedule.ts'
 import {
-  draftStartByMatchId,
-  gameInProgressClipByMatchId,
   gsiHandlers,
   lookingupToken,
   pendingCheckAuth,
@@ -150,10 +149,11 @@ export const buildDotaRetentionTelemetry = function buildDotaRetentionTelemetry(
 const collectDotaRetentionTelemetry = function collectDotaRetentionTelemetry(
   now = Date.now()
 ): DotaRetentionTelemetry {
+  const { draft, inGame } = clipScheduler.matchesByPhase
   return buildDotaRetentionTelemetry({
     clients: [...gsiHandlers.values()].map((handler) => handler.client),
-    draftStartMatches: draftStartByMatchId.size,
-    gameInProgressClipMatches: gameInProgressClipByMatchId.size,
+    draftStartMatches: draft,
+    gameInProgressClipMatches: inGame,
     memoryUsage: process.memoryUsage(),
     now,
     registries: {

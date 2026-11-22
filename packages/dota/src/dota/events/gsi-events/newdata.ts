@@ -26,7 +26,7 @@ import type { GSIHandlerType } from '../../gsi-handler-types'
 import { checkPassiveMidas } from '../../lib/check-midas'
 import { checkPassiveTp } from '../../lib/check-passive-tp'
 import { calculateManaSaved } from '../../lib/check-tread-toggle'
-import { draftStartByMatchId } from '../../lib/consts'
+import { scheduleVisionClip } from '../../lib/clip-schedule.ts'
 import { DelayedCommands } from '../../lib/delayed-commands'
 import { getSpectatorPlayers } from '../../lib/get-spectator-players'
 import { isPlayingMatch } from '../../lib/is-playing-match'
@@ -723,17 +723,10 @@ eventHandler.registerEvent('newdata', {
     // In case they connect to a game in progress and we missed the start event
     const setupOBSBlockersPromise = dotaClient.setupOBSBlockers(data.map?.game_state ?? '')
 
-    // Workaround: Add draft start map check, since its not handled in previously/added
-    // Its the first time gsi sends map data for a match, so we need to handle it here in newdata
+    // The first packet with match data can arrive without a game-state diff.
     const currentMatchId = dotaClient.client.gsi?.map?.matchid ?? ''
-    if (
-      isPlayingMatch(dotaClient.client.gsi, false) &&
-      data.map?.game_state === 'DOTA_GAMERULES_STATE_PLAYER_DRAFT' &&
-      currentMatchId.length > 0 &&
-      !draftStartByMatchId.has(currentMatchId)
-    ) {
-      draftStartByMatchId.add(currentMatchId)
-      events.emit('map:game_state', 'DOTA_GAMERULES_STATE_PLAYER_DRAFT', dotaClient.client.token)
+    if (data.map?.game_state === 'DOTA_GAMERULES_STATE_PLAYER_DRAFT' && currentMatchId.length > 0) {
+      void scheduleVisionClip(dotaClient.client, data.map.game_state)
     }
 
     if (!isPlayingMatch(dotaClient.client.gsi)) {

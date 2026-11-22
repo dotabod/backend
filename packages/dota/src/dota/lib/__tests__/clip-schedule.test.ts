@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { rearmWith, scheduleClipWith } from '../clip-schedule.ts'
+import { ClipScheduler } from '../clip-schedule.ts'
 import type { ClipScheduleDeps, ClipTaskPayload } from '../clip-schedule.ts'
 
 // Fully in-memory deps so the scheduling/re-arm logic is exercised offline with
@@ -42,6 +42,7 @@ const makeDeps = function makeDeps() {
   return {
     armed,
     deps,
+    scheduler: new ClipScheduler(deps),
     getRunCalls: () => runCalls,
     setNow: (n: number) => {
       now = n
@@ -59,7 +60,6 @@ const PAYLOAD: ClipTaskPayload = {
   opts: { maxAttempts: 1, pollAttempts: 1, pollIntervalMs: 1 },
 }
 
-// Build a persisted member exactly as scheduleClipWith would, for re-arm tests.
 const makeMember = (executeAt: number) =>
   JSON.stringify({ executeAt, id: `id-${executeAt}-${Math.random()}`, ...PAYLOAD })
 
@@ -71,7 +71,7 @@ describe('clipSchedule', () => {
   })
 
   it('persists the task to Redis and arms the in-process timer', async () => {
-    await scheduleClipWith(h.deps, 5000, PAYLOAD)
+    await h.scheduler.schedule(5000, PAYLOAD)
 
     expect(h.zset.size).toBe(1)
     const [[member, score]] = [...h.zset.entries()]
@@ -83,18 +83,47 @@ describe('clipSchedule', () => {
   })
 
   it('runs the clip action and removes the member when the timer fires', async () => {
-    await scheduleClipWith(h.deps, 5000, PAYLOAD)
+    await h.scheduler.schedule(5000, PAYLOAD)
     await h.armed[0].cb()
 
     expect(h.getRunCalls()).toBe(1)
-    // member consumed
     expect(h.zset.size).toBe(0)
   })
 
-  it('does not run twice if the same member fires again (ZREM guard)', async () => {
-    await scheduleClipWith(h.deps, 5000, PAYLOAD)
+  it('runs an in-process task after a failed write when Redis recovers before it fires', async () => {
+    h.deps.zAdd = async () => {
+      throw new Error('Redis unavailable')
+    }
+
+    await h.scheduler.schedule(5000, PAYLOAD)
     await h.armed[0].cb()
-    // e.g. a duplicate timer / stray re-arm
+
+    expect(h.getRunCalls()).toBe(1)
+    expect(h.zset.size).toBe(0)
+  })
+
+  it('coalesces overlapping draft observations and still schedules the other phases', async () => {
+    await Promise.all([
+      h.scheduler.schedule(46_000, { ...PAYLOAD, detectPath: 'detect_draft' }),
+      h.scheduler.schedule(46_000, { ...PAYLOAD, detectPath: 'detect_draft' }),
+      h.scheduler.schedule(43_750, PAYLOAD),
+      h.scheduler.schedule(60_000, { ...PAYLOAD, detectPath: 'detect_in_game' }),
+    ])
+
+    expect(h.armed.map(({ delayMs }) => delayMs)).toStrictEqual([46_000, 43_750, 60_000])
+  })
+
+  it('keeps a strategy capture for each stream while coalescing repeats from a stream', async () => {
+    await h.scheduler.schedule(5000, PAYLOAD)
+    await h.scheduler.schedule(5000, { ...PAYLOAD, accountId: 'acct-2' })
+    await h.scheduler.schedule(5000, PAYLOAD)
+
+    expect(h.armed).toHaveLength(2)
+  })
+
+  it('does not run twice if the same member fires again (ZREM guard)', async () => {
+    await h.scheduler.schedule(5000, PAYLOAD)
+    await h.armed[0].cb()
     await h.armed[0].cb()
 
     expect(h.getRunCalls()).toBe(1)
@@ -104,47 +133,43 @@ describe('clipSchedule', () => {
     const member = makeMember(1_000_000 + 30_000)
     h.zset.set(member, 1_000_000 + 30_000)
 
-    await rearmWith(h.deps)
+    await h.scheduler.rearm()
 
     expect(h.armed).toHaveLength(1)
-    // remaining delay
     expect(h.armed[0].delayMs).toBe(30_000)
   })
 
   it('fires a recently-passed task immediately on re-arm', async () => {
-    // 5s late, within staleness window
     const member = makeMember(1_000_000 - 5000)
     h.zset.set(member, 1_000_000 - 5000)
 
-    await rearmWith(h.deps)
+    await h.scheduler.rearm()
 
     expect(h.armed).toHaveLength(1)
     expect(h.armed[0].delayMs).toBe(0)
-    // not dropped; runs when the 0ms timer fires
     expect(h.zset.size).toBe(1)
   })
 
   it('drops a stale task (too late to capture the screen) without arming it', async () => {
-    // way past the 90s window
     const member = makeMember(1_000_000 - 200_000)
     h.zset.set(member, 1_000_000 - 200_000)
 
-    await rearmWith(h.deps)
+    await h.scheduler.rearm()
 
     expect(h.armed).toHaveLength(0)
-    // pruned
     expect(h.zset.size).toBe(0)
   })
 
   it('survives a restart: a dropped in-process timer is re-armed and fires once', async () => {
-    await scheduleClipWith(h.deps, 5000, PAYLOAD)
+    await h.scheduler.schedule(5000, PAYLOAD)
     expect(h.armed).toHaveLength(1)
 
-    // Simulate the process dying: the in-memory timer is gone, Redis kept the member.
     h.armed.length = 0
     expect(h.zset.size).toBe(1)
 
-    await rearmWith(h.deps)
+    const restarted = new ClipScheduler(h.deps)
+    await restarted.rearm()
+    await restarted.schedule(5000, PAYLOAD)
     expect(h.armed).toHaveLength(1)
 
     await h.armed[0].cb()
