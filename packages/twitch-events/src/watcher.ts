@@ -237,95 +237,106 @@ export const setupAccountWatcher = function setupAccountWatcher(
   dependencies: WatcherDependencies = defaultDependencies
 ): void {
   const channelName = `${IS_DEV ? 'dev-' : ''}twitch-events`
-  const subscribe = function subscribe(): void {
-    let channel: ReturnType<typeof supabase.channel> | undefined
-    let retired = false
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  let activeChannel: ReturnType<typeof supabase.channel> | null = null
 
-    const scheduleReconnect = function scheduleReconnect(status: string, error?: Error): void {
-      if (retired) {
+  const connection = {
+    scheduleReconnect(status: string, error?: Error): void {
+      if (reconnectTimer !== null) {
         return
       }
 
-      retired = true
-      setTimeout(subscribe, RECONNECT_DELAY_MS)
+      reconnectTimer = setTimeout(() => {
+        connection.subscribe()
+      }, RECONNECT_DELAY_MS)
+      const deadChannel = activeChannel
+      activeChannel = null
       logger.warn('[WATCHER] Realtime channel down, scheduling reconnect', {
         delayMs: RECONNECT_DELAY_MS,
         err: error?.message,
         status,
       })
-      if (channel !== undefined) {
-        void supabase.removeChannel(channel)
+      if (deadChannel !== null) {
+        void supabase.removeChannel(deadChannel)
       }
-    }
-
-    try {
-      channel = supabase.channel(channelName)
-    } catch (error) {
-      logger.error('[WATCHER] supabase.channel() threw — scheduling reconnect', {
-        channelName,
-        err: error instanceof Error ? error.message : String(error),
-      })
-      scheduleReconnect('CHANNEL_CREATION_THREW', error instanceof Error ? error : undefined)
-      return
-    }
-
-    logger.info('[WATCHER] Starting accounts/users watcher', { channelName })
-    try {
-      channel
-        .on(
-          'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'accounts' },
-          (payload: { new: AccountRow }) => {
-            dependencies.executeHandler(
-              executeHandler(handleAccountInsert(payload), 'INSERT:accounts')
-            )
-          }
-        )
-        .on(
-          'postgres_changes',
-          { event: 'UPDATE', schema: 'public', table: 'accounts' },
-          (payload: { new: AccountRow; old: Partial<AccountRow> }) => {
-            dependencies.executeHandler(
-              executeHandler(handleAccountUpdate(payload), 'UPDATE:accounts')
-            )
-          }
-        )
-        .on(
-          'postgres_changes',
-          { event: 'DELETE', schema: 'public', table: 'accounts' },
-          (payload: { old: Partial<AccountRow> }) => {
-            dependencies.executeHandler(
-              executeHandler(handleAccountDelete(payload), 'DELETE:accounts')
-            )
-          }
-        )
-        .on(
-          'postgres_changes',
-          { event: 'UPDATE', schema: 'public', table: 'users' },
-          (payload: { new: UserRow; old: Partial<UserRow> }) => {
-            dependencies.executeHandler(executeHandler(handleUserUpdate(payload), 'UPDATE:users'))
-          }
-        )
-        .subscribe((status: string, error?: Error) => {
-          if (retired) {
-            return
-          }
-          if (status === 'SUBSCRIBED') {
-            logger.info('[WATCHER] Subscribed to Realtime channel', { channelName })
-            return
-          }
-          if (RECONNECT_STATUSES.has(status)) {
-            scheduleReconnect(status, error)
-          }
+    },
+    subscribe(): void {
+      reconnectTimer = null
+      let channel: ReturnType<typeof supabase.channel>
+      try {
+        channel = supabase.channel(channelName)
+        activeChannel = channel
+      } catch (error) {
+        logger.error('[WATCHER] supabase.channel() threw — scheduling reconnect', {
+          channelName,
+          err: error instanceof Error ? error.message : String(error),
         })
-    } catch (error) {
-      logger.error('[WATCHER] channel.on/.subscribe threw — scheduling reconnect', {
-        channelName,
-        err: error instanceof Error ? error.message : String(error),
-      })
-      scheduleReconnect('CHANNEL_SETUP_THREW', error instanceof Error ? error : undefined)
-    }
+        activeChannel = null
+        connection.scheduleReconnect(
+          'CHANNEL_CREATION_THREW',
+          error instanceof Error ? error : undefined
+        )
+        return
+      }
+
+      logger.info('[WATCHER] Starting accounts/users watcher', { channelName })
+      try {
+        channel
+          .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'accounts' },
+            (payload: { new: AccountRow }) => {
+              dependencies.executeHandler(
+                executeHandler(handleAccountInsert(payload), 'INSERT:accounts')
+              )
+            }
+          )
+          .on(
+            'postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'accounts' },
+            (payload: { new: AccountRow; old: Partial<AccountRow> }) => {
+              dependencies.executeHandler(
+                executeHandler(handleAccountUpdate(payload), 'UPDATE:accounts')
+              )
+            }
+          )
+          .on(
+            'postgres_changes',
+            { event: 'DELETE', schema: 'public', table: 'accounts' },
+            (payload: { old: Partial<AccountRow> }) => {
+              dependencies.executeHandler(
+                executeHandler(handleAccountDelete(payload), 'DELETE:accounts')
+              )
+            }
+          )
+          .on(
+            'postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'users' },
+            (payload: { new: UserRow; old: Partial<UserRow> }) => {
+              dependencies.executeHandler(executeHandler(handleUserUpdate(payload), 'UPDATE:users'))
+            }
+          )
+          .subscribe((status: string, error?: Error) => {
+            if (status === 'SUBSCRIBED') {
+              logger.info('[WATCHER] Subscribed to Realtime channel', { channelName })
+              return
+            }
+            if (RECONNECT_STATUSES.has(status)) {
+              connection.scheduleReconnect(status, error)
+            }
+          })
+      } catch (error) {
+        logger.error('[WATCHER] channel.on/.subscribe threw — scheduling reconnect', {
+          channelName,
+          err: error instanceof Error ? error.message : String(error),
+        })
+        connection.scheduleReconnect(
+          'CHANNEL_SETUP_THREW',
+          error instanceof Error ? error : undefined
+        )
+      }
+    },
   }
 
-  subscribe()
+  connection.subscribe()
 }
