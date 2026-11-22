@@ -558,8 +558,8 @@ class Dota {
     if (!this.isProduction()) {
       try {
         this.exit()
-      } catch (error) {
-        logger.error('err steam error', { error })
+      } catch (cleanupError) {
+        logger.error('err steam error', { error: cleanupError })
       }
       return
     }
@@ -613,21 +613,6 @@ class Dota {
       this.dota2.on('ready', this.checkAccounts.bind(this))
     }
   }
-
-  public requestMatchDetails = async (matchIds: number): Promise<unknown> =>
-    await new Promise((resolve, reject) => {
-      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {
-        reject(new CustomError('Not connected to Dota 2 GC'))
-      } else {
-        this.dota2.requestMatchDetails(matchIds, (err: unknown, data: unknown) => {
-          if (err !== null && err !== undefined) {
-            reject(err)
-            return
-          }
-          resolve(data)
-        })
-      }
-    })
 
   // node-dota2 emits this after ~30s of unanswered ClientHellos but does NOT
   // stand its own knock timer down. The old handler re-launched on a 30s
@@ -745,20 +730,19 @@ class Dota {
   }
 
   private async fetchProfileCard(account: number): Promise<Cards> {
-    return await new Promise<Cards>((resolve, reject) => {
-      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {
-        reject(new CustomError('Error getting medal'))
-      } else {
-        this.dota2.requestProfileCard(account, (err: unknown, card: Cards) => {
-          if (err !== null && err !== undefined) {
-            logger.error('[STEAM] Error getting medal', { account, err })
-            reject(err)
-            return
-          }
-          resolve(card)
-        })
+    if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {
+      throw new CustomError('Error getting medal')
+    }
+    const { promise, resolve, reject } = Promise.withResolvers<Cards>()
+    this.dota2.requestProfileCard(account, (err: unknown, card: Cards) => {
+      if (err !== null && err !== undefined) {
+        logger.error('[STEAM] Error getting medal', { account, err })
+        reject(err instanceof Error ? err : new Error(String(err)))
+        return
       }
+      resolve(card)
     })
+    return await promise
   }
 
   promiseTimeout = async <T>(promise: Promise<T>, ms: number, reason: string): Promise<T> =>
@@ -866,25 +850,25 @@ class Dota {
     return await this.playerSummaries.get(accounts)
   }
 
-  public requestMatchMinimalDetails = async (
+  public async requestMatchMinimalDetails(
     matchIds: number[]
-  ): Promise<MatchMinimalDetailsResponse> =>
-    await new Promise((resolve, reject) => {
-      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {
-        reject(new CustomError('Not connected to Dota 2 GC'))
-      } else {
-        this.dota2.requestMatchMinimalDetails(
-          matchIds,
-          (err: unknown, data: MatchMinimalDetailsResponse) => {
-            if (err !== null && err !== undefined) {
-              reject(err)
-              return
-            }
-            resolve(data)
-          }
-        )
+  ): Promise<MatchMinimalDetailsResponse> {
+    if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {
+      throw new CustomError('Not connected to Dota 2 GC')
+    }
+    const { promise, resolve, reject } = Promise.withResolvers<MatchMinimalDetailsResponse>()
+    this.dota2.requestMatchMinimalDetails(
+      matchIds,
+      (err: unknown, data: MatchMinimalDetailsResponse) => {
+        if (err !== null && err !== undefined) {
+          reject(err instanceof Error ? err : new Error(String(err)))
+          return
+        }
+        resolve(data)
       }
-    })
+    )
+    return await promise
+  }
 
   public static getInstance(): Dota {
     Dota.instance ??= new Dota()

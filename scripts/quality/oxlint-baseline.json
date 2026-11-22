@@ -326,26 +326,6 @@
         "severity": "error"
       }
     },
-    "0295660a4a79f44a546488f3f17d3c2cc75a65a32f20f222001df437564f0a86": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(no-nested-conditional)",
-        "file": "packages/dota/src/twitch/index.ts",
-        "labels": [
-          {
-            "context": [
-              "name: user,",
-              "permission: userInfo.isBroadcaster ? 3 : userInfo.isMod ? 2 : userInfo.isSubscriber ? 1 : 0,",
-              "userId: userInfo.userId,"
-            ],
-            "message": "",
-            "span": "userInfo.isSubscriber ? 1 : 0"
-          }
-        ],
-        "message": "Extract this nested ternary operation into an independent statement.",
-        "severity": "error"
-      }
-    },
     "02991392f79bb9f6d5fdf0f3d539710477652f8350d879b0c1722b4e11e46c69": {
       "count": 1,
       "diagnostic": {
@@ -4978,26 +4958,6 @@
         "severity": "error"
       }
     },
-    "23ec9707826117bece6645b30a0713ed1f797c2198c9282f8eb9eff9a553883b": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-nested-ternary)",
-        "file": "packages/dota/src/twitch/index.ts",
-        "labels": [
-          {
-            "context": [
-              "name: user,",
-              "permission: userInfo.isBroadcaster ? 3 : userInfo.isMod ? 2 : userInfo.isSubscriber ? 1 : 0,",
-              "userId: userInfo.userId,"
-            ],
-            "message": "",
-            "span": "userInfo.isBroadcaster ? 3 : userInfo.isMod ? 2 : userInfo.isSubscriber ? 1 : 0"
-          }
-        ],
-        "message": "Do not nest ternary expressions.",
-        "severity": "error"
-      }
-    },
     "24405193aa3816baf1e17eea1543974ea59bd17a7617fa7e0cb7f21616c4e67a": {
       "count": 1,
       "diagnostic": {
@@ -6219,35 +6179,6 @@
           }
         ],
         "message": "Assignment to function parameter 'res'.",
-        "severity": "error"
-      }
-    },
-    "2d06cf09e9b23b1b4ccf9e65bffb2d9ecc35b90fed8862f20a2dae0e467663ed": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-shadow)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "if (!this.isProduction()) {",
-              "this.exit().catch((error) => logger.error('err steam error', { error }))",
-              "return"
-            ],
-            "message": "",
-            "span": "error"
-          },
-          {
-            "context": [
-              "// the retries never take, the GC watchdog's dead-exit ceiling is the backstop.",
-              "private handleError(error: { eresult?: number; message?: string }) {",
-              "this.user.loggedOn = false"
-            ],
-            "message": "",
-            "span": "error"
-          }
-        ],
-        "message": "'error' is already declared in the upper scope.",
         "severity": "error"
       }
     },
@@ -7967,26 +7898,6 @@
           }
         ],
         "message": "Reduce the number of conditional operators (4) used in the expression (maximum allowed 3).",
-        "severity": "error"
-      }
-    },
-    "3a4c3ae351fbe530bef6a2895985e5e5d7452cb4b4d83a9016fb144a1fef58fd": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(no-promise-in-callback)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "if (!this.isProduction()) {",
-              "this.exit().catch((error) => logger.error('err steam error', { error }))",
-              "return"
-            ],
-            "message": "",
-            "span": "this.exit().catch"
-          }
-        ],
-        "message": "Avoid using promises inside of callbacks.",
         "severity": "error"
       }
     },
@@ -12614,22 +12525,6 @@
         "severity": "error"
       }
     },
-    "599ba65ce31daac8e59d35169e6df52a2ba055df4cc8e932a25183285d161f92": {
-      "count": 2,
-      "diagnostic": {
-        "code": "typescript(prefer-promise-reject-errors)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": ["if (err !== null && err !== undefined) {", "reject(err)", "}"],
-            "message": "",
-            "span": "reject(err)"
-          }
-        ],
-        "message": "Expected the Promise rejection reason to be an Error.",
-        "severity": "error"
-      }
-    },
     "59e32136dc94b58e35170dca58120bb3b8db2ea1040e37bfe3222d169422163b": {
       "count": 1,
       "diagnostic": {
@@ -14478,26 +14373,6 @@
         "severity": "error"
       }
     },
-    "666e24f52073dc3a1a3ac72fe1810655e6677483004c9fe8fc30fee149f3fa3d": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(avoid-new)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "public requestMatchDetails = async (matchIds: number): Promise<unknown> =>",
-              "await new Promise((resolve, reject) => {",
-              "if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {"
-            ],
-            "message": "",
-            "span": "new Promise((resolve, reject) => {\n      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {\n        reject(new CustomError('Not connected to Dota 2 GC'))\n      } else {\n        this.dota2.requestMatchDetails(matchIds, (err: unknown, data: unknown) => {\n          if (err !== null && err !== undefined) {\n            reject(err)\n          }\n          resolve(data)\n        })\n      }\n    })"
-          }
-        ],
-        "message": "Avoid creating new promises",
-        "severity": "error"
-      }
-    },
     "6670914a435115aac2eee3c4b04843c7e93b92eab7bec3175e782dfb319c9286": {
       "count": 1,
       "diagnostic": {
@@ -15818,26 +15693,6 @@
         "severity": "error"
       }
     },
-    "740052028fd945d9dfc6cf8742d064fc98d7b6166944d7e546f4b188de9f39e3": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-callbacks)",
-        "file": "packages/steam/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "'getRealTimeStats',",
-              "async (data: Parameters<typeof GetRealTimeStats>[0], callback: callback) => {",
-              "if (!isConnectedToSteam) {"
-            ],
-            "message": "",
-            "span": "callback: callback"
-          }
-        ],
-        "message": "Prefer `async`/`await` to the callback pattern",
-        "severity": "error"
-      }
-    },
     "742b2339729fa0354d6da7c75e76ca5a6ffb74dda1e8536407b5cb6a391e00f1": {
       "count": 1,
       "diagnostic": {
@@ -16617,26 +16472,6 @@
           }
         ],
         "message": "Value-returning function used in a context where a void function is expected.",
-        "severity": "error"
-      }
-    },
-    "7b297f5681969a14780042825868d1f8cef2a510981fa5568a79214600116dd7": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-callbacks)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "if (!this.isProduction()) {",
-              "this.exit().catch((error) => logger.error('err steam error', { error }))",
-              "return"
-            ],
-            "message": "",
-            "span": "(error) => logger.error('err steam error', { error })"
-          }
-        ],
-        "message": "Prefer `async`/`await` to the callback pattern",
         "severity": "error"
       }
     },
@@ -19829,26 +19664,6 @@
           }
         ],
         "message": "Review this usage of \"disableUserCache\" as it can only be empty here.",
-        "severity": "error"
-      }
-    },
-    "9269324a6586329a08a8116ed9ee5dcca67be24d9697203689bb0fc3a34c3208": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(prefer-promise-reject-errors)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "logger.error('[STEAM] Error getting medal', { account, err })",
-              "reject(err)",
-              "}"
-            ],
-            "message": "",
-            "span": "reject(err)"
-          }
-        ],
-        "message": "Expected the Promise rejection reason to be an Error.",
         "severity": "error"
       }
     },
@@ -23129,26 +22944,6 @@
         "severity": "error"
       }
     },
-    "a876d588994f70734ad535db0d18365b92c576a4d8665d7175b79961b565357f": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(no-unsafe-assignment)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "if (!this.isProduction()) {",
-              "this.exit().catch((error) => logger.error('err steam error', { error }))",
-              "return"
-            ],
-            "message": "",
-            "span": "error"
-          }
-        ],
-        "message": "Unsafe assignment of an any value.",
-        "severity": "error"
-      }
-    },
     "a91c4b0e3398f632cbad09f316326713ab4966382474a09445f9bee49e6486d9": {
       "count": 1,
       "diagnostic": {
@@ -23286,26 +23081,6 @@
           }
         ],
         "message": "Unsafe member access .requires_refresh on an `any` value.",
-        "severity": "error"
-      }
-    },
-    "aa2176b07bebae66d42a5cb667e508384b25e16b55f79875a3039439874d8bb8": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(avoid-new)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "): Promise<MatchMinimalDetailsResponse> =>",
-              "await new Promise((resolve, reject) => {",
-              "if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {"
-            ],
-            "message": "",
-            "span": "new Promise((resolve, reject) => {\n      if (!this.isDota2Ready() || !this.isSteamClientLoggedOn()) {\n        reject(new CustomError('Not connected to Dota 2 GC'))\n      } else {\n        this.dota2.requestMatchMinimalDetails(\n          matchIds,\n          (err: unknown, data: MatchMinimalDetailsResponse) => {\n            if (err !== null && err !== undefined) {\n              reject(err)\n            }\n            resolve(data)\n          }\n        )\n      }\n    })"
-          }
-        ],
-        "message": "Avoid creating new promises",
         "severity": "error"
       }
     },
@@ -28308,26 +28083,6 @@
         "severity": "error"
       }
     },
-    "d031e6869b594f6e26771988fc8024012540c08d4768547b55259c564a7f57c5": {
-      "count": 1,
-      "diagnostic": {
-        "code": "promise(prefer-await-to-then)",
-        "file": "packages/steam/src/steam.ts",
-        "labels": [
-          {
-            "context": [
-              "if (!this.isProduction()) {",
-              "this.exit().catch((error) => logger.error('err steam error', { error }))",
-              "return"
-            ],
-            "message": "",
-            "span": "catch"
-          }
-        ],
-        "message": "Prefer await to then()/catch()/finally()",
-        "severity": "error"
-      }
-    },
     "d04130dfdb91b23b1e213c2584ab91361a05b2268e95123905d1773341db40fa": {
       "count": 1,
       "diagnostic": {
@@ -29883,26 +29638,6 @@
         "severity": "error"
       }
     },
-    "d953361bb1183d2222ff98d1bfa1ed45e0df72ef74670804dffd6f75ab141f4c": {
-      "count": 1,
-      "diagnostic": {
-        "code": "eslint(no-nested-ternary)",
-        "file": "packages/dota/src/twitch/index.ts",
-        "labels": [
-          {
-            "context": [
-              "name: user,",
-              "permission: userInfo.isBroadcaster ? 3 : userInfo.isMod ? 2 : userInfo.isSubscriber ? 1 : 0,",
-              "userId: userInfo.userId,"
-            ],
-            "message": "",
-            "span": "userInfo.isMod ? 2 : userInfo.isSubscriber ? 1 : 0"
-          }
-        ],
-        "message": "Do not nest ternary expressions.",
-        "severity": "error"
-      }
-    },
     "d9a09d07806b884170028b52be2264d7efb63375d023129db8d65108a7d11e9a": {
       "count": 1,
       "diagnostic": {
@@ -31013,26 +30748,6 @@
         "severity": "error"
       }
     },
-    "e215cfba4e33c1ea0123d36929157b095b148617a4523310670e896b2b839394": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(no-nested-conditional)",
-        "file": "packages/dota/src/twitch/index.ts",
-        "labels": [
-          {
-            "context": [
-              "name: user,",
-              "permission: userInfo.isBroadcaster ? 3 : userInfo.isMod ? 2 : userInfo.isSubscriber ? 1 : 0,",
-              "userId: userInfo.userId,"
-            ],
-            "message": "",
-            "span": "userInfo.isMod ? 2 : userInfo.isSubscriber ? 1 : 0"
-          }
-        ],
-        "message": "Extract this nested ternary operation into an independent statement.",
-        "severity": "error"
-      }
-    },
     "e232477116024ee24ffb5311e507fe0da41d2a1094fb8b9ff741f71e7b1757f8": {
       "count": 1,
       "diagnostic": {
@@ -31138,26 +30853,6 @@
           }
         ],
         "message": "Unexpected `await` inside a loop.",
-        "severity": "error"
-      }
-    },
-    "e2afe908e9230dff2d2b01a051f2cc892a3bc7271c2d8b50e9eca5a0a47d3d6f": {
-      "count": 1,
-      "diagnostic": {
-        "code": "typescript(strict-void-return)",
-        "file": "packages/steam/src/index.ts",
-        "labels": [
-          {
-            "context": [
-              "'getRealTimeStats',",
-              "async (data: Parameters<typeof GetRealTimeStats>[0], callback: callback) => {",
-              "if (!isConnectedToSteam) {"
-            ],
-            "message": "",
-            "span": "async (data: Parameters<typeof GetRealTimeStats>[0], callback: callback) => {\n      if (!isConnectedToSteam) {\n        callback('Steam not connected', null)\n        return\n      }\n      try {\n        const result = await withTimeout(GetRealTimeStats(data))\n        callback(null, result)\n      } catch (error) {\n        callback(getErrorMessage(error), null)\n      }\n    }"
-          }
-        ],
-        "message": "Async function used in a context where a void function is expected.",
         "severity": "error"
       }
     },

@@ -42,7 +42,9 @@ const getErrorMessage = function getErrorMessage(error: unknown): string {
 
 const withTimeout = async <T>(operation: Promise<T>): Promise<T> => {
   const { promise: timeout, reject } = Promise.withResolvers<never>()
-  const timer = setTimeout(() => reject(new Error('Operation timed out')), 30_000)
+  const timer = setTimeout(() => {
+    reject(new Error('Operation timed out'))
+  }, 30_000)
   try {
     return await Promise.race([operation, timeout])
   } finally {
@@ -148,25 +150,24 @@ const socketIoServer = createSocketServer((socket, server) => {
     }
   })
 
-  socket.on(
-    'getRealTimeStats',
-    async (data: Parameters<typeof getRealTimeStats>[0], callback: callback) => {
-      if (!isConnectedToSteam) {
-        callback('Steam not connected', null)
-        return
-      }
+  socket.on('getRealTimeStats', (data: Parameters<typeof getRealTimeStats>[0], ack: callback) => {
+    if (!isConnectedToSteam) {
+      ack('Steam not connected', null)
+      return
+    }
+    void (async () => {
       try {
         const result = await withTimeout(
           getRealTimeStats(data, (match) => {
             server.to('steam').emit('saveHeroesForMatchId', match)
           })
         )
-        callback(null, result)
+        ack(null, result)
       } catch (error) {
-        callback(getErrorMessage(error), null)
+        ack(getErrorMessage(error), null)
       }
-    }
-  )
+    })()
+  })
 
   socket.on('getMatchMinimalDetails', async (data: { match_id: number }, callback: callback) => {
     if (!isConnectedToSteam) {
