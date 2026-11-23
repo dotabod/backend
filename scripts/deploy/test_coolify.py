@@ -25,13 +25,14 @@ class CoolifyFake:
         self.resource_uuid = APPS['dota']
         self.deployment_finished = False
         self.health_states = []
+        self.built_commit = 'HEAD'
 
     def __call__(self, path, method='GET', data=None):
         self.calls.append((method, path, data))
         if method == 'PATCH':
             if self.confirm_pin:
                 self.app.update(data)
-            return {'uuid': APPS['dota']}
+            return {'uuid': self.app['uuid']}
         if method == 'POST':
             return {'deployments': [{'resource_uuid': self.resource_uuid, 'deployment_uuid': 'deploy-1'}]}
         if path.startswith('/deployments/'):
@@ -39,13 +40,26 @@ class CoolifyFake:
             if len(self.statuses) > 1:
                 self.statuses.pop(0)
             self.deployment_finished = status == 'finished'
-            return {'status': status}
+            return {'status': status, 'commit': self.built_commit}
         if self.deployment_finished and self.health_states:
             return {**self.app, 'status': self.health_states.pop(0)}
         return self.app.copy()
 
     def mutations(self):
         return [call for call in self.calls if call[0] != 'GET']
+
+
+class VisionFake(CoolifyFake):
+    """A Compose app that Coolify builds from the commit it is pinned to."""
+
+    def __init__(self, **overrides):
+        super().__init__(**{'uuid': APPS['vision'], 'build_pack': 'dockercompose',
+                            'git_repository': 'dotabod/backend', 'git_branch': 'master',
+                            'base_directory': '/packages/clip-processor-py', 'git_commit_sha': 'HEAD',
+                            'docker_registry_image_name': None, 'docker_registry_image_tag': None,
+                            'settings': {'is_consistent_container_name_enabled': False}, **overrides})
+        self.resource_uuid = APPS['vision']
+        self.built_commit = REVISION
 
 
 class CoolifyReleaseTests(unittest.TestCase):
@@ -151,6 +165,41 @@ class CoolifyReleaseTests(unittest.TestCase):
     def test_valid_manifest_uses_coolify_digest_format(self):
         self.assertEqual(validate_manifest(manifest(), 'dota', REVISION), TAG)
 
+    def test_vision_release_pins_the_tested_commit_and_waits_for_healthy_completion(self):
+        api = VisionFake()
+        result = deploy(api, 'vision', None, REVISION, wait=lambda _: None)
+        self.assertEqual(api.mutations(), [
+            ('PATCH', '/applications/jw4o88gkk8ogkccowk4s84ck', {'git_commit_sha': REVISION}),
+            ('POST', '/deploy?uuid=jw4o88gkk8ogkccowk4s84ck&force=false', None),
+        ])
+        self.assertEqual(result['previous_commit'], 'HEAD')
+        self.assertEqual(result['status'], 'running:healthy')
+        self.assertNotIn('digest', result)
+
+    def test_vision_build_of_another_commit_is_a_release_failure(self):
+        api = VisionFake()
+        api.built_commit = 'c' * 40
+        with self.assertRaisesRegex(ReleaseError, 'different commit'):
+            deploy(api, 'vision', None, REVISION, wait=lambda _: None)
+
+    def test_vision_must_build_master_from_its_own_directory(self):
+        for override in [{'uuid': 'different-app'}, {'build_pack': 'dockerimage'},
+                         {'git_repository': 'someone/fork'}, {'git_branch': 'feature'},
+                         {'base_directory': '/packages/dota'}]:
+            with self.subTest(override=override):
+                api = VisionFake(**override)
+                with self.assertRaises(ReleaseError):
+                    deploy(api, 'vision', None, REVISION)
+                self.assertEqual(api.mutations(), [])
+
+    def test_vision_release_requires_a_full_commit(self):
+        for revision in ['', 'HEAD', 'a' * 7]:
+            with self.subTest(revision=revision):
+                api = VisionFake()
+                with self.assertRaises(ReleaseError):
+                    deploy(api, 'vision', None, revision)
+                self.assertEqual(api.calls, [])
+
 
 class ReleaseSelectionTests(unittest.TestCase):
     def setUp(self):
@@ -218,3 +267,16 @@ class ReleaseSelectionTests(unittest.TestCase):
     def test_manual_release_requires_explicit_run(self):
         with self.assertRaises(ReleaseError):
             self.select(manual_run_id='')
+
+    def test_automatic_release_includes_changed_vision_source(self):
+        result = self.select(automatic=True, services=['dota', 'vision'], revision=REVISION, run_id='123')
+        self.assertEqual(result['services'], ['dota', 'vision'])
+
+    def test_manual_vision_release_uses_the_run_commit_without_an_image_manifest(self):
+        self.assertEqual(self.select(selected_service='vision'),
+                         {'services': ['vision'], 'revision': REVISION, 'run_id': '123'})
+
+    def test_manual_vision_release_still_requires_successful_master_ci(self):
+        self.run['conclusion'] = 'failure'
+        with self.assertRaises(ReleaseError):
+            self.select(selected_service='vision')

@@ -19,6 +19,15 @@ calls the image builder for changed services. Each published image gets a
 image digest. Only those services are deployed, using the digest rather than a
 mutable branch tag. Feature branch builds never deploy to production.
 
+Vision (`packages/clip-processor-py`, Coolify app `vision-on-oracle`) is released
+by the same pipeline when files under that directory change. Coolify builds it
+from source as a Compose app with its own Postgres, so it has no GHCR image or
+manifest artifact. The release pins the app's `git_commit_sha` to the CI-tested
+master commit and requires the Coolify deployment to report that same commit.
+Keep Coolify's own auto-deploy off for this app so that releases go through CI
+only. A redeploy from the Coolify UI rebuilds the pinned commit, not master's
+HEAD.
+
 CI and release concurrency must never cancel a running master cutover. Old queued
 automatic releases skip deployment if master has advanced. A manual rollback
 deliberately permits an older successful master release.
@@ -50,7 +59,8 @@ gh workflow run deploy.yml --repo dotabod/backend --ref master \
   -f mode=inspect -f service=all
 ```
 
-The service choices are `all`, `dota`, `steam`, `twitch-chat`, and `twitch-events`.
+The service choices are `all`, `dota`, `steam`, `twitch-chat`, `twitch-events`,
+and `vision`.
 
 | Service | Production app UUID |
 | --- | --- |
@@ -58,12 +68,18 @@ The service choices are `all`, `dota`, `steam`, `twitch-chat`, and `twitch-event
 | steam | wsgwk8s |
 | twitch-chat | zwgkg48 |
 | twitch-events | zwg4g4c |
+| vision | jw4o88gkk8ogkccowk4s84ck (`vision-on-oracle`) |
 
-Each app must use `build_pack=dockerimage`, the corresponding
+Each image app must use `build_pack=dockerimage`, the corresponding
 `ghcr.io/dotabod/<service>` repository, and
 `settings.is_consistent_container_name_enabled=true`. This forces a hard cutover.
 These services are stateful singletons: never enable rolling overlap or a second
 replica. The helper fails rather than silently changing these settings.
+
+Vision must use `build_pack=dockercompose`, `git_repository=dotabod/backend`,
+`git_branch=master`, and `base_directory=/packages/clip-processor-py`. Coolify's
+Compose deployment builds first, then stops the old containers before starting the
+new ones, so it is a hard cutover without the consistent-name setting.
 
 ## Retry or roll back
 
@@ -83,7 +99,9 @@ gh workflow run deploy.yml --repo dotabod/backend --ref master \
 ```
 
 The workflow checks that the run was push-triggered master CI, succeeded, and
-belongs to master's history. It rejects expired or missing manifests. Old CI runs
+belongs to master's history. It rejects expired or missing manifests. Vision has
+no manifest: select `service=vision` explicitly, and any successful master CI run
+pins and rebuilds that run's commit. `service=all` never includes Vision. Old CI runs
 from before release manifests were introduced cannot use this command. For an
 older emergency rollback, use a previously recorded, trusted registry digest in
 Coolify's image tag/hash field as `sha256-<64 hex characters>` and redeploy through
@@ -106,7 +124,8 @@ The proven API sequence is:
 
 1. `GET /api/v1/applications/<uuid>` and check the app and hard-cutover settings.
 2. `PATCH /api/v1/applications/<uuid>` with the desired `docker_registry_image_tag`
-   in Coolify's `sha256-<digest>` format; read it back to confirm.
+   in Coolify's `sha256-<digest>` format (Vision: `git_commit_sha` set to the full
+   commit); read it back to confirm.
 3. `POST /api/v1/deploy?uuid=<uuid>&force=false` and retain the returned deployment UUID.
 4. Poll `GET /api/v1/deployments/<deployment-uuid>`, then read the application again.
 

@@ -8,7 +8,7 @@ This repository contains the Dotabod backend monorepo, including shared packages
 - GitHub CI workflow: `.github/workflows/ci.yml`
 - Manually dispatch CI for a pushed branch: `gh workflow run ci.yml --ref <branch>`
 - Watch the dispatched run: `gh run watch --exit-status`
-- Production deployment: master CI runs checks, publishes changed service images, then calls `.github/workflows/deploy.yml`. Read [the Coolify deployment skill](.agents/skills/dotabod-coolify-deploy/SKILL.md) for inspection, release verification, retries, and rollback. A successful image build alone is not a deployment.
+- Production deployment: master CI runs checks, publishes changed service images, then calls `.github/workflows/deploy.yml`. That release also covers Vision (`packages/clip-processor-py`), which Coolify builds from the tested commit. Read [the Coolify deployment skill](.agents/skills/dotabod-coolify-deploy/SKILL.md) for inspection, release verification, retries, and rollback. A successful image build alone is not a deployment.
 
 ## Production-host resource policy
 
