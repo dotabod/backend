@@ -1,0 +1,121 @@
+name: Vision image smoke
+
+on:
+  pull_request:
+    paths:
+      - 'packages/clip-processor-py/**'
+      - '.github/workflows/vision-image-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Vision image smoke (${{ matrix.runner }})
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Build the Vision image without publishing
+        run: docker build --pull --tag vision-image-smoke packages/clip-processor-py
+
+      - name: Check installed pins and native OCR dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --network none vision-image-smoke bash -n /app/entrypoint.sh
+          docker run --rm --network none vision-image-smoke python -m pip check
+          docker run --rm --network none -i vision-image-smoke python - <<'PY'
+          from importlib.metadata import version
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          assert sys.version_info[:2] == (3, 12), sys.version
+          for raw_line in Path("/app/requirements.txt").read_text(encoding="utf-8").splitlines():
+              line = raw_line.strip()
+              if line and not line.startswith("#"):
+                  name, expected = line.split("==", 1)
+                  actual = version(name)
+                  assert actual == expected, f"{name}: expected {expected}, got {actual}"
+          languages = subprocess.check_output(["tesseract", "--list-langs"], text=True).splitlines()
+          assert {"eng", "rus"} <= set(languages), languages
+          PY
+
+      - name: Exercise the image and disposable PostgreSQL without external network access
+        shell: bash
+        run: |
+          set -euo pipefail
+          cleanup() {
+            local result=$?
+            if [[ "$result" != 0 ]]; then
+              docker logs vision-app || true
+              docker logs vision-db || true
+            fi
+            docker rm -f -v vision-app vision-db >/dev/null 2>&1 || true
+            docker network rm vision-smoke >/dev/null 2>&1 || true
+            exit "$result"
+          }
+          trap cleanup EXIT
+
+          docker pull postgres:14
+          docker network create --internal vision-smoke
+          docker run -d --name vision-db --network vision-smoke \
+            -e POSTGRES_PASSWORD=vision-smoke-password \
+            -e POSTGRES_DB=vision_smoke \
+            postgres:14
+          for _ in {1..30}; do
+            if docker exec vision-db pg_isready -h 127.0.0.1 -U postgres -d vision_smoke; then
+              break
+            fi
+            sleep 1
+          done
+          docker exec vision-db pg_isready -h 127.0.0.1 -U postgres -d vision_smoke
+
+          # The fixture WSGI entry only replaces public asset downloads. Keep the
+          # real app, migrations, Gunicorn worker, and PostgreSQL client.
+          docker run -d --name vision-app --network vision-smoke \
+            -e DATABASE_URL=postgresql://postgres:vision-smoke-password@vision-db:5432/vision_smoke \
+            -e VISION_API_KEY=vision-smoke-api-key \
+            -e PYTHONPATH=/app:/app/src:/app/tests/smoke \
+            vision-image-smoke \
+            gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 4 --timeout 60 vision_image_wsgi:app
+          for _ in {1..30}; do
+            if docker exec vision-app curl -fsS --max-time 2 http://127.0.0.1:5000/health; then
+              break
+            fi
+            sleep 1
+          done
+          docker exec vision-app curl -fsS --max-time 5 http://127.0.0.1:5000/health \
+            | jq -e '.status == "ok"'
+
+          # Health is liveness only. Check the real migration ledger and write a
+          # deterministic draft through the disposable DB, then read it over HTTP.
+          docker exec -i vision-db psql -X -U postgres -d vision_smoke -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          BEGIN
+            IF (SELECT count(*) FROM migrations
+                WHERE name IN ('001_initial_schema.sql', '002_add_match_id.sql')) <> 2
+                OR to_regclass('processing_queue') IS NULL THEN
+              RAISE EXCEPTION 'Vision migrations or queue table are missing';
+            END IF;
+          END;
+          $$;
+          INSERT INTO clip_results (clip_id, clip_url, match_id, results)
+          VALUES ('synthetic-draft', 'https://example.invalid/synthetic-draft', '8900',
+                  '{"is_draft": true, "heroes": [], "draft_player_order": ["Sample Player", null, "Sample Captain", null, null, null, null, null, null, null]}');
+          SQL
+          docker exec vision-app curl -fsS --max-time 5 \
+            -H 'X-API-Key: vision-smoke-api-key' http://127.0.0.1:5000/match/8900 \
+            | jq -e '
+              .match_id == "8900" and .is_draft == true
+              and .heroes_status == "waiting" and .heroes == []
+              and .draft_player_order == ["Sample Player",null,"Sample Captain",null,null,null,null,null,null,null]
+            '

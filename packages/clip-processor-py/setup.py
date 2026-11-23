@@ -3,7 +3,16 @@
 Setup script for the Dota 2 Hero Detection API
 """
 
-from setuptools import setup, find_packages
+from pathlib import Path
+
+from setuptools import find_packages, setup
+
+requirements = Path(__file__).with_name("requirements.txt").read_text(encoding="utf-8")
+runtime_dependencies = [
+    line
+    for raw_line in requirements.splitlines()
+    if (line := raw_line.strip()) and not line.startswith("#")
+]
 
 setup(
     name="clip-processor",
@@ -11,22 +20,8 @@ setup(
     description="Process Twitch clips to extract player names and ranks and detect Dota 2 heroes",
     author="HubSpot",
     packages=find_packages(),
-    python_requires=">=3.8",
-    install_requires=[
-        "opencv-python==4.11.0.86",
-        "pytesseract==0.3.10",
-        "moviepy==1.0.3",
-        "requests==2.32.4",
-        "numpy==1.26.4",
-        "Pillow==11.1.0",
-        "beautifulsoup4==4.12.2",
-        "tqdm==4.66.3",
-        "flask==3.1.3",
-        "gunicorn==23.0.0",
-        "streamlink==6.5.0",
-        "psycopg2-binary==2.9.9",
-        "psutil==5.9.8",
-    ],
+    python_requires=">=3.11,<3.13",
+    install_requires=runtime_dependencies,
     entry_points={
         "console_scripts": [
             "clip-processor=src.dota_hero_detection:main",

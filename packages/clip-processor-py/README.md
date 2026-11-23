@@ -15,7 +15,7 @@ This Python tool processes a Twitch clip to extract player names and ranks from 
 
 ## Requirements
 
-- Python 3.7+
+- Python 3.11 or 3.12 (the Docker image runs 3.12)
 - OpenCV
 - Tesseract OCR
 - Other dependencies listed in `requirements.txt`
@@ -24,7 +24,7 @@ This Python tool processes a Twitch clip to extract player names and ranks from 
 
 ### 1. Install Dependencies
 
-First, ensure you have Python 3.7+ installed. Then install Tesseract OCR:
+First, ensure you have Python 3.11 or 3.12 installed. Then install Tesseract OCR:
 
 **On macOS:**
 
@@ -437,7 +437,7 @@ The Docker configuration is optimized for this single-worker approach, using Gun
 
 ### Prerequisites
 
-- Python 3.9+
+- Python 3.11 or 3.12 (the Docker image runs 3.12)
 - PostgreSQL
 - Tesseract OCR
 
