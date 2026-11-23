@@ -14,7 +14,10 @@ APPS = {
     'steam': 'wsgwk8s',
     'twitch-chat': 'zwgkg48',
     'twitch-events': 'zwg4g4c',
+    'vision': 'jw4o88gkk8ogkccowk4s84ck',
 }
+# Coolify builds these apps from this repository's directory instead of pulling a CI image.
+SOURCE_APPS = {'vision': '/packages/clip-processor-py'}
 
 
 class ReleaseError(Exception):
@@ -62,6 +65,13 @@ def validate_manifest(manifest, service, revision):
 
 def inspect_app(api, service):
     app = api('/applications/' + APPS[service])
+    if service in SOURCE_APPS:
+        # Compose deployments build first, then stop the old containers before starting new ones.
+        if (app.get('uuid') != APPS[service] or app.get('build_pack') != 'dockercompose'
+                or app.get('git_repository') != 'dotabod/backend' or app.get('git_branch') != 'master'
+                or app.get('base_directory') != SOURCE_APPS[service]):
+            raise ReleaseError('The application does not build the requested service from master')
+        return app
     if app.get('uuid') != APPS[service] or app.get('build_pack') != 'dockerimage':
         raise ReleaseError('Unexpected Coolify application or build pack')
     if app.get('docker_registry_image_name') != 'ghcr.io/dotabod/' + service:
@@ -72,14 +82,21 @@ def inspect_app(api, service):
 
 
 def deploy(api, service, manifest, revision, wait=time.sleep):
-    tag = validate_manifest(manifest, service, revision)
+    if service in SOURCE_APPS:
+        if re.fullmatch('[0-9a-f]{40}', revision or '') is None:
+            raise ReleaseError('A full commit SHA is required')
+        # Coolify builds this app itself, so pin the commit that passed CI rather than an image digest.
+        field, pin, previous_key, release = 'git_commit_sha', revision, 'previous_commit', {}
+    else:
+        field, pin, previous_key = 'docker_registry_image_tag', validate_manifest(manifest, service, revision), 'previous_tag'
+        release = {'digest': manifest['digest']}
     app = inspect_app(api, service)
-    previous_tag = app.get('docker_registry_image_tag') or ''
-    emit({'service': service, 'revision': revision, 'previous_tag': previous_tag, 'image_digest': manifest['digest']})
+    release[previous_key] = app.get(field) or ''
+    emit({'service': service, 'revision': revision, **release})
     path = '/applications/' + APPS[service]
-    api(path, 'PATCH', {'docker_registry_image_tag': tag})
-    if inspect_app(api, service).get('docker_registry_image_tag') != tag:
-        raise ReleaseError('Coolify did not confirm the pinned image digest')
+    api(path, 'PATCH', {field: pin})
+    if inspect_app(api, service).get(field) != pin:
+        raise ReleaseError('Coolify did not confirm the pinned release')
     # Do not retry this mutation: a lost response might already have queued a deployment.
     response = api('/deploy?uuid=' + APPS[service] + '&force=false', 'POST')
     deployments = response.get('deployments') or []
@@ -90,7 +107,8 @@ def deploy(api, service, manifest, revision, wait=time.sleep):
         raise ReleaseError('Coolify returned an invalid deployment identifier')
     previous_status = None
     for _ in range(120):
-        status = api('/deployments/' + deployment_id).get('status')
+        deployment = api('/deployments/' + deployment_id)
+        status = deployment.get('status')
         if status != previous_status:
             emit({'service': service, 'deployment_uuid': deployment_id, 'status': status})
             previous_status = status
@@ -101,18 +119,20 @@ def deploy(api, service, manifest, revision, wait=time.sleep):
         wait(5)
     else:
         raise ReleaseError('Timed out waiting for the Coolify deployment')
+    if service in SOURCE_APPS and deployment.get('commit') != revision:
+        raise ReleaseError('Coolify built a different commit than the release')
     # Docker allows 120s of startup grace; Coolify's status refresh can lag it.
     # Keep polling the same completed deployment rather than queueing another one.
     previous_health = None
     for _ in range(60):
         app = inspect_app(api, service)
-        if app.get('docker_registry_image_tag') != tag:
-            raise ReleaseError('The configured image changed during deployment')
+        if app.get(field) != pin:
+            raise ReleaseError('The configured release changed during deployment')
         if app.get('status') != previous_health:
             emit({'service': service, 'deployment_uuid': deployment_id, 'application_status': app.get('status')})
             previous_health = app.get('status')
         if app.get('status') == 'running:healthy':
-            result = {'service': service, 'deployment_uuid': deployment_id, 'revision': revision, 'digest': manifest['digest'], 'previous_tag': previous_tag, 'status': app['status']}
+            result = {'service': service, 'deployment_uuid': deployment_id, 'revision': revision, **release, 'status': app['status']}
             emit(result)
             return result
         wait(5)
@@ -150,6 +170,9 @@ def prepare(github, mode, services, revision, run_id, selected_service, manual_r
             artifact['name'] == 'coolify-image-' + service and not artifact.get('expired')
             for artifact in artifacts
         ) and selected_service in ['all', service]]
+        if selected_service in SOURCE_APPS:
+            # Coolify rebuilds this app from the run's commit, so it has no image manifest to retain.
+            services = [selected_service]
         if not services:
             raise ReleaseError('No retained release manifest exists for the selected service')
     if re.fullmatch('[0-9a-f]{40}', revision or '') is None:
@@ -191,13 +214,14 @@ def main():
     api = lambda path, method='GET', data=None: request_json(base + path, key, method, data)
     if os.environ['DEPLOY_MODE'] == 'inspect':
         app = inspect_app(api, service)
-        emit({'service': service, 'status': app.get('status'), 'image_tag': app.get('docker_registry_image_tag'), 'hard_cutover': True})
+        pin = {'commit': app.get('git_commit_sha')} if service in SOURCE_APPS else {'image_tag': app.get('docker_registry_image_tag')}
+        emit({'service': service, 'status': app.get('status'), **pin, 'hard_cutover': True})
         return
     revision = os.environ['RELEASE_REVISION']
     if os.environ['AUTOMATIC_RELEASE'] == 'true' and github('/git/ref/heads/master')['object']['sha'] != revision:
         emit({'service': service, 'skipped': 'Master advanced before deployment'})
         return
-    manifest = json.loads(Path('release/' + service + '.json').read_text())
+    manifest = None if service in SOURCE_APPS else json.loads(Path('release/' + service + '.json').read_text())
     result = deploy(api, service, manifest, revision)
     with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
         summary.write('### ' + service + '\n\n' + '\n'.join('- ' + key + ': `' + value + '`' for key, value in result.items()) + '\n')

@@ -4,7 +4,7 @@ on:
   workflow_call:
     outputs:
       services:
-        description: Services whose images were published
+        description: Services to release (published images, plus Vision, which Coolify builds from source)
         value: ${{ jobs.changes.outputs.services }}
   workflow_dispatch:
   push:
@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       services: ${{ steps.select.outputs.services }}
+      images: ${{ steps.select.outputs.images }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -67,19 +68,24 @@ jobs:
               - 'package.json'
               - 'pnpm-lock.yaml'
               - '.github/workflows/builder.yml'
+            vision:
+              - 'packages/clip-processor-py/**'
 
       - name: Select services to build
         id: select
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo 'services=["dota","twitch-chat","steam","twitch-events"]' >> "$GITHUB_OUTPUT"
+            services='["dota","twitch-chat","steam","twitch-events"]'
           else
-            echo 'services=${{ steps.filter.outputs.changes }}' >> "$GITHUB_OUTPUT"
+            services='${{ steps.filter.outputs.changes }}'
           fi
+          echo "services=$services" >> "$GITHUB_OUTPUT"
+          # Coolify builds Vision from the released commit, so it has no image to publish here.
+          echo "images=$(jq -c 'map(select(. != "vision"))' <<< "$services")" >> "$GITHUB_OUTPUT"
 
   build:
     needs: changes
-    if: needs.changes.outputs.services != '[]'
+    if: needs.changes.outputs.images != '[]'
     # Native arm64 runner (free on public repos) — avoids the ~5-10x QEMU
     # emulation overhead from building linux/arm64 on ubuntu-latest (amd64).
     runs-on: ubuntu-24.04-arm
@@ -89,7 +95,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: ${{ fromJSON(needs.changes.outputs.services) }}
+        service: ${{ fromJSON(needs.changes.outputs.images) }}
     steps:
       - uses: actions/checkout@v7
 

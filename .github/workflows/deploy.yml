@@ -24,7 +24,7 @@ on:
         default: inspect
       service:
         type: choice
-        options: [all, dota, steam, twitch-chat, twitch-events]
+        options: [all, dota, steam, twitch-chat, twitch-events, vision]
         default: all
       ci_run_id:
         description: Successful master CI run containing the desired image manifests (deploy only)
@@ -76,7 +76,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Download the image manifest from its build run
-        if: inputs.mode == 'deploy'
+        # Vision has no image manifest: Coolify builds it from the release commit.
+        if: inputs.mode == 'deploy' && matrix.service != 'vision'
         uses: actions/download-artifact@v8
         with:
           name: coolify-image-${{ matrix.service }}
