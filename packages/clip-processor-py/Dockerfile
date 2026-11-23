@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.12-slim-bookworm
 
 # Install system dependencies including tesseract-ocr
 RUN apt-get update && \
@@ -25,14 +25,10 @@ WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Now the source and the editable install that links it. Every dependency is already
-# satisfied above, so this resolves without hitting the network. Dependency resolution
-# is deliberately left on rather than passing --no-deps: if setup.py ever gains a
-# package that requirements.txt lacks, it gets installed here instead of going missing
-# at runtime.
-COPY setup.py ./
+# The editable install uses the same dependency pins as the cached layer above.
+COPY setup.py MANIFEST.in ./
 COPY src/ ./src/
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir --no-deps -e . && pip check
 
 # Copy the rest of the application code
 COPY . ./
