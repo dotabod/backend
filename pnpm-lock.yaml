@@ -97,8 +97,8 @@ importers:
         specifier: ^1.19.1
         version: 1.27.0
       dotaconstants:
-        specifier: github:dotabod/dotaconstants#b97d986dd3b6d53b6b59fde8dd3f3369f4571767
-        version: https://codeload.github.com/dotabod/dotaconstants/tar.gz/b97d986dd3b6d53b6b59fde8dd3f3369f4571767
+        specifier: github:dotabod/dotaconstants#279f43fceb8a9fa6d95ebd09cdb14efd892c779d
+        version: https://codeload.github.com/dotabod/dotaconstants/tar.gz/279f43fceb8a9fa6d95ebd09cdb14efd892c779d
       express:
         specifier: ^4.21.2
         version: 4.22.2
@@ -2244,9 +2244,9 @@ packages:
     resolution: {gitHosted: true, integrity: sha512-iWo37QWJZXV7nfBKVe1D1OCs10ltkSR67GN2DTVz+PDH0+apWbXajSfEfuK5LYY6sU7U64/LomN+Yer15fo+Jw==, tarball: https://codeload.github.com/dotabod/node-dota2/tar.gz/4a1a09537d5bead430c36427b9a50b770abe56fc}
     version: 7.0.3
 
-  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/b97d986dd3b6d53b6b59fde8dd3f3369f4571767:
-    resolution: {gitHosted: true, integrity: sha512-/bPPfi7e6NtPOWaHVQLevL03cjGcD7Y7J4sDwBEC30imp1wvFW21ZCdFE0QptkG774dOxmzf2grZUvFu16+dIA==, tarball: https://codeload.github.com/dotabod/dotaconstants/tar.gz/b97d986dd3b6d53b6b59fde8dd3f3369f4571767}
-    version: 10.8.28
+  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/279f43fceb8a9fa6d95ebd09cdb14efd892c779d:
+    resolution: {gitHosted: true, integrity: sha512-PLCfUUDT5GY0iXVxZy2y3+u4lYm6SJVEG9InU0IvC2n7pPV9YsKwOWJiUAsNFc8tcifJw2A1/vTtcurtJYAcpA==, tarball: https://codeload.github.com/dotabod/dotaconstants/tar.gz/279f43fceb8a9fa6d95ebd09cdb14efd892c779d}
+    version: 10.8.29
 
   dts-resolver@3.0.0:
     resolution: {integrity: sha512-1T1f+z+4tl9XD+m+0HBgWoL/nm0bOIffyWaUuUSBlFg/86IWvfx+wjNaO/ybU0AJzG9/Mi5hBUgGV6zCmWEN7Q==}
@@ -4012,12 +4012,15 @@ packages:
 
   yuku-ast@0.9.3:
     resolution: {integrity: sha512-Kt0PXlPCXdKF1fWFTl7N3DaxsVk6DHF8VAXHJMkwPtJnWYgbx20pYgGSweuC/86mIM7k1NUITQ4JffgOLUWTCw==}
+    deprecated: 'Yuku is now one package with one core. Use "yuku" instead: https://yuku.fyi/javascript/. Existing installs keep working but get no more fixes.'
 
   yuku-codegen@0.9.3:
     resolution: {integrity: sha512-7oTWwetHiMSyrVPFb8089lBBqkU1gaeQZyumNBJ0t5hocMQRaWhnMeSXTz7J1xm/rcw9+ePsajORdZbub2C35w==}
+    deprecated: 'Yuku is now one package with one core. Use "yuku" instead: https://yuku.fyi/javascript/. Existing installs keep working but get no more fixes.'
 
   yuku-parser@0.9.3:
     resolution: {integrity: sha512-96wPoHnwaXfkZv7UIOUkDb+s7ZH8lv8Qtg+MxdvHUV1LFa5jV9iKOaams1942YQt+krFQrWiD6lSg2ermv5kHA==}
+    deprecated: 'Yuku is now one package with one core. Use "yuku" instead: https://yuku.fyi/javascript/. Existing installs keep working but get no more fixes.'
 
   zod@4.5.4:
     resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
@@ -5476,7 +5479,7 @@ snapshots:
       steam-resources: https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45
       winston: 3.19.0
 
-  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/b97d986dd3b6d53b6b59fde8dd3f3369f4571767: {}
+  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/279f43fceb8a9fa6d95ebd09cdb14efd892c779d: {}
 
   dts-resolver@3.0.0(oxc-resolver@11.24.2):
     optionalDependencies:
