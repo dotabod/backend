@@ -69,6 +69,43 @@ describe(initUserSubscriptions, () => {
     }
   })
 
+  it('skips channel.chat.message on resync when non-chat subscriptions already exist and the bot is banned in the channel', async () => {
+    const savedBotId = process.env.TWITCH_BOT_PROVIDERID
+    const savedClientId = process.env.TWITCH_CLIENT_ID
+    process.env.TWITCH_BOT_PROVIDERID = 'bot-1'
+    process.env.TWITCH_CLIENT_ID = 'client-1'
+    try {
+      seedSubscriptions(
+        '193001897',
+        REQUIRED.filter((type) => type !== 'channel.chat.message')
+      )
+      state.addModeratorError = {
+        _body: '{"error":"Bad Request","status":400,"message":"user is banned"}',
+      }
+      const ok = await initUserSubscriptions('193001897')
+      expect(ok).toBeTruthy()
+      expect(state.subscribeCalls).toHaveLength(0)
+      expect(state.commandDisableCalls).toContainEqual(
+        expect.objectContaining({
+          kind: 'disable',
+          reason: 'BOT_BANNED',
+          userId: 'user-1',
+        })
+      )
+
+      // Subsequent resync once already marked BOT_BANNED skips chat sub without duplicate disable writes.
+      state.commandDisableCalls = []
+      state.dbSettings = [{ disable_reason: 'BOT_BANNED', key: 'commandDisable', value: true }]
+      const okAgain = await initUserSubscriptions('193001897')
+      expect(okAgain).toBeTruthy()
+      expect(state.subscribeCalls).toHaveLength(0)
+      expect(state.commandDisableCalls).toHaveLength(0)
+    } finally {
+      process.env.TWITCH_BOT_PROVIDERID = savedBotId
+      process.env.TWITCH_CLIENT_ID = savedClientId
+    }
+  })
+
   it('does nothing when all required subscriptions already exist', async () => {
     seedSubscriptions('111', REQUIRED)
     await initUserSubscriptions('111')

@@ -214,6 +214,17 @@ const recordChannelBotBan = async function recordChannelBotBan(
     if (account?.userId === undefined || account.userId.length === 0) {
       return
     }
+    const { data: settings } = await supabase
+      .from('settings')
+      .select('value, disable_reason')
+      .eq('userId', account.userId)
+      .eq('key', 'commandDisable')
+    const alreadyBotBanned = settings?.some(
+      (setting) => setting.value === true && setting.disable_reason === 'BOT_BANNED'
+    )
+    if (alreadyBotBanned === true) {
+      return
+    }
     await commandDisable.disable(account.userId, 'BOT_BANNED', {
       additional_info: 'Bot is banned in broadcaster chat',
       ban_detected_at: new Date().toISOString(),
@@ -235,13 +246,14 @@ export const initUserSubscriptions = async function initUserSubscriptions(
   try {
     const existingSubscriptions = eventSubMap.get(providerAccountId) ?? {}
     const hadExistingSubscriptions = Object.keys(existingSubscriptions).length > 0
+    const needsChatSubscription = existingSubscriptions[CHAT_SUBSCRIPTION_TYPE] === undefined
     let botBannedInChannel = false
 
-    // Run moderator check before subscribing on initial setup so that (a) Twitch
+    // Run moderator check whenever channel.chat.message is missing so that (a) Twitch
     // authorizes channel.chat.message when the broadcaster lacks channel:bot, and
-    // (b) a per-channel bot ban is caught cleanly instead of triggering a false
-    // 403 -> TOKEN_REVOKED revoke loop.
-    if (!hadExistingSubscriptions && !isBanned) {
+    // (b) a per-channel bot ban is caught cleanly on both initial setup and later
+    // resyncs instead of triggering a false 403 -> TOKEN_REVOKED revoke loop.
+    if (needsChatSubscription && !isBanned) {
       const moderatorStatus = await setModeratorStatus(providerAccountId)
       if (moderatorStatus === 'banned') {
         botBannedInChannel = true
