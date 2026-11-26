@@ -83,23 +83,31 @@ describe(initUserSubscriptions, () => {
         _body: '{"error":"Bad Request","status":400,"message":"user is banned"}',
       }
       const ok = await initUserSubscriptions('193001897')
-      expect(ok).toBeTruthy()
-      expect(state.subscribeCalls).toHaveLength(0)
-      expect(state.commandDisableCalls).toContainEqual(
-        expect.objectContaining({
-          kind: 'disable',
-          reason: 'BOT_BANNED',
-          userId: 'user-1',
-        })
-      )
+      expect({
+        disableReasons: state.commandDisableCalls.map((call) =>
+          call.kind === 'disable' ? `${call.userId}:${call.reason}` : call.kind
+        ),
+        ok,
+        subscribeCalls: state.subscribeCalls,
+      }).toStrictEqual({
+        disableReasons: ['user-1:BOT_BANNED'],
+        ok: true,
+        subscribeCalls: [],
+      })
 
       // Subsequent resync once already marked BOT_BANNED skips chat sub without duplicate disable writes.
       state.commandDisableCalls = []
       state.dbSettings = [{ disable_reason: 'BOT_BANNED', key: 'commandDisable', value: true }]
       const okAgain = await initUserSubscriptions('193001897')
-      expect(okAgain).toBeTruthy()
-      expect(state.subscribeCalls).toHaveLength(0)
-      expect(state.commandDisableCalls).toHaveLength(0)
+      expect({
+        commandDisableCalls: state.commandDisableCalls,
+        okAgain,
+        subscribeCalls: state.subscribeCalls,
+      }).toStrictEqual({
+        commandDisableCalls: [],
+        okAgain: true,
+        subscribeCalls: [],
+      })
     } finally {
       process.env.TWITCH_BOT_PROVIDERID = savedBotId
       process.env.TWITCH_CLIENT_ID = savedClientId
