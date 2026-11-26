@@ -97,8 +97,8 @@ importers:
         specifier: ^1.19.1
         version: 1.27.0
       dotaconstants:
-        specifier: github:dotabod/dotaconstants#279f43fceb8a9fa6d95ebd09cdb14efd892c779d
-        version: https://codeload.github.com/dotabod/dotaconstants/tar.gz/279f43fceb8a9fa6d95ebd09cdb14efd892c779d
+        specifier: github:dotabod/dotaconstants#12e4afcbb9aa7f2b99f244a0d4e7edffb5e11b27
+        version: https://codeload.github.com/dotabod/dotaconstants/tar.gz/12e4afcbb9aa7f2b99f244a0d4e7edffb5e11b27
       express:
         specifier: ^4.21.2
         version: 4.22.2
@@ -2244,9 +2244,9 @@ packages:
     resolution: {gitHosted: true, integrity: sha512-iWo37QWJZXV7nfBKVe1D1OCs10ltkSR67GN2DTVz+PDH0+apWbXajSfEfuK5LYY6sU7U64/LomN+Yer15fo+Jw==, tarball: https://codeload.github.com/dotabod/node-dota2/tar.gz/4a1a09537d5bead430c36427b9a50b770abe56fc}
     version: 7.0.3
 
-  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/279f43fceb8a9fa6d95ebd09cdb14efd892c779d:
-    resolution: {gitHosted: true, integrity: sha512-PLCfUUDT5GY0iXVxZy2y3+u4lYm6SJVEG9InU0IvC2n7pPV9YsKwOWJiUAsNFc8tcifJw2A1/vTtcurtJYAcpA==, tarball: https://codeload.github.com/dotabod/dotaconstants/tar.gz/279f43fceb8a9fa6d95ebd09cdb14efd892c779d}
-    version: 10.8.29
+  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/12e4afcbb9aa7f2b99f244a0d4e7edffb5e11b27:
+    resolution: {gitHosted: true, integrity: sha512-zJ4dEcsXIsGTmGBeobj+TuEcF6vM2oKJ2NF81/GSgaf4Mm0rDRyLOevGO9ym0jbKwM6L6+mrlaGsUYsC3vHelg==, tarball: https://codeload.github.com/dotabod/dotaconstants/tar.gz/12e4afcbb9aa7f2b99f244a0d4e7edffb5e11b27}
+    version: 10.8.30
 
   dts-resolver@3.0.0:
     resolution: {integrity: sha512-1T1f+z+4tl9XD+m+0HBgWoL/nm0bOIffyWaUuUSBlFg/86IWvfx+wjNaO/ybU0AJzG9/Mi5hBUgGV6zCmWEN7Q==}
@@ -5479,7 +5479,7 @@ snapshots:
       steam-resources: https://codeload.github.com/dotabod/node-steam-resources/tar.gz/57ee94899194c3c5a090722632ef3b5df00a3e45
       winston: 3.19.0
 
-  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/279f43fceb8a9fa6d95ebd09cdb14efd892c779d: {}
+  dotaconstants@https://codeload.github.com/dotabod/dotaconstants/tar.gz/12e4afcbb9aa7f2b99f244a0d4e7edffb5e11b27: {}
 
   dts-resolver@3.0.0(oxc-resolver@11.24.2):
     optionalDependencies:
