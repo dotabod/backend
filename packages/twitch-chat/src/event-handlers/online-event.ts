@@ -41,7 +41,7 @@ export const onlineEvent = function onlineEvent(data: { payload: { event: Twitch
         return
       }
 
-      if (user?.userId) {
+      if (user?.userId !== undefined && user.userId.length > 0) {
         const { error: updateError } = await supabase
           .from('users')
           .update({
