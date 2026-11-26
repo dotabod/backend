@@ -5,7 +5,12 @@ import { is8500Plus } from '../../../utils/index'
 import { getStreamDelay } from '../../get-stream-delay'
 import { announceCapturedCosmetics } from '../../lib/announce-cosmetics'
 import { DRAFT_CLIP_OPTS, GAMEPLAY_CLIP_OPTS, scheduleClip } from '../../lib/clip-schedule'
-import { draftStartByMatchId, GLOBAL_DELAY, gameInProgressClipByMatchId } from '../../lib/consts'
+import {
+  draftClipByMatchId,
+  draftStartByMatchId,
+  GLOBAL_DELAY,
+  gameInProgressClipByMatchId,
+} from '../../lib/consts'
 import type { allStates } from '../../lib/consts'
 import { isPlayingMatch } from '../../lib/is-playing-match'
 import eventHandler from '../event-handler'
@@ -80,7 +85,14 @@ eventHandler.registerEvent('map:game_state', {
 
     // Create a clip when the draft starts to get a list of players
     if (gameState === 'DOTA_GAMERULES_STATE_PLAYER_DRAFT') {
-      draftStartByMatchId.add(dotaClient.client.gsi?.map?.matchid ?? '')
+      const matchId = dotaClient.client.gsi?.map?.matchid ?? ''
+      draftStartByMatchId.add(matchId)
+      if (matchId.length > 0 && draftClipByMatchId.has(matchId)) {
+        return
+      }
+      if (matchId.length > 0) {
+        draftClipByMatchId.add(matchId)
+      }
       // 46 seconds
       const DRAFT_CLIP_DELAY_MS = 46_000
       const streamDelay = getStreamDelay(dotaClient.client.settings, dotaClient.client.subscription)

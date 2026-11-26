@@ -49,6 +49,7 @@ describe(onlineEvent, () => {
     onlineEvent(evt('b1'))
     await flushMacrotasks()
     expect(state.userUpdates).toHaveLength(0)
+    expect(state.logError).toHaveLength(0)
   })
 })
 

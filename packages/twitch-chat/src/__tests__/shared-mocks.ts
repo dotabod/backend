@@ -94,6 +94,7 @@ export const resetState = function resetState() {
 interface SupabaseBuilder {
   select: () => SupabaseBuilder
   eq: (col: string, val: string) => SupabaseBuilder
+  maybeSingle: () => Promise<{ data: { userId: string } | null; error: Error | null }>
   single: () => Promise<{ data: { userId: string } | null; error: Error | null }>
   update: (values: UserUpdateValues) => SupabaseUpdateBuilder
 }
@@ -105,6 +106,8 @@ interface SupabaseUpdateBuilder {
 const createSupabaseBuilder = function createSupabaseBuilder() {
   const builder: SupabaseBuilder = {
     eq: () => builder,
+    maybeSingle: async () =>
+      await Promise.resolve({ data: state.dbAccount, error: state.accountError }),
     select: () => builder,
     single: async () => await Promise.resolve({ data: state.dbAccount, error: state.accountError }),
     update: (values: UserUpdateValues) => ({

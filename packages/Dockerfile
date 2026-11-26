@@ -69,6 +69,6 @@ ENV SERVICE_CONTEXT=$BUILD_CONTEXT
 # Reports `unhealthy` when steam's GC has been dead/stale (visibility + alerting;
 # the app self-restarts via process.exit once the GC is unrecoverable). Other
 # services short-circuit to exit 0.
-HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --start-interval=5s --retries=3 \
   CMD node healthcheck.mjs
 CMD ["sh", "-c", "exec node ${CPU_PROF:+--cpu-prof --cpu-prof-dir=/tmp/profiles} dist/index.js"]

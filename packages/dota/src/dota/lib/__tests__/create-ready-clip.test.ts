@@ -352,4 +352,110 @@ describe(createReadyClip, () => {
     expect(result).toBeNull()
     expect(getCreateCalls()).toBe(1)
   })
+
+  it('backs off before retrying when Twitch returns 429 Too Many Requests', async () => {
+    const waits: number[] = []
+    let createCalls = 0
+    const rateLimitError: Error & { _statusCode?: number; body?: string } = Object.assign(
+      new Error('Encountered HTTP status code 429: Too Many Requests'),
+      {
+        _statusCode: 429,
+        body: '{"error":"Too Many Requests","status":429,"message":"Request rate limited."}',
+      }
+    )
+    const api = {
+      callApi: async () => {
+        createCalls += 1
+        if (createCalls <= 2) {
+          return await Promise.reject(rateLimitError)
+        }
+        return await Promise.resolve({ data: [{ id: 'recovered-clip' }] })
+      },
+      clips: {
+        getClipById: async () => await Promise.resolve({ duration: 30 }),
+      },
+    }
+
+    const result = await createReadyClip(
+      api,
+      'acct',
+      { maxAttempts: 3, pollAttempts: 2, pollIntervalMs: 5000 },
+      '[Draft Clip]',
+      LOG_CONTEXT,
+      {
+        logger: noopLogger,
+        wait: async (milliseconds: number) => {
+          waits.push(milliseconds)
+          await Promise.resolve()
+        },
+      }
+    )
+
+    expect(result).toBe('recovered-clip')
+    expect(createCalls).toBe(3)
+    expect(waits).toStrictEqual([5000, 10_000])
+  })
+
+  it('does not wait after the final failed createClip attempt', async () => {
+    const waits: number[] = []
+    const rateLimitError = Object.assign(new Error('Too Many Requests'), { statusCode: 429 })
+    const api = {
+      callApi: async () => await Promise.reject(rateLimitError),
+      clips: {
+        getClipById: async () => await Promise.resolve({ duration: 0 }),
+      },
+    }
+
+    const result = await createReadyClip(
+      api,
+      'acct',
+      { maxAttempts: 2, pollAttempts: 2, pollIntervalMs: 5000 },
+      '[Draft Clip]',
+      LOG_CONTEXT,
+      {
+        logger: noopLogger,
+        wait: async (milliseconds: number) => {
+          waits.push(milliseconds)
+          await Promise.resolve()
+        },
+      }
+    )
+
+    expect(result).toBeNull()
+    expect(waits).toStrictEqual([5000])
+  })
+
+  it('skips rate-limit backoff and returns null when waiting would exceed deadlineMs', async () => {
+    const waits: number[] = []
+    let createCalls = 0
+    const rateLimitError = Object.assign(new Error('Too Many Requests'), { statusCode: 429 })
+    const api = {
+      callApi: async () => {
+        createCalls += 1
+        return await Promise.reject(rateLimitError)
+      },
+      clips: {
+        getClipById: async () => await Promise.resolve({ duration: 0 }),
+      },
+    }
+
+    const result = await createReadyClip(
+      api,
+      'acct',
+      { deadlineMs: 1000, maxAttempts: 2, pollAttempts: 2, pollIntervalMs: 5000 },
+      '[Draft Clip]',
+      LOG_CONTEXT,
+      {
+        logger: noopLogger,
+        wait: async (milliseconds: number) => {
+          waits.push(milliseconds)
+          await Promise.resolve()
+        },
+      }
+    )
+
+    expect(result).toBeNull()
+    expect(createCalls).toBe(1)
+    expect(waits).toStrictEqual([])
+  })
 })

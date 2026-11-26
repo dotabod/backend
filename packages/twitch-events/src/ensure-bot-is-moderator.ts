@@ -3,9 +3,11 @@ import { z } from 'zod'
 
 const moderatorErrorSchema = z.object({ _body: z.string() })
 
+type ModeratorStatus = 'banned' | 'error' | 'ok'
+
 export const ensureBotIsModerator = async function ensureBotIsModerator(
   broadcasterId: string
-): Promise<void> {
+): Promise<ModeratorStatus> {
   try {
     const botProviderId = process.env.TWITCH_BOT_PROVIDERID
     const clientId = process.env.TWITCH_CLIENT_ID
@@ -19,7 +21,7 @@ export const ensureBotIsModerator = async function ensureBotIsModerator(
         broadcasterId,
         hasBotId: Boolean(botProviderId),
       })
-      return
+      return 'error'
     }
 
     const api = await getTwitchAPI(broadcasterId)
@@ -27,11 +29,18 @@ export const ensureBotIsModerator = async function ensureBotIsModerator(
 
     try {
       await api.moderation.addModerator(broadcasterId, botProviderId)
+      return 'ok'
     } catch (moderatorError) {
       const parsedError = moderatorErrorSchema.safeParse(moderatorError)
       if (parsedError.success && parsedError.data._body.includes('user is already a mod')) {
         logger.debug('[TWITCHEVENTS] Bot is already a moderator', { broadcasterId })
-        return
+        return 'ok'
+      }
+      if (parsedError.success && parsedError.data._body.includes('user is banned')) {
+        logger.warn('[TWITCHEVENTS] Bot is banned in channel, cannot add as moderator', {
+          broadcasterId,
+        })
+        return 'banned'
       }
       throw moderatorError
     }
@@ -40,5 +49,6 @@ export const ensureBotIsModerator = async function ensureBotIsModerator(
       broadcasterId,
       error,
     })
+    return 'error'
   }
 }

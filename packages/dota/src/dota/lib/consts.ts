@@ -120,4 +120,5 @@ export const pendingCheckAuth = new Map<string, boolean>()
 export const lookingupToken = new Map<string, boolean>()
 
 export const draftStartByMatchId = new MatchIdMemory()
+export const draftClipByMatchId = new MatchIdMemory()
 export const gameInProgressClipByMatchId = new MatchIdMemory()

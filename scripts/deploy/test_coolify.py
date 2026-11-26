@@ -150,10 +150,10 @@ class CoolifyReleaseTests(unittest.TestCase):
         api = CoolifyFake(statuses=['finished'], status='running:unhealthy')
         waits = []
 
-        with self.assertRaisesRegex(ReleaseError, 'healthy'):
+        with self.assertRaisesRegex(ReleaseError, 'healthy.*running:unhealthy'):
             deploy(api, 'dota', manifest(), REVISION, wait=waits.append)
 
-        self.assertEqual(waits, [5] * 60)
+        self.assertEqual(waits, [5] * 84)
         self.assertEqual(len([call for call in api.calls if call[0] == 'POST']), 1)
 
     def test_different_returned_resource_is_a_release_failure(self):

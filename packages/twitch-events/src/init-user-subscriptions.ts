@@ -1,6 +1,12 @@
 import { setTimeout as delay } from 'node:timers/promises'
 
-import { checkBotStatus, fetchConduitId, logger } from '@dotabod/shared-utils'
+import {
+  checkBotStatus,
+  commandDisable,
+  fetchConduitId,
+  logger,
+  supabase,
+} from '@dotabod/shared-utils'
 
 import { eventSubMap } from './chat-sub-ids'
 import { ensureBotIsModerator } from './ensure-bot-is-moderator'
@@ -183,11 +189,37 @@ const subscribeToTypes = async function subscribeToTypes(
 
 const setModeratorStatus = async function setModeratorStatus(
   providerAccountId: string
-): Promise<void> {
+): Promise<'banned' | 'error' | 'ok'> {
   try {
-    await ensureBotIsModerator(providerAccountId)
+    return await ensureBotIsModerator(providerAccountId)
   } catch (error) {
     logger.debug('[TWITCHEVENTS] Failed to set moderator status', {
+      error: error instanceof Error ? error.message : String(error),
+      providerAccountId,
+    })
+    return 'error'
+  }
+}
+
+const recordChannelBotBan = async function recordChannelBotBan(
+  providerAccountId: string
+): Promise<void> {
+  try {
+    const { data: account } = await supabase
+      .from('accounts')
+      .select('userId')
+      .eq('provider', 'twitch')
+      .eq('providerAccountId', providerAccountId)
+      .single()
+    if (account?.userId === undefined || account.userId.length === 0) {
+      return
+    }
+    await commandDisable.disable(account.userId, 'BOT_BANNED', {
+      additional_info: 'Bot is banned in broadcaster chat',
+      ban_detected_at: new Date().toISOString(),
+    })
+  } catch (error) {
+    logger.warn('[TWITCHEVENTS] Failed to record BOT_BANNED disable reason', {
       error: error instanceof Error ? error.message : String(error),
       providerAccountId,
     })
@@ -203,9 +235,25 @@ export const initUserSubscriptions = async function initUserSubscriptions(
   try {
     const existingSubscriptions = eventSubMap.get(providerAccountId) ?? {}
     const hadExistingSubscriptions = Object.keys(existingSubscriptions).length > 0
+    let botBannedInChannel = false
+
+    // Run moderator check before subscribing on initial setup so that (a) Twitch
+    // authorizes channel.chat.message when the broadcaster lacks channel:bot, and
+    // (b) a per-channel bot ban is caught cleanly instead of triggering a false
+    // 403 -> TOKEN_REVOKED revoke loop.
+    if (!hadExistingSubscriptions && !isBanned) {
+      const moderatorStatus = await setModeratorStatus(providerAccountId)
+      if (moderatorStatus === 'banned') {
+        botBannedInChannel = true
+        await recordChannelBotBan(providerAccountId)
+      }
+    }
+
+    const skipChatSubscription = isBanned || botBannedInChannel
     const missingTypes = REQUIRED_SUBSCRIPTION_TYPES.filter(
       (type) =>
-        existingSubscriptions[type] === undefined && !(type === CHAT_SUBSCRIPTION_TYPE && isBanned)
+        existingSubscriptions[type] === undefined &&
+        !(type === CHAT_SUBSCRIPTION_TYPE && skipChatSubscription)
     )
     if (missingTypes.length === 0) {
       return true
@@ -234,6 +282,7 @@ export const initUserSubscriptions = async function initUserSubscriptions(
       })
     } else {
       logger.info('[TWITCHEVENTS] Initial subscription setup', {
+        botBannedInChannel,
         criticalFailed: results.criticalFailed,
         criticalSuccess: results.criticalSuccess,
         failed: results.failed,
@@ -241,9 +290,6 @@ export const initUserSubscriptions = async function initUserSubscriptions(
         success: results.success,
         total: results.total,
       })
-      if (!isBanned) {
-        await setModeratorStatus(providerAccountId)
-      }
     }
 
     return results.criticalFailed === 0

@@ -121,10 +121,11 @@ def deploy(api, service, manifest, revision, wait=time.sleep):
         raise ReleaseError('Timed out waiting for the Coolify deployment')
     if service in SOURCE_APPS and deployment.get('commit') != revision:
         raise ReleaseError('Coolify built a different commit than the release')
-    # Docker allows 120s of startup grace; Coolify's status refresh can lag it.
-    # Keep polling the same completed deployment rather than queueing another one.
+    # Docker allows 120s of startup grace, and Coolify's sentinel force-refresh
+    # interval defaults to 300s (plus up to 60s push interval), so allow 7m (84 * 5s)
+    # before timing out rather than queueing another deployment.
     previous_health = None
-    for _ in range(60):
+    for _ in range(84):
         app = inspect_app(api, service)
         if app.get(field) != pin:
             raise ReleaseError('The configured release changed during deployment')
@@ -136,7 +137,9 @@ def deploy(api, service, manifest, revision, wait=time.sleep):
             emit(result)
             return result
         wait(5)
-    raise ReleaseError('The deployed application did not become healthy')
+    raise ReleaseError(
+        'The deployed application did not become healthy (last status: ' + str(previous_health or 'unknown') + ')'
+    )
 
 
 def prepare(github, mode, services, revision, run_id, selected_service, manual_run_id, automatic):

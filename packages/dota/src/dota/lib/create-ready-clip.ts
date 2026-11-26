@@ -29,6 +29,7 @@ export interface CreateReadyClipOptions {
   maxAttempts: number
   pollAttempts: number
   pollIntervalMs: number
+  createRetryDelayMs?: number
   initialDelayMs?: number
   deadlineMs?: number
   durationSeconds?: number
@@ -69,6 +70,7 @@ interface ClipWorkflow {
 }
 
 const clipErrorSchema = z.object({
+  _statusCode: z.number().optional(),
   body: z.string().optional(),
   message: z.string().optional(),
   statusCode: z.number().optional(),
@@ -108,7 +110,7 @@ const createClipWithDuration = async function createClipWithDuration(
 }
 
 const isChannelOfflineError = function isChannelOfflineError(error: ClipError | null): boolean {
-  if (error?.statusCode !== 404) {
+  if (error?.statusCode !== 404 && error?._statusCode !== 404) {
     return false
   }
   return /channel offline|stream not live/iu.test(`${error.body ?? ''} ${error.message ?? ''}`)
@@ -118,9 +120,35 @@ const isMissingScopeError = function isMissingScopeError(error: ClipError | null
   return /requested scopes|can not be upgraded/iu.test(error?.message ?? '')
 }
 
+const isRateLimitError = function isRateLimitError(error: ClipError | null): boolean {
+  if (error?.statusCode === 429 || error?._statusCode === 429) {
+    return true
+  }
+  return /status code 429|too many requests|rate limit/iu.test(
+    `${error?.body ?? ''} ${error?.message ?? ''}`
+  )
+}
+
 const isOverDeadline = function isOverDeadline(workflow: ClipWorkflow): boolean {
   const { deadlineMs } = workflow.options
   return deadlineMs !== undefined && Date.now() - workflow.startTime > deadlineMs
+}
+
+const wouldExceedDeadline = function wouldExceedDeadline(
+  workflow: ClipWorkflow,
+  delayMs: number
+): boolean {
+  const { deadlineMs } = workflow.options
+  return deadlineMs !== undefined && Date.now() - workflow.startTime + delayMs > deadlineMs
+}
+
+const getCreateRetryDelayMs = function getCreateRetryDelayMs(
+  workflow: ClipWorkflow,
+  attempt: number,
+  rateLimited: boolean
+): number {
+  const baseDelayMs = workflow.options.createRetryDelayMs ?? workflow.options.pollIntervalMs
+  return rateLimited ? baseDelayMs * attempt : baseDelayMs
 }
 
 const pollClip = async function pollClip(
@@ -194,11 +222,22 @@ const createReadyClipAttempt = async function createReadyClipAttempt(
       )
       return null
     }
+    const rateLimited = isRateLimitError(clipError)
     workflow.dependencies.logger.error(`${workflow.logPrefix} createClip failed`, {
       ...workflow.logContext,
       attempt,
       error: clipError?.message ?? String(error),
     })
+    if (attempt >= workflow.options.maxAttempts) {
+      return null
+    }
+    const retryDelayMs = getCreateRetryDelayMs(workflow, attempt, rateLimited)
+    if (wouldExceedDeadline(workflow, retryDelayMs)) {
+      return null
+    }
+    if (retryDelayMs > 0) {
+      await workflow.dependencies.wait(retryDelayMs)
+    }
     return await createReadyClipAttempt(workflow, attempt + 1)
   }
 

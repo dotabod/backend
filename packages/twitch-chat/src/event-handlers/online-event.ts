@@ -31,7 +31,7 @@ export const onlineEvent = function onlineEvent(data: { payload: { event: Twitch
         .select('userId')
         .eq('provider', 'twitch')
         .eq('providerAccountId', data?.payload?.event.broadcaster_user_id)
-        .single()
+        .maybeSingle()
 
       if (userError) {
         logger.error('Failed to fetch user account', {

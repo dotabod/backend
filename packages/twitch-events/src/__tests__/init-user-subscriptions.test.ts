@@ -42,6 +42,33 @@ describe(initUserSubscriptions, () => {
     expect(state.subscribeCalls).toHaveLength(REQUIRED.length - 1)
   })
 
+  it('skips channel.chat.message and records BOT_BANNED when the bot is banned in the channel', async () => {
+    const savedBotId = process.env.TWITCH_BOT_PROVIDERID
+    const savedClientId = process.env.TWITCH_CLIENT_ID
+    process.env.TWITCH_BOT_PROVIDERID = 'bot-1'
+    process.env.TWITCH_CLIENT_ID = 'client-1'
+    try {
+      state.addModeratorError = {
+        _body: '{"error":"Bad Request","status":400,"message":"user is banned"}',
+      }
+      const ok = await initUserSubscriptions('193001897')
+      const types = state.subscribeCalls.map((call) => call.type)
+      expect(ok).toBeTruthy()
+      expect(types).not.toContain('channel.chat.message')
+      expect(state.subscribeCalls).toHaveLength(REQUIRED.length - 1)
+      expect(state.commandDisableCalls).toContainEqual(
+        expect.objectContaining({
+          kind: 'disable',
+          reason: 'BOT_BANNED',
+          userId: 'user-1',
+        })
+      )
+    } finally {
+      process.env.TWITCH_BOT_PROVIDERID = savedBotId
+      process.env.TWITCH_CLIENT_ID = savedClientId
+    }
+  })
+
   it('does nothing when all required subscriptions already exist', async () => {
     seedSubscriptions('111', REQUIRED)
     await initUserSubscriptions('111')

@@ -174,19 +174,32 @@ describe(ensureBotIsModerator, () => {
   })
 
   it('adds the bot as a moderator', async () => {
-    await ensureBotIsModerator('999')
+    const result = await ensureBotIsModerator('999')
+    expect(result).toBe('ok')
     expect(state.addModeratorCalls).toContain('999')
   })
 
   it('swallows the "already a mod" error', async () => {
     state.addModeratorError = { _body: 'user is already a mod' }
-    await ensureBotIsModerator('999')
+    const result = await ensureBotIsModerator('999')
+    expect(result).toBe('ok')
     expect(state.logError).toHaveLength(0)
+  })
+
+  it('warns and returns "banned" when the bot is banned in the channel', async () => {
+    state.addModeratorError = {
+      _body: '{"error":"Bad Request","status":400,"message":"user is banned"}',
+    }
+    const result = await ensureBotIsModerator('999')
+    expect(result).toBe('banned')
+    expect(state.logError).toHaveLength(0)
+    expect(state.logWarn.some((l) => l.message.includes('Bot is banned in channel'))).toBeTruthy()
   })
 
   it('warns and returns when bot/client env is missing', async () => {
     delete process.env.TWITCH_BOT_PROVIDERID
-    await ensureBotIsModerator('999')
+    const result = await ensureBotIsModerator('999')
+    expect(result).toBe('error')
     expect(state.addModeratorCalls).toHaveLength(0)
   })
 })

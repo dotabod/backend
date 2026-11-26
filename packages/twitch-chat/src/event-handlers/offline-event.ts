@@ -36,7 +36,7 @@ export const offlineEvent = function offlineEvent({
         .select('userId')
         .eq('provider', 'twitch')
         .eq('providerAccountId', event.broadcaster_user_id)
-        .single()
+        .maybeSingle()
 
       if (user?.userId === undefined || user.userId.length === 0) {
         logger.info('[TWITCHEVENTS] user not found', {

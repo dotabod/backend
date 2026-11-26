@@ -50,6 +50,7 @@ const clipLogContextSchema: z.ZodType<ClipLogContext> = z.object({
 })
 
 const createReadyClipOptionsSchema: z.ZodType<CreateReadyClipOptions> = z.object({
+  createRetryDelayMs: z.number().optional(),
   deadlineMs: z.number().optional(),
   durationSeconds: z.number().optional(),
   initialDelayMs: z.number().optional(),
