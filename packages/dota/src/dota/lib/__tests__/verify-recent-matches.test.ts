@@ -128,7 +128,7 @@ describe(createMatchVerifier, () => {
     expect(table.get('row-1')).toMatchObject({ verification: 'resolved', won: true })
     expect(mmrCalls).toMatchObject([{ currentMmr: 4000, newMmr: 4025, steam32Id: 433_314_623 }])
     expect(predictionCalls).toStrictEqual([
-      [true, 'twitch-1', 'prediction-1', '9053165578', client.settings, PRO_SUB],
+      [true, 'twitch-1', 'prediction-1', '9053165578', client],
     ])
   })
 

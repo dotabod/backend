@@ -249,10 +249,6 @@ const startup = async function startup() {
       url: process.env.KUMA_PUSH_URL_SUPABASE,
     })
 
-    // Initialize Twitch EventSub connection. If twitch-events isn't reachable
-    // yet, this attempt fails — but the eventsSocket 'connect' handler in
-    // conduitSetup re-runs it whenever the link to twitch-events comes (back) up,
-    // so EventSub self-heals instead of staying dead until a manual restart.
     await ensureEventSubInitialized('startup')
   } catch (error) {
     logger.error('Error during startup', error)

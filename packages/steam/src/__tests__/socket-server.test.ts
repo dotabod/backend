@@ -1,51 +1,33 @@
-import type { Server } from 'socket.io'
-import { io as ioClient } from 'socket.io-client'
-import type { Socket } from 'socket.io-client'
-import { afterAll, describe, expect, it } from 'vitest'
-import { z } from 'zod'
+import { io as connect } from 'socket.io-client'
+import { describe, expect, it, vi } from 'vitest'
 
-import { createSocketServer } from '../socket-server'
+import { emitHeroesForMatch, setupSteamSocket } from '../socket-server.ts'
 
-interface ClientToServerEvents {
-  ping: (payload: string, acknowledge: (reply: string) => void) => void
-}
-
-interface ServerToClientEvents {
-  serverReady: () => void
-}
-
-const server: Server<ClientToServerEvents, ServerToClientEvents> = createSocketServer(0)
-const addressResult = z.object({ port: z.number() }).safeParse(server.httpServer.address())
-if (!addressResult.success) {
-  throw new Error('Socket test server did not bind to a TCP port')
-}
-const { port } = addressResult.data
-
-describe('createSocketServer round-trip', () => {
-  afterAll(async () => {
-    server.disconnectSockets(true)
-    await server.close()
-  }, 10_000)
-
-  it('accepts a client connection and echoes an event', async () => {
-    server.on('connection', (socket) => {
-      socket.on('ping', (payload, acknowledge) => {
+describe(setupSteamSocket, () => {
+  it('serves the first Steam client and broadcasts to its room', async () => {
+    const listener = setupSteamSocket((socket) => {
+      void socket.join('steam')
+      socket.on('ping', (payload: string, acknowledge: (reply: string) => void) => {
         acknowledge(`pong:${payload}`)
       })
+    }, 0)
+    const client = connect(`http://127.0.0.1:${listener.port}`, {
+      reconnection: false,
+      transports: ['websocket'],
     })
 
-    const client: Socket<ServerToClientEvents, ClientToServerEvents> = ioClient(
-      `http://127.0.0.1:${port}`,
-      {
-        reconnection: false,
-        transports: ['websocket'],
-      }
-    )
     try {
-      const reply = await client.emitWithAck('ping', 'hello')
-      expect(reply).toBe('pong:hello')
+      await expect(client.timeout(1000).emitWithAck('ping', 'hello')).resolves.toBe('pong:hello')
+      const onHeroes = vi.fn<(payload: { matchId: string; token: string }) => void>()
+      client.once('saveHeroesForMatchId', onHeroes)
+      const match = { matchId: '42', token: 'token' }
+      emitHeroesForMatch(match)
+      await vi.waitFor(() => {
+        expect(onHeroes).toHaveBeenCalledWith(match)
+      })
     } finally {
-      client.disconnect()
+      client.close()
+      await listener.close()
     }
   })
 })

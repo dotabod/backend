@@ -33,6 +33,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Twitch has taken about 25 minutes to make a clip available (969a2e10).
+CLIP_RETRY_LIMIT = 6
+
 
 class PostgresClient:
     """Client for interacting with PostgreSQL database."""
@@ -520,25 +523,20 @@ class PostgresClient:
                 return None
             cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-            # First check for a completed non-draft result.
-            #
-            # A row only counts as "completed" if it actually carries heroes. A draft
-            # attempt on a frame the detector rejects still writes a row shaped like
-            # {is_draft: false, heroes: absent} — without the heroes check that empty
-            # row short-circuits the later strategy clip, throwing away a capture that
-            # did contain the roster panel (observed on match 8916340932).
             query = f"""
             SELECT clip_id FROM {self.results_table}
             WHERE match_id = %s
               AND COALESCE((results->>'is_draft')::boolean, FALSE) = FALSE
-              AND jsonb_array_length(COALESCE(results->'heroes', '[]'::jsonb)) > 0
+              AND CASE jsonb_typeof(results->'heroes')
+                  WHEN 'array' THEN jsonb_array_length(results->'heroes') > 0
+                  ELSE FALSE
+              END
             ORDER BY processed_at DESC
             LIMIT 1
             """
             cursor.execute(query, (match_id,))
             result_row = cursor.fetchone()
 
-            # If we found a non-draft result, return it as completed
             if result_row:
                 return {
                     'found': True,
@@ -1136,12 +1134,11 @@ class PostgresClient:
         self,
         request_id: str,
         delay_seconds: int = 60,
-        max_retries: int = 6,
     ) -> bool:
         """Re-queue a transiently failed request so a future worker pass can retry it.
 
         Returns True if the row was flipped back to 'pending' (caller should NOT then
-        mark it failed); returns False if max_retries is already exceeded (caller
+        mark it failed); returns False if the retry budget is exhausted (caller
         should fall through to update_queue_status(..., 'failed')).
 
         The conditional UPDATE makes the bump atomic — concurrent workers can't
@@ -1158,9 +1155,6 @@ class PostgresClient:
                 logger.error("Failed to get database connection for requeueing")
                 return False
             cursor = conn.cursor()
-            # Bump retry_count and flip back to pending only if we haven't blown
-            # the budget. The WHERE clause's retry_count < max_retries check is
-            # what enforces the cap atomically.
             query = f"""
             UPDATE {self.queue_table}
             SET status = 'pending',
@@ -1170,7 +1164,7 @@ class PostgresClient:
             WHERE request_id = %s
               AND COALESCE(retry_count, 0) < %s
             """
-            cursor.execute(query, (delay_seconds, request_id, max_retries))
+            cursor.execute(query, (delay_seconds, request_id, CLIP_RETRY_LIMIT))
             requeued = cursor.rowcount > 0
             conn.commit()
             cursor.close()
@@ -1192,7 +1186,6 @@ class PostgresClient:
     def fetch_recent_failed_clips(
         self,
         window: str = '2 hours',
-        max_retry_count: int = 6,
         limit: int = 50,
     ) -> list:
         """Return failed clip queue rows that should be auto-replayed.
@@ -1210,12 +1203,6 @@ class PostgresClient:
         The sliding window bounds the work — once a row ages out we stop trying.
         Order by created_at so the oldest failures get the next retry slot first.
 
-        Budget sizing: recovering a clip that was submitted while Twitch was
-        still transcoding has been observed to take ~25 min, but the old
-        budget (retry_count < 3 over 1h) only gave ~15 min of practical
-        coverage at the 300s sweep cadence. 6 retries over 2h covers the
-        observed lag with headroom; max_retries on requeue_for_retry must stay
-        in step with max_retry_count or the wider budget here is dead code.
         """
         if not self._initialized and not self.initialize():
             logger.warning("PostgreSQL not initialized, can't fetch failed clips")
@@ -1245,7 +1232,7 @@ class PostgresClient:
             ORDER BY q.created_at ASC
             LIMIT %s
             """
-            cursor.execute(query, (window, max_retry_count, limit))
+            cursor.execute(query, (window, CLIP_RETRY_LIMIT, limit))
             rows = [dict(r) for r in cursor.fetchall()]
             cursor.close()
             return rows

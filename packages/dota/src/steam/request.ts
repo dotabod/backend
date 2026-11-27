@@ -12,8 +12,6 @@ interface SteamRequestArgs {
   getUserSteamServer: [steam32Id: number | string | null]
 }
 
-// The steam service acks with (error, data). emitWithAck resolves with that first, null
-// argument, so every reply read through it is empty; the callback form reads both.
 export const requestSteam = async function requestSteam<
   E extends keyof SteamRequestArgs,
   S extends z.ZodType,

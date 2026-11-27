@@ -200,6 +200,9 @@ importers:
       '@twurple/auth':
         specifier: 7.2.1
         version: 7.2.1
+      socket.io:
+        specifier: ^4.8.1
+        version: 4.8.3
       winston:
         specifier: ^3.17.0
         version: 3.19.0
@@ -4158,6 +4161,7 @@ snapshots:
       '@supabase/supabase-js': 2.108.2
       '@twurple/api': 7.2.1(@twurple/auth@7.2.1)
       '@twurple/auth': 7.2.1
+      socket.io: 4.8.3
       winston: 3.19.0
       zod: 4.5.4
     transitivePeerDependencies:
