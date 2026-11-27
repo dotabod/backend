@@ -677,10 +677,6 @@ class GSIServer implements GSIServerInterface {
       res.type('text/plain').status(200).send(getDiagnosticPayload())
     })
 
-    httpServer.listen(5120, () => {
-      logger.info(`[GSI] Dota 2 GSI listening on *:5120`)
-    })
-
     this.io.use(handleSocketAuth)
     this.io.on('connection', (socket) => {
       void handleSocketConnection(socket)
@@ -690,6 +686,10 @@ class GSIServer implements GSIServerInterface {
     })
     this.io.on('disconnect', (reason) => {
       logger.info('[GSI] io disconnect', { reason })
+    })
+
+    httpServer.listen(5120, () => {
+      logger.info(`[GSI] Dota 2 GSI listening on *:5120`)
     })
 
     // Set up the repeating timer for cleaning up resubscribe timestamps

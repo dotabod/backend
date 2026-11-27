@@ -1192,26 +1192,6 @@
         "severity": "error"
       }
     },
-    "078c7b8580d928fb3c9667e68c5ee42bb11ed8a5604cf3a127d6f0aff6f0cb3d": {
-      "count": 1,
-      "diagnostic": {
-        "code": "sonarjs(no-duplicate-string)",
-        "file": "packages/twitch-chat/src/utils/socket-manager.ts",
-        "labels": [
-          {
-            "context": [
-              "): void {",
-              "io.to('twitch-chat-messages').emit('msg', broadcasterLogin, chatterLogin, text, metadata)",
-              "}"
-            ],
-            "message": "",
-            "span": "'twitch-chat-messages'"
-          }
-        ],
-        "message": "Define a constant instead of duplicating this literal 3 times.",
-        "severity": "error"
-      }
-    },
     "07ab462bbdd1e6c7c4085e39aef1a705d8435b1be64972f3db75ff3cb9500c75": {
       "count": 1,
       "diagnostic": {

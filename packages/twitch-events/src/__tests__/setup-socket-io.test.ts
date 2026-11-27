@@ -1,29 +1,27 @@
 import { io as connect } from 'socket.io-client'
-import { afterAll, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
-import { closeSocketIO, isEventsIOConnected, setupSocketIO } from './shared-mocks.ts'
-
-const PORT = 15_015
+import { isEventsIOConnected, setupSocketIO } from './shared-mocks.ts'
 
 describe(setupSocketIO, () => {
-  afterAll(async () => {
-    await closeSocketIO()
-  })
-
-  // Prod 2026-09-27: twitch-chat connected before the connection handler was attached,
-  // and its getConduitData requests went unanswered until twitch-chat was restarted.
-  it('answers getConduitData from a client that connects the moment the port opens', async () => {
+  it('answers getConduitData from the first connected client', async () => {
     const onConduitData = vi.fn<(payload: { conduitId: string }) => void>()
-    setupSocketIO(PORT)
-
-    const client = connect(`http://localhost:${PORT}`, { transports: ['websocket'] })
-    client.on('conduitData', onConduitData)
-    client.emit('getConduitData', { forceRefresh: false })
-
-    await vi.waitFor(() => {
-      expect(onConduitData).toHaveBeenCalledWith({ conduitId: 'conduit-1' })
+    const listener = setupSocketIO(0)
+    const client = connect(`http://127.0.0.1:${listener.port}`, {
+      reconnection: false,
+      transports: ['websocket'],
     })
-    expect(isEventsIOConnected()).toBeTruthy()
-    client.close()
+
+    try {
+      client.on('conduitData', onConduitData)
+      client.emit('getConduitData', { forceRefresh: false })
+      await vi.waitFor(() => {
+        expect(onConduitData).toHaveBeenCalledWith({ conduitId: 'conduit-1' })
+      })
+      expect(isEventsIOConnected()).toBeTruthy()
+    } finally {
+      client.close()
+      await listener.close()
+    }
   })
 })

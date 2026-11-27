@@ -2,7 +2,7 @@ import { startHeartbeat } from '@dotabod/shared-utils'
 import type { Socket } from 'socket.io'
 
 import { initSpectatorProtobuff } from './init-spectator-protobuff'
-import { getSocketIoServer } from './socket-server'
+import { setupSteamSocket } from './socket-server.js'
 import Dota, { GetRealTimeStats } from './steam'
 import type { MatchMinimalDetailsResponse } from './types/match-minimal-details'
 import { logger } from './utils/logger'
@@ -14,8 +14,6 @@ let _hasDotabodSocket = false
 let isConnectedToSteam = false
 
 initSpectatorProtobuff()
-
-const socketIoServer = getSocketIoServer()
 
 // Report liveness to the Uptime Kuma push monitor
 startHeartbeat()
@@ -50,7 +48,7 @@ const getErrorMessage = function getErrorMessage(error: unknown): string {
 // Store active sockets with cleanup capability
 const activeSockets = new Set()
 
-socketIoServer.on('connection', (socket) => {
+setupSteamSocket((socket) => {
   console.log('Found a connection!')
 
   activeSockets.add(socket)
@@ -204,5 +202,3 @@ socketIoServer.on('connection', (socket) => {
     }
   })
 })
-
-export default socketIoServer
