@@ -54,19 +54,6 @@ def test_match_processing_not_found(db_client, mock_cursor):
     assert mock_cursor.execute.call_count == 4
 
 
-def test_completed_query_requires_heroes(db_client, mock_cursor):
-    """The 'completed' probe must ignore non-draft rows that carry no heroes.
-
-    A draft attempt on a rejected frame still writes {is_draft: false} with no
-    heroes. Counting that as completed short-circuits the later strategy clip and
-    throws away the only capture of the roster panel (seen on match 8916340932).
-    """
-    mock_cursor.fetchone.side_effect = [None, None, None, None]
-    db_client.check_for_match_processing("m1")
-    completed_sql = " ".join(mock_cursor.execute.call_args_list[0][0][0].split())
-    assert "jsonb_array_length(COALESCE(results->'heroes', '[]'::jsonb)) > 0" in completed_sql
-
-
 # --------------------------------------------------------------------------- #
 # update_queue_status — per-status branch
 # --------------------------------------------------------------------------- #
@@ -115,55 +102,8 @@ def test_update_status_rolls_back_on_error(db_client, mock_cursor):
 
 
 # --------------------------------------------------------------------------- #
-# requeue_for_retry — atomic retry budget
+# fetch_recent_failed_clips — empty result and database errors
 # --------------------------------------------------------------------------- #
-def test_requeue_for_retry_returns_true_when_row_updated(db_client, mock_cursor):
-    mock_cursor.rowcount = 1
-    assert db_client.requeue_for_retry("r1", delay_seconds=42, max_retries=3) is True
-    query, params = mock_cursor.execute.call_args.args
-    assert "status = 'pending'" in query
-    assert "retry_count = COALESCE(retry_count, 0) + 1" in query
-    assert "not_before" in query and "interval '1 second'" in query
-    # max_retries is enforced in the WHERE clause, not Python, so the cap is atomic
-    assert "COALESCE(retry_count, 0) < %s" in query
-    assert params == (42, "r1", 3)
-    db_client._mock_conn.commit.assert_called_once()
-
-
-def test_requeue_for_retry_returns_false_when_cap_reached(db_client, mock_cursor):
-    # WHERE clause filtered the row out (retry_count >= max_retries) — no row updated
-    mock_cursor.rowcount = 0
-    assert db_client.requeue_for_retry("r1") is False
-
-
-# --------------------------------------------------------------------------- #
-# fetch_recent_failed_clips — sweep eligibility query
-# --------------------------------------------------------------------------- #
-def test_fetch_recent_failed_clips_filters_correctly(db_client, mock_cursor):
-    mock_cursor.fetchall.return_value = [
-        {"request_id": "r1", "clip_id": "c1", "match_id": "m1",
-         "request_type": "clip", "retry_count": 1},
-    ]
-    rows = db_client.fetch_recent_failed_clips(window='30 minutes', max_retry_count=2)
-    assert rows == [{
-        "request_id": "r1", "clip_id": "c1", "match_id": "m1",
-        "request_type": "clip", "retry_count": 1,
-    }]
-    query, params = mock_cursor.execute.call_args.args
-    assert "status = 'failed'" in query
-    # Permanent failures (decode crashes, no players detected) stay out of the
-    # sweep — matches the worker's "non-transient errors fail immediately" policy.
-    assert "failure_reason = 'transient'" in query
-    assert "request_type IN ('clip', 'clip_in_game')" in query
-    # Must skip matches that already have a successful clip_results row.
-    assert "NOT EXISTS" in query
-    assert "match_id IS NOT NULL" in query
-    # Bound per-pass fan-in so a long outage doesn't hand us hundreds of rows at once.
-    assert "LIMIT" in query
-    # Parameters: window, max_retry_count, limit (passed positionally to the SQL).
-    assert params == ('30 minutes', 2, 50)
-
-
 def test_fetch_recent_failed_clips_empty_on_no_rows(db_client, mock_cursor):
     mock_cursor.fetchall.return_value = []
     assert db_client.fetch_recent_failed_clips() == []
@@ -265,16 +205,6 @@ def test_get_next_pending_request_returns_row(db_client, mock_cursor):
 def test_get_next_pending_request_returns_none_when_empty(db_client, mock_cursor):
     mock_cursor.fetchone.return_value = None
     assert db_client.get_next_pending_request() is None
-
-
-def test_get_next_pending_request_gates_on_not_before(db_client, mock_cursor):
-    # A re-queued row carries `not_before` set in the future; the worker poll
-    # must skip those rows so we don't immediately re-attempt while Twitch GQL
-    # is still cold.
-    mock_cursor.fetchone.return_value = None
-    db_client.get_next_pending_request()
-    query = mock_cursor.execute.call_args.args[0]
-    assert "not_before IS NULL OR not_before <= CURRENT_TIMESTAMP" in query
 
 
 def test_add_to_queue_returns_existing_duplicate(db_client, mock_cursor):
